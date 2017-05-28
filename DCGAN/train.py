@@ -19,7 +19,7 @@ dirs = {
     'cifar-100': '/home/zero/cifar/cifar-100-python/',
     'sample_output': './DCGAN/',
     'checkpoint': './model/checkpoint',
-    'model': './model/LAPGAN-model.ckpt'
+    'model': './model/DCGAN-model.ckpt'
 }
 paras = {
     'epoch': 150,  # with GTX 1080 11gb, takes 3934s
