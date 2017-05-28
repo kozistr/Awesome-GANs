@@ -34,8 +34,8 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 ### DCGAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_0_0.png)
-#### global step : 150k
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_149250.png)
+#### global step : 14.1k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_140250.png)
 
 ## Author
 Hyeongchan Kim / @kozistr
