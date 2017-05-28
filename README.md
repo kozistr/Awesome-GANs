@@ -12,11 +12,11 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
     just download it and run train.py
     $ python3 train.py
 
-## Dataset
+## Datasets
 Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 (more dataset will be added soon!)
 
-## Paper
+## Papers
 * BEGAN     : https://arxiv.org/abs/1703.10717
 * CGAN      : https://arxiv.org/abs/1411.1784
 * DCGAN     : https://arxiv.org/abs/1511.06434
