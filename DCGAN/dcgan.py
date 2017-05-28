@@ -203,8 +203,9 @@ class DCGAN:
 
         # training # optimizer
         beta1 = 0.5
+        # self.learning_rate = 1e-4
         self.learning_rate = tf.train.exponential_decay(
-            learning_rate=4e-4,
+            learning_rate=2e-4,
             decay_rate=0.9,
             decay_steps=150,
             global_step=750,
