@@ -22,7 +22,7 @@ dirs = {
     'model': './model/LAPGAN-model.ckpt'
 }
 paras = {
-    'epoch': 200,  # with GTX 1080 11gb, takes 5750s
+    'epoch': 200,  # with GTX 1080 11gb, takes 4600s
     'batch_size': 64,
     'logging_interval': 750
 }
