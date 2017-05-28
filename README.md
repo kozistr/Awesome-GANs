@@ -15,3 +15,27 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 ## Dataset
 Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 (more dataset will be added soon!)
+
+## Paper
+BEGAN     : https://arxiv.org/abs/1703.10717
+CGAN      :
+DCGAN     : https://arxiv.org/abs/1511.06434
+DiscoGAN  :
+EnergyGAN :
+GAN       :
+InfoGAN   :
+LAPGAN    :
+LSGAN     :
+SalGAN    :
+SeqGAN    :
+WGAN      :
+
+## Results
+### DCGAN
+#### global step : 0
+![Alt text](/DCGAN/DCGAN/train_0_0.png)
+#### global step : 150k
+![Alt text](/DCGAN/DCGAN/train_199_149250.png)
+
+## Author
+Hyeongchan Kim / @kozistr
