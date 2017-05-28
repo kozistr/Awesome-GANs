@@ -59,7 +59,7 @@ def main():
 
         # import random
         # rnd = random.randint(0, dataset.valid_images.shape[0] / model.sample_size - 1)
-        sample_images = dataset.valid_images[model.sample_size:model.sample_size].astype(np.float32) / 255.0
+        sample_images = dataset.valid_images[:model.sample_size].astype(np.float32) / 255.0
         sample_z = np.random.uniform(-1., 1., size=(model.sample_num, model.z_dim))  # noise
 
         d_overpowered = False  # G loss > D loss * 2
