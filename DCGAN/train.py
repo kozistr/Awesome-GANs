@@ -62,6 +62,14 @@ def main():
         sample_images = dataset.valid_images[:model.sample_size].astype(np.float32) / 255.0
         sample_z = np.random.uniform(-1., 1., size=(model.sample_num, model.z_dim))  # noise
 
+        # export real image
+        valid_image_height = 8
+        valid_image_width = 8
+        sample_dir = dirs['sample_output'] + 'valid.png'
+
+        # Generated image save
+        iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+
         d_overpowered = False  # G loss > D loss * 2
 
         step = int(global_step)
