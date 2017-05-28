@@ -87,12 +87,13 @@ def linear(input_, output_size, scope=None, stddev=2e-2, bias_start=0.0, with_w=
 class DCGAN:
 
     def __init__(self, s, input_height=32, input_width=32,
-                 batch_size=64, sample_size=64,
+                 batch_size=64, sample_size=64, sample_num=64,
                  z_dim=100, gf_dim=64, df_dim=64, c_dim=3, eps=1e-12):
 
         self.s = s
         self.batch_size = batch_size
         self.sample_size = sample_size
+        self.sample_num = sample_num
 
         self.input_height = input_height
         self.input_width = input_width
