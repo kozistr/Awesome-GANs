@@ -18,17 +18,17 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 
 ## Paper
 * BEGAN     : https://arxiv.org/abs/1703.10717
-* CGAN      :
-* DCGAN     : https://arxiv.org/abs/1511.06434 
-* DiscoGAN  :
-* EnergyGAN :
-* GAN       :
-* InfoGAN   :
-* LAPGAN    :
-* LSGAN     :
-* SalGAN    :
-* SeqGAN    :
-* WGAN      :
+* CGAN      : https://arxiv.org/abs/1411.1784
+* DCGAN     : https://arxiv.org/abs/1511.06434
+* DiscoGAN  : https://arxiv.org/abs/1703.05192
+* EnergyGAN : https://arxiv.org/abs/1609.03126
+* GAN       : https://arxiv.org/abs/1406.2661
+* InfoGAN   : https://arxiv.org/abs/1606.03657
+* LAPGAN    : https://arxiv.org/abs/1506.05751
+* LSGAN     : https://arxiv.org/abs/1701.06264
+* SalGAN    : https://arxiv.org/abs/1701.01081
+* SeqGAN    : https://arxiv.org/abs/1609.05473
+* WGAN      : https://arxiv.org/abs/1701.07875
 
 ## Results
 ### DCGAN
