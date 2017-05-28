@@ -17,7 +17,7 @@ dirs = {
     # 'sample_output': 'D:\\ML\\cifar\\DCGAN\\',
     'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
     'cifar-100': '/home/zero/cifar/cifar-100-python/',
-    'sample_output': '/home/zero/cifar/DCGAN/',
+    'sample_output': './DCGAN/',
     'checkpoint': './model/checkpoint',
     'model': './model/LAPGAN-model.ckpt'
 }
