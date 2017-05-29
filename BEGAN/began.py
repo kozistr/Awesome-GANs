@@ -39,3 +39,4 @@ class BEGAN:
 
         self.lr = tf.placeholder(tf.float32, "learning-rate")
         self.kt = tf.placeholder(tf.float32, "kt")
+        
