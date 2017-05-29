@@ -53,7 +53,8 @@ class BEGAN:
 
     def __init__(self, s, input_height=128, input_width=128, channel=3,
                  output_height=128, output_width=128, sample_size=128, sample_num=64, batch_size=64,
-                 z_dim=128, filter_num=64, eps=1e-12, gamma=0.4):
+                 z_dim=128, filter_num=128, embedding=128,
+                 eps=1e-12, gamma=0.4, lambda_=1e-3, momentum1=0.5, momentum2=0.9999):
         self.s = s
         self.batch_size = batch_size
 
@@ -66,9 +67,13 @@ class BEGAN:
 
         self.eps = eps
         self.gamma = gamma  # 0.3 ~ 0.5 # 0.7
+        self.lambda_ = lambda_
+        self.mm1 = momentum1
+        self.mm2 = momentum2
 
         self.z_dim = z_dim
         self.filter_num = filter_num
+        self.embedding = embedding
 
         self.sample_size = sample_size
         self.sample_num = sample_num
@@ -77,7 +82,7 @@ class BEGAN:
             learning_rate=1e-4,
             decay_rate=0.95,
             decay_steps=2000,
-            global_step=2e5,
+            global_step=2e5,  # 200k
             staircase=False
         )
 
@@ -122,6 +127,52 @@ class BEGAN:
             x = tf.nn.elu(x)
 
             x = conv2d(x, 3)
+
+        return x
+
+    def encoder(self, x, reuse=None):
+        with tf.variable_scope("encoder", reuse=reuse):
+            f = self.filter_num
+            w = self.sample_num
+
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            x = conv2d(x, 2 * f, k_h=1, k_w=1)
+            x = avgpool(x)
+            x = conv2d(x, 2 * f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, 2 * f)
+            x = tf.nn.elu(x)
+
+            x = conv2d(x, 3 * f, k_h=1, k_w=1)
+            x = avgpool(x)
+            x = conv2d(x, 3 * f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, 3 * f)
+            x = tf.nn.elu(x)
+
+            x = conv2d(x, 4 * f, k_h=1, k_w=1)
+            x = avgpool(x)
+            x = conv2d(x, 4 * f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, 4 * f)
+            x = tf.nn.elu(x)
+
+            if self.sample_size == 128:
+                x = conv2d(x, 5 * f, k_h=1, k_w=1)
+                x = avgpool(x)
+                x = conv2d(x, 5 * f)
+                x = tf.nn.elu(x)
+                x = conv2d(x, 5 * f)
+                x = tf.nn.elu(x)
+
+            x = fc(x, self.embedding)
 
         return x
 
