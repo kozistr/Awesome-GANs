@@ -89,9 +89,7 @@ class BEGAN:
         self.build_bdgan()
 
     def discriminator(self, x, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
-            f = self.filter_num
-            w = self.sample_num
+        pass
 
     def generator(self, x, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
@@ -223,8 +221,16 @@ class BEGAN:
         return x
 
     def build_bdgan(self):
-        self.x = tf.placeholder(tf.float32, [self.batch_size] + self.image_shape, "x-image")
-        self.z = tf.placeholder(tf.float32, [self.batch_size, self.z_dim], "z-noise")
+        self.x = tf.placeholder(tf.float32, [self.batch_size, self.input_width], "x-image")
+        self.y = tf.placeholder(tf.float32, [self.batch_size, self.sample_size, self.sample_size, self.channel])
 
         self.lr = tf.placeholder(tf.float32, "learning-rate")
         self.kt = tf.placeholder(tf.float32, "kt")
+
+        # Generator Model
+        self.G = self.generator(self.x)
+
+        # Discriminator Model
+        # self.D = self.decoder(self.x, reuse=True)
+        # self.D_rael = self.decoder(self.encoder(self.y))
+        # self.D_fake = self.decoder(self.encoder(self.G, reuse=True), reuse=True)
