@@ -12,7 +12,7 @@ import began
 dirs = {
     # 'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
     # 'cifar-100': '/home/zero/cifar/cifar-100-python/',
-    'celeb-a': '/home/zero/celeba/',
+    'celeb-a': '/home/zero/celeba/img_align_celeba/',
     'sample_output': './BEGAN/',
     'checkpoint': './model/checkpoint',
     'model': './model/BEGAN-model.ckpt'
@@ -27,6 +27,18 @@ paras = {
 def main():
     start_time = time.time()  # clocking start
 
+    '''
+    GPU Specs
+        # home (Desktop)
+        /gpu:0 : GTX 1060 6gb
+        
+        # Labs (Server)
+        /gpu:0 : GTX 1080 11gb
+        /gpu:1 : GTX Titan X (maxwell)
+        
+        # Labs (Desktop)
+        /gpu:0 : GTX 960 2gb
+    '''
     with tf.device('/gpu:1'):
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
         config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
