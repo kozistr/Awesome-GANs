@@ -32,8 +32,8 @@ def main():
         config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 
         with tf.Session(config=config) as s:
-
             end_time = time.time() - start_time
+
             # elapsed time
             print("[+] Elapsed time {:.8f}s".format(end_time))
 
