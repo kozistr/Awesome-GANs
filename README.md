@@ -31,6 +31,12 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 * WGAN      : https://arxiv.org/abs/1701.07875
 
 ## Results
+### BEGAN
+#### global step : 0
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
+#### global step : 15k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
+
 ### DCGAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_0_0.png)
