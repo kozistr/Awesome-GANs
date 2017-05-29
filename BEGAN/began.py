@@ -54,7 +54,7 @@ class BEGAN:
     def __init__(self, s, input_height=128, input_width=128, channel=3,
                  output_height=128, output_width=128, sample_size=128, sample_num=64, batch_size=64,
                  z_dim=128, filter_num=128, embedding=128,
-                 eps=1e-12, gamma=0.4, lambda_=1e-3, momentum1=0.5, momentum2=0.9999):
+                 eps=1e-12, gamma=0.4, lambda_=1e-3, momentum1=0.5, momentum2=0.999):
         self.s = s
         self.batch_size = batch_size
 
@@ -90,6 +90,11 @@ class BEGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
+            f = self.filter_num
+            w = self.sample_num
+
+    def generator(self, x, reuse=None):
+        with tf.variable_scope("generator", reuse=reuse):
             f = self.filter_num
             w = self.sample_num
 
@@ -133,7 +138,6 @@ class BEGAN:
     def encoder(self, x, reuse=None):
         with tf.variable_scope("encoder", reuse=reuse):
             f = self.filter_num
-            w = self.sample_num
 
             x = conv2d(x, f)
             x = tf.nn.elu(x)
@@ -176,12 +180,47 @@ class BEGAN:
 
         return x
 
-    def generator(self, x, reuse=None):
-        with tf.variable_scope("generator", reuse=reuse):
+    def decoder(self, x, reuse=None):
+        with tf.variable_scope("decoder",reuse=reuse):
             f = self.filter_num
             w = self.sample_num
 
+            x = fc(x, 8 * 8 * f)
+            x = tf.reshape(x, [-1, 8, 8, f])
 
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            if self.sample_size == 128:
+                x = resize_nn(x, w / 8)
+                x = conv2d(x, f)
+                x = tf.nn.elu(x)
+                x = conv2d(x, f)
+                x = tf.nn.elu(x)
+
+            x = resize_nn(x, w / 4)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            x = resize_nn(x, w / 2)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            x = resize_nn(x, w)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+            x = conv2d(x, f)
+            x = tf.nn.elu(x)
+
+            x = conv2d(x, 3)
+
+        return x
 
     def build_bdgan(self):
         self.x = tf.placeholder(tf.float32, [self.batch_size] + self.image_shape, "x-image")
@@ -189,4 +228,3 @@ class BEGAN:
 
         self.lr = tf.placeholder(tf.float32, "learning-rate")
         self.kt = tf.placeholder(tf.float32, "kt")
-
