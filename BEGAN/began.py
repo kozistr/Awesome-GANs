@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 import numpy as np
 
 
@@ -51,10 +52,11 @@ def resize_nn(x, size):
 
 class BEGAN:
 
-    def __init__(self, s, input_height=64, input_width=64, channel=3,
-                 output_height=64, output_width=64, sample_size=64, sample_num=64, batch_size=16,
-                 z_dim=128, filter_num=64, embedding=64,
-                 eps=1e-12, gamma=0.4, lambda_=1e-3, momentum1=0.5, momentum2=0.999):
+    def __init__(self, s, input_height=64, input_width=64, output_height=64, output_width=64, channel=3,
+                 sample_size=64, sample_num=64, batch_size=16,
+                 z_dim=128, filter_num=64, embedding=128,
+                 epsilon=1e-12, gamma=0.4, lambda_k=1e-3, momentum1=0.5, momentum2=0.999,
+                 g_lr=8e-5, d_lr=8e-5, lr_low_boundary=2e-5, lr_update_step=1e5):
         self.s = s
         self.batch_size = batch_size
 
@@ -63,13 +65,14 @@ class BEGAN:
         self.output_height = output_height
         self.output_width = output_width
         self.channel = channel
-        self.image_shape = [self.input_height, self.input_height, self.channel]  # 128x128x3
+        self.conv_repeat_num = int(np.log2(input_height)) - 2
+        self.image_shape = [self.input_height, self.input_height, self.channel]  # 64x64x3
 
-        self.eps = eps
+        self.eps = epsilon
         self.gamma = gamma  # 0.3 ~ 0.5 # 0.7
-        self.lambda_ = lambda_
-        self.mm1 = momentum1
-        self.mm2 = momentum2
+        self.lambda_k = lambda_k
+        self.mm1 = momentum1  # beta1
+        self.mm2 = momentum2  # beta2
 
         self.z_dim = z_dim
         self.filter_num = filter_num
@@ -77,6 +80,12 @@ class BEGAN:
 
         self.sample_size = sample_size
         self.sample_num = sample_num
+
+        self.g_lr = g_lr
+        self.d_lr = d_lr
+
+        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * 0.5, lr_low_boundary, name="g_lr_update"))
+        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * 0.5, lr_low_boundary, name="d_lr_update"))
 
         self.learning_rate = tf.train.exponential_decay(
             learning_rate=1e-4,
@@ -86,141 +95,61 @@ class BEGAN:
             staircase=False
         )
 
-        self.build_bdgan()
+        self.build_began()
 
-    def discriminator(self, x, reuse=None):
-        pass
-
-    def generator(self, x, reuse=None):
-        with tf.variable_scope("generator", reuse=reuse):
-            f = self.filter_num
-            w = self.sample_num
-
-            x = fc(x, 8 * 8 * f)
-            x = tf.reshape(x, [-1, 8, 8, f])
-
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            if self.sample_size == 128:
-                x = resize_nn(x, w / 8)
-                x = conv2d(x, f)
-                x = tf.nn.elu(x)
-                x = conv2d(x, f)
-                x = tf.nn.elu(x)
-
-            x = resize_nn(x, w / 4)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = resize_nn(x, w / 2)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = resize_nn(x, w)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = conv2d(x, 3)
-
-        return x
-
-    def encoder(self, x, reuse=None):
+    def encoder(self, x, embedding, reuse=None):
         with tf.variable_scope("encoder", reuse=reuse):
-            f = self.filter_num
+            with slim.arg_scope([slim.conv2d],
+                                stride=1, activation_fn=tf.nn.elu, padding="SAME",
+                                weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                weights_regularizer=slim.l2_regularizer(5e-4),
+                                bias_initializer=tf.zeros_initializer()):
+                x = slim.conv2d(x, embedding, 3)
 
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
+                for i in range(self.conv_repeat_num):
+                    channel_num = embedding * (i + 1)
+                    x = slim.repeat(x, 2, slim.conv2d, channel_num, 3)
+                    if i < self.conv_repeat_num - 1:
+                        # Is using stride pooling more better method than max pooling?
+                        x = slim.conv2d(x, channel_num, kernel_size=3, stride=2)  # sub-sampling
+                        # x = slim.max_pooling2d(x, 3, 2)
 
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = conv2d(x, 2 * f, k_h=1, k_w=1)
-            x = avgpool(x)
-            x = conv2d(x, 2 * f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, 2 * f)
-            x = tf.nn.elu(x)
-
-            x = conv2d(x, 3 * f, k_h=1, k_w=1)
-            x = avgpool(x)
-            x = conv2d(x, 3 * f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, 3 * f)
-            x = tf.nn.elu(x)
-
-            x = conv2d(x, 4 * f, k_h=1, k_w=1)
-            x = avgpool(x)
-            x = conv2d(x, 4 * f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, 4 * f)
-            x = tf.nn.elu(x)
-
-            if self.sample_size == 128:
-                x = conv2d(x, 5 * f, k_h=1, k_w=1)
-                x = avgpool(x)
-                x = conv2d(x, 5 * f)
-                x = tf.nn.elu(x)
-                x = conv2d(x, 5 * f)
-                x = tf.nn.elu(x)
-
-            x = fc(x, self.embedding)
-
+                x = tf.reshape(x, [-1, np.prod([8, 8, channel_num]))
         return x
 
-    def decoder(self, x, reuse=None):
-        with tf.variable_scope("decoder",reuse=reuse):
-            f = self.filter_num
-            w = self.sample_num
+    def decoder(self, z, embedding, reuse=None):
+        with tf.variable_scope("decoder", reuse=reuse):
+            with slim.arg_scope([slim.conv2d, slim.fully_connected],
+                                weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                weights_regularizer=slim.l2_regularizer(5e-4),
+                                bias_initializer=tf.zeros_initializer()):
+                with slim.arg_scope([slim.conv2d], padding="SAME",
+                                    activation_fn=tf.nn.elu, stride=1):
+                    x = slim.fully_connected(z, 8 * 8 * embedding, activation_fn=None)
+                    x = tf.reshape(x, [-1, 8, 8, embedding])
 
-            x = fc(x, 8 * 8 * f)
-            x = tf.reshape(x, [-1, 8, 8, f])
+                    for i in range(self.conv_repeat_num):
+                        x = slim.repeat(x, 2, slim.conv2d, embedding, 3)
+                        if i < self.conv_repeat_num - 1:
+                            x = resize_nn(x, 2)  # NN up-sampling
 
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            if self.sample_size == 128:
-                x = resize_nn(x, w / 8)
-                x = conv2d(x, f)
-                x = tf.nn.elu(x)
-                x = conv2d(x, f)
-                x = tf.nn.elu(x)
-
-            x = resize_nn(x, w / 4)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = resize_nn(x, w / 2)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = resize_nn(x, w)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-            x = conv2d(x, f)
-            x = tf.nn.elu(x)
-
-            x = conv2d(x, 3)
-
+                    x = slim.conv2d(x, 3, 3, activation_fn=None)
         return x
 
-    def build_bdgan(self):
+    def discriminator(self, x, embedding, reuse=None):
+        with tf.variable_scope("discriminator", reuse=reuse):
+            x = self.encoder(x, embedding, reuse=reuse)
+            x = self.decoder(x, embedding, reuse=reuse)
+
+            return x
+
+    def generator(self, z, embedding, reuse=None):
+        with tf.variable_scope("generator/decoder", reuse=reuse):
+            x = self.decoder(z, embedding)
+
+            return x
+
+    def build_began(self):
         self.x = tf.placeholder(tf.float32, [self.batch_size, self.input_width], "x-image")
         self.y = tf.placeholder(tf.float32, [self.batch_size, self.sample_size, self.sample_size, self.channel])
 
@@ -231,6 +160,7 @@ class BEGAN:
         self.G = self.generator(self.x)
 
         # Discriminator Model
-        # self.D = self.decoder(self.x, reuse=True)
-        # self.D_rael = self.decoder(self.encoder(self.y))
-        # self.D_fake = self.decoder(self.encoder(self.G, reuse=True), reuse=True)
+        self.D = self.decoder(self.x, reuse=True)
+        self.D_real = self.discriminator(self.y)
+        self.D_fake = self.discriminator(self.G, reuse=True)
+
