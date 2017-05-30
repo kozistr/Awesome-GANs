@@ -51,9 +51,9 @@ def resize_nn(x, size):
 
 class BEGAN:
 
-    def __init__(self, s, input_height=128, input_width=128, channel=3,
-                 output_height=128, output_width=128, sample_size=128, sample_num=64, batch_size=64,
-                 z_dim=128, filter_num=128, embedding=128,
+    def __init__(self, s, input_height=64, input_width=64, channel=3,
+                 output_height=64, output_width=64, sample_size=64, sample_num=64, batch_size=16,
+                 z_dim=128, filter_num=64, embedding=64,
                  eps=1e-12, gamma=0.4, lambda_=1e-3, momentum1=0.5, momentum2=0.999):
         self.s = s
         self.batch_size = batch_size
