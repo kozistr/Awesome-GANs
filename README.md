@@ -44,4 +44,4 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_140250.png)
 
 ## Author
-Hyeongchan Kim / @kozistr
+Hyeongchan Kim / @kozistr, [@zer0day](http://zer0day.tistory.com)
