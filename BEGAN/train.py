@@ -39,18 +39,26 @@ def main():
         # Labs (Desktop)
         /gpu:0 : GTX 960 2gb
     '''
-    with tf.device('/gpu:1'):
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
-        config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
+    config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 
-        with tf.Session(config=config) as s:
-            end_time = time.time() - start_time
+    with tf.Session(config=config) as s:
+        end_time = time.time() - start_time
 
-            # elapsed time
-            print("[+] Elapsed time {:.8f}s".format(end_time))
+        # BEGAN Model
+        model = began.BEGAN(s)
 
-            # close tf.Session
-            s.close()
+        kt = tf.Variable(0., dtype=tf.float32)
+
+        # k_t update
+        # k_t+1 = K_t + lambda_k * (gamma * d_real - d_fake)
+        kt += model.lambda_k * (model.gamma * model.D_real - model.D_fake)
+
+        # elapsed time
+        print("[+] Elapsed time {:.8f}s".format(end_time))
+
+        # close tf.Session
+        s.close()
 
 if __name__ == '__main__':
     main()
