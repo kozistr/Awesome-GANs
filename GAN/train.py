@@ -18,7 +18,7 @@ dirs = {
 }
 paras = {
     'global_step': 100000,
-    'logging_interval': 100
+    'logging_interval': 10000
 }
 
 
@@ -29,9 +29,10 @@ def main():
     mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
 
     # GPU configure
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
-    config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
-
+    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
+    # config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
     with tf.Session(config=config) as s:
         end_time = time.time() - start_time
 
@@ -42,11 +43,13 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_size)
+        sample_x = sample_x.reshape(-1, model.n_input)
         sample_z = np.random.uniform(-1.0, 1.0, [model.sample_size, model.z_num]).astype(np.float32)
 
         d_overpowered = False
         for step in range(paras['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
+            batch_x = batch_x.reshape(-1, model.n_input)
 
             # generate z
             batch_z = np.random.uniform(-1.0, 1.0, size=[model.batch_size, model.z_num]).astype(np.float32)  # 64 x 128
@@ -60,6 +63,7 @@ def main():
 
             if step % paras['logging_interval'] == 0:
                 batch_x, _ = mnist.test.next_batch(model.batch_size)
+                batch_x = batch_x.reshape(-1, model.n_input)
                 batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_num]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([
