@@ -43,5 +43,11 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 #### global step : 14.1k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_140250.png)
 
+### GAN
+#### global step : 0
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_0.png)
+#### glob al step : 100k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_100000.png)
+
 ## Author
 Hyeongchan Kim / @kozistr, [@zer0day](http://zer0day.tistory.com)
