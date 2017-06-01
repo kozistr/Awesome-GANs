@@ -6,10 +6,10 @@ tf.set_random_seed(777)
 
 class GAN:
 
-    def __init(self, s, batch_size=64,
+    def __init__(self, s, batch_size=64,
                input_height=28, input_width=28, channel=1, z_num=128, sample_num=9, sample_size=16,
                output_height=28, output_width=28, n_input=784, n_classes=10,
-               n_hidden_layer_1=128, n_hidden_layer_2=128, g_lr=1e-3, d_lr=1e-3,
+               n_hidden_layer_1=64, n_hidden_layer_2=128, g_lr=1e-3, d_lr=1e-3,
                epsilon=1e-12):
         self.s = s
         self.batch_size = batch_size
@@ -22,12 +22,13 @@ class GAN:
         self.output_height = output_height
         self.output_width = output_width
         self.channel = channel
+        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
         self.z_num = z_num
 
         self.n_input = n_input
-        self.n_classes = n_classes
         self.n_hl_1 = n_hidden_layer_1
         self.n_hl_2 = n_hidden_layer_2
+        self.n_classes = n_classes
 
         self.eps = epsilon
 
@@ -48,12 +49,12 @@ class GAN:
                 net = tf.nn.dropout(net, 0.8 - 0.05)
 
             with tf.name_scope("logits"):
-                logits = tf.nn.bias_add(tf.matmul(net, w['d_h_out']), b['d_b_out'])  # logits
+                logits = tf.nn.bias_add(tf.matmul(net, w['d_h_out']), b['d_b_out'])
 
             with tf.name_scope("prob"):
-                prob = tf.nn.sigmoid(logits)
+                prob = tf.nn.softmax(logits)
 
-        return logits, prob
+        return prob
 
     def generator(self, z, w, b, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
@@ -66,15 +67,15 @@ class GAN:
                 de_net = tf.nn.relu(de_net)
 
             with tf.name_scope("logits"):
-                logits = tf.nn.bias_add(tf.matmul(de_net, w['g_h2']), b['g_b2'])
+                logits = tf.nn.bias_add(tf.matmul(de_net, w['g_h_out']), b['g_b_out'])
 
             with tf.name_scope("prob"):
-                prob = tf.nn.sigmoid(logits)
+                prob = tf.nn.softmax(logits)
 
         return prob
 
     def build_gan(self):
-        # placeholder
+        # x, zplaceholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_num], name='z-noise')
         # self.y = tf.placeholder(tf.int32, shape=[None, self.n_classes], name="y-label")
@@ -113,47 +114,38 @@ class GAN:
         self.G = self.generator(self.z, self.W, self.b)
 
         # discriminator
-        self.D_logit_real, self.D_real = self.discriminator(self.x, self.W, self.b)
-        self.D_logit_fake, self.D_fake = self.discriminator(self.G, self.W, self.b)
+        self.D_real = self.discriminator(self.x, self.W, self.b)
+        self.D_fake = self.discriminator(self.G, self.W, self.b, reuse=True)
 
         # loss
-        # self.G_loss = -tf.reduce_mean(tf.log(self.D_fake + self.eps))
-        # self.D_loss = -tf.reduce_mean(tf.log(self.D_real + self.eps) + tf.log(1 + self.eps - self.D_fake))
-        # sigmoid loss
-        self.G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-            self.D_logit_fake, tf.ones_like(self.D_logit_fake)))
 
-        self.D_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-            self.D_logit_real, tf.ones_like(self.D_logit_real)))
-        self.D_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-            self.D_logit_fake, tf.zeros_like(self.D_logit_fake)))
-        self.D_loss = self.D_real_loss + self.D_fake_loss
+        # maximize log(D(G(z)))
+        self.g_loss = -tf.reduce_mean(tf.log(self.D_fake + self.eps))
+
+        # maximize log(D(x)) + log(1 - D(G(z)))
+        self.d_real_loss = -tf.reduce_mean(tf.log(self.D_real + self.eps))
+        self.d_fake_loss = -tf.reduce_mean(tf.log((1. - self.D_fake) + self.eps))
+        self.d_loss = self.d_real_loss + self.d_fake_loss
 
         # summary
         self.z_sum = tf.summary.histogram("z", self.z)
 
+        self.G = tf.reshape(self.G, shape=[1, self.output_height, self.output_height, self.channel])
         self.G_sum = tf.summary.image("G", self.G)  # generated image from G model
         self.D_real_sum = tf.summary.histogram("D_real", self.D_real)
         self.D_fake_sum = tf.summary.histogram("D_fake", self.D_fake)
 
-        self.d_real_loss_sum = tf.summary.scalar("d_real_loss", self.D_real_loss)
-        self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.D_fake_loss)
-        self.d_loss_sum = tf.summary.scalar("d_loss", self.D_loss)
-        self.g_loss_sum = tf.summary.scalar("g_loss", self.G_loss)
-
-        # collect trainer values
-        vars = tf.trainable_variables()
-        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
-        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
+        self.d_real_loss_sum = tf.summary.scalar("d_real_loss", self.d_real_loss)
+        self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.d_fake_loss)
+        self.d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
+        self.g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
 
         # model saver
         self.saver = tf.train.Saver()
 
         # optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr). \
-            minimize(self.D_loss, var_list=self.d_vars)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr). \
-            minimize(self.G_loss, var_list=self.g_vars)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr).minimize(self.d_loss)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr).minimize(self.g_loss)
 
         # merge summary
         self.g_sum = tf.summary.merge([self.z_sum, self.D_fake_sum, self.G_sum, self.d_fake_loss_sum, self.g_loss_sum])
