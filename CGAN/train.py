@@ -35,22 +35,22 @@ def main():
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as s:
         # GAN Model
-        model = cgan.GAN(s)
+        model = cgan.CGAN(s)
 
         # initializing
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_y = np.zeros(shape=[model.sample_num, model.input_width])
+        sample_y = np.zeros(shape=[model.sample_num, model.y_dim])
         sample_y[:, 7] = 1
-        sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(paras['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
 
             # generate z
-            batch_z = np.random.uniform(-1.0, 1.0, size=[model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
+            batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
 
             # update D network
             if not d_overpowered:
@@ -65,7 +65,7 @@ def main():
 
             if step % paras['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([
                     model.d_loss,
