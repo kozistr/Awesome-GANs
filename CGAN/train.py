@@ -55,12 +55,12 @@ def main():
             # update D network
             if not d_overpowered:
                 _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x,
-                                                                         model.y: batch_y,
+                                                                         model.c: batch_y,
                                                                          model.z: batch_z})
 
             # update G network
             _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x,
-                                                                     model.y: batch_y,
+                                                                     model.c: batch_y,
                                                                      model.z: batch_z})
 
             if step % paras['logging_interval'] == 0:
@@ -73,7 +73,7 @@ def main():
                     model.merged
                 ], feed_dict={
                     model.x: batch_x,
-                    model.y: batch_y,
+                    model.c: batch_y,
                     model.z: batch_z
                 })
 
@@ -87,7 +87,7 @@ def main():
                 # training G model with sample image and noise
                 samples = s.run(model.G, feed_dict={
                     model.x: sample_x,
-                    model.y: sample_y,
+                    model.c: sample_y,
                     model.z: sample_z
                 })
 
