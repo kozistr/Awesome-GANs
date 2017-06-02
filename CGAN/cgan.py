@@ -22,6 +22,7 @@ class CGAN:
         self.output_width = output_width
         self.channel = channel
         self.z_dim = z_dim
+        self.y_dim = n_classes
 
         self.n_input = n_input
         self.n_hl_1 = n_hidden_layer_1
@@ -65,22 +66,22 @@ class CGAN:
         return prob
 
     def build_cgan(self):
-        # x, y, z placeholder
+        # x, c, z placeholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")
-        self.y = tf.placeholder(tf.float32, shape=[None, self.input_width], name='c-condition')
+        self.c = tf.placeholder(tf.float32, shape=[None, self.y_dim], name='c-condition')
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # weights
         self.W = {
             # weights for discriminator
-            'd_h1': tf.get_variable('d_h1', shape=[self.n_input, self.n_hl_1],
+            'd_h1': tf.get_variable('d_h1', shape=[self.n_input + self.y_dim, self.n_hl_1],
                                     initializer=tf.contrib.layers.variance_scaling_initializer()),
             'd_h2': tf.get_variable('d_h2', shape=[self.n_hl_1, self.n_hl_2],
                                     initializer=tf.contrib.layers.variance_scaling_initializer()),
             'd_h_out': tf.get_variable('d_h_out', shape=[self.n_hl_2, 1],
                                        initializer=tf.contrib.layers.variance_scaling_initializer()),
             # weights for generator
-            'g_h1': tf.get_variable('g_h1', shape=[self.z_dim, self.n_hl_2],
+            'g_h1': tf.get_variable('g_h1', shape=[self.z_dim + self.y_dim, self.n_hl_2],
                                     initializer=tf.contrib.layers.variance_scaling_initializer()),
             'g_h2': tf.get_variable('g_h2', shape=[self.n_hl_2, self.n_hl_1],
                                     initializer=tf.contrib.layers.variance_scaling_initializer()),
@@ -101,11 +102,11 @@ class CGAN:
         }
 
         # generator
-        self.G = self.generator(self.z, self.y)
+        self.G = self.generator(self.z, self.c)
 
         # discriminator
-        self.D_real = self.discriminator(self.x, self.y)
-        self.D_fake = self.discriminator(self.G, self.y, reuse=True)
+        self.D_real = self.discriminator(self.x, self.c)
+        self.D_fake = self.discriminator(self.G, self.c, reuse=True)
 
         # maximize log(D(G(z)))
         self.g_loss = -tf.reduce_mean(tf.log(self.D_fake + self.eps))
@@ -117,6 +118,7 @@ class CGAN:
 
         # summary
         self.z_sum = tf.summary.histogram("z", self.z)
+        self.c_sum = tf.summary.histogram("c", self.c)
 
         self.G = tf.reshape(self.G, shape=[-1, self.output_height, self.output_height, self.channel])
         self.G_sum = tf.summary.image("G", self.G)  # generated image from G model
@@ -140,7 +142,7 @@ class CGAN:
                                             self.b['g_b1'], self.b['g_b2'], self.b['g_b_out']])
 
         # merge summary
-        self.g_sum = tf.summary.merge([self.z_sum, self.D_fake_sum, self.G_sum, self.d_fake_loss_sum, self.g_loss_sum])
-        self.d_sum = tf.summary.merge([self.z_sum, self.D_real_sum, self.d_real_loss_sum, self.d_loss_sum])
+        self.g_sum = tf.summary.merge([self.z_sum, self.c_sum, self.D_fake_sum, self.G_sum, self.d_fake_loss_sum, self.g_loss_sum])
+        self.d_sum = tf.summary.merge([self.z_sum, self.c_sum, self.D_real_sum, self.d_real_loss_sum, self.d_loss_sum])
         self.merged = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
