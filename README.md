@@ -13,7 +13,11 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
     $ python3 train.py
 
 ## Datasets
-Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
+Now supporting(?) dataset is... (code is in dataset.py)
+* mnist
+* cifar-10
+* cifar-100
+* Celeb-A
 (more dataset will be added soon!)
 
 ## Papers
@@ -45,9 +49,9 @@ Now supporting(?) cifar-10 and cifar-100 (code is in dataset.py)
 
 ### GAN
 #### global step : 0
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_0000000.png)
-#### global step : 250k
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_0250000.png)
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
+#### global step : 100k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_01000000.png)
 
 ## Author
 Hyeongchan Kim / @kozistr, [@zer0day](http://zer0day.tistory.com)
