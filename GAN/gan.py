@@ -7,7 +7,7 @@ tf.set_random_seed(777)
 class GAN:
 
     def __init__(self, s, batch_size=64,
-                 input_height=28, input_width=28, channel=1, z_dim=128, sample_num=64, sample_size=8,
+                 input_height=28, input_width=28, channel=1, z_dim=100, sample_num=64, sample_size=8,
                  output_height=28, output_width=28, n_input=784, n_classes=10,
                  n_hidden_layer_1=64, n_hidden_layer_2=128, g_lr=1e-3, d_lr=1e-3, epsilon=1e-8):
         self.s = s
