@@ -46,7 +46,6 @@ class CGAN:
             net = tf.nn.dropout(net, 0.8 - 0.05)
 
             logits = tf.nn.bias_add(tf.matmul(net, self.W['d_h_out']), self.b['d_b_out'])
-            # prob = tf.nn.softmax(logits)
 
         return logits
 
@@ -60,7 +59,6 @@ class CGAN:
             de_net = tf.nn.relu(de_net)
 
             logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
-            # prob = tf.nn.softmax(logits)
 
         return logits
 
@@ -137,10 +135,10 @@ class CGAN:
         self.saver = tf.train.Saver()
 
         # optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr).\
+        self.d_op = tf.train.AdamOptimizer().\
             minimize(self.d_loss, var_list=[self.W['d_h1'], self.W['d_h2'], self.W['d_h_out'],
                                             self.b['d_b1'], self.b['d_b2'], self.b['d_b_out']])
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr).\
+        self.g_op = tf.train.AdamOptimizer().\
             minimize(self.g_loss, var_list=[self.W['g_h1'], self.W['g_h2'], self.W['g_h_out'],
                                             self.b['g_b1'], self.b['g_b2'], self.b['g_b_out']])
 
