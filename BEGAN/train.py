@@ -7,11 +7,11 @@ import numpy as np
 
 import time
 import began
+import dataset
+import image_utils as iu
 
 
 dirs = {
-    # 'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
-    # 'cifar-100': '/home/zero/cifar/cifar-100-python/',
     'celeb-a': '/home/zero/celeba/img_align_celeba/',
     'sample_output': './BEGAN/',
     'checkpoint': './model/checkpoint',
@@ -27,18 +27,6 @@ paras = {
 def main():
     start_time = time.time()  # clocking start
 
-    '''
-    GPU Specs
-        # home (Desktop)
-        /gpu:0 : GTX 1060 6gb
-
-        # Labs (Server)
-        /gpu:0 : GTX 1080 11gb
-        /gpu:1 : GTX Titan X (maxwell)
-
-        # Labs (Desktop)
-        /gpu:0 : GTX 960 2gb
-    '''
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
     config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 
@@ -48,17 +36,57 @@ def main():
         # BEGAN Model
         model = began.BEGAN(s)
 
-        kt = tf.Variable(0., dtype=tf.float32)
+        # initializing
+        s.run(tf.global_variables_initializer())
 
-        # k_t update
-        # k_t+1 = K_t + lambda_k * (gamma * d_real - d_fake)
-        kt += model.lambda_k * (model.gamma * model.D_real - model.D_fake)
+        # load model & graph & weight
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
 
-        # elapsed time
-        print("[+] Elapsed time {:.8f}s".format(end_time))
+            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            print("[+] global step : %s" % global_step, " successfully loaded")
+        else:
+            global_step = 0
+            print('[-] No checkpoint file found')
+            # return
 
-        # close tf.Session
-        s.close()
+        # initializing variables
+        tf.global_variables_initializer().run()
+
+        # load Celeb-A dataset
+        batch = dataset(dirs['celeb-a'])
+
+        kt = tf.Variable(0., dtype=tf.float32)  # init K_0 value, 0
+
+        d_overpowered = False
+        for epoch in range(paras['epoch']):
+            # k_t update
+            # k_t+1 = K_t + lambda_k * (gamma * d_real - d_fake)
+            kt = kt + model.lambda_k * (model.gamma * model.D_real - model.D_fake)
+
+            # z update
+            z = np.random.uniform(-1., 1., [paras['batch_size'], model.z_dim]).astype(np.float32)
+
+            # update D network
+            if not d_overpowered:
+                s.run(model.d_op, feed_dict={model.x: 0, model.z: z, model.kt: kt})
+
+            # update G network
+            s.run(model.g_op, feed_dict={model.z: z, model.kt: kt})
+
+            if global_step % paras['logging_interval'] == 0:
+
+                pass
+
+            global_step += 1
+
+    # elapsed time
+    print("[+] Elapsed time {:.8f}s".format(end_time))
+
+    # close tf.Session
+    s.close()
 
 if __name__ == '__main__':
     main()
