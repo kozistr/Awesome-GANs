@@ -21,18 +21,18 @@ Now supporting(?) dataset is... (code is in dataset.py)
 (more dataset will be added soon!)
 
 ## Papers
-* BEGAN     : https://arxiv.org/abs/1703.10717
-* CGAN      : https://arxiv.org/abs/1411.1784
-* DCGAN     : https://arxiv.org/abs/1511.06434
-* DiscoGAN  : https://arxiv.org/abs/1703.05192
-* EnergyGAN : https://arxiv.org/abs/1609.03126
-* GAN       : https://arxiv.org/abs/1406.2661
-* InfoGAN   : https://arxiv.org/abs/1606.03657
-* LAPGAN    : https://arxiv.org/abs/1506.05751
-* LSGAN     : https://arxiv.org/abs/1701.06264
-* SalGAN    : https://arxiv.org/abs/1701.01081
-* SeqGAN    : https://arxiv.org/abs/1609.05473
-* WGAN      : https://arxiv.org/abs/1701.07875
+* BEGAN     : Boundary Equilibrium Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1703.10717)
+* CGAN      : Conditional Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1411.1784)
+* DCGAN     : Deep Convolutional Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1511.06434)
+* DiscoGAN  : Discover Cross-Domain Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1703.05192)
+* EnergyGAN : Energy-based Generative Adversarial Network [arXiv](https://arxiv.org/abs/1609.03126)
+* GAN       : Generative Adversarial Network [arXiv](https://arxiv.org/abs/1406.2661)
+* InfoGAN   : Information Maximizing Generative Adversarial Network [arXiv](https://arxiv.org/abs/1606.03657)
+* LAPGAN    : Laplacian Pyramid Generative Adversarial Network [arXiv](https://arxiv.org/abs/1506.05751)
+* LSGAN     : Loss-Sensitive Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1701.06264)
+* SalGAN    : Visual Saliency Prediction Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1701.01081)
+* SeqGAN    : Sequence Generative Adversarial Networks with Policy Gradient [arXiv](https://arxiv.org/abs/1609.05473)
+* WGAN      : Wasserstein Generative Adversarial Network [arXiv](https://arxiv.org/abs/1701.07875)
 
 ## Results
 ### BEGAN
