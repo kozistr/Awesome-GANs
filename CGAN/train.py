@@ -45,14 +45,12 @@ def main():
         sample_y[:, 3] = 1   # specify label number what u wanna get
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
-        d_overpowered = False
         for step in range(paras['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)
 
             # update D network
-            if not d_overpowered:
-                s.run(model.d_op, feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z})
+            s.run(model.d_op, feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z})
 
             # update G network
             s.run(model.g_op, feed_dict={model.c: batch_y, model.z: batch_z})
@@ -74,9 +72,6 @@ def main():
                 # print loss
                 print("[+] Step %08d => " % (step),
                       "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
-
-                # update overpowered
-                d_overpowered = d_loss < g_loss / 2
 
                 # training G model with sample image and noise
                 samples = s.run(model.G, feed_dict={
