@@ -44,8 +44,8 @@ Now supporting(?) dataset is... (code is in dataset.py)
 ### CGAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00000000.png)
-#### global step : 100k
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_01000000.png)
+#### global step : 440k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00440000.png)
 
 ### DCGAN
 #### global step : 0
@@ -56,7 +56,7 @@ Now supporting(?) dataset is... (code is in dataset.py)
 ### GAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
-#### global step : 100k
+#### global step : 1000k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_01000000.png)
 
 ## Author
