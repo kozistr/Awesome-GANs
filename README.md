@@ -2,8 +2,8 @@
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Prerequisites
-* Python 2.7+ or 3.3+
-* Tensorflow r1.1
+* Python 3.3+
+* Tensorflow 1.1.0+
 * SciPy
 * pillow
 
@@ -40,6 +40,12 @@ Now supporting(?) dataset is... (code is in dataset.py)
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
 #### global step : 15k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
+
+### CGAN
+#### global step : 0
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00000000.png)
+#### global step : 100k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_01000000.png)
 
 ### DCGAN
 #### global step : 0
