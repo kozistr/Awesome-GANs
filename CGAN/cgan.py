@@ -9,7 +9,7 @@ class CGAN:
     def __init__(self, s, batch_size=64,
                  input_height=28, input_width=28, channel=1, z_dim=100, sample_num=64, sample_size=8,
                  output_height=28, output_width=28, n_input=784, n_classes=10,
-                 n_hidden_layer_1=64, n_hidden_layer_2=128, g_lr=1e-3, d_lr=1e-3, epsilon=1e-8):
+                 n_hidden_layer_1=128, n_hidden_layer_2=128, g_lr=1e-3, d_lr=1e-3, epsilon=1e-12):
         self.s = s
         self.batch_size = batch_size
 
@@ -46,9 +46,9 @@ class CGAN:
             net = tf.nn.dropout(net, 0.8 - 0.05)
 
             logits = tf.nn.bias_add(tf.matmul(net, self.W['d_h_out']), self.b['d_b_out'])
-            prob = tf.nn.sigmoid(logits)
+            # prob = tf.nn.softmax(logits)
 
-        return prob
+        return logits
 
     def generator(self, z, y, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
@@ -60,9 +60,9 @@ class CGAN:
             de_net = tf.nn.relu(de_net)
 
             logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
-            prob = tf.nn.sigmoid(logits)
+            # prob = tf.nn.softmax(logits)
 
-        return prob
+        return logits
 
     def build_cgan(self):
         # x, c, z placeholder
@@ -108,13 +108,13 @@ class CGAN:
         self.D_fake = self.discriminator(self.G, self.c, reuse=True)
 
         # loss function with sigmoid
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+        self.g_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
             logits=self.D_fake, labels=tf.ones_like(self.D_fake)))
 
-        self.d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+        self.d_real_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
             logits=self.D_real, labels=tf.ones_like(self.D_real)
         ))
-        self.d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+        self.d_fake_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
             logits=self.D_fake, labels=tf.zeros_like(self.D_fake)
         ))
         self.d_loss = self.d_real_loss + self.d_fake_loss
