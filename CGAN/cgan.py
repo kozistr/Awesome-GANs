@@ -55,7 +55,7 @@ class CGAN:
             de_net = tf.nn.relu(de_net)
 
             logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
-            prob = tf.nn.sigmoid(logits)
+            prob = tf.nn.tanh(logits)
 
         return prob
 
@@ -79,7 +79,7 @@ class CGAN:
                                        initializer=tf.contrib.layers.variance_scaling_initializer()),
         }
 
-        # bias
+        # biases
         self.b = {
             # biases for discriminator
             'd_b1': tf.Variable(tf.zeros([self.maxout_unit * self.n_hl_1])),
@@ -117,6 +117,11 @@ class CGAN:
         self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.d_fake_loss)
         self.d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
         self.g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
+
+        # collect trainer values
+        vars = tf.trainable_variables()
+        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
+        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
 
         # model saver
         self.saver = tf.train.Saver()
