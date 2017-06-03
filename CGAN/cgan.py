@@ -61,7 +61,7 @@ class CGAN:
             de_net = tf.nn.relu(de_net)
 
             logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
-            prob = tf.nn.tanh(logits)
+            prob = tf.nn.sigmoid(logits)
 
         return prob
 
