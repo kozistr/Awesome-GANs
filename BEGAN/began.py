@@ -14,7 +14,7 @@ def l1_loss(x, y):
 class BEGAN:
 
     def __init__(self, s, input_height=64, input_width=64, output_height=64, output_width=64, channel=3,
-                 sample_size=64, sample_num=64, embedding=128, batch_size=16,
+                 sample_size=64, sample_num=64, embedding=100, batch_size=16,
                  gamma=0.4, lambda_k=1e-3, momentum1=0.5, momentum2=0.999,
                  g_lr=8e-5, d_lr=8e-5, lr_low_boundary=2e-5):
         self.s = s
@@ -91,7 +91,7 @@ class BEGAN:
             z = self.encoder(x, embedding, reuse=reuse)
             x = self.decoder(z, embedding, reuse=reuse)
 
-            return x, z
+            return x
 
     def generator(self, z, embedding, reuse=None):
         with tf.variable_scope("generator/decoder", reuse=reuse):
@@ -108,7 +108,7 @@ class BEGAN:
         self.kt = tf.placeholder(tf.float32, "k_t")
 
         # Generator Model
-        self.G = self.generator(self.z)
+        self.G = self.generator(self.z, self.embedding)
 
         # Discriminator Model (Critic)
         self.D_real = self.discriminator(self.x, self.embedding)  # discriminator
@@ -127,6 +127,8 @@ class BEGAN:
 
         # summary
         self.z_sum = tf.summary.histogram("z", self.z)
+        self.lr_sum = tf.summary.histogram("lr", self.lr)
+        self.kt_sum = tf.summary.histogram("k_t", self.kt)
 
         self.G_sum = tf.summary.image("G", self.G)  # generated image from G model
         self.D_real_sum = tf.summary.histogram("D_real", self.D_real)
