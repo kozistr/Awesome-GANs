@@ -108,13 +108,13 @@ class CGAN:
         self.D_fake = self.discriminator(self.G, self.c, reuse=True)
 
         # loss function with sigmoid
-        self.g_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
             logits=self.D_fake, labels=tf.ones_like(self.D_fake)))
 
-        self.d_real_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        self.d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
             logits=self.D_real, labels=tf.ones_like(self.D_real)
         ))
-        self.d_fake_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        self.d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
             logits=self.D_fake, labels=tf.zeros_like(self.D_fake)
         ))
         self.d_loss = self.d_real_loss + self.d_fake_loss
