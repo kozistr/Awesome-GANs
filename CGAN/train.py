@@ -41,7 +41,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_y = np.zeros(shape=[model.sample_num, model.y_dim])
+        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         sample_y[:, 3] = 1   # specify label number what u wanna get
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
