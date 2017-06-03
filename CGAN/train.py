@@ -52,13 +52,10 @@ def main():
 
             # update D network
             if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x,
-                                                                         model.c: batch_y,
-                                                                         model.z: batch_z})
+                s.run(model.d_op, feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z})
 
             # update G network
-            _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.c: batch_y,
-                                                                     model.z: batch_z})
+            s.run(model.g_op, feed_dict={model.c: batch_y, model.z: batch_z})
 
             if step % paras['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
@@ -79,7 +76,7 @@ def main():
                       "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
 
                 # update overpowered
-                d_overpowered = d_loss < g_loss / 3
+                d_overpowered = d_loss < g_loss / 2
 
                 # training G model with sample image and noise
                 samples = s.run(model.G, feed_dict={
