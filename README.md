@@ -2,7 +2,7 @@
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Prerequisites
-* Python 3.3+
+* Python 3.5+
 * Tensorflow 1.1.0+
 * SciPy
 * pillow
@@ -13,26 +13,26 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
     $ python3 train.py
 
 ## Datasets
-Now supporting(?) dataset is... (code is in dataset.py)
+Now supporting(?) datasets are... (code is in dataset.py)
 * mnist
 * cifar-10
 * cifar-100
 * Celeb-A
-(more dataset will be added soon!)
+* (more dataset will be added soon!)
 
 ## Papers
-* BEGAN     : Boundary Equilibrium Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1703.10717)
-* CGAN      : Conditional Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1411.1784)
-* DCGAN     : Deep Convolutional Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1511.06434)
-* DiscoGAN  : Discover Cross-Domain Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1703.05192)
-* EnergyGAN : Energy-based Generative Adversarial Network [arXiv](https://arxiv.org/abs/1609.03126)
+* BEGAN     : Boundary Equilibrium Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.10717)
+* CGAN      : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784)
+* DCGAN     : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434)
+* DiscoGAN  : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192)
+* EnergyGAN : Energy-based Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1609.03126)
 * GAN       : Generative Adversarial Network [arXiv](https://arxiv.org/abs/1406.2661)
-* InfoGAN   : Information Maximizing Generative Adversarial Network [arXiv](https://arxiv.org/abs/1606.03657)
-* LAPGAN    : Laplacian Pyramid Generative Adversarial Network [arXiv](https://arxiv.org/abs/1506.05751)
-* LSGAN     : Loss-Sensitive Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1701.06264)
-* SalGAN    : Visual Saliency Prediction Generative Adversarial Networks [arXiv](https://arxiv.org/abs/1701.01081)
-* SeqGAN    : Sequence Generative Adversarial Networks with Policy Gradient [arXiv](https://arxiv.org/abs/1609.05473)
-* WGAN      : Wasserstein Generative Adversarial Network [arXiv](https://arxiv.org/abs/1701.07875)
+* InfoGAN   : Information Maximizing Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1606.03657)
+* LAPGAN    : Laplacian Pyramid Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1506.05751)
+* LSGAN     : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
+* SalGAN    : Visual Saliency Prediction Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.01081)
+* SeqGAN    : Sequence Generative Adversarial Networks with Policy Gradient [[arXiv]](https://arxiv.org/abs/1609.05473)
+* WGAN      : Wasserstein Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1701.07875)
 
 ## Results
 ### BEGAN
@@ -56,7 +56,7 @@ Now supporting(?) dataset is... (code is in dataset.py)
 ### GAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
-#### global step : 1000k
+#### global step : 1M
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_01000000.png)
 
 ## Author
