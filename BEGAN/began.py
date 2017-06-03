@@ -29,7 +29,7 @@ class BEGAN:
         self.image_shape = [self.input_height, self.input_height, self.channel]  # 64x64x3
 
         self.gamma = gamma  # 0.3 ~ 0.5 # 0.7
-        self.lambda_k = lambda_k
+        self.lambda_k = lambda_k  # learning rate of k_t
         self.mm1 = momentum1  # beta1
         self.mm2 = momentum2  # beta2
 
@@ -104,7 +104,6 @@ class BEGAN:
         self.x = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape, name='x-images')
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.embedding], name='z-noise')
 
-        # self.lr = tf.placeholder(tf.float32, "learning-rate")
         self.kt = tf.placeholder(tf.float32, "k_t")
 
         # Generator Model
@@ -137,6 +136,7 @@ class BEGAN:
         self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.D_fake_loss)
         self.d_loss_sum = tf.summary.scalar("d_loss", self.D_loss)
         self.g_loss_sum = tf.summary.scalar("g_loss", self.G_loss)
+        self.m_global = tf.summary.scalar("m_global", self.M_global)
 
         # collect trainer values
         vars = tf.trainable_variables()
