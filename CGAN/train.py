@@ -42,15 +42,13 @@ def main():
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.y_dim])
-        sample_y[:, 7] = 1
+        sample_y[:, 3] = 1   # specify label number what u wanna get
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(paras['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-
-            # generate z
-            batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
+            batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)
 
             # update D network
             if not d_overpowered:
@@ -59,8 +57,7 @@ def main():
                                                                          model.z: batch_z})
 
             # update G network
-            _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x,
-                                                                     model.c: batch_y,
+            _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.c: batch_y,
                                                                      model.z: batch_z})
 
             if step % paras['logging_interval'] == 0:
@@ -86,7 +83,6 @@ def main():
 
                 # training G model with sample image and noise
                 samples = s.run(model.G, feed_dict={
-                    model.x: sample_x,
                     model.c: sample_y,
                     model.z: sample_z
                 })
