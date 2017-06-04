@@ -41,7 +41,7 @@ def lrelu(x, leak=0.2, name="LeakyRelu"):
 class DiscoGAN:
 
     def __init__(self, s, input_height=64, input_width=64, batch_size=64,
-                 sample_size=32, sample_num=64, z_dim=100, gf_dim=64, df_dim=64, c_dim=3,
+                 sample_size=32, sample_num=64, z_dim=100, gf_dim=32, df_dim=32, c_dim=3,
                  learning_rate=2e-4, beta1=0.5, beta2=0.999, eps=1e-12):
 
         self.s = s
@@ -67,13 +67,18 @@ class DiscoGAN:
         self.d_bn1 = batch_norm(self.df_dim * 2, name='d_bn1')
         self.d_bn2 = batch_norm(self.df_dim * 4, name='d_bn2')
         self.d_bn3 = batch_norm(self.df_dim * 8, name='d_bn3')
+        self.d_bn4 = batch_norm(self.df_dim * 16, name='d_bn4')
+        self.d_bn = [self.d_bn1, self.d_bn2, self.d_bn3, self.d_bn4]
 
-        self.g_bn1 = batch_norm(self.batch_size, name='g_bn1')
-        self.g_bn2 = batch_norm(self.batch_size, name='g_bn2')
-        self.g_bn3 = batch_norm(self.batch_size, name='g_bn3')
-        self.g_bn4 = batch_norm(self.batch_size, name='g_bn4')
-        self.g_bn5 = batch_norm(self.batch_size, name='g_bn5')
-        self.g_bn6 = batch_norm(self.batch_size, name='g_bn6')
+        self.g_bn1 = batch_norm(self.gf_dim * 2, name='g_bn1')
+        self.g_bn2 = batch_norm(self.gf_dim * 4, name='g_bn2')
+        self.g_bn3 = batch_norm(self.gf_dim * 8, name='g_bn3')
+        self.g_bn4 = batch_norm(self.gf_dim * 16, name='g_bn4')
+        self.g_bn5 = batch_norm(self.gf_dim * 8, name='g_bn5')
+        self.g_bn6 = batch_norm(self.gf_dim * 4, name='g_bn6')
+        self.g_bn7 = batch_norm(self.gf_dim * 2, name='g_bn7')
+        self.g_bn_1 = [self.g_bn1, self.g_bn2, self.g_bn3]
+        self.g_bn_2 = [self.g_bn4, self.g_bn5, self.g_bn6, self.g_bn7]
 
         self.d_lr, g_lr = learning_rate, learning_rate
 
@@ -81,40 +86,77 @@ class DiscoGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            with slim.arg_scope([slim.conv2d], padding="SAME",
+            with slim.arg_scope([slim.conv2d, slim.fully_connected], padding="SAME", stride=2, kernel_size=4,
                                 weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                 weights_regularizer=slim.l2_regularizer(2e-4)):
-                net = slim.conv2d(x, self.df_dim, 4, 2)
+                net = slim.conv2d(x, self.df_dim)
                 net = lrelu(net)
 
-                net = slim.conv2d(net, self.df_dim * 2, 4, 2)
-                net = self.d_bn1(net)
-                net = lrelu(net)
+                mul = 2
+                for bn in self.d_bn:
+                    net = slim.conv2d(net, self.df_dim * mul)
+                    net = bn(net)
+                    net = lrelu(net)
+                    mul *= 2
 
-                net = slim.conv2d(net, self.df_dim * 4, 4, 2)
-                net = self.d_bn2(net)
-                net = lrelu(net)
+                net = tf.reshape(net, shape=[-1, 2*2*512])
+                net = slim.fully_connected(net, 512, activation_fn=lrelu, normalizer_fn=slim.batch_norm)
+                net = slim.fully_connected(net, 1, activation_fn=tf.nn.sigmoid)
 
-                net = slim.conv2d(net, self.df_dim * 8, 4, 2)
-                net = self.d_bn3(net)
-                net = lrelu(net)
-
-                net = slim.conv2d(net, 1, 4, 1)
-                net = tf.squeeze(net, squeeze_dims=[1])  # logits
-
-        return tf.nn.sigmoid(net)  # return prob
+        return net  # return prob
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            with slim.arg_scope([slim.conv2d], padding="SAME",
+            with slim.arg_scope([slim.conv2d, slim.fully_connected], padding="SAME", kernel_size=4,
                                 weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                 weights_regularizer=slim.l2_regularizer(2e-4)):
+                with slim.arg_scope([slim.conv2d], stride=2):
+                    net = slim.conv2d(z, self.gf_dim)
+                    net = lrelu(net)
 
-                pass
+                    mul = 2
+                    for bn in self.g_bn_1:
+                        net = slim.conv2d(net, self.gf_dim * mul)
+                        net = bn(net)
+                        net = lrelu(net)
+                        mul *= 2
+
+                with slim.arg_scope([slim.conv2d], stride=1, activation_fn=tf.nn.relu):
+                    hw, hidden = 8, 128
+                    for bn in self.g_bn_2:
+                        net = slim.conv2d(net, self.gf_dim * mul)
+                        net = bn(net)
+
+                        net = tf.reshape(net, shape=[-1, hw, hw, hidden])
+
+                        mul /= 2
+                        hw *= 2
+                        hidden /= 2
+
+                    net = slim.conv2d(net, 3)
+        return net
 
     def build_discogan(self):
         # x, z placeholder
-        x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
-        z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+        self.shoes_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
+        self.shoes_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+
+        self.bags_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
+        self.bags_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+
+        # generator
+        self.G_shoes = self.generator(self.shoes_z)
+        self.G_bags = self.generator(self.bags_z)
+
+        # discriminator
+        self.D_shoes_real = self.discriminator(self.shoes_x)
+        self.D_bags_real = self.discriminator(self.bags_x)
+
+        self.D_shoes_fake = self.discriminator(self.G_shoes, reuse=True)
+        self.D_bags_fake = self.discriminator(self.G_bags, reuse=True)
+
+
+
+
 
 
