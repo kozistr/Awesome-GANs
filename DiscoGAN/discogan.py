@@ -148,6 +148,9 @@ class DiscoGAN:
         self.G_shoes = self.generator(self.shoes_z)
         self.G_bags = self.generator(self.bags_z)
 
+        self.G_shoes_fake = self.generator(self.G_shoes, reuse=True)
+        self.G_bags_fake = self.generator(self.G_bags, reuse=True)
+
         # discriminator
         self.D_shoes_real = self.discriminator(self.shoes_x)
         self.D_bags_real = self.discriminator(self.bags_x)
@@ -155,8 +158,5 @@ class DiscoGAN:
         self.D_shoes_fake = self.discriminator(self.G_shoes, reuse=True)
         self.D_bags_fake = self.discriminator(self.G_bags, reuse=True)
 
-
-
-
-
-
+        # loss
+        # using sigmoid cross entropy
