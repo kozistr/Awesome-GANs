@@ -8,7 +8,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 * pillow
 
 ## Usage
-    (before running train.py, make sure downloading dataset & changing dataset directory in train.py)
+    (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
     just download it and run train.py
     $ python3 train.py
 
@@ -18,6 +18,8 @@ Now supporting(?) datasets are... (code is in dataset.py)
 * Cifar-10
 * Cifar-100
 * Celeb-A
+* pix2pix shoes
+* pix2pix bags
 * (more datasets will be added soon!)
 
 ## Papers
