@@ -14,25 +14,33 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Datasets
 Now supporting(?) datasets are... (code is in dataset.py)
-* mnist
-* cifar-10
-* cifar-100
+* MNIST
+* Cifar-10
+* Cifar-100
 * Celeb-A
-* (more dataset will be added soon!)
+* (more datasets will be added soon!)
 
 ## Papers
-* BEGAN     : Boundary Equilibrium Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.10717)
-* CGAN      : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784)
-* DCGAN     : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434)
-* DiscoGAN  : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192)
-* EnergyGAN : Energy-based Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1609.03126)
-* GAN       : Generative Adversarial Network [arXiv](https://arxiv.org/abs/1406.2661)
-* InfoGAN   : Information Maximizing Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1606.03657)
-* LAPGAN    : Laplacian Pyramid Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1506.05751)
-* LSGAN     : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
-* SalGAN    : Visual Saliency Prediction Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.01081)
-* SeqGAN    : Sequence Generative Adversarial Networks with Policy Gradient [[arXiv]](https://arxiv.org/abs/1609.05473)
-* WGAN      : Wasserstein Generative Adversarial Network [[arXiv]](https://arxiv.org/abs/1701.07875)
+* ACGAN       : Auxiliary Classifier Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1610.09585)
+* AdaGAN      : Boosting Generative Models [[arXiv]](https://arxiv.org/abs/1701.02386)
+* BEGAN       : Boundary Equilibrium Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.10717)
+* BSGAN       : Boundary-Seeking Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1702.08431)
+* CGAN        : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784)
+* CoupledGAN  : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
+* DCGAN       : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434)
+* DiscoGAN    : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192)
+* EnergyGAN   : Energy-based Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1609.03126)
+* f-GAN       : Training Generative Neural Samplers using Variational Divergence Minimization [[arXiv]](https://arxiv.org/abs/1606.00709)
+* GAN         : Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1406.2661)
+* Softmax GAN : Softmax Generative Adversarial Networks [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf)
+* InfoGAN     : Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.03657)
+* LAPGAN      : Laplacian Pyramid Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1506.05751)
+* LSGAN       : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
+* MAGAN       : Margin Adaptation for Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1704.03817)
+* MRGAN       : Mode Regularized Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1612.02136)
+* SalGAN      : Visual Saliency Prediction Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.01081)
+* SeqGAN      : Sequence Generative Adversarial Networks with Policy Gradient [[arXiv]](https://arxiv.org/abs/1609.05473)
+* WGAN        : Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.07875)
 
 ## Results
 ### BEGAN
