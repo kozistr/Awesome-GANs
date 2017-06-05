@@ -80,7 +80,7 @@ class DiscoGAN:
         self.g_bn_1 = [self.g_bn1, self.g_bn2, self.g_bn3]
         self.g_bn_2 = [self.g_bn4, self.g_bn5, self.g_bn6, self.g_bn7]
 
-        self.d_lr, g_lr = learning_rate, learning_rate
+        self.lr = learning_rate
 
         self.build_discogan()
 
@@ -139,14 +139,14 @@ class DiscoGAN:
     def build_discogan(self):
         # x, z placeholder
         self.shoes_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
-        self.shoes_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+        # self.shoes_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
 
         self.bags_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
-        self.bags_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+        # self.bags_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
 
         # generator
-        self.G_shoes = self.generator(self.shoes_z)
-        self.G_bags = self.generator(self.bags_z)
+        self.G_shoes = self.generator(self.shoes_x)
+        self.G_bags = self.generator(self.bags_x)
 
         self.G_shoes_fake = self.generator(self.G_shoes, reuse=True)
         self.G_bags_fake = self.generator(self.G_bags, reuse=True)
@@ -159,4 +159,35 @@ class DiscoGAN:
         self.D_bags_fake = self.discriminator(self.G_bags, reuse=True)
 
         # loss
-        # using sigmoid cross entropy
+        self.shoes_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.shoes_x, self.G_shoes_fake))
+        self.bags_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.bags_x, self.G_bags_fake))
+
+        self.g_shoes_loss = tf.reduce_sum(tf.square(self.D_shoes_fake - 1)) / 2
+        self.g_bags_loss = tf.reduce_sum(tf.square(self.D_bags_fake - 1)) / 2
+
+        self.d_shoes_real_loss = tf.reduce_sum(tf.square(self.D_shoes_real - 1)) / 2
+        self.d_shoes_fake_loss = tf.reduce_sum(tf.square(self.D_shoes_fake)) / 2
+        self.d_bags_real_loss = tf.reduce_sum(tf.square(self.D_bags_real - 1)) / 2
+        self.d_bags_fake_loss = tf.reduce_sum(tf.square(self.D_bags_fake)) / 2
+
+        self.d_shoes_loss = self.d_shoes_real_loss + self.d_shoes_fake_loss
+        self.d_bags_loss = self.d_bags_real_loss + self.d_bags_fake_loss
+
+        self.g_loss = 10 * (self.shoes_loss + self.bags_loss) + self.g_shoes_loss + self.g_bags_loss
+        self.d_loss = self.d_shoes_loss + self.d_bags_loss
+
+        # collect trainer values
+        vars = tf.trainable_variables()
+        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
+        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
+
+        self.saver = tf.train.Saver()
+
+        self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.lr).minimize(self.g_loss, var_list=self.g_vars)
+        self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.lr).minimize(self.d_loss, var_list=self.d_vars)
+
+        # merge summary
+        self.g_sum = tf.summary.merge([self.g_loss])
+        self.d_sum = tf.summary.merge([self.d_loss])
+        self.merged = tf.summary.merge_all()
+        self.writer = tf.summary.FileWriter('./model/', self.s.graph)
