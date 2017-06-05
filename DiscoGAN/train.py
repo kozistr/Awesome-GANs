@@ -47,3 +47,16 @@ def main():
         # initializing variables
         tf.global_variables_initializer().run()
 
+    end_time = time.time() - start_time
+
+    # elapsed time
+    print("[+] Elapsed time {:.8f}s".format(end_time))
+
+    # close tf.Session
+    s.close()
+
+if __name__ == '__main__':
+    main()
+
+
+
