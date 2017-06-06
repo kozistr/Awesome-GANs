@@ -1,11 +1,11 @@
-# Awesome-GANs in Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)[![Build Status](https://travis-ci.org/dwyl/esta.svg?branch=master)](https://travis-ci.org/)
+# Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)[![Build Status](https://travis-ci.org/dwyl/esta.svg?branch=master)](https://travis-ci.org/)
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Prerequisites
 * Python 3.5+
 * Tensorflow 1.1.0+
 * SciPy
-* pillow
+* Pillow
 
 ## Usage
     (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
@@ -28,13 +28,13 @@ Now supporting(?) datasets are... (code is in dataset.py)
 * BEGAN       : Boundary Equilibrium Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.10717)
 * BSGAN       : Boundary-Seeking Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1702.08431)
 * CGAN        : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784)
-* CoupledGAN  : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
+* CoGAN       : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
 * DCGAN       : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434)
 * DiscoGAN    : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192)
 * EnergyGAN   : Energy-based Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1609.03126)
 * f-GAN       : Training Generative Neural Samplers using Variational Divergence Minimization [[arXiv]](https://arxiv.org/abs/1606.00709)
 * GAN         : Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1406.2661)
-* Softmax GAN : Softmax Generative Adversarial Networks [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf)
+* Softmax GAN : Generative Adversarial Networks with softmax [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf)
 * InfoGAN     : Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.03657)
 * LAPGAN      : Laplacian Pyramid Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1506.05751)
 * LSGAN       : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
