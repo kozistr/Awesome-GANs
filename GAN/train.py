@@ -8,6 +8,11 @@ import numpy as np
 
 import time
 import gan
+
+import sys
+sys.path.insert(0, '../')
+
+from datasets import DataSet
 import image_utils as iu
 
 
@@ -26,7 +31,8 @@ def main():
     start_time = time.time()  # clocking start
 
     # mnist data loading
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet(dataset_name='mnist')
+    mnist = mnist.mnist
 
     # GPU configure
     # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
@@ -49,7 +55,7 @@ def main():
             batch_x = batch_x.reshape(-1, model.n_input)
 
             # generate z
-            batch_z = np.random.uniform(-1.0, 1.0, size=[model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
+            batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
 
             # update D network
             if not d_overpowered:
@@ -60,7 +66,7 @@ def main():
 
             if step % paras['logging_interval'] == 0:
                 batch_x, _ = mnist.test.next_batch(model.batch_size)
-                batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([
                     model.d_loss,

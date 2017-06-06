@@ -7,8 +7,12 @@ import numpy as np
 
 import time
 import discogan
+
+import sys
+sys.path.insert(0, '../')
+
+from datasets import DataIterator, DataSet
 import image_utils as iu
-import dataset
 
 
 dirs = {

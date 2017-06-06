@@ -7,13 +7,15 @@ import numpy as np
 
 import time
 import dcgan
+
+import sys
+sys.path.insert(0, '../')
+
+from datasets import DataIterator, DataSet
 import image_utils as iu
-from dataset import Dataset, DataIterator
 
 
 dirs = {
-    'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
-    'cifar-100': '/home/zero/cifar/cifar-100-python/',
     'sample_output': './DCGAN/',
     'checkpoint': './model/checkpoint',
     'model': './model/DCGAN-model.ckpt'
@@ -50,7 +52,9 @@ def main():
         tf.global_variables_initializer().run()
 
         # training, test data set
-        dataset = Dataset(dirs['cifar-100'], name='cifar-100')  # Dataset(dirs['cifar-100'])
+        dataset = DataSet(input_height=32,
+                          input_width=32,
+                          input_channel=3, dataset_name='cifar-100')  # Dataset(dirs['cifar-100'])
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, paras['batch_size'])
 
         sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.0

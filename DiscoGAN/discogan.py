@@ -138,11 +138,10 @@ class DiscoGAN:
 
     def build_discogan(self):
         # x, z placeholder
-        self.shoes_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
-        # self.shoes_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
-
-        self.bags_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel], name='x-image')
-        # self.bags_z = tf.placeholder(tf.float32, [-1, self.z_dim], name='z-noise')
+        self.shoes_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel],
+                                      name='x-shoes_image')
+        self.bags_x = tf.placeholder(tf.float32, [-1, self.input_height, self.input_width, self.input_channel],
+                                     name='x-bags_image')
 
         # generator
         self.G_shoes = self.generator(self.shoes_x)
