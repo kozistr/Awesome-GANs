@@ -253,7 +253,10 @@ class Dataset:
             train_batch[b'fine_labels']
         ], axis=0)
 
-        train_images = np.swapaxes(train_data.reshape([-1, 32, 32, 3], order='F'), 1, 2)
+        train_images = np.swapaxes(train_data.reshape([-1,
+                                                       self.input_height,
+                                                       self.input_width,
+                                                       self.input_channel], order='F'), 1, 2)
 
         # test data & label
         test_batch = unpickle("{0}test".format(dataset_path))
@@ -266,12 +269,15 @@ class Dataset:
             test_batch[b'fine_labels']
         ], axis=0)
 
-        test_images = np.swapaxes(test_data.reshape([-1, 32, 32, 3], order='F'), 1, 2)
+        test_images = np.swapaxes(test_data.reshape([-1,
+                                                     self.input_height,
+                                                     self.input_width,
+                                                     self.input_channel], order='F'), 1, 2)
 
         # split training data set into train, valid
         train_images, valid_images, train_labels, valid_labels = \
             train_test_split(train_images, train_labels,
-                             test_size=split_rate, random_state=random_state)
+                             test_size=self.split_rate, random_state=self.random_state)
 
         self.train_images = train_images
         self.valid_images = valid_images
