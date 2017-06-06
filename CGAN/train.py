@@ -8,6 +8,11 @@ import numpy as np
 
 import time
 import cgan
+
+import sys
+sys.path.insert(0, '../')
+
+from datasets import DataSet
 import image_utils as iu
 
 
@@ -26,7 +31,8 @@ def main():
     start_time = time.time()  # clocking start
 
     # mnist data loading
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet(dataset_name='mnist')
+    mnist = mnist.mnist
 
     # GPU configure
     config = tf.ConfigProto()
