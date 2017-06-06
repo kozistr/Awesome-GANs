@@ -2,10 +2,14 @@
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Prerequisites
-* Python 3.5+
-* Tensorflow 1.1.0+
-* SciPy
-* Pillow
+* python 3.5+
+* tensorflow 1.1.0+
+* scipy
+* pillow
+* h5py
+* pickle
+* glob, tqdm
+* (sklearn for train_test_split)
 
 ## Usage
     (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
@@ -13,7 +17,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
     $ python3 train.py
 
 ## Datasets
-Now supporting(?) datasets are... (code is in dataset.py)
+Now supporting(?) datasets are... (code is in /datasets.py)
 * MNIST
 * Cifar-10
 * Cifar-100
