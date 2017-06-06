@@ -87,7 +87,7 @@ class DataIterator:
             yield self.next_batch()
 
 
-class Dataset:
+class DataSet:
     '''
     Supporting DataSets
         - MNIST
