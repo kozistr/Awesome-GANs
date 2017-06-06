@@ -7,13 +7,15 @@ import numpy as np
 
 import time
 import began
-import dataset
+
+import sys
+sys.path.insert(0, '../')
+
+import datasets
 import image_utils as iu
 
 
 dirs = {
-    'celeb-a': '/home/zero/celeba/img_align_celeba/',
-    'dataset': '/home/zero/celeba/celeba.h5',
     'sample_output': './BEGAN/',
     'checkpoint': './model/checkpoint',
     'model': './model/BEGAN-model.ckpt'
@@ -56,8 +58,11 @@ def main():
         # initializing variables
         tf.global_variables_initializer().run()
 
-        # load Celeb-A dataset
-        ds = dataset.dataset(dirs['celeb-a'])
+        # loading Celeb-A dataset
+        ds = datasets.DataSet(input_height=64,
+                              input_width=64,
+                              input_channel=64,
+                              dataset_name="celeb-a")
         images = ds.images
 
         sample_z = np.random.uniform(-1., 1., size=(model.sample_num, model.z_dim)).astype(np.float32)
@@ -68,7 +73,7 @@ def main():
         batch_per_epoch = int(len(images) / paras['batch_size'])
         for epoch in range(paras['epoch']):
             for step in range(batch_per_epoch):
-                iter_ = ds.dataIterator([images], paras['batch_size'])
+                iter_ = datasets.DataIterator([images], paras['batch_size'])
 
                 # k_t update
                 # k_t+1 = K_t + lambda_k * (gamma * d_real - d_fake)
