@@ -11,7 +11,7 @@ import began
 import sys
 sys.path.insert(0, '../')
 
-import datasets
+from datasets import DataIterator, DataSet
 import image_utils as iu
 
 
@@ -59,10 +59,10 @@ def main():
         tf.global_variables_initializer().run()
 
         # loading Celeb-A dataset
-        ds = datasets.DataSet(input_height=64,
-                              input_width=64,
-                              input_channel=64,
-                              dataset_name="celeb-a")
+        ds = DataSet(input_height=64,
+                     input_width=64,
+                     input_channel=3,
+                     dataset_name="celeb-a")
         images = ds.images
 
         sample_z = np.random.uniform(-1., 1., size=(model.sample_num, model.z_dim)).astype(np.float32)
