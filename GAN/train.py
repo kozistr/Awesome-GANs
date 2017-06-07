@@ -47,14 +47,14 @@ def main():
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # original sample image
-        original_image_height = model.sample_size
-        original_image_width = model.sample_size
-        original_dir = dirs['sample_output'] + 'original.png'
+        #  original_image_height = model.sample_size
+        #  original_image_width = model.sample_size
+        #  original_dir = dirs['sample_output'] + 'original.png'
 
         # original image save
-        original_x = sample_x.reshape([-1, model.input_height, model.input_width, model.channel])
-        iu.save_images(original_x, size=[original_image_height, original_image_width],
-                       image_path=original_dir)
+        #  original_x = sample_x.reshape([-1, model.input_height, model.input_width, model.channel])
+        #  iu.save_images(original_x, size=[original_image_height, original_image_width],
+        #                 image_path=original_dir)
 
         d_overpowered = False
         for step in range(paras['global_step']):
