@@ -21,7 +21,7 @@ dirs = {
     'model': './model/GAN-model.ckpt'
 }
 paras = {
-    'global_step': 500001,
+    'global_step': 250001,
     'logging_interval': 10000
 }
 
