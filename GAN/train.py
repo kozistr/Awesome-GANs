@@ -46,6 +46,15 @@ def main():
         sample_x, _ = mnist.train.next_batch(model.sample_num)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
+        # original sample image
+        original_image_height = model.sample_size
+        original_image_width = model.sample_size
+        original_dir = dirs['sample_output'] + 'original.png'
+
+        # original image save
+        iu.save_images(sample_x, size=[original_image_height, original_image_width],
+                       image_path=original_dir)
+
         d_overpowered = False
         for step in range(paras['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
