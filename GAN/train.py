@@ -3,7 +3,6 @@ from __future__ import print_function
 from __future__ import division
 
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
 
 import time
@@ -22,7 +21,7 @@ dirs = {
     'model': './model/GAN-model.ckpt'
 }
 paras = {
-    'global_step': 1000001,
+    'global_step': 500001,
     'logging_interval': 10000
 }
 
@@ -35,8 +34,6 @@ def main():
     mnist = mnist.mnist
 
     # GPU configure
-    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
-    # config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as s:
@@ -47,7 +44,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(paras['global_step']):
@@ -82,7 +79,7 @@ def main():
                       "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
 
                 # update overpowered
-                d_overpowered = d_loss < g_loss / 4
+                d_overpowered = d_loss < g_loss / 2
 
                 # training G model with sample image and noise
                 samples = s.run(model.G, feed_dict={
