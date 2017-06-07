@@ -18,8 +18,8 @@ dirs = {
     'cifar-100': '/home/zero/cifar/cifar-100-python/',
     'celeb-a': '/home/zero/celeba/img_align_celeba/',
     'celeb-a-h5': '/home/zero/celeba/celeba.h5',
-    'pix2pix_shoes': '/home/zero/pix2pix/shoes/*.jpg',
-    'pix2pix_bags': '/home/zero/pix2pix/bags/*.jpg'
+    'pix2pix_shoes': '/home/zero/pix2pix/edges2handbags/train/*.jpg',
+    'pix2pix_bags': '/home/zero/pix2pix/edges2shoes/train/*.jpg'
 }
 
 
