@@ -70,7 +70,13 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 #### global step : 14.1k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_140250.png)
 
-### GAN
+### DiscoGAN
+#### global step : 0
+
+#### global step : 300k
+
+
+### GAN (with Softmax)
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
 #### global step : 250k
