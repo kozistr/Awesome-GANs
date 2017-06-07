@@ -54,9 +54,11 @@ def one_hot(labels_dense, num_classes=10):
 
 class DataIterator:
 
-    def __init__(self, x, y, batch_size):
+    def __init__(self, x, y, batch_size, label_off=False):
         self.x = x
-        self.y = y
+        self.label_off = label_off
+        if not label_off:
+            self.y = y
         self.batch_size = batch_size
         self.num_examples = num_examples = x.shape[0]
         self.num_batches = num_examples // batch_size
@@ -73,14 +75,18 @@ class DataIterator:
             np.random.shuffle(perm)
 
             self.x = self.x[perm]
-            self.y = self.y[perm]
+            if not self.label_off:
+                self.y = self.y[perm]
 
             start = 0
             self.pointer = self.batch_size
 
         end = self.pointer
 
-        return self.x[start:end], self.y[start:end]
+        if not self.label_off:
+            return self.x[start:end], self.y[start:end]
+        else:
+            return self.x[start:end]
 
     def iterate(self):
         for step in range(self.num_batches):
