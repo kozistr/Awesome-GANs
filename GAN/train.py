@@ -52,7 +52,8 @@ def main():
         original_dir = dirs['sample_output'] + 'original.png'
 
         # original image save
-        iu.save_images(sample_x, size=[original_image_height, original_image_width],
+        original_x = sample_x.reshape([-1, model.input_height, model.input_width, model.channel])
+        iu.save_images(original_x, size=[original_image_height, original_image_width],
                        image_path=original_dir)
 
         d_overpowered = False
