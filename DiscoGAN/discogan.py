@@ -84,34 +84,34 @@ class DiscoGAN:
 
         self.build_discogan()
 
-    def discriminator(self, x, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
-            with slim.arg_scope([slim.conv2d, slim.fully_connected], padding="SAME", stride=2, kernel_size=4,
+    def discriminator(self, x, name, reuse=None):
+        with tf.variable_scope(name, reuse=reuse):
+            with slim.arg_scope([slim.conv2d, slim.fully_connected],
                                 weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                 weights_regularizer=slim.l2_regularizer(2e-4)):
-                net = slim.conv2d(x, self.df_dim)
-                net = lrelu(net)
-
-                mul = 2
-                for bn in self.d_bn:
-                    net = slim.conv2d(net, self.df_dim * mul)
-                    net = bn(net)
+                with slim.arg_scope([slim.conv2d], padding="SAME", stride=2, kernel_size=4):
+                    net = slim.conv2d(x, self.df_dim)
                     net = lrelu(net)
-                    mul *= 2
+
+                    mul = 2
+                    for bn in self.d_bn:
+                        net = slim.conv2d(net, self.df_dim * mul)
+                        net = bn(net)
+                        net = lrelu(net)
+                        mul *= 2
 
                 net = tf.reshape(net, shape=[-1, 2*2*512])
                 net = slim.fully_connected(net, 512, activation_fn=lrelu, normalizer_fn=slim.batch_norm)
                 net = slim.fully_connected(net, 1, activation_fn=tf.nn.sigmoid)
+            return net  # return prob
 
-        return net  # return prob
-
-    def generator(self, z, reuse=None):
-        with tf.variable_scope("generator", reuse=reuse):
+    def generator(self, x, name, reuse=None):
+        with tf.variable_scope(name, reuse=reuse):
             with slim.arg_scope([slim.conv2d, slim.fully_connected], padding="SAME", kernel_size=4,
                                 weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                 weights_regularizer=slim.l2_regularizer(2e-4)):
                 with slim.arg_scope([slim.conv2d], stride=2):
-                    net = slim.conv2d(z, self.gf_dim)
+                    net = slim.conv2d(x, self.gf_dim)
                     net = lrelu(net)
 
                     mul = 2
@@ -129,38 +129,38 @@ class DiscoGAN:
 
                         net = tf.reshape(net, shape=[-1, hw, hw, hidden])
 
-                        mul /= 2
+                        mul = int(mul / 2)
                         hw *= 2
-                        hidden /= 2
+                        hidden = int(hidden / 2)
 
                     net = slim.conv2d(net, 3)
         return net  # logits
 
     def build_discogan(self):
         # x, z placeholder
-        self.shoes_x = tf.placeholder(tf.float32, [-1,
+        self.shoes_x = tf.placeholder(tf.float32, [None,
                                                    self.input_height,
                                                    self.input_width,
                                                    self.input_channel], name='x-shoes_image')  # -1x64x64x3
-        self.bags_x = tf.placeholder(tf.float32, [-1,
+        self.bags_x = tf.placeholder(tf.float32, [None,
                                                   self.input_height,
                                                   self.input_width,
                                                   self.input_channel], name='x-bags_image')  # -1x64x64x3
 
         # generator
         # s : shoes, b : bags, 2 : to
-        self.G_s2b = self.generator(self.shoes_x)
-        self.G_b2s = self.generator(self.bags_x)
+        self.G_s2b = self.generator(self.shoes_x, "generator_s2b")
+        self.G_b2s = self.generator(self.bags_x, "generator_b2s")
 
-        self.G_s2b2s = self.generator(self.G_s2b, reuse=True)
-        self.G_b2s2b = self.generator(self.G_b2s, reuse=True)
+        self.G_s2b2s = self.generator(self.G_s2b, "generator_s2b", reuse=True)
+        self.G_b2s2b = self.generator(self.G_b2s, "generator_b2s", reuse=True)
 
         # discriminator
-        self.D_s_real = self.discriminator(self.shoes_x)
-        self.D_b_real = self.discriminator(self.bags_x)
+        self.D_s_real = self.discriminator(self.shoes_x, "discriminator_real")
+        self.D_b_real = self.discriminator(self.bags_x, "discriminator_fake")
 
-        self.D_s_fake = self.discriminator(self.G_s2b2s, reuse=True)
-        self.D_b_fake = self.discriminator(self.G_b2s2b, reuse=True)
+        self.D_s_fake = self.discriminator(self.G_s2b2s, "discriminator_real", reuse=True)
+        self.D_b_fake = self.discriminator(self.G_b2s2b, "discriminator_fake", reuse=True)
 
         # loss
         self.s_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.shoes_x, self.G_s2b2s))
@@ -202,8 +202,18 @@ class DiscoGAN:
 
         # collect trainer values
         vars = tf.trainable_variables()
-        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
-        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
+        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator_*")
+        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator_*")
+
+        # summary
+        self.g_shoes_sum = tf.summary.histogram("G_shoes", self.g_s_loss)
+        self.g_bags_sum = tf.summary.histogram("G_bags", self.g_b_loss)
+
+        self.d_shoes_sum = tf.summary.histogram("D_shoes", self.d_s_loss)
+        self.d_bags_sum = tf.summary.histogram("D_bags", self.d_b_loss)
+
+        self.g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
+        self.d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
 
         self.saver = tf.train.Saver()
 
@@ -214,7 +224,7 @@ class DiscoGAN:
             minimize(self.d_loss, var_list=self.d_vars)
 
         # merge summary
-        self.g_sum = tf.summary.merge([self.g_loss])
-        self.d_sum = tf.summary.merge([self.d_loss, self.d_s_loss, self.d_b_loss])
+        self.g_sum = tf.summary.merge([self.g_loss_sum, self.g_shoes_sum, self.g_bags_sum])
+        self.d_sum = tf.summary.merge([self.d_loss_sum, self.d_shoes_sum, self.d_bags_sum])
         self.merged = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
