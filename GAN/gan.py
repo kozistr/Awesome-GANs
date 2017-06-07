@@ -9,7 +9,7 @@ class GAN:
     def __init__(self, s, batch_size=32,
                  input_height=28, input_width=28, channel=1, z_dim=100, sample_num=64, sample_size=8,
                  output_height=28, output_width=28, n_input=784, n_classes=10, maxout_unit=8,
-                 n_hidden_layer_1=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+                 n_hidden_layer_1=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
         self.s = s
         self.batch_size = batch_size
 
@@ -103,7 +103,7 @@ class GAN:
         '''
         # softmax loss
         # Z_B = sigma x∈B exp(−μ(x)), −μ(x) is discriminator
-        Z_B = tf.reduce_sum(tf.exp(-self.D_real)) + tf.reduce_sum(tf.exp(-self.D_fake))
+        Z_B = tf.reduce_sum(tf.exp(-self.D_real)) + tf.reduce_sum(tf.exp(-self.D_fake)) + self.eps
 
         self.B_plus = self.batch_size
         self.B_minus = self.batch_size * 2
