@@ -12,14 +12,22 @@ from sklearn.cross_validation import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
 
 
-# dataSets saved paths
+# saved dataSets' paths
 dirs = {
-    'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
-    'cifar-100': '/home/zero/cifar/cifar-100-python/',
-    'celeb-a': '/home/zero/celeba/img_align_celeba/',
-    'celeb-a-h5': '/home/zero/celeba/celeba.h5',
-    'pix2pix_shoes': '/home/zero/pix2pix/edges2handbags/train/*.jpg',
-    'pix2pix_bags': '/home/zero/pix2pix/edges2shoes/train/*.jpg'
+    'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
+    'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
+    'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
+    'celeb-a-h5': 'D:\\DataSet\\Celeb-A\\Celeb-A.h5',
+    'pix2pix_shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
+    'pix2pix_bags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
+    'pix2pix_monet': 'D:\\DataSet\\pix2pix\\monet2photo\\',
+    'pix2pix_vangogh': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    # 'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
+    # 'cifar-100': '/home/zero/cifar/cifar-100-python/',
+    # 'celeb-a': '/home/zero/celeba/img_align_celeba/',
+    # 'celeb-a-h5': '/home/zero/celeba/celeba.h5',
+    # 'pix2pix_shoes': '/home/zero/pix2pix/edges2handbags/train/*.jpg',
+    # 'pix2pix_bags': '/home/zero/pix2pix/edges2shoes/train/*.jpg'
 }
 
 
@@ -135,8 +143,21 @@ class DataSet:
             OR you can download with 'wget' cmd
             Example : wget https://people.eecs.berkeley.edu/~tinghuiz/projects/pix2pix/datasets/edges2shoes.tar.gz
 
+        - Caltech
+            Caltech-* DataSets can be downloaded at http://www.vision.caltech.edu/archive.html
+
+            - Birds
+                Caltech-CUB-200-2011 link : http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz
+                Caltech-CUB-200-2010 link : http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2010.tgz
+
+            Choose any of them!
+            DataSets used in this repo are 'Caltech-CUB-200-2011'
+
+            OR you can download with 'wget' cmd
+            Example : wget http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz
+
     Unpack
-        with following cmds...
+        With following cmds...
 
         - .tar.gz
             tar zxvf [file-path]
@@ -144,7 +165,6 @@ class DataSet:
             unzip -r [file-path]
         - .7z
             7z x [file-path]
-
     '''
 
     def __init__(self, batch_size=256, input_height=64, input_width=64, input_channel=3,
