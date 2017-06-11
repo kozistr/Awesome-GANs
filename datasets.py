@@ -168,9 +168,9 @@ class DataSet:
             7z x [file-path]
     '''
 
-    def __init__(self, batch_size=256, input_height=64, input_width=64, input_channel=3,
+    def __init__(self, batch_size=256, epoch=250, input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=16, dataset_name="None"):
+                 split_rate=0.2, random_state=42, num_threads=8, dataset_name="None"):
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
@@ -179,6 +179,7 @@ class DataSet:
         self.output_width = output_width
         self.output_channel = output_channel
 
+        self.epoch = epoch
         self.batch_size = batch_size
         self.split_rate = split_rate
         self.random_state = random_state
@@ -368,34 +369,43 @@ class DataSet:
 
     def pix2pix_vangogh(self):
         queue_A = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-A']),
-                                                 capacity=200)
+                                                 num_epochs=self.epoch, shuffle=True)
         queue_B = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-B']),
-                                                 capacity=200)
+                                                 num_epochs=self.epoch, shuffle=True)
+
         image_reader = tf.WholeFileReader()
 
         _, img_A = image_reader.read(queue_A)
         _, img_B = image_reader.read(queue_B)
 
         # decoding jpg images
-        img_A, img_B = tf.image.decode_jpeg(img_A), tf.image.decode_jpeg(img_B)
+        img_A = tf.image.decode_jpeg(img_A)
+        img_B = tf.image.decode_jpeg(img_B)
 
         # image size : 64x64x3
-        img_A = tf.cast(tf.reshape(img_A, shape=[self.input_height,
-                                                 self.input_width,
-                                                 self.input_channel]), dtype=tf.float32) / 255.
-        img_B = tf.cast(tf.reshape(img_B, shape=[self.input_height,
-                                                 self.input_width,
-                                                 self.input_channel]), dtype=tf.float32) / 255.
+        self.img_A = tf.cast(tf.reshape(img_A, shape=[None,
+                                                      self.input_height,
+                                                      self.input_width,
+                                                      self.input_channel]), dtype=tf.float32) / 255.
+        self.img_B = tf.cast(tf.reshape(img_B, shape=[None,
+                                                      self.input_height,
+                                                      self.input_width,
+                                                      self.input_channel]), dtype=tf.float32) / 255.
+        print(self.img_A.shape)
+        print(self.img_B.shape)
+        # min_queue_examples = self.batch_size
 
-        self.batch_A = tf.train.shuffle_batch([img_A],
-                                              batch_size=self.batch_size,
-                                              num_threads=self.num_threads,
-                                              capacity=1024, min_after_dequeue=256)
+        # self.batch_A = tf.train.shuffle_batch([img_A],
+        #                                       batch_size=self.batch_size,
+        #                                       num_threads=self.num_threads,
+        #                                       capacity=min_queue_examples + 3 * self.batch_size,
+        #                                       min_after_dequeue=min_queue_examples)
 
-        self.batch_B = tf.train.shuffle_batch([img_B],
-                                              batch_size=self.batch_size,
-                                              num_threads=self.num_threads,
-                                              capacity=1024, min_after_dequeue=256)
+        # self.batch_B = tf.train.shuffle_batch([img_B],
+        #                                       batch_size=self.batch_size,
+        #                                       num_threads=self.num_threads,
+        #                                       capacity=min_queue_examples + 3 * self.batch_size,
+        #                                       min_after_dequeue=min_queue_examples)
 
     def load_data(self, size, offset=0):
         '''
