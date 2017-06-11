@@ -21,7 +21,8 @@ dirs = {
     'pix2pix_shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
     'pix2pix_bags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
     'pix2pix_monet': 'D:\\DataSet\\pix2pix\\monet2photo\\',
-    'pix2pix_vangogh': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    'pix2pix_vangogh-A': 'D:\\DataSet\\pix2pix\\vangogh2photo\\trainA\\*.jpg',
+    'pix2pix_vangogh-B': 'D:\\DataSet\\pix2pix\\vangogh2photo\\trainB\\*.jpg',
     # 'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
     # 'cifar-100': '/home/zero/cifar/cifar-100-python/',
     # 'celeb-a': '/home/zero/celeba/img_align_celeba/',
@@ -198,8 +199,11 @@ class DataSet:
         elif self.dataset_name in 'celeba-a':
             self.celeba()  # for BEGAN
 
-        elif self.dataset_name in 'pix2pix':
-            self.pix2pix()  # shoes & bags for DiscoGAN
+        elif self.dataset_name in 'pix2pix_shoes_bags':
+            self.pix2pix_shoes_bags()  # shoes & bags for DiscoGAN
+
+        elif self.dataset_name in 'pix2pix_vangogh':
+            self.pix2pix_vangogh()  # vangogh photos for DiscoGAN
 
         else:  # DataSets will be added more soon!
             pass
@@ -331,7 +335,7 @@ class DataSet:
         self.num_image = 202599
         self.images = self.load_data(size=self.num_image)
 
-    def pix2pix(self):
+    def pix2pix_shoes_bags(self):
         shoes_filename_queue = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_shoes']),
                                                               capacity=200)
         bags_filename_queue = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_bags']),
@@ -361,6 +365,37 @@ class DataSet:
                                                  batch_size=self.batch_size,
                                                  num_threads=self.num_threads,
                                                  capacity=1024, min_after_dequeue=256)
+
+    def pix2pix_vangogh(self):
+        queue_A = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-A']),
+                                                 capacity=200)
+        queue_B = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-B']),
+                                                 capacity=200)
+        image_reader = tf.WholeFileReader()
+
+        _, img_A = image_reader.read(queue_A)
+        _, img_B = image_reader.read(queue_B)
+
+        # decoding jpg images
+        img_A, img_B = tf.image.decode_jpeg(img_A), tf.image.decode_jpeg(img_B)
+
+        # image size : 64x64x3
+        img_A = tf.cast(tf.reshape(img_A, shape=[self.input_height,
+                                                 self.input_width,
+                                                 self.input_channel]), dtype=tf.float32) / 255.
+        img_B = tf.cast(tf.reshape(img_B, shape=[self.input_height,
+                                                 self.input_width,
+                                                 self.input_channel]), dtype=tf.float32) / 255.
+
+        self.batch_A = tf.train.shuffle_batch([img_A],
+                                              batch_size=self.batch_size,
+                                              num_threads=self.num_threads,
+                                              capacity=1024, min_after_dequeue=256)
+
+        self.batch_B = tf.train.shuffle_batch([img_B],
+                                              batch_size=self.batch_size,
+                                              num_threads=self.num_threads,
+                                              capacity=1024, min_after_dequeue=256)
 
     def load_data(self, size, offset=0):
         '''
