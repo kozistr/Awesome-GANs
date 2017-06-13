@@ -137,34 +137,32 @@ class DiscoGAN:
         return net  # logits
 
     def build_discogan(self):
-        # x, z placeholder
-        self.shoes_x = tf.placeholder(tf.float32, [None,
+        self.A = tf.placeholder(tf.float32, shape=[None,
                                                    self.input_height,
                                                    self.input_width,
-                                                   self.input_channel], name='x-shoes_image')  # -1x64x64x3
-        self.bags_x = tf.placeholder(tf.float32, [None,
-                                                  self.input_height,
-                                                  self.input_width,
-                                                  self.input_channel], name='x-bags_image')  # -1x64x64x3
-
+                                                   self.input_channel], name='trainA')
+        self.B = tf.placeholder(tf.float32, shape=[None,
+                                                   self.input_height,
+                                                   self.input_width,
+                                                   self.input_channel], name='trainA')
         # generator
         # s : shoes, b : bags, 2 : to
-        self.G_s2b = self.generator(self.shoes_x, "generator_s2b")
-        self.G_b2s = self.generator(self.bags_x, "generator_b2s")
+        self.G_AB = self.generator(self.A, "generator_AB")
+        self.G_BA = self.generator(self.B, "generator_BA")
 
-        self.G_s2b2s = self.generator(self.G_s2b, "generator_s2b", reuse=True)
-        self.G_b2s2b = self.generator(self.G_b2s, "generator_b2s", reuse=True)
+        self.G_ABA = self.generator(self.G_AB, "generator_AB", reuse=True)
+        self.G_BAB = self.generator(self.G_BA, "generator_BA", reuse=True)
 
         # discriminator
-        self.D_s_real = self.discriminator(self.shoes_x, "discriminator_real")
-        self.D_b_real = self.discriminator(self.bags_x, "discriminator_fake")
+        self.D_s_real = self.discriminator(self.A, "discriminator_real")
+        self.D_b_real = self.discriminator(self.B, "discriminator_fake")
 
-        self.D_s_fake = self.discriminator(self.G_s2b2s, "discriminator_real", reuse=True)
-        self.D_b_fake = self.discriminator(self.G_b2s2b, "discriminator_fake", reuse=True)
+        self.D_s_fake = self.discriminator(self.G_ABA, "discriminator_real", reuse=True)
+        self.D_b_fake = self.discriminator(self.G_BAB, "discriminator_fake", reuse=True)
 
         # loss
-        self.s_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.shoes_x, self.G_s2b2s))
-        self.b_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.bags_x, self.G_b2s2b))
+        self.s_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.A, self.G_ABA))
+        self.b_loss = tf.reduce_sum(tf.losses.mean_squared_error(self.B, self.G_BAB))
 
         # self.g_shoes_loss = tf.reduce_sum(tf.square(self.D_s_fake - 1)) / 2
         # self.g_bags_loss = tf.reduce_sum(tf.square(self.D_b_fake - 1)) / 2
@@ -206,11 +204,11 @@ class DiscoGAN:
         self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator_*")
 
         # summary
-        self.g_shoes_sum = tf.summary.histogram("G_shoes", self.g_s_loss)
-        self.g_bags_sum = tf.summary.histogram("G_bags", self.g_b_loss)
+        self.g_shoes_sum = tf.summary.histogram("G_A", self.g_s_loss)
+        self.g_bags_sum = tf.summary.histogram("G_B", self.g_b_loss)
 
-        self.d_shoes_sum = tf.summary.histogram("D_shoes", self.d_s_loss)
-        self.d_bags_sum = tf.summary.histogram("D_bags", self.d_b_loss)
+        self.d_shoes_sum = tf.summary.histogram("D_A", self.d_s_loss)
+        self.d_bags_sum = tf.summary.histogram("D_B", self.d_b_loss)
 
         self.g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
         self.d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)

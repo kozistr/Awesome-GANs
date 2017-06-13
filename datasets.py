@@ -12,14 +12,23 @@ from sklearn.cross_validation import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
 
 
-# dataSets saved paths
+# saved dataSets' paths
 dirs = {
-    'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
-    'cifar-100': '/home/zero/cifar/cifar-100-python/',
-    'celeb-a': '/home/zero/celeba/img_align_celeba/',
-    'celeb-a-h5': '/home/zero/celeba/celeba.h5',
-    'pix2pix_shoes': '/home/zero/pix2pix/edges2handbags/train/*.jpg',
-    'pix2pix_bags': '/home/zero/pix2pix/edges2shoes/train/*.jpg'
+    'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
+    'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
+    'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
+    'celeb-a-h5': 'D:\\DataSet\\Celeb-A\\Celeb-A.h5',
+    'pix2pix_shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
+    'pix2pix_bags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
+    'pix2pix_monet': 'D:\\DataSet\\pix2pix\\monet2photo\\',
+    'pix2pix_vangogh-A': 'D:\\DataSet\\pix2pix\\vangogh2photo\\trainA\\*.jpg',
+    'pix2pix_vangogh-B': 'D:\\DataSet\\pix2pix\\vangogh2photo\\trainB\\*.jpg',
+    # 'cifar-10': '/home/zero/cifar/cifar-10-batches-py/',
+    # 'cifar-100': '/home/zero/cifar/cifar-100-python/',
+    # 'celeb-a': '/home/zero/celeba/img_align_celeba/',
+    # 'celeb-a-h5': '/home/zero/celeba/celeba.h5',
+    # 'pix2pix_shoes': '/home/zero/pix2pix/edges2handbags/train/*.jpg',
+    # 'pix2pix_bags': '/home/zero/pix2pix/edges2shoes/train/*.jpg'
 }
 
 
@@ -135,8 +144,21 @@ class DataSet:
             OR you can download with 'wget' cmd
             Example : wget https://people.eecs.berkeley.edu/~tinghuiz/projects/pix2pix/datasets/edges2shoes.tar.gz
 
+        - Caltech
+            Caltech-* DataSets can be downloaded at http://www.vision.caltech.edu/archive.html
+
+            - Birds
+                Caltech-CUB-200-2011 link : http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz
+                Caltech-CUB-200-2010 link : http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2010.tgz
+
+            Choose any of them!
+            DataSets used in this repo are 'Caltech-CUB-200-2011'
+
+            OR you can download with 'wget' cmd
+            Example : wget http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz
+
     Unpack
-        with following cmds...
+        With following cmds...
 
         - .tar.gz
             tar zxvf [file-path]
@@ -144,12 +166,11 @@ class DataSet:
             unzip -r [file-path]
         - .7z
             7z x [file-path]
-
     '''
 
-    def __init__(self, batch_size=256, input_height=64, input_width=64, input_channel=3,
+    def __init__(self, batch_size=256, epoch=250, input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=16, dataset_name="None"):
+                 split_rate=0.2, random_state=42, num_threads=8, dataset_name="None"):
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
@@ -158,6 +179,7 @@ class DataSet:
         self.output_width = output_width
         self.output_channel = output_channel
 
+        self.epoch = epoch
         self.batch_size = batch_size
         self.split_rate = split_rate
         self.random_state = random_state
@@ -178,8 +200,11 @@ class DataSet:
         elif self.dataset_name in 'celeba-a':
             self.celeba()  # for BEGAN
 
-        elif self.dataset_name in 'pix2pix':
-            self.pix2pix()  # shoes & bags for DiscoGAN
+        elif self.dataset_name in 'pix2pix_shoes_bags':
+            self.pix2pix_shoes_bags()  # shoes & bags for DiscoGAN
+
+        elif self.dataset_name in 'pix2pix_vangogh':
+            self.pix2pix_vangogh()  # vangogh photos for DiscoGAN
 
         else:  # DataSets will be added more soon!
             pass
@@ -311,7 +336,7 @@ class DataSet:
         self.num_image = 202599
         self.images = self.load_data(size=self.num_image)
 
-    def pix2pix(self):
+    def pix2pix_shoes_bags(self):
         shoes_filename_queue = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_shoes']),
                                                               capacity=200)
         bags_filename_queue = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_bags']),
@@ -341,6 +366,46 @@ class DataSet:
                                                  batch_size=self.batch_size,
                                                  num_threads=self.num_threads,
                                                  capacity=1024, min_after_dequeue=256)
+
+    def pix2pix_vangogh(self):
+        queue_A = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-A']),
+                                                 num_epochs=self.epoch, shuffle=True)
+        queue_B = tf.train.string_input_producer(tf.train.match_filenames_once(dirs['pix2pix_vangogh-B']),
+                                                 num_epochs=self.epoch, shuffle=True)
+
+        image_reader = tf.WholeFileReader()
+
+        _, img_A = image_reader.read(queue_A)
+        _, img_B = image_reader.read(queue_B)
+
+        # decoding jpg images
+        img_A = tf.image.decode_jpeg(img_A)
+        img_B = tf.image.decode_jpeg(img_B)
+
+        # image size : 64x64x3
+        self.img_A = tf.cast(tf.reshape(img_A, shape=[None,
+                                                      self.input_height,
+                                                      self.input_width,
+                                                      self.input_channel]), dtype=tf.float32) / 255.
+        self.img_B = tf.cast(tf.reshape(img_B, shape=[None,
+                                                      self.input_height,
+                                                      self.input_width,
+                                                      self.input_channel]), dtype=tf.float32) / 255.
+        print(self.img_A.shape)
+        print(self.img_B.shape)
+        # min_queue_examples = self.batch_size
+
+        # self.batch_A = tf.train.shuffle_batch([img_A],
+        #                                       batch_size=self.batch_size,
+        #                                       num_threads=self.num_threads,
+        #                                       capacity=min_queue_examples + 3 * self.batch_size,
+        #                                       min_after_dequeue=min_queue_examples)
+
+        # self.batch_B = tf.train.shuffle_batch([img_B],
+        #                                       batch_size=self.batch_size,
+        #                                       num_threads=self.num_threads,
+        #                                       capacity=min_queue_examples + 3 * self.batch_size,
+        #                                       min_after_dequeue=min_queue_examples)
 
     def load_data(self, size, offset=0):
         '''
