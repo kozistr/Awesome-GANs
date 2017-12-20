@@ -1,20 +1,28 @@
 # Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)[![Build Status](https://travis-ci.org/dwyl/esta.svg?branch=master)](https://travis-ci.org/)
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
+## Test Environments
+* Linux Ubuntu 16.04 x86-64
+* Tensorflow 1.4.0 with CUDA 8.0 + cuDNN 7.0
+* Python 3.5
+
 ## Prerequisites
 * python 3.5+
-* tensorflow 1.1.0+
+* tensorflow 1.4.0+ (renewal)
 * scipy
 * pillow
 * h5py
 * pickle
 * glob, tqdm
 * (sklearn for train_test_split)
+* Internet :)
+
+On this time, i'll add implementations with TFGAN, new features in TF 1.4.
 
 ## Usage
     (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
     just download it and run train.py
-    $ python3 train.py
+    $ python3 xxx_train.py
 
 ## Datasets
 Now supporting(?) DataSets are... (code is in /datasets.py)
@@ -26,6 +34,15 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * pix2pix bags
 * (more DataSets will be added soon!)
 
+Most of the renewal codes are based on MNIST datasets!
+
+## Repo Tree
+> [GAN Name/] <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [img/...] (generated images) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [..._train.py] (training) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [..._model.py] (gan model) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [....md] (explain text) <br/>
+
 ## Papers & Codes
 * ACGAN        : Auxiliary Classifier Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1610.09585)
 * AdaGAN       : Boosting Generative Models [[arXiv]](https://arxiv.org/abs/1701.02386)
@@ -33,6 +50,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * BSGAN        : Boundary-Seeking Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1702.08431)
 * CGAN         : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/cgan.py)
 * CoGAN        : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
+* CycleGAN     : 
 * DCGAN        : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan.py)
 * DiscoGAN     : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/discogan.py)
 * EnergyGAN    : Energy-based Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1609.03126)
@@ -83,4 +101,4 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00250000.png)
 
 ## Author
-Hyeongchan Kim / @kozistr, [@zer0day](http://zer0day.tistory.com)
+Hyeongchan Kim / [@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com)
