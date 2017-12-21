@@ -51,7 +51,7 @@ class CiFarDataSet:
         :param epoch: training epoch, default 250
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
-        :param channel: input image channel, default 3 (RGB)
+        :param input_channel: input image channel, default 3 (RGB)
         - in case of CIFAR, image size is 32x32x3(HWC).
         :param n_classes: input datasets' classes
         - in case of CIFAR, 10, 100
@@ -199,3 +199,44 @@ class CiFarDataSet:
         self.train_labels = one_hot(train_labels, self.n_classes)
         self.valid_labels = one_hot(valid_labels, self.n_classes)
         self.test_labels = one_hot(test_labels, self.n_classes)
+
+
+class DataIterator:
+
+    def __init__(self, x, y, batch_size, label_off=False):
+        self.x = x
+        self.label_off = label_off
+        if not label_off:
+            self.y = y
+        self.batch_size = batch_size
+        self.num_examples = num_examples = x.shape[0]
+        self.num_batches = num_examples // batch_size
+        self.pointer = 0
+
+        assert self.batch_size <= self.num_examples
+
+    def next_batch(self):
+        start = self.pointer
+        self.pointer += self.batch_size
+
+        if self.pointer > self.num_examples:
+            perm = np.arange(self.num_examples)
+            np.random.shuffle(perm)
+
+            self.x = self.x[perm]
+            if not self.label_off:
+                self.y = self.y[perm]
+
+            start = 0
+            self.pointer = self.batch_size
+
+        end = self.pointer
+
+        if not self.label_off:
+            return self.x[start:end], self.y[start:end]
+        else:
+            return self.x[start:end]
+
+    def iterate(self):
+        for step in range(self.num_batches):
+            yield self.next_batch()

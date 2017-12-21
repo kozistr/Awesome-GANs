@@ -5,38 +5,42 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-import time
-import dcgan
-
 import sys
-sys.path.insert(0, '../')
+import time
 
-from datasets import DataIterator, DataSet
+import dcgan_model as dcgan
+from dataset import DataIterator
+from dataset import CiFarDataSet as DataSet
+
+sys.path.append('../')
 import image_utils as iu
 
 
-dirs = {
-    'sample_output': './DCGAN/',
+results = {
+    'output': './gen_img/',
     'checkpoint': './model/checkpoint',
     'model': './model/DCGAN-model.ckpt'
 }
-paras = {
-    'epoch': 150,  # with GTX 1080 11gb, takes 3934s
+
+train_step = {
+    'epoch': 150,
     'batch_size': 64,
-    'logging_interval': 1000
+    'logging_interval': 1000,
+    'update_overpowered': 100,
 }
 
 
 def main():
-    start_time = time.time()  # clocking start
+    start_time = time.time()  # Clocking start
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
+
     with tf.Session(config=config) as s:
         # DCGAN model
-        model = dcgan.DCGAN(s, batch_size=paras['batch_size'])
+        model = dcgan.DCGAN(s, batch_size=train_step['batch_size'])
 
-        # load model & graph & weight
+        # Load model & Graph & Weights
         ckpt = tf.train.get_checkpoint_state('./model/')
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
@@ -48,22 +52,21 @@ def main():
             global_step = 0
             print('[-] No checkpoint file found')
 
-        # initializing variables
-        tf.global_variables_initializer().run()
+        # Initializing variables
+        s.run(tf.global_variables_initializer())
 
-        # training, test data set
-        dataset = DataSet(input_height=32,
-                          input_width=32,
-                          input_channel=3, dataset_name='cifar-100')  # Dataset(dirs['cifar-100'])
-        dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, paras['batch_size'])
+        # Training, test data set
+        dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-100')
+        dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
         sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.0
-        sample_z = np.random.uniform(-1., 1., size=(model.sample_num, model.z_dim))  # noise
+        sample_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                     size=(model.sample_num, model.z_dim))
 
-        # export real image
+        # Export real image
         valid_image_height = model.sample_size
         valid_image_width = model.sample_size
-        sample_dir = dirs['sample_output'] + 'valid.png'
+        sample_dir = results['sample_output'] + 'valid.png'
 
         # Generated image save
         iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
@@ -72,67 +75,79 @@ def main():
 
         step = int(global_step)
         cont = int(step / 750)
-        for epoch in range(cont, cont + paras['epoch']):
+        for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
                 batch_images = batch_images.astype(np.float32) / 255.0
-                batch_z = np.random.uniform(-1.0, 1.0, [paras['batch_size'], model.z_dim]).astype(np.float32)  # noise
+                batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                            [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
-                # update D network
+                # Update D network
                 if not d_overpowered:
-                    s.run(model.d_op, feed_dict={model.x: batch_images, model.z: batch_z})
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x: batch_images,
+                                          model.z: batch_z
+                                      })
 
-                # update G network
-                s.run(model.g_op, feed_dict={model.z: batch_z})
+                # Update G network
+                _, g_loss = s.run([model.g_op, model.g_loss],
+                                  feed_dict={
+                                      model.z: batch_z
+                                  })
+                # Logging
+                if step % train_step['update_overpowered'] == 0:
+                    d_overpowered = d_loss < (g_loss / 2)
 
-                if step % paras['logging_interval'] == 0:
-                    batch_images = dataset.valid_images[:paras['batch_size']].astype(np.float32) / 255.0
-                    batch_z = np.random.uniform(-1.0, 1.0, [paras['batch_size'], model.z_dim]).astype(np.float32)
+                    if step % train_step['logging_interval'] == 0:
+                        batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.0
+                        batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                                    [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
-                    d_loss, g_loss, summary = s.run([
-                        model.d_loss,
-                        model.g_loss,
-                        model.merged
-                    ], feed_dict={
-                        model.x: batch_images,
-                        model.z: batch_z
-                    })
+                        d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                        feed_dict={
+                                                            model.x: batch_images,
+                                                            model.z: batch_z
+                                                        })
 
-                    # print loss
-                    print("[+] Epoch %03d Step %05d => " % (epoch, step),
-                          "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                        # Print loss
+                        print("[+] Epoch %03d Step %05d => " % (epoch, step),
+                              "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss),
+                              "Overpowered :", d_overpowered)
 
-                    # update overpowered
-                    d_overpowered = d_loss < g_loss / 2
+                        # Update overpowered
+                        d_overpowered = d_loss < (g_loss / 2)
 
-                    # training G model with sample image and noise
-                    samples = s.run(model.G, feed_dict={
-                        model.x: sample_images,
-                        model.z: sample_z
-                    })
+                        # Training G model with sample image and noise
+                        samples = s.run(model.g,
+                                        feed_dict={
+                                            model.x: sample_images,
+                                            model.z: sample_z
+                                       })
 
-                    # summary saver
-                    model.writer.add_summary(summary, step)
+                        # Summary saver
+                        model.writer.add_summary(summary, step)
 
-                    # export image generated by model G
-                    sample_image_height = model.sample_size
-                    sample_image_width = model.sample_size
-                    sample_dir = dirs['sample_output'] + 'train_{0}_{1}.png'.format(epoch, step)
+                        # Export image generated by model G
+                        sample_image_height = model.sample_size
+                        sample_image_width = model.sample_size
+                        sample_dir = results['sample_output'] + 'train_{0}_{1}.png'.format(epoch, step)
 
-                    # Generated image save
-                    iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
+                        # Generated image save
+                        iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
 
-                    # model save
-                    model.saver.save(s, dirs['model'], global_step=step)
+                        # Model save
+                        model.saver.save(s, results['model'], global_step=step)
 
                 step += 1
 
-        end_time = time.time() - start_time
+        end_time = time.time() - start_time  # Clocking end
 
-        # elapsed time
-        print("[+] Elapsed time {:.8f}s".format(end_time))
+        # Elapsed time
+        print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 100s on my machine
 
-        # close tf.Session
+        # Close tf.Session
         s.close()
+
 
 if __name__ == '__main__':
     main()
