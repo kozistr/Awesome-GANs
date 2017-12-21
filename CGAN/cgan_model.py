@@ -6,33 +6,116 @@ tf.set_random_seed(777)
 
 class CGAN:
 
-    def __init__(self, s, batch_size=64,
-                 input_height=28, input_width=28, channel=1, z_dim=100, sample_num=64, sample_size=8,
-                 output_height=28, output_width=28, n_input=784, n_classes=10, maxout_unit=8,
-                 n_hidden_layer_1=128, epsilon=1e-9):
+    def __init__(self, s, batch_size=32, input_height=28, input_width=28, channel=1, n_classes=10,
+                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 n_input=784, maxout_unit=8, n_hidden_layer_1=128,
+                 z_dim=100, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
+
+        """
+        # General Settings
+        :param s: TF Session
+        :param batch_size: training batch size, default 32
+        :param input_height: input image height, default 28
+        :param input_width: input image width, default 28
+        :param channel: input image channel, default 1 (gray-scale)
+        - in case of MNIST, image size is 28x28x1(HWC).
+        :param n_classes: input dataset's classes
+        - in case of MNIST, 10 (0 ~ 9)
+
+        # Output Settings
+        :param sample_num: the number of output images, default 64
+        :param sample_size: sample image size, default 8
+        :param output_height: output images height, default 28
+        :param output_width: output images width, default 28
+
+        # For DNN model
+        :param n_input: input image size, default 784(28x28)
+        :param maxout_unit : max-out unit, default 8
+        :param n_hidden_layer_1: first NN hidden layer, default 128
+
+        # Training Option
+        :param z_dim: z dimension (kinda noise), default 100
+        :param g_lr: generator learning rate, default 8e-4
+        :param d_lr: discriminator learning rate, default 8e-4
+        :param epsilon: epsilon, default 1e-9
+        """
+
         self.s = s
         self.batch_size = batch_size
+        self.input_height = input_height
+        self.input_width = input_width
+        self.channel = channel
+        self.n_classes = n_classes
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-
-        self.input_height = input_height
-        self.input_width = input_width
         self.output_height = output_height
         self.output_width = output_width
-        self.channel = channel
-        self.z_dim = z_dim
 
         self.n_input = n_input
-        self.n_hl_1 = n_hidden_layer_1
-        self.n_classes = n_classes
         self.maxout_unit = maxout_unit
+        self.n_hl_1 = n_hidden_layer_1
 
+        self.z_dim = z_dim
+        self.g_lr = g_lr
+        self.d_lr = d_lr
+        self.beta1 = 0.5
         self.eps = epsilon
 
-        self.build_cgan()
+        ''' Weights
 
-    def discriminator(self, x, y, reuse=None):  # simple neural networks
+         - discriminator
+         (784 + 10, 8 * 128) -> (128, 1)
+
+         - generator
+         (100 + 10, 128) -> (128, 784)
+
+         Initializer : HE initializer
+         '''
+        self.W = {
+            # for discriminator
+            'd_h1': tf.get_variable('d_h1',
+                                    shape=[self.n_input + self.n_classes, self.maxout_unit * self.n_hl_1],
+                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
+            'd_h_out': tf.get_variable('d_h_out',
+                                       shape=[self.n_hl_1, 1],
+                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
+            # for generator
+            'g_h1': tf.get_variable('g_h1',
+                                    shape=[self.z_dim + self.n_classes, self.n_hl_1],
+                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
+            'g_h_out': tf.get_variable('g_h_out',
+                                       shape=[self.n_hl_1, self.n_input],
+                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
+        }
+
+        ''' Biases
+
+        - discriminator
+        (8 * 128), (1)
+
+        - generator
+        (128), (784)
+
+        Initializer : zero initializer
+        '''
+        self.b = {
+            # for discriminator
+            'd_b1': tf.Variable(tf.zeros([self.maxout_unit * self.n_hl_1])),
+            'd_b_out': tf.Variable(tf.zeros([1])),
+            # for generator
+            'g_b1': tf.Variable(tf.zeros([self.n_hl_1])),
+            'g_b_out': tf.Variable(tf.zeros([self.n_input])),
+        }
+
+        # Placeholders
+        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")        # (-1, 784)
+        self.c = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='c-condition')  # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 100)
+
+        self.build_cgan()  # build CGAN model
+
+    def discriminator(self, x, y, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
             inputs = tf.concat(axis=1, values=[x, y])
 
@@ -52,7 +135,7 @@ class CGAN:
             inputs = tf.concat(axis=1, values=[z, y])
 
             de_net = tf.nn.bias_add(tf.matmul(inputs, self.W['g_h1']), self.b['g_b1'])
-            de_net = tf.nn.relu(de_net)
+            de_net = tf.nn.leaky_relu(de_net)
 
             logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
             prob = tf.nn.tanh(logits)
@@ -60,82 +143,47 @@ class CGAN:
         return prob
 
     def build_cgan(self):
-        # x, c, z placeholder
-        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")
-        self.c = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='c-condition')
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
+        # Generator
+        self.g = self.generator(self.z, self.c)
 
-        # weights
-        self.W = {
-            # weights for discriminator
-            'd_h1': tf.get_variable('d_h1', shape=[self.n_input + self.n_classes, self.maxout_unit * self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'd_h_out': tf.get_variable('d_h_out', shape=[self.n_hl_1, 1],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-            # weights for generator
-            'g_h1': tf.get_variable('g_h1', shape=[self.z_dim + self.n_classes, self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'g_h_out': tf.get_variable('g_h_out', shape=[self.n_hl_1, self.n_input],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-        }
+        # Discriminator
+        d_real = self.discriminator(self.x, self.c)
+        d_fake = self.discriminator(self.g, self.c, reuse=True)
 
-        # biases
-        self.b = {
-            # biases for discriminator
-            'd_b1': tf.Variable(tf.zeros([self.maxout_unit * self.n_hl_1])),
-            'd_b_out': tf.Variable(tf.zeros([1])),
-            # biases for generator
-            'g_b1': tf.Variable(tf.zeros([self.n_hl_1])),
-            'g_b_out': tf.Variable(tf.zeros([self.n_input])),
-        }
+        # Maximize log(D(G(z)))
+        # Maximize log(D(x)) + log(1 - D(G(z)))
+        log = lambda x: tf.log(x + self.eps)
 
-        # generator
-        self.G = self.generator(self.z, self.c)
+        self.g_loss = -tf.reduce_mean(tf.log(d_fake + self.eps))
+        self.d_loss = -tf.reduce_mean(log(d_real) + log(1. - d_fake))
 
-        # discriminator
-        self.D_real = self.discriminator(self.x, self.c)
-        self.D_fake = self.discriminator(self.G, self.c, reuse=True)
+        # Summary
+        self.z_sum = tf.summary.histogram("z-noise", self.z)
+        self.c_sum = tf.summary.histogram("c-condition", self.c)
 
-        # maximize log(D(G(z)))
-        self.g_loss = -tf.reduce_mean(tf.log(self.D_fake + self.eps))
+        self.g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
+        g_sum = tf.summary.image("G", self.g)  # generated image from G model
+        d_real_sum = tf.summary.histogram("d_real", d_real)
+        d_fake_sum = tf.summary.histogram("d_fake", d_fake)
+        d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
+        g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
 
-        # maximize log(D(x)) + log(1 - D(G(z)))
-        self.d_real_loss = -tf.reduce_mean(tf.log(self.D_real + self.eps))
-        self.d_fake_loss = -tf.reduce_mean(tf.log((1. - self.D_fake) + self.eps))
-        self.d_loss = self.d_real_loss + self.d_fake_loss
-
-        # summary
-        self.z_sum = tf.summary.histogram("z", self.z)
-        self.c_sum = tf.summary.histogram("c", self.c)
-
-        self.G = tf.reshape(self.G, shape=[-1, self.output_height, self.output_height, self.channel])
-        self.G_sum = tf.summary.image("G", self.G)  # generated image from G model
-        self.D_real_sum = tf.summary.histogram("D_real", self.D_real)
-        self.D_fake_sum = tf.summary.histogram("D_fake", self.D_fake)
-
-        self.d_real_loss_sum = tf.summary.scalar("d_real_loss", self.d_real_loss)
-        self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.d_fake_loss)
-        self.d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
-        self.g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
-
-        # collect trainer values
+        # Collect trainer values
         vars = tf.trainable_variables()
-        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
-        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
+        d_params = [v for v in vars if v.name.startswith('d_')]
+        g_params = [v for v in vars if v.name.startswith('g_')]
 
         # model saver
         self.saver = tf.train.Saver()
 
         # optimizer
-        self.d_op = tf.train.AdamOptimizer().\
-            minimize(self.d_loss, var_list=[self.W['d_h1'], self.W['d_h_out'],
-                                            self.b['d_b1'], self.b['d_b_out']])
-        self.g_op = tf.train.AdamOptimizer().\
-            minimize(self.g_loss, var_list=[self.W['g_h1'], self.W['g_h_out'],
-                                            self.b['g_b1'], self.b['g_b_out']])
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1).\
+            minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1).\
+            minimize(self.g_loss, var_list=g_params)
 
         # merge summary
-        self.g_sum = tf.summary.merge([self.z_sum, self.c_sum, self.D_fake_sum, self.G_sum, self.d_fake_loss_sum, self.g_loss_sum])
-        self.d_sum = tf.summary.merge([self.z_sum, self.c_sum, self.D_real_sum, self.d_real_loss_sum, self.d_loss_sum])
+        self.g_sum = tf.summary.merge([self.z_sum, self.c_sum, d_fake_sum, g_sum, g_loss_sum])
+        self.d_sum = tf.summary.merge([self.z_sum, self.c_sum, d_real_sum, d_loss_sum])
         self.merged = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
