@@ -18,8 +18,6 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 * (sklearn for train_test_split)
 * Internet :)
 
-On this time, i'll add implementations with TFGAN, new features in TF 1.4.
-
 ## Usage
     (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
     just download it and run train.py
@@ -35,14 +33,13 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * pix2pix bags
 * (more DataSets will be added soon!)
 
-Most of the renewal codes are based on MNIST datasets!
-
 ## Repo Tree
 > [GAN Name/] <br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [img/...] (generated images) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [gen_img/...] (generated images) <br/>
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [..._train.py] (training) <br/>
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [..._model.py] (gan model) <br/>
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [....md] (explain text) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [dataset.py] (dataset loader) <br/>
 
 ## Papers & Codes
 * ACGAN        : Auxiliary Classifier Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1610.09585)
@@ -58,7 +55,7 @@ Most of the renewal codes are based on MNIST datasets!
 * f-GAN        : Training Generative Neural Samplers using Variational Divergence Minimization [[arXiv]](https://arxiv.org/abs/1606.00709)
 * GAN          : Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1406.2661) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan.py)
 * Softmax GAN  : Generative Adversarial Networks with Softmax [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan.py)
-* 3D GAN       : 3D Generative Adversarial Networks [[arXiv]](http://3dgan.csail.mit.edu/)
+* 3D GAN       : 3D Generative Adversarial Networks [[MIT]](http://3dgan.csail.mit.edu/)
 * GAP          : Generative Adversarial Parallelization [[arXiv]](https://arxiv.org/abs/1612.04021)
 * GEGAN        : Generalization and Equilibrium in Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.00573)
 * InfoGAN      : Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.03657)
