@@ -23,7 +23,7 @@ results = {
 }
 
 train_step = {
-    'epoch': 150,
+    'epoch': 50,
     'batch_size': 64,
     'logging_interval': 1000,
     'update_overpowered': 100,
