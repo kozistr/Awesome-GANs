@@ -15,7 +15,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 * h5py
 * pickle
 * glob, tqdm
-* (sklearn for train_test_split)
+* sklearn
 * Internet :)
 
 ## Usage
@@ -95,9 +95,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 
 ### GAN
-#### global step 0
+#### global step 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global step 250k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00000000.png)
-#### global step 250k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png)
 
 
