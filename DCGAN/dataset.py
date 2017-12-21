@@ -177,7 +177,7 @@ class CiFarDataSet:
                                                        self.input_channel], order='F'), 1, 2)
 
         # test data & label
-        test_batch = p.Unpickler("{0}/test".format(self.path))
+        test_batch = unpickle("{0}/test".format(self.path))
 
         test_data = np.concatenate([test_batch[b'data']], axis=0)
         test_labels = np.concatenate([test_batch[b'fine_labels']], axis=0)
