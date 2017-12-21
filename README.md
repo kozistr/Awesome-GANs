@@ -74,34 +74,37 @@ Most of the renewal codes are based on MNIST datasets!
 
 ## Results
 ### BEGAN
-#### global step : 0
+#### global step 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
-#### global step : 15k
+#### global step 150k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/BEGAN/train_0_0.png)
 
 ### CGAN
-#### global step : 0
+#### global step 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00000000.png)
-#### global step : 440k
+#### global step 440k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00440000.png)
 
 ### DCGAN
-#### global step : 0
+#### global step 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_0_0.png)
-#### global step : 14.1k
+#### global step 14.1k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/DCGAN/train_199_140250.png)
 
 ### DiscoGAN
-#### global step : 0
+#### global step 0
 
-#### global step : 300k
+#### global step 300k
 
 
 ### GAN
-#### global step : 0
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
-#### global step : 500k
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00250000.png)
+#### original
+![Gnerated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/original.png)
+#### global step 0
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00000000.png)
+#### global step 250k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png)
+
 
 ## Author
-Hyeongchan Kim / [@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com)
+HyeongChan Kim / [@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com)
