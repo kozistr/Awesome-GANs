@@ -29,7 +29,7 @@ train_step = {
 
 
 def main():
-    start_time = time.time()  # clocking start
+    start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
     mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
@@ -104,7 +104,7 @@ def main():
                           "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss),
                           "Overpowered :", d_overpowered)
 
-                    # training G model with sample image and noise
+                    # Training G model with sample image and noise
                     samples = s.run(model.g,
                                     feed_dict={
                                         model.x: sample_x,
@@ -124,13 +124,13 @@ def main():
                                    size=[sample_image_height, sample_image_width],
                                    image_path=sample_dir)
 
-                    # model save
+                    # Model save
                     model.saver.save(s, results['model'], global_step=step)
 
-    end_time = time.time() - start_time  # end time
+    end_time = time.time() - start_time  # Clocking end
 
     # Elapsed time
-    print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 280s on my machine
+    print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 370s on my machine
 
     # Close tf.Session
     s.close()
