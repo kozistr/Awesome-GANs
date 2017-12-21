@@ -82,8 +82,8 @@ Most of the renewal codes are based on MNIST datasets!
 ### CGAN
 #### global step 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00000000.png)
-#### global step 440k
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00440000.png)
+#### global step 225k
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/CGAN/train_00225000.png)
 
 ### DCGAN
 #### global step 0
