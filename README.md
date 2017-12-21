@@ -2,7 +2,8 @@
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Test Environments
-* Linux Ubuntu 16.04 x86-64
+* OS : Linux Ubuntu 16.04 x86-64
+* CPU : i7-7700K, GPU : GTX 1060 6GB
 * Tensorflow 1.4.0 with CUDA 8.0 + cuDNN 7.0
 * Python 3.5
 
@@ -50,14 +51,16 @@ Most of the renewal codes are based on MNIST datasets!
 * BSGAN        : Boundary-Seeking Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1702.08431)
 * CGAN         : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/cgan.py)
 * CoGAN        : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
-* CycleGAN     : 
+* CycleGAN     : Unpaired img2img translation using Cycle-consistent Adversarial Networks [[arXiv]](https://arxiv.org/pdf/1703.10593.pdf)
 * DCGAN        : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan.py)
 * DiscoGAN     : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/discogan.py)
 * EnergyGAN    : Energy-based Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1609.03126)
 * f-GAN        : Training Generative Neural Samplers using Variational Divergence Minimization [[arXiv]](https://arxiv.org/abs/1606.00709)
 * GAN          : Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1406.2661) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan.py)
 * Softmax GAN  : Generative Adversarial Networks with Softmax [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan.py)
+* 3D GAN       : 3D Generative Adversarial Networks [[arXiv]](http://3dgan.csail.mit.edu/)
 * GAP          : Generative Adversarial Parallelization [[arXiv]](https://arxiv.org/abs/1612.04021)
+* GEGAN        : Generalization and Equilibrium in Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.00573)
 * InfoGAN      : Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.03657)
 * LAPGAN       : Laplacian Pyramid Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1506.05751)
 * LSGAN        : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
@@ -94,10 +97,10 @@ Most of the renewal codes are based on MNIST datasets!
 #### global step : 300k
 
 
-### GAN (with Softmax)
+### GAN
 #### global step : 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00000000.png)
-#### global step : 250k
+#### global step : 500k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/GAN/train_00250000.png)
 
 ## Author
