@@ -98,8 +98,6 @@ Most of the renewal codes are based on MNIST datasets!
 
 
 ### GAN
-#### original
-![Gnerated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/original.png)
 #### global step 0
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00000000.png)
 #### global step 250k
