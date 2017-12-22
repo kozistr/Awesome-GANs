@@ -67,7 +67,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * SeqGAN       : Sequence Generative Adversarial Networks with Policy Gradient [[arXiv]](https://arxiv.org/abs/1609.05473)
 * SGAN         : Stacked Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1612.04357)
 * WGAN         : Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.07875) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
-* ImprovedWGAN : Improved Training of Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1704.00028) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/improved_wgan_model.py)
+* ImprovedWGAN : Improved Training of Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1704.00028) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
 
 ## Results
 ### BEGAN
@@ -98,10 +98,11 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_00000000.png)
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_00250000.png)
 
-### WGAN
-#### global step 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global step 10k
+### WGAN & Improved-WGAN
+#### global step 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global step 9k &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global step 9k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00000000.png)
-![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00010000.png)
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png)
+![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_2.png)
 
 ## Author
 HyeongChan Kim / [@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com)
