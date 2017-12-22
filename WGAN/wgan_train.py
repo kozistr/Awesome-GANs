@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'global_step': 100000,
+    'global_step': 100001,
     'logging_interval': 10000,
 }
 
