@@ -8,6 +8,22 @@ import tensorflow as tf
 tf.set_random_seed(777)
 
 
+class BatchNorm(object):
+
+    def __init__(self, epsilon=1e-6, momentum=0.9, name="batch_norm"):
+        with tf.variable_scope(name) as scope:
+            self.eps = epsilon
+            self.momentum = momentum
+            self.name = name
+
+    def __call__(self, x, train=True):
+        return tf.layers.batch_normalization(inputs=x,
+                                             momentum=self.momentum,
+                                             epsilon=self.eps,
+                                             scale=True,
+                                             training=train)
+
+
 def conv2d(input_, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, name="Conv2D"):
     with tf.variable_scope(name):
         w = tf.get_variable('weights', shape=[k_h, k_w, input_.get_shape()[-1], output_dim],
@@ -51,10 +67,10 @@ def linear(input_, output_size, scope=None, bias_start=0.):
 
 class WGAN:
 
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
+    def __init__(self, s, batch_size=128, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, n_input=784,
-                 z_dim=100, gf_dim=64, df_dim=64,
-                 epsilon=1e-12):
+                 z_dim=128, gf_dim=64, df_dim=64, epsilon=1e-12,
+                 enable_bn=False, enable_selu=False, enable_adam=False, enable_gp=False):
 
         """
         # General Settings
@@ -75,10 +91,14 @@ class WGAN:
         :param n_input: input image size, default 784(28x28)
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 100
+        :param z_dim: z dimension (kinda noise), default 128
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
         :param epsilon: epsilon, default 1e-9
+        :param enable_bn: enabling batch normalization, default False
+        :param enable_selu: enabling selu activation func, default False
+        :param enable_adam: enabling adam optimizer, default False
+        :param enable_gp: enabling gradient penaly, default False
         """
 
         self.s = s
@@ -99,6 +119,15 @@ class WGAN:
         self.df_dim = df_dim
         self.eps = epsilon
 
+        # Custom Batch Normalization
+        self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
+        self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
+        self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
+
+        self.g_bn1 = BatchNorm(self.batch_size, name='g_bn1')
+        self.g_bn2 = BatchNorm(self.batch_size, name='g_bn2')
+        self.g_bn3 = BatchNorm(self.batch_size, name='g_bn3')
+
         # Placeholders
         self.x = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape, name='x-images')
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')
@@ -110,18 +139,41 @@ class WGAN:
         self.d_clip = []  # (-0.01 ~ 0.01)
         self.decay = 0.90
 
+        self.EnableBN = enable_bn
+        self.EnableSELU = enable_selu
+        self.EnableAdam = enable_adam
+        self.EnableGP = enable_gp
+
+        self.d_op = None
+        self.g_op = None
+
         self.build_wgan()  # build WGAN model
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
             h0 = conv2d(x, self.df_dim, name='d_h0_conv')
-            h0 = tf.nn.leaky_relu(h0, alpha=0.2)
+            if self.EnableBN:
+                h0 = self.d_bn1(h0)
+            if self.EnableSELU:
+                h0 = tf.nn.selu(h0)
+            else:
+                h0 = tf.nn.leaky_relu(h0, alpha=0.2)
 
             h1 = conv2d(h0, self.df_dim * 2, name='d_h1_conv')
-            h1 = tf.nn.leaky_relu(h1, alpha=0.2)
+            if self.EnableBN:
+                h1 = self.d_bn2(h1)
+            if self.EnableSELU:
+                h1 = tf.nn.selu(h1)
+            else:
+                h1 = tf.nn.leaky_relu(h1, alpha=0.2)
 
             h2 = conv2d(h1, self.df_dim * 4, name='d_h2_conv')
-            h2 = tf.nn.leaky_relu(h2, alpha=0.2)
+            if self.EnableBN:
+                h2 = self.d_bn3(h2)
+            if self.EnableSELU:
+                h2 = tf.nn.selu(h2)
+            else:
+                h2 = tf.nn.leaky_relu(h2, alpha=0.2)
 
             h3 = linear(tf.reshape(h2, [self.batch_size, -1]), 1, 'd_h3_linear')
 
@@ -130,13 +182,28 @@ class WGAN:
     def generator(self, z, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
             h0 = tf.reshape(linear(z, self.gf_dim * 8 * 4 * 4, 'g_h0_lin'), [-1, 4, 4, self.gf_dim * 8])
-            h0 = tf.nn.leaky_relu(h0, alpha=0.2)
+            if self.EnableBN:
+                h0 = self.d_bn1(h0)
+            if self.EnableSELU:
+                h0 = tf.nn.selu(h0)
+            else:
+                h0 = tf.nn.leaky_relu(h0, alpha=0.2)
 
             h1 = deconv2d(h0, [self.batch_size, 7, 7, self.gf_dim * 4], name='g_h1')
-            h1 = tf.nn.leaky_relu(h1, alpha=0.2)
+            if self.EnableBN:
+                h1 = self.d_bn2(h1)
+            if self.EnableSELU:
+                h1 = tf.nn.selu(h1)
+            else:
+                h1 = tf.nn.leaky_relu(h1, alpha=0.2)
 
             h2 = deconv2d(h1, [self.batch_size, 14, 14, self.gf_dim * 2], name='g_h2')
-            h2 = tf.nn.leaky_relu(h2, alpha=0.2)
+            if self.EnableBN:
+                h2 = self.d_bn3(h2)
+            if self.EnableSELU:
+                h2 = tf.nn.selu(h2)
+            else:
+                h2 = tf.nn.leaky_relu(h2, alpha=0.2)
 
             h3 = deconv2d(h2, [self.batch_size,  # output shape is same as input shape
                                self.input_height, self.input_width, self.input_channel], name='g_h3')
@@ -153,16 +220,28 @@ class WGAN:
         d_real = self.discriminator(self.x)
         d_fake = self.discriminator(self.g, reuse=True)
 
-        # Loss
+        # The WGAN losses
         # maximize log(D(G(z)))
         # maximize log(D(x)) + log(1 - D(G(z)))
 
         log = lambda x: tf.log(x + self.eps)
 
+        self.g_loss = -tf.reduce_mean(log(d_fake))
         d_real_loss = -tf.reduce_mean(log(d_real))
         d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(log(d_fake))
+
+        # The gradient penalty loss
+        if self.EnableGP:
+            alpha = tf.random_uniform(shape=[self.batch_size, 1],
+                                      minval=0., maxval=1.)
+            diff = self.g - self.x  # fake data - real data
+            interpolates = self.x + alpha * diff
+            gradients = tf.gradients(self.discriminator(interpolates), [interpolates])[0]
+            slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+            gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
+            # Update D loss
+            self.d_loss += 10 * gradient_penalty
 
         # Summary
         z_sum = tf.summary.histogram("z", self.z)
@@ -187,12 +266,16 @@ class WGAN:
         self.saver = tf.train.Saver()
 
         # Optimizer
-        self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
-                                              decay=self.decay). \
-            minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
-                                              decay=self.decay). \
-            minimize(self.g_loss, var_list=g_params)
+        if self.EnableAdam:
+            self.d_op = tf.train.AdamOptimizer(learning_rate=1e-4,
+                                               beta1=0.5, beta2=0.9).minimize(self.d_loss, var_list=d_params)
+            self.g_op = tf.train.AdamOptimizer(learning_rate=1e-4,
+                                               beta1=0.5, beta2=0.9).minimize(self.g_loss, var_list=g_params)
+        else:
+            self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
+                                                  decay=self.decay).minimize(self.d_loss, var_list=d_params)
+            self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
+                                                  decay=self.decay).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.g_sum = tf.summary.merge([z_sum, d_fake_sum, g_sum, d_fake_loss_sum, g_loss_sum])

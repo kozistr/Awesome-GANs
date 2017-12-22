@@ -39,7 +39,11 @@ def main():
 
     with tf.Session(config=config) as s:
         # WGAN Model
-        model = wgan.WGAN(s)
+        model = wgan.WGAN(s,
+                          enable_bn=True,
+                          enable_selu=False,
+                          enable_adam=True,
+                          enable_gp=True)  # Improved-WGAN with gradient penalty
 
         # Initializing
         s.run(tf.global_variables_initializer())
