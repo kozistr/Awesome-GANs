@@ -81,7 +81,8 @@ def main():
                                             size=[model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update d_clip
-                s.run(model.d_clip)
+                if not model.EnableGP:
+                    s.run(model.d_clip)
 
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
