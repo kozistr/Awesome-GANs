@@ -70,6 +70,8 @@ def main():
             model.critic = 5
             if step % 500 == 0 or step < 25:
                 model.critic = 100
+            if model.EnableGP:
+                model.critic = 1
 
             for _ in range(model.critic):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
@@ -88,8 +90,8 @@ def main():
                                       model.z: batch_z
                                   })
 
-            batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
-            batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
+            # batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
+            # batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
 
             # Generate z
             batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1

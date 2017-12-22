@@ -137,7 +137,7 @@ class WGAN:
         self.critic = 5
         self.clip = 0.01
         self.d_clip = []  # (-0.01 ~ 0.01)
-        self.d_lambda = 10
+        self.d_lambda = 0.25
         self.decay = 0.90
 
         self.EnableBN = enable_bn
@@ -271,9 +271,9 @@ class WGAN:
         # Optimizer
         if self.EnableAdam:
             self.d_op = tf.train.AdamOptimizer(learning_rate=2e-4,
-                                               beta1=0.5, beta2=0.9).minimize(self.d_loss, var_list=d_params)
+                                               beta1=0.5).minimize(self.d_loss, var_list=d_params)
             self.g_op = tf.train.AdamOptimizer(learning_rate=2e-4,
-                                               beta1=0.5, beta2=0.9).minimize(self.g_loss, var_list=g_params)
+                                               beta1=0.5).minimize(self.g_loss, var_list=g_params)
         else:
             self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
                                                   decay=self.decay).minimize(self.d_loss, var_list=d_params)
