@@ -72,7 +72,7 @@ def main():
                 model.critic = 100
 
             for _ in range(model.critic):
-                batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 32
+                batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
                 batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
 
                 batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
@@ -88,7 +88,7 @@ def main():
                                       model.z: batch_z
                                   })
 
-            batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 32
+            batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
             batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
 
             # Generate z
@@ -146,7 +146,7 @@ def main():
     end_time = time.time() - start_time  # Clocking end
 
     # Elapsed time
-    print("[+] Elapsed time {:.8f}s".format(end_time))  # took about XXXs on my machine
+    print("[+] Elapsed time {:.8f}s".format(end_time))  # took over 2hrs for 10k steps on my machine
 
     # Close tf.Session
     s.close()

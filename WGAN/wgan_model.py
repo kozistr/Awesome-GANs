@@ -67,7 +67,7 @@ def linear(input_, output_size, scope=None, bias_start=0.):
 
 class WGAN:
 
-    def __init__(self, s, batch_size=128, input_height=28, input_width=28, input_channel=1, n_classes=10,
+    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, n_input=784,
                  z_dim=128, gf_dim=64, df_dim=64, epsilon=1e-12,
                  enable_bn=False, enable_selu=False, enable_adam=False, enable_gp=False):
@@ -137,6 +137,7 @@ class WGAN:
         self.critic = 5
         self.clip = 0.01
         self.d_clip = []  # (-0.01 ~ 0.01)
+        self.d_lambda = 10
         self.decay = 0.90
 
         self.EnableBN = enable_bn
@@ -233,15 +234,17 @@ class WGAN:
 
         # The gradient penalty loss
         if self.EnableGP:
-            alpha = tf.random_uniform(shape=[self.batch_size, 1],
-                                      minval=0., maxval=1.)
+            alpha = tf.random_uniform(shape=self.x.get_shape(),
+                                      minval=0., maxval=1., name='alpha')
             diff = self.g - self.x  # fake data - real data
             interpolates = self.x + alpha * diff
-            gradients = tf.gradients(self.discriminator(interpolates), [interpolates])[0]
+            d_interp = self.discriminator(interpolates, reuse=True)
+            gradients = tf.gradients(d_interp, [interpolates])[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
             gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
+
             # Update D loss
-            self.d_loss += 10 * gradient_penalty
+            self.d_loss += self.d_lambda * gradient_penalty
 
         # Summary
         z_sum = tf.summary.histogram("z", self.z)
@@ -267,9 +270,9 @@ class WGAN:
 
         # Optimizer
         if self.EnableAdam:
-            self.d_op = tf.train.AdamOptimizer(learning_rate=1e-4,
+            self.d_op = tf.train.AdamOptimizer(learning_rate=2e-4,
                                                beta1=0.5, beta2=0.9).minimize(self.d_loss, var_list=d_params)
-            self.g_op = tf.train.AdamOptimizer(learning_rate=1e-4,
+            self.g_op = tf.train.AdamOptimizer(learning_rate=2e-4,
                                                beta1=0.5, beta2=0.9).minimize(self.g_loss, var_list=g_params)
         else:
             self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,
