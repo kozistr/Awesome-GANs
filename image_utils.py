@@ -4,23 +4,23 @@ import numpy as np
 import tensorflow as tf
 
 
-def downsample(I):
-    shape = I.get_shape()  # [batch, height, width, channels]
+def down_sampling(img):
+    shape = img.get_shape()  # [batch, height, width, channels]
 
     h2 = int(shape[1] // 2)
     w2 = int(shape[2] // 2)
 
-    return tf.image.resize_images(I, h2, w2,
+    return tf.image.resize_images(img, h2, w2,
                                   tf.image.ResizeMethod.BILINEAR)
 
 
-def upsample(I):
-    shape = I.get_shape()  # [batch, height, width, channels]
+def up_sampling(img):
+    shape = img.get_shape()  # [batch, height, width, channels]
 
     h2 = int(shape[1] * 2)
     w2 = int(shape[2] * 2)
 
-    return tf.image.resize_images(I, h2, w2,
+    return tf.image.resize_images(img, h2, w2,
                                   tf.image.ResizeMethod.BILINEAR)
 
 
@@ -40,10 +40,10 @@ def merge(images, size):
     return img
 
 
-def imsave(images, size, path):
+def img_save(images, size, path):
     image = np.squeeze(merge(images, size))
     return scipy.misc.imsave(path, image)
 
 
 def save_images(images, size, image_path):
-    return imsave(inverse_transform(images), size, image_path)
+    return img_save(inverse_transform(images), size, image_path)
