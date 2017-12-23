@@ -23,11 +23,11 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
     just download it and run train.py
     $ python3 xxx_train.py
 
-## Datasets
+## DataSets
 Now supporting(?) DataSets are... (code is in /datasets.py)
 * MNIST
-* Cifar-10
-* Cifar-100
+* CiFar-10
+* CiFar-100
 * Celeb-A
 * pix2pix shoes
 * pix2pix bags
