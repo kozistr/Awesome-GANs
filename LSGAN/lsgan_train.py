@@ -46,14 +46,13 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
+        sample_x = np.reshape(sample_x, model.image_shape)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
-            batch_x = batch_x.reshape(-1, model.n_input)           # (-1, 784)
-
-            # Generate z
+            batch_x = np.reshape(batch_x, model.image_shape)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
 
             # Update D network
@@ -77,6 +76,7 @@ def main():
 
                 if step % train_step['logging_interval'] == 0:
                     batch_x, _ = mnist.test.next_batch(model.batch_size)
+                    batch_x = np.reshape(batch_x, model.image_shape)
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],

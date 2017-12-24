@@ -4,7 +4,7 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad="SAME", name="Conv2D"):
+def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad='same', name="Conv2D"):
     with tf.variable_scope(name):
         return tf.layers.conv2d(inputs=input_,
                                 filters=filter_,
@@ -17,12 +17,26 @@ def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, 
                                 name=name)
 
 
-class GAN:
+def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="DeConv2D"):
+    with tf.variable_scope(name):
+        return tf.layers.conv2d_transpose(inputs=input_,
+                                          filters=filter_,
+                                          kernel_size=k,
+                                          strides=d,
+                                          padding=pad,
+                                          activation=activation,
+                                          kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                          bias_initializer=tf.constant_initializer(0.),
+                                          name=name)
+
+
+class LSGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
                  n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
                  z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-12):
+
         """
         # General Settings
         :param s: TF Session
@@ -59,6 +73,7 @@ class GAN:
         self.input_height = input_height
         self.input_width = input_width
         self.channel = channel
+        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
         self.n_classes = n_classes
 
         self.sample_num = sample_num
@@ -79,8 +94,8 @@ class GAN:
         self.d_loss = 0.
 
         # Placeholder
-        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 100)
+        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 28, 28, 1)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_lsgan()  # build LSGAN model
 
@@ -94,7 +109,7 @@ class GAN:
 
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='d_fc_1')
+            x = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d_fc_1')
             x = tf.layers.dropout(x, 0.5, name='d_dropout_3')
 
             x = tf.layers.dense(x, 1, name='d_fc_2')  # logits
@@ -103,23 +118,11 @@ class GAN:
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, self.fc_unit, activation=tf.nn.leaky_relu, name='g_fc_1')
-            x = tf.layers.dense(x, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_2')
+            x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_1')
             x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim * 2])
 
-            x = tf.layers.conv2d_transpose(x,
-                                           filters=[self.batch_size, 14, 14, self.gf_dim],
-                                           kernel_size=(5, 5),
-                                           strides=(2, 2),
-                                           activation=tf.nn.leaky_relu,
-                                           name='g_deconv_1')
-
-            x = tf.layers.conv2d_transpose(x,
-                                           filters=[self.batch_size, 28, 28, 1],
-                                           kernel_size=(5, 5),
-                                           strides=(2, 2),
-                                           activation=tf.nn.sigmoid,
-                                           name='g_deconv_2')
+            x = tf.layers.conv2d_transpose(x, self.gf_dim, 2, strides=2, activation=tf.nn.leaky_relu, name='g_deconv_1')
+            x = tf.layers.conv2d_transpose(x, 1, 2, strides=2, activation=tf.nn.sigmoid, name='g_deconv_2')
 
             return x
 
@@ -142,17 +145,16 @@ class GAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        self.g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
         tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.scalar("d_real", d_real)
-        tf.summary.scalar("d_fake", d_fake)
+        tf.summary.histogram("d_real", d_real)
+        tf.summary.histogram("d_fake", d_fake)
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # optimizer
         vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d_')]
-        g_params = [v for v in vars if v.name.startswith('g_')]
+        d_params = [v for v in vars if v.name.startswith('d')]
+        g_params = [v for v in vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(self.d_lr).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(self.g_lr).minimize(self.g_loss, var_list=g_params)
