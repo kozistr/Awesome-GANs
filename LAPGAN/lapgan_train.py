@@ -72,7 +72,7 @@ def main():
                                                [train_step['batch_size'], model.z_noises[i]]).astype(np.float32))
 
                 # Update D/G networks
-                img_fake, _, _, _, d_loss_1, g_loss_1, \
+                img_fake, _, _, img_coarse, d_loss_1, g_loss_1, \
                 _, _, _, _, _, d_loss_2, g_loss_2, \
                 _, _, _, _, d_loss_3, g_loss_3, \
                 _, _, _, _, _, _ = s.run([
@@ -100,7 +100,7 @@ def main():
                           "D loss : {:.8f}".format(d_loss_1.mean()), " G loss : {:.8f}".format(g_loss_1.mean()))
 
                     # Training G model with sample image and noise
-                    samples = img_fake
+                    samples = img_fake + img_coarse
 
                     # Summary saver
                     # model.writer.add_summary(summary, step) # time saving

@@ -37,9 +37,9 @@ def image_sampling(img, sampling_type='down'):
 
 class LAPGAN:
 
-    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3, n_classes=10,
+    def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
                  sample_size=8, sample_num=64,
-                 z_dim=128, gf_dim=64, df_dim=64,
+                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=1024,
                  eps=1e-12):
 
         """
@@ -57,9 +57,10 @@ class LAPGAN:
         :param sample_num: the number of sample images, default 64
 
         # Model Settings
-        :param z_dim: z noise dimension, default 128
+        :param z_dim: z noise dimension, default 100
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
+        :param fc_unit: the number of fully connected filters
 
         # Training Settings
         :param eps: epsilon, default 1e-12
@@ -83,7 +84,7 @@ class LAPGAN:
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
-        self.fc_unit = 1024  # default
+        self.fc_unit = fc_unit
 
         # Placeholders
         self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name='y-classes')  # one_hot
@@ -157,12 +158,14 @@ class LAPGAN:
                 h = tf.concat([x1, y], axis=1)
 
                 h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-1')
-                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-2')
+                h = tf.layers.dropout(h, 0.5, name='d-dropout-1')
+                h = tf.layers.dense(h, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-2')
+                h = tf.layers.dropout(h, 0.5, name='d-dropout-2')
                 h = tf.layers.dense(h, 1, name='d-fc-3')
             else:
                 x = x1 + x2
 
-                y = tf.layers.dense(y, scale * scale, activation=tf.nn.leaky_relu, name='d-fc-0')
+                y = tf.layers.dense(y, scale * scale, activation=tf.nn.leaky_relu, name='d-fc-1')
                 y = tf.reshape(y, [-1, scale, scale, 1])
 
                 h = tf.concat([x, y], axis=3)
@@ -172,8 +175,9 @@ class LAPGAN:
 
                 h = tf.layers.flatten(h)
                 h = tf.nn.leaky_relu(h)
+                h = tf.layers.dropout(h, 0.5,  name='d-dropout-1')
 
-                h = tf.layers.dense(h, 1, name='d-fc-1')
+                h = tf.layers.dense(h, 1, name='d-fc-2')
 
             return h
 
@@ -195,7 +199,9 @@ class LAPGAN:
 
                 # FC Layers
                 h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
-                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-2')
+                h = tf.layers.dropout(h, 0.5, name='g-dropout-1')
+                h = tf.layers.dense(h, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='g-fc-2')
+                h = tf.layers.dropout(h, 0.5, name='g-dropout-2')
                 h = tf.layers.dense(h, 3 * 8 * 8, name='g-fc-3')
 
                 h = tf.reshape(h, [-1, 8, 8, 3])
@@ -203,7 +209,7 @@ class LAPGAN:
                 y = tf.layers.dense(y, scale * scale, name='g-fc-0')
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
-                # print(x.get_shape(), y.get_shape(), z.get_shape())
+
                 h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
 
                 # Convolution Layers
