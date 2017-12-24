@@ -45,7 +45,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 *Name* | *Summary* | *Paper* | *Code*
 :---: | :---: | :---: | :---:
-**ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) |
+**ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/acgan_model.py)
 **AdaGAN**       | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) |
 **BEGAN**        | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/began_model.py)
 **BSGAN**        | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) |
@@ -76,7 +76,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 *Name* | *Global Step 50k~* | *Global Step 150k~* | *Loss Function*
 :---: | :---: | --- | :---:
-**ACGAN**     |  |  | 
+**ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00175000.png) | 
 **AdaGAN**    |  |  | 
 **BEGAN**     |  |  | 
 **BSGAN**     |  |  | 
