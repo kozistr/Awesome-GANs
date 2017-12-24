@@ -3,11 +3,9 @@ from __future__ import print_function
 from __future__ import division
 
 import tensorflow as tf
-import numpy as np
 
 
 tf.set_random_seed(777)
-np.random.seed(777)
 
 
 class BatchNorm(object):
@@ -24,12 +22,6 @@ class BatchNorm(object):
                                              epsilon=self.eps,
                                              scale=True,
                                              training=train)
-
-
-def conv_cond_concat(x, y):
-    """Concatenate conditioning vector on feature map axis."""
-    x_shapes, y_shapes = x.get_shape(), y.get_shape()
-    return tf.concat([x, y*tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])], 3)
 
 
 def conv2d(input_, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, name="Conv2D"):
@@ -136,6 +128,7 @@ class DCGAN:
 
         # Training Options
         self.beta1 = 0.5
+        self.beta2 = 0.9
         self.learning_rate = 5e-4
         self.lr = tf.train.exponential_decay(
             learning_rate=self.learning_rate,
@@ -226,9 +219,11 @@ class DCGAN:
         self.saver = tf.train.Saver()
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=self.beta1).\
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                           beta1=self.beta1, beta2=self.beta2).\
             minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate, beta1=self.beta1).\
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                           beta1=self.beta1, beta2=self.beta2).\
             minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
