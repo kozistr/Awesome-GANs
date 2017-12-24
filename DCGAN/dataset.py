@@ -24,8 +24,8 @@ DataSets = {
     # 'cifar-10': "/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py",
     # 'cifar-100': "/home/zero/hdd/DataSet/Cifar/cifar-100-python",
     # Windows
-    'cifar-10': "D:\\DataSets\\Cifar\\cifar-10-batches-py",
-    'cifar-100': "D:\\DataSets\\Cifar\\cifar-100-python",
+    'cifar-10': "D:\\DataSet\\Cifar\\cifar-10-batches-py",
+    'cifar-100': "D:\\DataSet\\Cifar\\cifar-100-python",
 }
 
 
