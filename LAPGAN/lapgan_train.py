@@ -36,7 +36,7 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        # LAPGAN model
+        # LAPGAN model # D/G Models are same as DCGAN
         model = lapgan.LAPGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing variables
@@ -65,32 +65,40 @@ def main():
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
                 batch_images = batch_images.astype(np.float32) / 255.0
-                batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                            [train_step['batch_size'], model.z_dim]).astype(np.float32)
+                l1 = iu.down_sampling(tf.constant(batch_images, dtype=tf.float32))
+                l0 = s.run(iu.up_sampling(l1))
+                h0 = batch_images - l0
+                z0 = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                       (train_step['batch_size'],) + model.image_shape + (1,)).astype(np.float32)
+                l0 = np.concatenate([l0, z0], axis=1)
 
                 # Update D network
                 if not d_overpowered:
                     _, d_loss = s.run([model.d_op, model.d_loss],
                                       feed_dict={
-                                          model.x: batch_images,
-                                          model.z: batch_z
+                                          model.x: l0,
+                                          model.z: z0,
                                       })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
-                                      model.z: batch_z
+                                      model.z: z0,
                                   })
                 # Logging
                 if step % train_step['logging_interval'] == 0:
-                    batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.0
-                    batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                                [train_step['batch_size'], model.z_dim]).astype(np.float32)
+                    batch_images = batch_images.astype(np.float32) / 255.0
+                    l1 = iu.down_sampling(tf.constant(batch_images, dtype=tf.float32))
+                    l0 = s.run(iu.up_sampling(l1))
+                    h0 = batch_images - l0
+                    z0 = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                           (train_step['batch_size'],) + model.image_shape + (1,)).astype(np.float32)
+                    l0 = np.concatenate([l0, z0], axis=1)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                     feed_dict={
-                                                        model.x: batch_images,
-                                                        model.z: batch_z
+                                                        model.x: l0,
+                                                        model.z: z0,
                                                     })
 
                     # Print loss

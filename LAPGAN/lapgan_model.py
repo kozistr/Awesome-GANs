@@ -65,7 +65,7 @@ def linear(input_, output_size, scope=None, bias_start=0.):
         return layer
 
 
-class DCGAN:
+class LAPGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
                  sample_size=8, sample_num=64,
@@ -137,7 +137,7 @@ class DCGAN:
             staircase=False,
         )
 
-        self.bulid_dcgan()  # build DCGAN model
+        self.bulid_lapgan()  # build LAPGAN model
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
@@ -179,7 +179,7 @@ class DCGAN:
 
             return tf.nn.tanh(h3)
 
-    def bulid_dcgan(self):
+    def bulid_lapgan(self):
         # Generator
         self.g = self.generator(self.z)
 
