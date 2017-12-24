@@ -74,20 +74,20 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## Results & Loss Functions
 
-*Name* | *Global Step 5k* | *Global Step 10k* | *Loss Function*
+*Name* | *Global Step 50k ~* | *Global Step 150k ~* | *Loss Function*
 :---: | :---: | --- | :---:
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_0_0.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_0_0.png) | 
-**CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00225000.png) | 
+**CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png) | 
 **DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_0_0.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_43_27000.png) |
 **DiscoGAN**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/gen_img/train_0_0.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/gen_img/train_0_0.png) | 
-**GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png) | 
+**GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png) | 
 **InfoGAN**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00250000.png) | 
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_00250000.png) | 
 **MRGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MRGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MRGAN/gen_img/train_00250000.png) | 
-**WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) | 
-**WGAN-GP**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00080000_2.png) | 
+**WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) |  | 
+**WGAN-GP**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00080000_2.png) |  | 
 
-WGAN took so much times(?) so i just stopped at 90k. <br/>
+WGAN took so much times(?) so i just stopped at 8 ~ 90k. <br/>
 If you want better results, maybe you should increase global step or adjust the d_lambda, a little bit.
 
 ## Author
