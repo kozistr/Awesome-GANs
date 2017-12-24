@@ -76,7 +76,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 *Name* | *Global Step 50k~* | *Global Step 150k~* | *Loss Function*
 :---: | :---: | --- | :---:
-**ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00175000.png) | 
+**ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00175000.png) | 
 **AdaGAN**    |  |  | 
 **BEGAN**     |  |  | 
 **BSGAN**     |  |  | 
