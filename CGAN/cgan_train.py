@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'global_step': 500001,
+    'global_step': 250001,
     'logging_interval': 25000,
-    'update_overpowered': 10,
+    'update_overpowered': 100,
 }
 
 
