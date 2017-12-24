@@ -8,66 +8,36 @@ import tensorflow as tf
 tf.set_random_seed(777)
 
 
-class BatchNorm(object):
-
-    def __init__(self, epsilon=1e-6, momentum=0.9, name="batch_norm"):
-        with tf.variable_scope(name) as scope:
-            self.eps = epsilon
-            self.momentum = momentum
-            self.name = name
-
-    def __call__(self, x, train=True):
-        return tf.layers.batch_normalization(inputs=x,
-                                             momentum=self.momentum,
-                                             epsilon=self.eps,
-                                             scale=True,
-                                             training=train)
-
-
-def conv2d(input_, output_dim, k_h=3, k_w=3, d_h=2, d_w=2, name="Conv2D"):
+def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad="SAME", name="Conv2D"):
     with tf.variable_scope(name):
-        w = tf.get_variable('weights', shape=[k_h, k_w, input_.get_shape()[-1], output_dim],
-                            initializer=tf.contrib.layers.variance_scaling_initializer())
-        b = tf.get_variable('biases', [output_dim],
-                            initializer=tf.constant_initializer(0.))
-
-        conv = tf.nn.conv2d(input_, w, strides=[1, d_h, d_w, 1], padding='SAME')
-        conv = tf.reshape(tf.nn.bias_add(conv, b), conv.get_shape())
-
-        return conv
-
-
-def deconv2d(input_, output_shape, k_h=3, k_w=3, d_h=2, d_w=2, name="DeConv2D"):
-    with tf.variable_scope(name):
-        w = tf.get_variable('weights', shape=[k_h, k_w, output_shape[-1], input_.get_shape()[-1]],
-                            initializer=tf.contrib.layers.variance_scaling_initializer())
-        b = tf.get_variable('biases', [output_shape[-1]],
-                            initializer=tf.constant_initializer(0.))
-
-        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape, strides=[1, d_h, d_w, 1])
-        deconv = tf.reshape(tf.nn.bias_add(deconv, b), deconv.get_shape())
-
-        return deconv
+        return tf.layers.conv2d(inputs=input_,
+                                filters=filter_,
+                                kernel_size=k,
+                                strides=d,
+                                padding=pad,
+                                activation=activation,
+                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                bias_initializer=tf.constant_initializer(0.),
+                                name=name)
 
 
-def linear(input_, output_size, scope=None, bias_start=0.):
-    shape = input_.get_shape().as_list()
+# In image_utils, up/down_sampling
+def image_sampling(img, sampling_type='down'):
+    shape = img.get_shape()  # [batch, height, width, channels]
 
-    with tf.variable_scope(scope or "Linear"):
-        matrix = tf.get_variable("matrix", shape=[shape[1], output_size],
-                                 initializer=tf.contrib.layers.variance_scaling_initializer())
+    if sampling_type == 'down':
+        h = int(shape[1] // 2)
+        w = int(shape[2] // 2)
+    else:  # 'up'
+        h = int(shape[1] * 2)
+        w = int(shape[2] * 2)
 
-        bias_term = tf.get_variable("bias", shape=[output_size],
-                                    initializer=tf.constant_initializer(bias_start))
-
-        layer = tf.nn.bias_add(tf.matmul(input_, matrix), bias_term)
-
-        return layer
+    return tf.image.resize_images(img, [h, w], tf.image.ResizeMethod.BILINEAR)
 
 
 class LAPGAN:
 
-    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
+    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3, n_classes=10,
                  sample_size=8, sample_num=64,
                  z_dim=128, gf_dim=64, df_dim=64,
                  eps=1e-12):
@@ -79,7 +49,8 @@ class LAPGAN:
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of CIFAR, image size is 32x32x3(HWC).
+        :param n_classes: the number of classes, default 10
+        - in case of CIFAR, image size is 32x32x3(HWC), classes are 10.
 
         # Output Settings
         :param sample_size: sample image size, default 8
@@ -99,6 +70,7 @@ class LAPGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+        self.n_classes = n_classes
 
         self.sample_size = sample_size
         self.sample_num = sample_num
@@ -111,19 +83,34 @@ class LAPGAN:
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
-
-        # Custom Batch Normalization
-        self.d_bn1 = BatchNorm(self.batch_size, name='d_bn1')
-        self.d_bn2 = BatchNorm(self.batch_size, name='d_bn2')
-        self.d_bn3 = BatchNorm(self.batch_size, name='d_bn3')
-
-        self.g_bn1 = BatchNorm(self.batch_size, name='g_bn1')
-        self.g_bn2 = BatchNorm(self.batch_size, name='g_bn2')
-        self.g_bn3 = BatchNorm(self.batch_size, name='g_bn3')
+        self.fc_unit = 1024  # default
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape, name='x-images')
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')
+        self.y = tf.placeholder(tf.int32, shape=[self.batch_size, self.n_classes], name='y-classes')  # one_hot
+
+        self.x1_fine = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape,
+                                      name='x-images')  # [32, 32]
+        self.x1_scaled = image_sampling(self.x1_fine, 'down')
+        self.x1_coarse = image_sampling(self.x1_scaled, 'up')
+        self.x1_diff = self.x1_fine - self.x1_coarse
+
+        self.x2_fine = self.x1_scaled  # [16, 16]
+        self.x2_scaled = image_sampling(self.x2_fine, 'down')
+        self.x2_coarse = image_sampling(self.x2_scaled, 'up')
+        self.x2_diff = self.x2_fine - self.x2_coarse
+
+        self.x3_fine = self.x2_scaled  # [8, 8]
+
+        self.z = []
+        self.z_noises = [32 * 32, 16 * 16, self.z_dim]
+        for i in range(3):
+            self.z.append(tf.placeholder(tf.float32,
+                                         shape=[self.batch_size, self.z_noises[i]],
+                                         name='z-noise_{0}'.format(i)))
+
+        self.g = []        # generators
+        self.d_reals = []  # discriminator_real
+        self.d_fakes = []  # discriminator_fake
 
         # Training Options
         self.beta1 = 0.5
@@ -139,53 +126,99 @@ class LAPGAN:
 
         self.bulid_lapgan()  # build LAPGAN model
 
-    def discriminator(self, x, reuse=None):
-        with tf.variable_scope('discriminator', reuse=reuse):
-            h0 = conv2d(x, self.df_dim, name='d_h0_conv')
-            h0 = tf.nn.leaky_relu(h0)
+    def discriminator(self, x1, x2, y, scale=32, reuse=None):
+        """
+        :param x1: image to discriminate
+        :param x2: down-up sampling-ed images
+        :param y: classes
+        :param scale: image size
+        :param reuse: variable re-use
+        :return: prob
+        """
 
-            h1 = conv2d(h0, self.df_dim * 2, name='d_h1_conv')
-            h1 = self.d_bn1(h1)
-            h1 = tf.nn.leaky_relu(h1)
+        assert (scale % 8 == 0)  # 32, 16, 8
 
-            h2 = conv2d(h1, self.df_dim * 4, name='d_h2_conv')
-            h2 = self.d_bn2(h2)
-            h2 = tf.nn.leaky_relu(h2)
+        with tf.variable_scope('discriminator_{0}'.format(scale), reuse=reuse):
+            if scale == 8:
+                x1 = tf.reshape(x1, [self.batch_size, scale * scale * 3])
 
-            h3 = conv2d(h2, self.df_dim * 8, name='d_h3_conv')
-            h3 = self.d_bn3(h3)
-            h3 = tf.nn.leaky_relu(h3)
+                h = tf.concat([x1, y], axis=1)
 
-            h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_linear')
+                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-1')
+                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-2')
+                h = tf.layers.dense(h, 1, name='d-fc-3')
+            else:
+                x = x1 + x2
 
-            return tf.nn.sigmoid(h4)
+                y = tf.layers.dense(y, scale * scale, activation=tf.nn.leaky_relu, name='d-fc-0')
+                y = tf.reshape(y, [-1, scale, scale, 1])
 
-    def generator(self, z, reuse=None):
-        with tf.variable_scope('generator', reuse=reuse):
-            h0 = tf.reshape(linear(z, self.gf_dim * 8 * 4 * 4, 'g_h0_lin'), [-1, 4, 4, self.gf_dim * 8])
-            h0 = self.g_bn1(h0)
-            h0 = tf.nn.leaky_relu(h0)
+                h = tf.concat([x, y], axis=3)
 
-            h1 = deconv2d(h0, [self.batch_size, 8, 8, self.gf_dim * 4], name='g_h1')
-            h1 = self.g_bn2(h1)
-            h1 = tf.nn.leaky_relu(h1)
+                h = conv2d(h, filter_=self.df_dim, pad="VALID", name='d-conv-1')
+                h = conv2d(h, filter_=self.df_dim, activation=None, pad="VALID", name='d-conv-2')
 
-            h2 = deconv2d(h1, [self.batch_size, 16, 16, self.gf_dim * 2], name='g_h2')
-            h2 = self.g_bn3(h2)
-            h2 = tf.nn.leaky_relu(h2)
+                h = tf.layers.flatten(h)
+                h = tf.nn.leaky_relu(h)
 
-            h3 = deconv2d(h2, [self.batch_size,  # output shape is same as input shape
-                               self.input_height, self.input_width, self.input_channel], name='g_h3')
+                h = tf.layers.dense(h, 1, name='d-fc-1')
 
-            return tf.nn.tanh(h3)
+            return tf.nn.sigmoid(h)
+
+    def generator(self, x, y, z, scale=32, reuse=None):
+        """
+        :param x: images to fake
+        :param y: classes
+        :param z: noise
+        :param scale: image size
+        :param reuse: variable re-use
+        :return: prob
+        """
+
+        assert(scale % 8 == 0)  # 32, 16, 8
+
+        with tf.variable_scope('generator_{0}'.format(scale), reuse=reuse):
+            if scale == 8:
+                h = tf.concat([z, y], axis=1)
+
+                # FC Layers
+                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
+                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-2')
+                h = tf.layers.dense(h, 3 * 8 * 8, name='g-fc-3')
+
+                h = tf.reshape(h, [-1, 8, 8, 3])
+            else:
+                y = tf.layers.dense(y, [scale, scale], name='g-fc-0')
+                y = tf.reshape(y, [-1, scale, scale, 1])
+                z = tf.reshape(z, [-1, scale, scale, 1])
+
+                h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
+
+                # Convolution Layers
+                for idx in range(1, scale // 8 - 1):
+                    h = conv2d(h, filter_=self.gf_dim, name='g-deconv-{0}'.format(idx))
+
+                h = conv2d(h, filter_=3, activation=None, name='g-deconv-{0}'.format(scale // 8))
+
+            return tf.nn.sigmoid(h)
 
     def bulid_lapgan(self):
-        # Generator
-        self.g = self.generator(self.z)
+        # Generator & Discriminator
+        g1 = self.generator(x=self.x1_coarse, y=self.y, z=self.z[0], scale=32)
+        d1_real = self.discriminator(x1=self.x1_diff, x2=self.x1_coarse, y=self.y, scale=32)
+        d1_fake = self.discriminator(x1=g1, x2=self.x1_coarse, y=self.y, scale=32, reuse=True)
 
-        # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        g2 = self.generator(x=self.x2_coarse, y=self.y, z=self.z[1], scale=16)
+        d2_real = self.discriminator(x1=self.x2_diff, x2=self.x2_coarse, y=self.y, scale=16)
+        d2_fake = self.discriminator(x1=g2, x2=self.x2_coarse, y=self.y, scale=16, reuse=True)
+
+        g3 = self.generator(x=None, y=self.y, z=self.z[2], scale=8)
+        d3_real = self.discriminator(x1=self.x3_fine, x2=None, y=self.y, scale=8)
+        d3_fake = self.discriminator(x1=g3, x2=None, y=self.y, scale=8, reuse=True)
+
+        self.g = [g1, g2, g3]
+        self.d_reals = [d1_real, d2_real, d3_real]
+        self.d_fakes = [d1_fake, d2_fake, d3_fake]
 
         # Loss
         # maximize log(D(G(z)))
