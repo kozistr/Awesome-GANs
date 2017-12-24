@@ -93,7 +93,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **GEGAN**     |  |  | 
 **InfoGAN**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00250000.png) | 
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_128_80000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_224_140000.png) | 
-**LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00000000.png) | 
+**LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00175000.png) | 
 **MAGAN**     |  |  | 
 **MRGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MRGAN/gen_img/train_00000000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MRGAN/gen_img/train_00250000.png) | 
 **SalGAN**    |  |  | 
