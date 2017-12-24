@@ -10,7 +10,7 @@ def down_sampling(img):
     h2 = int(shape[1] // 2)
     w2 = int(shape[2] // 2)
 
-    return tf.image.resize_images(img, h2, w2,
+    return tf.image.resize_images(img, [h2, w2],
                                   tf.image.ResizeMethod.BILINEAR)
 
 
@@ -20,7 +20,7 @@ def up_sampling(img):
     h2 = int(shape[1] * 2)
     w2 = int(shape[2] * 2)
 
-    return tf.image.resize_images(img, h2, w2,
+    return tf.image.resize_images(img, [h2, w2],
                                   tf.image.ResizeMethod.BILINEAR)
 
 
