@@ -42,34 +42,38 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [dataset.py] (dataset loader) <br/>
 
 ## Papers & Codes
-* ACGAN        : Auxiliary Classifier Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1610.09585)
-* AdaGAN       : Boosting Generative Models [[arXiv]](https://arxiv.org/abs/1701.02386)
-* BEGAN        : Boundary Equilibrium Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.10717) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/began_model.py)
-* BSGAN        : Boundary-Seeking Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1702.08431)
-* CGAN         : Conditional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1411.1784) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/cgan_model.py)
-* CoGAN        : Coupled Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.07536)
-* CycleGAN     : Unpaired img2img translation using Cycle-consistent Adversarial Networks [[arXiv]](https://arxiv.org/pdf/1703.10593.pdf)
-* DCGAN        : Deep Convolutional Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1511.06434) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan_model.py)
-* DiscoGAN     : Discover Cross-Domain Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.05192) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/discogan.py)
-* EnergyGAN    : Energy-based Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1609.03126)
-* f-GAN        : Training Generative Neural Samplers using Variational Divergence Minimization [[arXiv]](https://arxiv.org/abs/1606.00709)
-* GAN          : Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1406.2661) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
-* Softmax GAN  : Generative Adversarial Networks with Softmax [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
-* 3D GAN       : 3D Generative Adversarial Networks [[MIT]](http://3dgan.csail.mit.edu/)
-* GAP          : Generative Adversarial Parallelization [[arXiv]](https://arxiv.org/abs/1612.04021)
-* GEGAN        : Generalization and Equilibrium in Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1703.00573)
-* InfoGAN      : Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1606.03657)
-* LAPGAN       : Laplacian Pyramid Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1506.05751)
-* LSGAN        : Loss-Sensitive Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.06264)
-* MAGAN        : Margin Adaptation for Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1704.03817)
-* MRGAN        : Mode Regularized Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1612.02136)
-* SalGAN       : Visual Saliency Prediction Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.01081)
-* SeqGAN       : Sequence Generative Adversarial Networks with Policy Gradient [[arXiv]](https://arxiv.org/abs/1609.05473)
-* SGAN         : Stacked Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1612.04357)
-* WGAN         : Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1701.07875) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
-* ImprovedWGAN : Improved Training of Wasserstein Generative Adversarial Networks [[arXiv]](https://arxiv.org/abs/1704.00028) [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
+
+*Name* | *Summary* | *Paper* | *Code*
+:---: | :---: | :---: | :---:
+**ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) |
+**AdaGAN**       | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) |
+**BEGAN**        | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/began_model.py)
+**BSGAN**        | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) |
+**CGAN**         | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/cgan_model.py)
+**CoGAN**        | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) |
+**CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/pdf/1703.10593.pdf) |
+**DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan_model.py)
+**DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/discogan.py)
+**EnergyGAN**    | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) |
+**f-GAN**        | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) |
+**GAN**          | *Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1406.2661) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
+**Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
+**3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) |
+**GAP**          | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) |
+**GEGAN**        | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) |
+**InfoGAN**      | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657)
+**LAPGAN**       | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) |
+**LSGAN**        | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) |
+**MAGAN**        | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) |
+**MRGAN**        | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) |
+**SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
+**SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
+**SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) |
+**WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
+**ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
 
 ## Results
+
 ### BEGAN
 #### global step 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; global step 150k
 ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_0_0.png)
