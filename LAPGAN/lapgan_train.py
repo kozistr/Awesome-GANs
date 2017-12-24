@@ -64,49 +64,43 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, batch_labels in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 255.0
-                z0 = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                       [train_step['batch_size'], model.z_dim]).astype(np.float32)
+                batch_images = batch_images.astype(np.float32) / 255.
 
-                # Update D network
-                if not d_overpowered:
-                    _, d_loss = s.run([model.d_op, model.d_loss],
-                                      feed_dict={
-                                          model.x: batch_images,
-                                          model.z: z0,
-                                      })
+                z = []
+                for i in range(3):
+                    z.append(np.random.uniform(-1., 1.,
+                                               [train_step['batch_size'], model.z_noises[i]]).astype(np.float32))
 
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.z: z0,
-                                  })
+                # Update D/G networks
+                img_fake, _, _, _, d_loss_1, g_loss_1, \
+                _, _, _, _, _, d_loss_2, g_loss_2, \
+                _, _, _, _, d_loss_3, g_loss_3, \
+                _, _, _, _, _, _ = s.run([
+                    model.g[0], model.d_reals_prob[0], model.d_fakes_prob[0], model.x1_coarse,
+                    model.d_loss[0], model.g_loss[0],
+
+                    model.x2_fine, model.g[1], model.d_reals_prob[1], model.d_fakes_prob[1], model.x2_coarse,
+                    model.d_loss[1], model.g_loss[1],
+
+                    model.x3_fine, model.g[2], model.d_reals_prob[2], model.d_fakes_prob[2],
+                    model.d_loss[2], model.g_loss[2],
+
+                    model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2]  # D/G ops
+                ],
+                    feed_dict={
+                        model.x1_fine: batch_images,  # images
+                        model.y: batch_labels,  # classes
+                        model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2]  # z-noises
+                    })
+
                 # Logging
                 if step % train_step['logging_interval'] == 0:
-                    batch_images = batch_images.astype(np.float32) / 255.0
-                    z0 = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                           [train_step['batch_size'], model.z_dim]).astype(np.float32)
-
-                    d_loss, g_loss = s.run([model.d_loss, model.g_loss],  # add 'model.merge' for summary if u want to
-                                           feed_dict={
-                                               model.x: batch_images,
-                                               model.z: z0,
-                                           })
-
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
-                          "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss),
-                          "Overpowered :", d_overpowered)
-
-                    # Update overpowered
-                    d_overpowered = d_loss < (g_loss / 2)
+                          "D loss : {:.8f}".format(d_loss_1.mean()), " G loss : {:.8f}".format(g_loss_1.mean()))
 
                     # Training G model with sample image and noise
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.x: sample_images,
-                                        model.z: sample_z
-                                    })
+                    samples = img_fake
 
                     # Summary saver
                     # model.writer.add_summary(summary, step) # time saving

@@ -86,7 +86,7 @@ class LAPGAN:
         self.fc_unit = 1024  # default
 
         # Placeholders
-        self.y = tf.placeholder(tf.int32, shape=[self.batch_size, self.n_classes], name='y-classes')  # one_hot
+        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name='y-classes')  # one_hot
 
         self.x1_fine = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape,
                                       name='x-images')  # [32, 32]
@@ -108,11 +108,19 @@ class LAPGAN:
                                          shape=[self.batch_size, self.z_noises[i]],
                                          name='z-noise_{0}'.format(i)))
 
-        self.g = []        # generators
-        self.d_reals = []  # discriminator_real
-        self.d_fakes = []  # discriminator_fake
+        self.g = []       # generators
+        self.g_loss = []  # generator losses
+
+        self.d_reals = []  # discriminator_real logit
+        self.d_fakes = []  # discriminator_fake logit
+        self.d_reals_prob = []  # discriminator_real prob
+        self.d_fakes_prob = []  # discriminator_fake prob
+        self.d_loss = []  # discriminator_real losses
 
         # Training Options
+        self.d_op = []
+        self.g_op = []
+
         self.beta1 = 0.5
         self.beta2 = 0.9
         self.learning_rate = 8e-4
@@ -124,6 +132,10 @@ class LAPGAN:
             staircase=False,
         )
 
+        self.saver = None
+        self.merged = None
+        self.writer = None
+
         self.bulid_lapgan()  # build LAPGAN model
 
     def discriminator(self, x1, x2, y, scale=32, reuse=None):
@@ -133,7 +145,7 @@ class LAPGAN:
         :param y: classes
         :param scale: image size
         :param reuse: variable re-use
-        :return: prob
+        :return: logits
         """
 
         assert (scale % 8 == 0)  # 32, 16, 8
@@ -163,7 +175,7 @@ class LAPGAN:
 
                 h = tf.layers.dense(h, 1, name='d-fc-1')
 
-            return tf.nn.sigmoid(h)
+            return h
 
     def generator(self, x, y, z, scale=32, reuse=None):
         """
@@ -172,7 +184,7 @@ class LAPGAN:
         :param z: noise
         :param scale: image size
         :param reuse: variable re-use
-        :return: prob
+        :return: logits
         """
 
         assert(scale % 8 == 0)  # 32, 16, 8
@@ -188,10 +200,10 @@ class LAPGAN:
 
                 h = tf.reshape(h, [-1, 8, 8, 3])
             else:
-                y = tf.layers.dense(y, [scale, scale], name='g-fc-0')
+                y = tf.layers.dense(y, scale * scale, name='g-fc-0')
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
-
+                # print(x.get_shape(), y.get_shape(), z.get_shape())
                 h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
 
                 # Convolution Layers
@@ -200,66 +212,72 @@ class LAPGAN:
 
                 h = conv2d(h, filter_=3, activation=None, name='g-deconv-{0}'.format(scale // 8))
 
-            return tf.nn.sigmoid(h)
+            return h
 
     def bulid_lapgan(self):
         # Generator & Discriminator
         g1 = self.generator(x=self.x1_coarse, y=self.y, z=self.z[0], scale=32)
-        d1_real = self.discriminator(x1=self.x1_diff, x2=self.x1_coarse, y=self.y, scale=32)
-        d1_fake = self.discriminator(x1=g1, x2=self.x1_coarse, y=self.y, scale=32, reuse=True)
+        d1_fake = self.discriminator(x1=g1, x2=self.x1_coarse, y=self.y, scale=32)
+        d1_real = self.discriminator(x1=self.x1_diff, x2=self.x1_coarse, y=self.y, scale=32, reuse=True)
 
         g2 = self.generator(x=self.x2_coarse, y=self.y, z=self.z[1], scale=16)
-        d2_real = self.discriminator(x1=self.x2_diff, x2=self.x2_coarse, y=self.y, scale=16)
-        d2_fake = self.discriminator(x1=g2, x2=self.x2_coarse, y=self.y, scale=16, reuse=True)
+        d2_fake = self.discriminator(x1=g2, x2=self.x2_coarse, y=self.y, scale=16)
+        d2_real = self.discriminator(x1=self.x2_diff, x2=self.x2_coarse, y=self.y, scale=16, reuse=True)
 
         g3 = self.generator(x=None, y=self.y, z=self.z[2], scale=8)
-        d3_real = self.discriminator(x1=self.x3_fine, x2=None, y=self.y, scale=8)
-        d3_fake = self.discriminator(x1=g3, x2=None, y=self.y, scale=8, reuse=True)
+        d3_fake = self.discriminator(x1=g3, x2=None, y=self.y, scale=8)
+        d3_real = self.discriminator(x1=self.x3_fine, x2=None, y=self.y, scale=8, reuse=True)
 
         self.g = [g1, g2, g3]
         self.d_reals = [d1_real, d2_real, d3_real]
         self.d_fakes = [d1_fake, d2_fake, d3_fake]
 
+        # Prob
+        m_sigmoid = lambda x: tf.reduce_mean(tf.sigmoid(x))
+        with tf.variable_scope('prob') as scope:
+            for i in range(len(self.g)):
+                self.d_reals_prob.append(m_sigmoid(self.d_reals[i]))
+                self.d_fakes_prob.append(m_sigmoid(self.d_fakes[i]))
+
         # Loss
-        # maximize log(D(G(z)))
-        # maximize log(D(x)) + log(1 - D(G(z)))
-
-        log = lambda x: tf.log(x + self.eps)
-
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(log(d_fake))
+        # maximize log(D(G(z))) # maximize log(D(x)) + log(1 - D(G(z)))
+        sigmoid_CE = lambda x, y: tf.nn.sigmoid_cross_entropy_with_logits(labels=x, logits=y)  # using sigmoid CE loss
+        with tf.variable_scope('loss') as scope:
+            for i in range(len(self.g)):
+                self.d_loss.append(tf.reduce_mean(sigmoid_CE(tf.ones_like(self.d_reals[i]), self.d_reals[i]) +
+                                                  sigmoid_CE(tf.zeros_like(self.d_fakes[i]), self.d_fakes[i]),
+                                                  name="d_loss_{0}".format(i)))
+                self.g_loss.append(tf.reduce_mean(sigmoid_CE(tf.ones_like(self.d_fakes[i]), self.d_fakes[i]),
+                                                  name="g_loss_{0}".format(i)))
 
         # Summary
-        z_sum = tf.summary.histogram("z", self.z)
-        g_sum = tf.summary.image("g", self.g)  # generated image from G model
-        d_real_sum = tf.summary.histogram("d_real", d_real)
-        d_fake_sum = tf.summary.histogram("d_fake", d_fake)
+        for i in range(len(self.g)):
+            tf.summary.scalar('d_real_{0}'.format(i), self.d_reals[i])
+            tf.summary.scalar('d_fake_{0}'.format(i), self.d_fakes[i])
+            tf.summary.scalar('d_real_prob_{0}'.format(i), self.d_reals_prob[i])
+            tf.summary.scalar('d_fake_prob_{0}'.format(i), self.d_fakes_prob[i])
+            tf.summary.scalar('d_loss_{0}'.format(i), self.d_loss[i])
+            tf.summary.scalar('g_loss_{0}'.format(i), self.g_loss[i])
 
-        d_real_loss_sum = tf.summary.scalar("d_real_loss", d_real_loss)
-        d_fake_loss_sum = tf.summary.scalar("d_fake_loss", d_fake_loss)
-        d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
-        g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
+            tf.summary.histogram("z_{0}".format(i), self.z[i])
 
-        # Collect trainer values
+        tf.summary.image("g", g1)  # generated image from G model
+
+        # Optimizer
         vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('discriminator')]
-        g_params = [v for v in vars if v.name.startswith('generator')]
+        for idx, i in enumerate([32, 16, 8]):
+            self.d_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1, beta2=self.beta2).
+                             minimize(loss=self.d_loss[idx],
+                                      var_list=[v for v in vars if v.name.startswith('discriminator_{0}'.format(i))]))
+            self.g_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1, beta2=self.beta2).
+                             minimize(loss=self.g_loss[idx],
+                                      var_list=[v for v in vars if v.name.startswith('generator_{0}'.format(i))]))
+
+        # Merge summary
+        self.merged = tf.summary.merge_all()
 
         # Model Saver
         self.saver = tf.train.Saver()
-
-        # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
-                                           beta1=self.beta1, beta2=self.beta2).\
-            minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
-                                           beta1=self.beta1, beta2=self.beta2).\
-            minimize(self.g_loss, var_list=g_params)
-
-        # Merge summary
-        self.g_sum = tf.summary.merge([z_sum, d_fake_sum, g_sum, d_fake_loss_sum, g_loss_sum])
-        self.d_sum = tf.summary.merge([z_sum, d_real_sum, d_real_loss_sum, d_loss_sum])
-        self.merged = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
