@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 50,
+    'epoch': 250,
     'batch_size': 64,
-    'logging_interval': 1000,
+    'logging_interval': 5000,
 }
 
 
