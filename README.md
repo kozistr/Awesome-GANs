@@ -83,7 +83,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png) | 
 **COGAN**     |  |  | 
 **CycleGAN**  |  |  | 
-**DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_0_0.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_43_27000.png) |
+**DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_144_90000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_240_150000.png) |
 **DiscoGAN**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/gen_img/train_0_0.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/gen_img/train_0_0.png) | 
 **EnergyGAN** |  |  | 
 **f-GAN**     |  |  | 
