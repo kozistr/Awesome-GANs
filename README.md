@@ -102,8 +102,9 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) |  | 
 **WGAN-GP**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00080000_2.png) |  | 
 
-ACGAN, WGAN took so much times(?) so i just stopped at 8 ~ 90k. <br/>
+* ACGAN, WGAN took so much times(?) so i just stopped at 8 ~ 90k. <br/>
 If you want better results, maybe you should increase global step or adjust the d_lambda, a little bit.
+* Most of the Generator/Discriminator Networks are customed, it means they aren't followed the networks referred in the paper.
 
 ## Author
-HyeongChan Kim / [@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com)
+HyeongChan Kim / ([@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com))
