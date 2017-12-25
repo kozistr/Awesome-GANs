@@ -76,7 +76,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 *Name* | *Global Step 50k~* | *Global Step 150k~* | *Loss Function*
 :---: | :---: | --- | :---:
-**ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00175000.png) | 
+**ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_0050000.png) |  | 
 **AdaGAN**    |  |  | 
 **BEGAN**     |  |  | 
 **BSGAN**     |  |  | 
@@ -102,7 +102,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) |  | 
 **WGAN-GP**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00080000_2.png) |  | 
 
-WGAN took so much times(?) so i just stopped at 8 ~ 90k. <br/>
+ACGAN, WGAN took so much times(?) so i just stopped at 8 ~ 90k. <br/>
 If you want better results, maybe you should increase global step or adjust the d_lambda, a little bit.
 
 ## Author
