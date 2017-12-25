@@ -185,10 +185,11 @@ class EBGAN:
         tf.summary.histogram("z-noise", self.z)
 
         tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
+        # tf.summary.histogram("d_real", d_real)
+        # tf.summary.histogram("d_fake", d_fake)
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("pt_loss", self.pt_loss)
 
         # Optimizer
         vars = tf.trainable_variables()
