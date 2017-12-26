@@ -4,37 +4,11 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="Conv2D"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d(inputs=input_,
-                                filters=filter_,
-                                kernel_size=k,
-                                strides=d,
-                                padding=pad,
-                                activation=activation,
-                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                bias_initializer=tf.constant_initializer(0.),
-                                name=name)
-
-
-def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="DeConv2D"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d_transpose(inputs=input_,
-                                          filters=filter_,
-                                          kernel_size=k,
-                                          strides=d,
-                                          padding=pad,
-                                          activation=activation,
-                                          kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                          bias_initializer=tf.constant_initializer(0.),
-                                          name=name)
-
-
 class EBGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
+                 n_input=784, df_dim=64, gf_dim=64, fc_d_unit=32, fc_g_unit=1024,
                  z_dim=128, g_lr=8e-4, d_lr=8e-4, enable_pull_away=True, epsilon=1e-12):
 
         """
@@ -58,7 +32,8 @@ class EBGAN:
         :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
-        :param fc_unit: the number of fully connected filters, default 1024
+        :param fc_d_unit: the number of fully connected filters used in D net, default 32
+        :param fc_g_unit: the number of fully connected filters used in G net, default 1024
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
@@ -85,7 +60,8 @@ class EBGAN:
         self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
-        self.fc_unit = fc_unit
+        self.fc_d_unit = fc_d_unit
+        self.fc_g_unit = fc_g_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
@@ -94,7 +70,10 @@ class EBGAN:
         self.EnablePullAway = enable_pull_away
         self.eps = epsilon
         self.pt_lambda = 0.1
-        self.margin = 10  # 10, 20
+
+        # 1 is enough.
+        # but in case of the large batch, it needs value more than 1.
+        self.margin = max(1., self.batch_size / 64.)
 
         self.g_loss = 0.
         self.d_loss = 0.
@@ -107,37 +86,80 @@ class EBGAN:
         self.build_ebgan()  # build EBGAN model
 
     def encoder(self, x, reuse=None):
+        """
+        :param x: images
+        :param reuse: re-usable
+        :return: embeddings
+        """
         with tf.variable_scope('encoder', reuse=reuse):
-            x = conv2d(x, filter_=self.df_dim, name='e-conv-1')
-            x = conv2d(x, filter_=self.df_dim * 2, name='e-conv-2')
-            x = conv2d(x, filter_=self.df_dim * 4, name='e-conv-3')
+            x = tf.layers.conv2d(x,
+                                 filters=self.fc_d_unit * 2,
+                                 kernel_size=4, strides=2, padding='SAME', name='enc-conv-1')
+            x = tf.nn.leaky_relu(x)
+
+            # x = tf.reshape(x, [self.batch_size, -1])
+            x = tf.layers.flatten(x)
+
+            x = tf.layers.dense(x, units=self.fc_d_unit, name='enc-fc-1')
 
             return x
 
     def decoder(self, x, reuse=None):
+        """
+        :param x: embeddings
+        :param reuse: re-usable
+        :return: prob
+        """
         with tf.variable_scope('decoder', reuse=reuse):
-            x = deconv2d(x, filter_=self.df_dim, name='d-deconv-1')
-            x = deconv2d(x, filter_=int(self.df_dim / 2), name='d-deconv-2')
-            x = deconv2d(x, filter_=3, activation=None, name='d-deconv-3')
+            x = tf.layers.dense(x, units=self.fc_d_unit * 2 * 14 * 14, name='dec-fc-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.reshape(x, [self.batch_size, 14, 14, self.fc_d_unit * 2])
+
+            x = tf.layers.conv2d_transpose(x, filters=1,
+                                           kernel_size=4, strides=2, padding='SAME', name='dec-deconv-1')
+            x = tf.nn.sigmoid(x)
 
             return x
 
     def discriminator(self, x, reuse=None):
+        """
+        # referred architecture in the paper
+        : (64)4c2s-FC32-FC64*14*14_BR-(1)4dc2s_S
+        :param x: images
+        :param reuse: re-usable
+        :return: prob, embeddings, gen-ed_image
+        """
         with tf.variable_scope("discriminator", reuse=reuse):
-            encode = self.encoder(x, reuse=reuse)
-            decode = self.decoder(encode, reuse=reuse)
+            embeddings = self.encoder(x, reuse=reuse)
+            decoded = self.decoder(embeddings, reuse=reuse)
 
-            prob = tf.nn.sigmoid(decode)
-
-            return prob, encode
+            return embeddings, decoded
 
     def generator(self, z, reuse=None):
+        """
+        # referred architecture in the paper
+        : FC1024_BR-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
+        :param z: embeddings
+        :param reuse: re-usable
+        :return: prob
+        """
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_1')
-            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim * 2])
+            x = tf.layers.dense(z, units=self.fc_g_unit, name='g-fc-1')
+            x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, filter_=self.df_dim, k=2, d=2, name='g_deconv_1')
-            x = deconv2d(x, filter_=1, k=2, d=2, activation=tf.nn.sigmoid, name='g_deconv_2')
+            x = tf.layers.dense(x, units=7 * 7 * int(self.fc_g_unit / 4), name='g-fc-2')
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.reshape(x, [self.batch_size, 7, 7, int(self.fc_g_unit / 4)])
+
+            x = tf.layers.conv2d_transpose(x, filters=self.gf_dim,
+                                           kernel_size=4, strides=2, padding='SAME', name='g-deconv-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.layers.conv2d_transpose(x, filters=1,
+                                           kernel_size=4, strides=2, padding='SAME', name='g-deconv-2')
+            x = tf.nn.sigmoid(x)
 
             return x
 
@@ -161,35 +183,33 @@ class EBGAN:
             :param n: batch_size
             :return: MSE(Mean Square Error) loss
             """
-            return tf.sqrt(tf.nn.l2_loss(pred - data)) / n
+            return tf.sqrt(2. * tf.nn.l2_loss(pred - data)) / n
 
         # Generator
         self.g = self.generator(self.z)
 
         # Discriminator
-        d_real, _ = self.discriminator(self.x)
-        d_fake, d_embed_fake = self.discriminator(self.g, reuse=True)
+        d_embed_real, d_decode_real = self.discriminator(self.x)
+        d_embed_fake, d_decode_fake = self.discriminator(self.g, reuse=True)
 
-        d_real_loss = tf.reduce_sum(mse_loss(d_real, tf.ones_like(d_real)))
-        d_fake_loss = tf.reduce_sum(mse_loss(d_fake, tf.zeros_like(d_fake)))
-        zero = tf.zeros_like(self.margin - d_fake_loss)
-        self.d_loss = d_real_loss + tf.maximum(zero, self.margin - d_fake_loss)
-
-        self.g_loss = tf.reduce_sum(mse_loss(d_fake, tf.ones_like(d_fake)))
+        d_real_loss = mse_loss(d_decode_real, self.x)
+        d_fake_loss = mse_loss(d_decode_fake, self.g)
+        self.d_loss = d_real_loss + tf.maximum(0., self.margin - d_fake_loss)
 
         if self.EnablePullAway:
             self.pt_loss = pullaway_loss(d_embed_fake)
-            self.g_loss += + self.pt_lambda * self.pt_loss  # g_loss = mse + lambda * pt_loss
+
+        self.g_loss = d_fake_loss + self.pt_lambda * self.pt_loss  # g_loss = mse + lambda * pt_loss
 
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
         tf.summary.image("g", self.g)  # generated images by Generative Model
-        # tf.summary.histogram("d_real", d_real)
-        # tf.summary.histogram("d_fake", d_fake)
         tf.summary.scalar("d_loss", self.d_loss)
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("g_loss", self.g_loss)
-        tf.summary.scalar("pt_loss", self.pt_loss)
+        # tf.summary.scalar("pt_loss", self.pt_loss)
 
         # Optimizer
         vars = tf.trainable_variables()

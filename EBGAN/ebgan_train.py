@@ -23,7 +23,7 @@ results = {
 
 train_step = {
     'global_step': 200001,
-    'logging_interval': 20000,
+    'logging_interval': 2000,
 }
 
 
@@ -48,19 +48,17 @@ def main():
         sample_x = np.reshape(sample_x, model.image_shape)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
-        d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
             batch_x = np.reshape(batch_x, model.image_shape)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
 
             # Update D network
-            if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z
-                                  })
+            _, d_loss = s.run([model.d_op, model.d_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.z: batch_z
+                              })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
@@ -81,12 +79,9 @@ def main():
                                                     model.z: batch_z
                                                 })
 
-                d_overpowered = d_loss < (g_loss / 2)
-
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss),
-                      "Overpowered :", d_overpowered)
+                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
