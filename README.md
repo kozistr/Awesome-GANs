@@ -53,8 +53,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **CoGAN**        | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) |
 **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/pdf/1703.10593.pdf) |
 **DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan_model.py)
-**DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DiscoGAN/discogan.py)
-**EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) |
+**DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | 
+**EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/ebgan_model.py)
 **f-GAN**        | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) |
 **GAN**          | *Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1406.2661) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
 **Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/pdf/1704.06191.pdf) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_model.py)
@@ -69,6 +69,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
 **SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) |
+**StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | 
 **WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
 **ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/wgan_model.py)
 
@@ -85,7 +86,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **CycleGAN**  |  |  | 
 **DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_144_90000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_240_150000.png) |
 **DiscoGAN**  |  |  | 
-**EBGAN**     |  |  | 
+**EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00150000.png) | 
 **f-GAN**     |  |  | 
 **GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png) | 
 **3D-GAN**    |  |  | 
