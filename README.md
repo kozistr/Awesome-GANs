@@ -2,10 +2,10 @@
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Test Environments
-* OS : Linux Ubuntu 16.04 x86-64
+* OS : Windows 10 Edu x86-64 / Linux Ubuntu 16.04 x86-64
 * CPU : i7-7700K, GPU : GTX 1060 6GB
 * Tensorflow 1.4.0 with CUDA 8.0 + cuDNN 7.0
-* Python 3.5
+* Python 3.5+
 
 ## Prerequisites
 * python 3.5+
