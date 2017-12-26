@@ -82,11 +82,11 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **BEGAN**     |  |  | 
 **BSGAN**     |  |  | 
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png) | 
-**COGAN**     |  |  | 
+**CoGAN**     |  |  | 
 **CycleGAN**  |  |  | 
 **DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_144_90000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_240_150000.png) |
 **DiscoGAN**  |  |  | 
-**EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00150000.png) | 
+**EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00068000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00182000.png) | 
 **f-GAN**     |  |  | 
 **GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png) | 
 **3D-GAN**    |  |  | 
