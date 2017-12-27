@@ -137,3 +137,44 @@ class CelebADataSet:
             faces = np.array(faces, dtype=np.float32)
 
         return faces / 255.
+
+
+class DataIterator:
+
+    def __init__(self, x, y, batch_size, label_off=False):
+        self.x = x
+        self.label_off = label_off
+        if not label_off:
+            self.y = y
+        self.batch_size = batch_size
+        self.num_examples = num_examples = x.shape[0]
+        self.num_batches = num_examples // batch_size
+        self.pointer = 0
+
+        assert self.batch_size <= self.num_examples
+
+    def next_batch(self):
+        start = self.pointer
+        self.pointer += self.batch_size
+
+        if self.pointer > self.num_examples:
+            perm = np.arange(self.num_examples)
+            np.random.shuffle(perm)
+
+            self.x = self.x[perm]
+            if not self.label_off:
+                self.y = self.y[perm]
+
+            start = 0
+            self.pointer = self.batch_size
+
+        end = self.pointer
+
+        if not self.label_off:
+            return self.x[start:end], self.y[start:end]
+        else:
+            return self.x[start:end]
+
+    def iterate(self):
+        for step in range(self.num_batches):
+            yield self.next_batch()
