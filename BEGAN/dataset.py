@@ -46,8 +46,8 @@ class CelebADataSet:
         - in case of Celeb-A, image size is 32x32x3(HWC).
 
         # Output Settings
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
+        :param output_height: output images height, default 32
+        :param output_width: output images width, default 32
         :param output_channel: output images channel, default 3
 
         # Pre-Processing Option
@@ -103,6 +103,8 @@ class CelebADataSet:
             self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
                                  dtype=np.uint8)
 
+            print("[*] Image size : ", self.data.shape)
+
             assert (len(self.files) == self.num_images)
 
             for n, f_name in tqdm(enumerate(self.files)):
@@ -139,7 +141,9 @@ class CelebADataSet:
             else:
                 faces = faces[offset * size:(offset + 1) * size]
 
-            faces = np.array(faces, dtype=np.float32)
+            faces = np.array(faces, dtype=np.float16)
+
+        print("[+] Image size : ", faces.shape)
 
         return faces / 255.
 
