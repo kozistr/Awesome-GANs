@@ -42,10 +42,11 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=64,
-                     input_width=64,
+        ds = DataSet(input_height=32,
+                     input_width=32,
                      input_channel=3,
                      mode='r').images
+        ds = tf.image.resize_images(ds, model.image_shape)
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
