@@ -92,7 +92,9 @@ class BEGAN:
         self.eps = epsilon
 
         self.d_real = 0
+        self.d_real_loss = 0
         self.d_fake = 0
+        self.d_fake_loss = 0
 
         self.g_loss = 0.
         self.d_loss = 0.
@@ -105,7 +107,11 @@ class BEGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 32, 32, 3)
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
-        self.kt = tf.placeholder(tf.float32, name='k_t')  # 0 < k_t < 1, k_0 = 0
+
+        self.kt = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
+
+        # k_t update
+        self.kt_update = 0
 
         self.build_began()  # build BEGAN model
 
@@ -206,22 +212,29 @@ class BEGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Loss
-        d_real_loss = l1_loss(self.x, d_real)
-        d_fake_loss = l1_loss(self.g, d_fake)
-        self.d_loss = d_real_loss + self.kt * d_fake_loss
-        self.g_loss = d_fake_loss
+        self.d_real_loss = l1_loss(self.x, d_real)
+        self.d_fake_loss = l1_loss(self.g, d_fake)
 
-        self.m_global = d_real_loss + (self.gamma * d_real_loss - d_fake_loss)
+        self.d_loss = self.d_real_loss + self.kt * self.d_fake_loss
+        self.g_loss = self.d_fake_loss
+
+        # Convergence Metric
+        self.m_global = self.d_real_loss + tf.abs(self.gamma * self.d_real_loss - self.d_fake_loss)
+
+        # k_t update
+        self.kt_update = self.kt.assign(
+            tf.clip_by_value(self.kt + self.lambda_k * (self.gamma * self.d_real_loss - self.d_fake_loss), 0, 1))
 
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
         tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("d_real_loss", self.d_real_loss)
+        tf.summary.scalar("d_fake_loss", self.d_fake_loss)
         tf.summary.scalar("g_loss", self.g_loss)
         tf.summary.scalar("m_global", self.m_global)
+        tf.summary.scalar("k_t", self.kt)
 
         # Optimizer
         vars = tf.trainable_variables()
