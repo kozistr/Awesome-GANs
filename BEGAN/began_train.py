@@ -56,7 +56,7 @@ def main():
 
         for epoch in range(train_step['epoch']):
             d_losses, g_losses = [], []
-            for batch_images, _ in dataset_iter.iterate():
+            for batch_images in dataset_iter.iterate():
                 batch_x = batch_images
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 
