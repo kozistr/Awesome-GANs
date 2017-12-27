@@ -1,3 +1,5 @@
+# deprecated, but still useful
+
 from __future__ import division
 
 import os
