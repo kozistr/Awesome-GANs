@@ -34,20 +34,20 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
-    # Celeb-A DataSet images
-    ds = DataSet(input_height=64,
-                 input_width=64,
-                 input_channel=3,
-                 mode='r').images
-    dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                label_off=True)
-
     with tf.Session(config=config) as s:
         # BEGAN Model
         model = began.BEGAN(s)  # BEGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
+
+        # Celeb-A DataSet images
+        ds = DataSet(input_height=64,
+                     input_width=64,
+                     input_channel=3,
+                     mode='r').images
+        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
+                                    label_off=True)
 
         sample_x = ds[:model.batch_size]
         sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
@@ -56,7 +56,7 @@ def main():
 
         for epoch in range(train_step['epoch']):
             d_losses, g_losses = [], []
-            for batch_images, _ in dataset_iter.iterator():
+            for batch_images, _ in dataset_iter.iterate():
                 batch_x = batch_images
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 

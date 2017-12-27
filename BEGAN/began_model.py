@@ -16,14 +16,13 @@ def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
     :param name: scope name, default conv2d
     :return: covn2d net
     """
-    with tf.variable_scope(name):
-        return tf.layers.conv2d(x,
-                                filters=f, kernel_size=k, strides=d,
-                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                bias_initializer=tf.zeros_initializer(),
-                                activation=act,
-                                padding=pad, name=name)
+    return tf.layers.conv2d(x,
+                            filters=f, kernel_size=k, strides=d,
+                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                            bias_initializer=tf.zeros_initializer(),
+                            activation=act,
+                            padding=pad, name=name)
 
 
 def resize_nn(x, size):
@@ -35,7 +34,7 @@ class BEGAN:
     def __init__(self, s, batch_size=32, input_height=32, input_width=32, input_channel=3,
                  sample_num=9, sample_size=32, output_height=32, output_width=32,
                  df_dim=64, gf_dim=64,
-                 gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+                 gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=0.0001, d_lr=0.0001, epsilon=1e-12):
 
         """
         # General Settings
@@ -86,7 +85,8 @@ class BEGAN:
         self.z_dim = z_dim
         self.beta1 = 0.5
         self.beta2 = 0.999
-        self.d_lr, self.g_lr = d_lr, g_lr
+        self.d_lr = tf.Variable(d_lr, name='d_lr')
+        self.g_lr = tf.Variable(g_lr, name='g_lr')
         self.lr_decay_rate = 0.5
         self.lr_low_boundary = 1e-5
         self.eps = epsilon
@@ -118,18 +118,18 @@ class BEGAN:
         with tf.variable_scope('encoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            x = conv2d(x, f=self.df_dim, name='enc-conv-0')
+            x = conv2d(x, f=self.df_dim, name="enc-conv-0")
 
-            for i in range(repeat):
-                f = self.df_dim * (i + 1)
+            for i in range(1, repeat + 1):
+                f = self.df_dim * i
 
-                x = conv2d(x, f=f, name='enc-conv-%d'.format(i * 2 - 1))
-                x = conv2d(x, f=f, name='enc-conv-%d'.format(i * 2))
+                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2))
 
-                if i < repeat - 1:
+                if i < repeat:
                     # x = tf.layers.max_pooling2d(x, 2, 2)
                     # x = conv2d(x, f=f, d=2)  # conv pooling
-                    x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name='enc-subsample-%d'.format(i))
+                    x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
             x = tf.layers.flatten(x)
             x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')
@@ -148,12 +148,12 @@ class BEGAN:
             x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
             x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
 
-            for i in range(repeat):
-                x = conv2d(x, f=self.gf_dim, name='dec-conv-%d'.format(i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, name='dec-conv-%d'.format(i * 2))
+            for i in range(1, repeat + 1):
+                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2))
 
-                if i < repeat - 1:
-                    x = resize_nn(x, 2)  # NN up-sampling
+                if i < repeat:
+                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
             x = conv2d(x, 3)
 
@@ -178,7 +178,19 @@ class BEGAN:
         :return: logits
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = self.decoder(z, reuse=reuse)
+            repeat = int(np.log2(self.input_height)) - 2
+
+            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='g-fc-1')
+            x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
+
+            for i in range(1, repeat + 1):
+                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2))
+
+                if i < repeat:
+                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
+
+            x = conv2d(x, 3)
 
             return x
 
