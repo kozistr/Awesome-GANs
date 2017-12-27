@@ -69,8 +69,8 @@ class BEGAN:
 
         self.input_height = input_height
         self.input_width = input_width
-        self.channel = input_channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
+        self.input_channel = input_channel
+        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
 
         self.sample_num = sample_num
         self.sample_size = sample_size

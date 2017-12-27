@@ -45,12 +45,12 @@ def main():
         ds = DataSet(input_height=32,
                      input_width=32,
                      input_channel=3,
-                     mode='r').images
-        ds = tf.image.resize_images(ds, model.image_shape)
+                     mode='w').images
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
         sample_x = ds[:model.batch_size]
+        sample_x = np.reshape(sample_x, model.image_shape)
         sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 
         kt = tf.Variable(0., dtype=tf.float32)
@@ -58,7 +58,7 @@ def main():
         for epoch in range(train_step['epoch']):
             d_losses, g_losses = [], []
             for batch_images in dataset_iter.iterate():
-                batch_x = batch_images
+                batch_x = tf.reshape(batch_images, model.image_shape)
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 
                 # Update k_t
