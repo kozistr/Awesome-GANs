@@ -26,7 +26,7 @@ DataSets = {
     # 'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba',
     # 'celeb-a-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a.h5',
     # Windows
-    'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba',
+    'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
     'celeb-a-h5': 'D:\\DataSet\\Celeb-A\\celeb-a.h5',
 }
 
@@ -35,7 +35,7 @@ class CelebADataSet:
 
     def __init__(self, batch_size=128, input_height=32, input_width=32, input_channel=3,
                  output_height=32, output_width=32, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, name="None"):
+                 split_rate=0.2, random_state=42, num_threads=8, mode='w'):
 
         """
         # General Settings
@@ -56,7 +56,7 @@ class CelebADataSet:
         :param num_threads: the number of threads for multi-threading, default 8
 
         # DataSet Option
-        :param name: DataSet name, default None
+        :param mode: file mode(RW), default w
         """
 
         self.batch_size = batch_size
@@ -72,20 +72,19 @@ class CelebADataSet:
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.name = name
+        self.mode = mode
 
         self.path = ""      # DataSet path
         self.files = ""     # files' name
         self.n_classes = 0  # DataSet the number of classes, default 10
 
-        self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
-                             dtype=np.uint8)
+        self.data = []      # loaded images
         self.num_images = 202599
         self.images = []
 
-        self.celeb_a()  # load Celeb-A
+        self.celeb_a(mode=self.mode)  # load Celeb-A
 
-    def celeb_a(self):
+    def celeb_a(self, mode):
         def get_image(path, w, h):
             img = imread(path).astype(np.float)
 
@@ -97,16 +96,22 @@ class CelebADataSet:
 
             return img[margin:margin + h]
 
-        self.files = glob(os.path.join("img_align_celeba", "*.jpg"))
-        self.files = np.sort(self.files)
+        if mode == 'w':
+            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            self.files = np.sort(self.files)
 
-        for n, f_name in tqdm(enumerate(self.files)):
-            image = get_image(f_name, self.input_width, self.input_height)
-            self.data[n] = image.flatten()
+            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
+                                 dtype=np.uint8)
 
-        # write .h5 file for reusing later...
-        with h5py.File(''.join([DataSets['celeb-a-h5']]), 'w') as f:
-            f.create_dataset("images", data=self.data)
+            assert (len(self.files) == self.num_images)
+
+            for n, f_name in tqdm(enumerate(self.files)):
+                image = get_image(f_name, self.input_width, self.input_height)
+                self.data[n] = image.flatten()
+
+            # write .h5 file for reusing later...
+            with h5py.File(''.join([DataSets['celeb-a-h5']]), 'w') as f:
+                f.create_dataset("images", data=self.data)
 
         self.images = self.load_data(size=self.num_images)
 
