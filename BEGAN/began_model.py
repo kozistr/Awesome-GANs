@@ -1,159 +1,229 @@
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
 import numpy as np
+
+
+tf.set_random_seed(777)  # reproducibility
+
+
+def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param d: strides, default 2
+    :param act: activation function, default elu
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default conv2d
+    :return: covn2d net
+    """
+    with tf.variable_scope(name):
+        return tf.layers.conv2d(x,
+                                filters=f, kernel_size=k, strides=d,
+                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                                bias_initializer=tf.zeros_initializer(),
+                                activation=act,
+                                padding=pad, name=name)
 
 
 def resize_nn(x, size):
     return tf.image.resize_nearest_neighbor(x, size=(int(size), int(size)))
 
 
-def l1_loss(x, y):
-    return tf.reduce_mean(tf.abs(x - y))
-
-
 class BEGAN:
 
-    def __init__(self, s, input_height=64, input_width=64, output_height=64, output_width=64, channel=3,
-                 sample_size=64, sample_num=64, embedding=128, batch_size=16,
-                 gamma=0.4, lambda_k=1e-3, momentum1=0.5, momentum2=0.999,
-                 g_lr=8e-5, d_lr=8e-5, lr_low_boundary=2e-5):
+    def __init__(self, s, batch_size=32, input_height=32, input_width=32, input_channel=3,
+                 sample_num=9, sample_size=32, output_height=32, output_width=32,
+                 df_dim=64, gf_dim=64,
+                 gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+
+        """
+        # General Settings
+        :param s: TF Session
+        :param batch_size: training batch size, default 32
+        :param input_height: input image height, default 32
+        :param input_width: input image width, default 32
+        :param input_channel: input image channel, default 3 (RGB)
+        - in case of Celeb-A, image size is 32x32x3(HWC).
+
+        # Output Settings
+        :param sample_num: the number of output images, default 9
+        :param sample_size: sample image size, default 32
+        :param output_height: output images height, default 32
+        :param output_width: output images width, default 32
+
+        # For CNN model
+        :param df_dim: discriminator filter, default 64
+        :param gf_dim: generator filter, default 64
+
+        # Training Option
+        :param gamma: gamma value, default 0.4
+        :param lambda_k: lr adjustment value lambda k, default 1e-3
+        :param z_dim: z dimension (kinda noise), default 128
+        :param g_lr: generator learning rate, default 1e-4
+        :param d_lr: discriminator learning rate, default 1e-4
+        :param epsilon: epsilon, default 1e-12
+        """
+
         self.s = s
         self.batch_size = batch_size
 
         self.input_height = input_height
         self.input_width = input_width
+        self.channel = input_channel
+        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
+
+        self.sample_num = sample_num
+        self.sample_size = sample_size
         self.output_height = output_height
         self.output_width = output_width
-        self.channel = channel
-        self.conv_repeat_num = int(np.log2(input_height)) - 2
-        self.image_shape = [self.input_height, self.input_height, self.channel]  # 64x64x3
 
-        self.gamma = gamma  # 0.3 ~ 0.5 # 0.7
-        self.lambda_k = lambda_k  # learning rate of k_t
-        self.mm1 = momentum1  # beta1
-        self.mm2 = momentum2  # beta2
+        self.df_dim = df_dim
+        self.gf_dim = gf_dim
 
-        self.sample_size = sample_size
-        self.sample_num = sample_num
-        self.embedding = embedding
+        self.gamma = gamma  # 0.3 ~ 0.7
+        self.lambda_k = lambda_k
+        self.z_dim = z_dim
+        self.beta1 = 0.5
+        self.beta2 = 0.999
+        self.d_lr, self.g_lr = d_lr, g_lr
+        self.lr_decay_rate = 0.5
+        self.lr_low_boundary = 1e-5
+        self.eps = epsilon
 
-        self.g_lr = g_lr
-        self.d_lr = d_lr
+        self.d_real = 0
+        self.d_fake = 0
 
-        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * 0.5, lr_low_boundary, name="g_lr_update"))
-        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * 0.5, lr_low_boundary, name="d_lr_update"))
+        self.g_loss = 0.
+        self.d_loss = 0.
+        self.m_global = 0.
 
-        self.build_began()
+        # LR update
+        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
+        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
-    def encoder(self, x, embedding, reuse=None):
-        with tf.variable_scope("encoder", reuse=reuse):
-            with slim.arg_scope([slim.conv2d],
-                                stride=1, activation_fn=tf.nn.elu, padding="SAME",
-                                weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                weights_regularizer=slim.l2_regularizer(5e-4),
-                                bias_initializer=tf.zeros_initializer()):
-                x = slim.conv2d(x, embedding, 3)
+        # Placeholders
+        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 32, 32, 3)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
+        self.kt = tf.placeholder(tf.float32, name='k_t')  # 0 < k_t < 1, k_0 = 0
 
-                for i in range(self.conv_repeat_num):
-                    channel_num = embedding * (i + 1)
-                    x = slim.repeat(x, 2, slim.conv2d, channel_num, 3)
-                    if i < self.conv_repeat_num - 1:
-                        # Is using stride pooling more better method than max pooling?
-                        # or average pooling
-                        # x = slim.conv2d(x, channel_num, kernel_size=3, stride=2)  # sub-sampling
-                        x = slim.avg_pool2d(x, kernel_size=2, stride=2)
-                        # x = slim.max_pooling2d(x, 3, 2)
+        self.build_began()  # build BEGAN model
 
-                x = tf.reshape(x, [-1, np.prod([8, 8, channel_num])])
-        return x
+    def encoder(self, x, reuse=None):
+        """
+        :param x: images
+        :param reuse: re-usable
+        :return: embeddings
+        """
+        with tf.variable_scope('encoder', reuse=reuse):
+            repeat = int(np.log2(self.input_height)) - 2
 
-    def decoder(self, z, embedding, reuse=None):
-        with tf.variable_scope("decoder", reuse=reuse):
-            with slim.arg_scope([slim.conv2d, slim.fully_connected],
-                                weights_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                weights_regularizer=slim.l2_regularizer(5e-4),
-                                bias_initializer=tf.zeros_initializer()):
-                with slim.arg_scope([slim.conv2d], padding="SAME",
-                                    activation_fn=tf.nn.elu, stride=1):
-                    x = slim.fully_connected(z, 8 * 8 * embedding, activation_fn=None)
-                    x = tf.reshape(x, [-1, 8, 8, embedding])
+            x = conv2d(x, f=self.df_dim, name='enc-conv-0')
 
-                    for i in range(self.conv_repeat_num):
-                        x = slim.repeat(x, 2, slim.conv2d, embedding, 3)
-                        if i < self.conv_repeat_num - 1:
-                            x = resize_nn(x, 2)  # NN up-sampling
+            for i in range(repeat):
+                f = self.df_dim * (i + 1)
 
-                    x = slim.conv2d(x, 3, 3, activation_fn=None)
-        return x
+                x = conv2d(x, f=f, name='enc-conv-%d'.format(i * 2 - 1))
+                x = conv2d(x, f=f, name='enc-conv-%d'.format(i * 2))
 
-    def discriminator(self, x, embedding, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
-            z = self.encoder(x, embedding, reuse=reuse)
-            x = self.decoder(z, embedding, reuse=reuse)
+                if i < repeat - 1:
+                    # x = tf.layers.max_pooling2d(x, 2, 2)
+                    # x = conv2d(x, f=f, d=2)  # conv pooling
+                    x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name='enc-subsample-%d'.format(i))
+
+            x = tf.layers.flatten(x)
+            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')
 
             return x
 
-    def generator(self, z, embedding, reuse=None):
-        with tf.variable_scope("generator/decoder", reuse=reuse):
-            x = self.decoder(z, embedding)
+    def decoder(self, x, reuse=None):
+        """
+        :param x: embeddings
+        :param reuse: re-usable
+        :return: logits
+        """
+        with tf.variable_scope('decoder', reuse=reuse):
+            repeat = int(np.log2(self.input_height)) - 2
+
+            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
+            x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
+
+            for i in range(repeat):
+                x = conv2d(x, f=self.gf_dim, name='dec-conv-%d'.format(i * 2 - 1))
+                x = conv2d(x, f=self.gf_dim, name='dec-conv-%d'.format(i * 2))
+
+                if i < repeat - 1:
+                    x = resize_nn(x, 2)  # NN up-sampling
+
+            x = conv2d(x, 3)
+
+            return x
+
+    def discriminator(self, x, reuse=None):
+        """
+        :param x: images
+        :param reuse: re-usable
+        :return: logits
+        """
+        with tf.variable_scope("discriminator", reuse=reuse):
+            x = self.encoder(x, reuse=reuse)
+            x = self.decoder(x, reuse=reuse)
+
+            return x
+
+    def generator(self, z, reuse=None):
+        """
+        :param z: embeddings
+        :param reuse: re-usable
+        :return: logits
+        """
+        with tf.variable_scope("generator", reuse=reuse):
+            x = self.decoder(z, reuse=reuse)
 
             return x
 
     def build_began(self):
-        # x, z placeholder
-        self.x = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape, name='x-images')
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.embedding], name='z-noise')
+        def l1_loss(x, y):
+            return tf.reduce_mean(tf.abs(x - y))
 
-        self.kt = tf.placeholder(tf.float32, "k_t")
+        # Generator
+        self.g = self.generator(self.z)
 
-        # Generator Model
-        self.G = self.generator(self.z, self.embedding)
+        # Discriminator
+        d_real = self.discriminator(self.x)
+        d_fake = self.discriminator(self.g, reuse=True)
 
-        # Discriminator Model (Critic)
-        self.D_real = self.discriminator(self.x, self.embedding)  # discriminator
-        self.D_fake = self.discriminator(self.G, self.embedding, reuse=True)  # discriminate
+        # Loss
+        d_real_loss = l1_loss(self.x, d_real)
+        d_fake_loss = l1_loss(self.g, d_fake)
+        self.d_loss = d_real_loss + self.kt * d_fake_loss
+        self.g_loss = d_fake_loss
 
-        # Generator & Discriminator loss(l1 loss)
-        # loss of D = loss of D_real - kt * loss of D_fake (0 < k_t < 1, k_0 = 0)
-        # loss of G = loss of D_fake
-        self.D_real_loss = l1_loss(self.x, self.D_real)
-        self.D_fake_loss = l1_loss(self.G, self.D_fake)
-        self.D_loss = self.D_real_loss - self.kt * self.D_fake_loss
+        self.m_global = d_real_loss + (self.gamma * d_real_loss - d_fake_loss)
 
-        self.G_loss = self.D_fake_loss
+        # Summary
+        tf.summary.histogram("z-noise", self.z)
 
-        self.M_global = self.D_real_loss + (self.gamma * self.D_real_loss * self.D_fake_loss)
+        tf.summary.image("g", self.g)  # generated images by Generative Model
+        tf.summary.scalar("d_loss", self.d_loss)
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("m_global", self.m_global)
 
-        # summary
-        self.z_sum = tf.summary.histogram("z", self.z)
-        self.kt_sum = tf.summary.histogram("k_t", self.kt)
-
-        self.G_sum = tf.summary.image("G", self.G)  # generated image from G model
-        self.D_real_sum = tf.summary.histogram("D_real", self.D_real)
-        self.D_fake_sum = tf.summary.histogram("D_fake", self.D_fake)
-
-        self.d_real_loss_sum = tf.summary.scalar("d_real_loss", self.D_real_loss)
-        self.d_fake_loss_sum = tf.summary.scalar("d_fake_loss", self.D_fake_loss)
-        self.d_loss_sum = tf.summary.scalar("d_loss", self.D_loss)
-        self.g_loss_sum = tf.summary.scalar("g_loss", self.G_loss)
-        self.m_global = tf.summary.scalar("m_global", self.M_global)
-
-        # collect trainer values
+        # Optimizer
         vars = tf.trainable_variables()
-        self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator")
-        self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator")
+        d_params = [v for v in vars if v.name.startswith('d')]
+        g_params = [v for v in vars if v.name.startswith('g')]
 
-        # model saver
-        self.saver = tf.train.Saver()
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
-        # optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update, beta1=self.mm1).\
-            minimize(self.D_loss, var_list=self.d_vars)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update, beta1=self.mm1).\
-            minimize(self.G_loss, var_list=self.g_vars)
-
-        # merge summary
-        self.g_sum = tf.summary.merge([self.z_sum, self.D_fake_sum, self.G_sum, self.d_fake_loss_sum, self.g_loss_sum])
-        self.d_sum = tf.summary.merge([self.z_sum, self.D_real_sum, self.d_real_loss_sum, self.d_loss_sum])
+        # Merge summary
         self.merged = tf.summary.merge_all()
+
+        # Model saver
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
