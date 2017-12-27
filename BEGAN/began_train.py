@@ -37,7 +37,8 @@ def main():
     # Celeb-A DataSet images
     ds = DataSet(input_height=64,
                  input_width=64,
-                 input_channel=3).images
+                 input_channel=3,
+                 mode='r').images
     dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                 label_off=True)
 
