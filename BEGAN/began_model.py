@@ -31,15 +31,15 @@ def resize_nn(x, size):
 
 class BEGAN:
 
-    def __init__(self, s, batch_size=32, input_height=32, input_width=32, input_channel=3,
-                 sample_num=9, sample_size=32, output_height=32, output_width=32,
+    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
+                 sample_num=64, sample_size=8, output_height=32, output_width=32,
                  df_dim=64, gf_dim=64,
                  gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=0.0001, d_lr=0.0001, epsilon=1e-12):
 
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 32
+        :param batch_size: training batch size, default 64
         :param input_height: input image height, default 32
         :param input_width: input image width, default 32
         :param input_channel: input image channel, default 3 (RGB)
@@ -144,7 +144,7 @@ class BEGAN:
         with tf.variable_scope('decoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
+            # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
             x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
