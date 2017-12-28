@@ -22,9 +22,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 50,
+    'epoch': 150,
     'n_iter': 1000,
-    'logging_interval': 500,
+    'logging_interval': 1000,
 }
 
 
@@ -76,7 +76,7 @@ def main():
 
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
-            for i in range(train_step['n_iter']):
+            for i in range(train_step['n_iter'] + 1):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
                 batch_x = np.reshape(batch_x, model.image_shape)
 
@@ -119,7 +119,7 @@ def main():
                                                     })
 
                     # Print loss
-                    print("[+] Epoch %03d Step %05d => " % (epoch, i),
+                    print("[+] Epoch %03d Global Step %05d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss))
 
