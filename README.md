@@ -65,7 +65,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **InfoGAN**      | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657)
 **LAPGAN**       | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_model.py)
 **LSGAN**        | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/lsgan_model.py)
-**MAGAN**        | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) |
+**MAGAN**        | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/magan_model.py)
 **MRGAN**        | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) |
 **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
@@ -96,7 +96,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **InfoGAN**   |  |  
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_128_80000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_224_140000.png) 
 **LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00200000.png) 
-**MAGAN**     |  |  
+**MAGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00100000.png)
 **MRGAN**     |  |  
 **SalGAN**    |  |  
 **SeqGAN**    |  |  
