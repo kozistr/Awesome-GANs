@@ -130,7 +130,6 @@ class MAGAN:
 
             x = tf.layers.conv2d_transpose(x, filters=1,
                                            kernel_size=4, strides=2, padding='SAME', name='dec-deconv-1')
-            x = tf.nn.sigmoid(x)
 
             return x
 
@@ -176,14 +175,13 @@ class MAGAN:
             return x
 
     def build_magan(self):
-        def mse_loss(pred, data, n=self.batch_size):
+        def l1_loss(x, y):
             """
-            :param pred: prediction
-            :param data: image
-            :param n: batch_size
-            :return: MSE(Mean Square Error) loss
+            :param y: prediction
+            :param x: image
+            :return: L1 loss
             """
-            return tf.sqrt(2. * tf.nn.l2_loss(pred - data)) / n
+            return tf.reduce_sum((x - y) ** 2, axis=1)
 
         # Generator
         self.g = self.generator(self.z)
@@ -192,10 +190,13 @@ class MAGAN:
         _, d_real = self.discriminator(self.x)
         _, d_fake = self.discriminator(self.g, reuse=True)
 
-        self.d_real_loss = mse_loss(d_real, self.x)
-        self.d_fake_loss = mse_loss(d_fake, self.g)
-        self.d_loss = tf.reduce_mean(self.d_real_loss + tf.maximum(0., self.m - self.d_fake_loss))
-        self.g_loss = tf.reduce_mean(self.d_fake_loss)
+        d_real = l1_loss(self.x, d_real)
+        d_fake = l1_loss(self.g, d_fake)
+
+        self.d_real_loss = tf.reduce_mean(d_real)
+        self.d_fake_loss = tf.reduce_mean(d_fake)
+        self.d_loss = tf.reduce_mean(d_real + tf.maximum(0., self.m - d_fake))
+        self.g_loss = self.d_fake_loss
 
         # Summary
         tf.summary.histogram("z-noise", self.z)

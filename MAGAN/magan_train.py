@@ -22,9 +22,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 150,
+    'epoch': 120,
     'n_iter': 1000,
-    'logging_interval': 1000,
+    'logging_interval': 2000,
 }
 
 
@@ -73,6 +73,7 @@ def main():
                        })
 
         s_g_0 = np.inf  # Sg_0 = infinite
+        d_overpowered = False
 
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
@@ -83,12 +84,13 @@ def main():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
 
                 # Update D network
-                _, d_loss, d_real_loss = s.run([model.d_op, model.d_loss, model.d_real_loss],
-                                               feed_dict={
-                                                   model.x: batch_x,
-                                                   model.z: batch_z,
-                                                   model.m: margin,
-                                               })
+                if not d_overpowered:
+                    _, d_loss, d_real_loss = s.run([model.d_op, model.d_loss, model.d_real_loss],
+                                                   feed_dict={
+                                                       model.x: batch_x,
+                                                       model.z: batch_z,
+                                                       model.m: margin,
+                                                   })
 
                 # Update D real sample
                 s_d += np.sum(d_real_loss)
@@ -96,8 +98,8 @@ def main():
                 # Update G network
                 _, g_loss, d_fake_loss = s.run([model.g_op, model.g_loss, model.d_fake_loss],
                                                feed_dict={
-                                                   model.x: batch_x,
-                                                   model.z: batch_z,
+                                                   model.x: sample_x,
+                                                   model.z: sample_z,
                                                    model.m: margin,
                                                })
 
@@ -118,6 +120,8 @@ def main():
                                                         model.m: margin,
                                                     })
 
+                    d_overpowered = d_loss < g_loss / 2
+
                     # Print loss
                     print("[+] Epoch %03d Global Step %05d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
@@ -126,8 +130,9 @@ def main():
                     # Training G model with sample image and noise
                     samples = s.run(model.g,
                                     feed_dict={
-                                        model.x: sample_x,
-                                        model.z: sample_z
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                        model.m: margin,
                                     })
 
                     # Summary saver
