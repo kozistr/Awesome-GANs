@@ -97,6 +97,7 @@ class BEGAN:
         self.g_loss = 0.
         self.d_loss = 0.
         self.m_global = 0.
+        self.balance = 0.
 
         # LR update
         self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
@@ -213,11 +214,12 @@ class BEGAN:
         self.g_loss = d_fake_loss
 
         # Convergence Metric
-        self.m_global = d_real_loss + tf.abs(self.gamma * d_real_loss - d_fake_loss)
+        self.balance = self.gamma * d_real_loss - d_fake_loss
+        self.m_global = d_real_loss + tf.abs(self.balance)
 
         # k_t update
-        self.k_update = self.k.assign(
-            tf.clip_by_value(self.k + self.lambda_k * (self.gamma * d_real_loss - d_fake_loss), 0, 1))
+        self.k_update = tf.assign(self.k,
+                                  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
         tf.summary.histogram("z-noise", self.z)
@@ -227,6 +229,7 @@ class BEGAN:
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("balance", self.balance)
         tf.summary.scalar("m_global", self.m_global)
         tf.summary.scalar("k_t", self.k)
 
