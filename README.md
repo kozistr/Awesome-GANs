@@ -40,7 +40,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [gan_model.py] (gan model) <br/>
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [readme.md]    (explain text) <br/>
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [dataset.py]   (dataset loader) <br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [..._tb.png]   (tensorboard result) <br/>
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |-- [gan_tb.png]   (tensorboard result) <br/>
 
 ## Papers & Codes
 
