@@ -50,21 +50,19 @@ def main():
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         global_step = 0
-        N = train_step['n_iter'] * model.batch_size  # training set size
+        N = mnist.train.images.shape[0] // model.batch_size  # training set size
 
         # Pre-Train
-        for iter_ in range(2 * train_step['n_iter'] + 1):
-            batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_x = np.reshape(batch_x, model.image_shape)
+        print("[+] pre-train")
+        for _ in range(2):
+            for iter_ in range(N):
+                batch_x, _ = mnist.train.next_batch(model.batch_size)
+                batch_x = np.reshape(batch_x, model.image_shape)
 
-            _, d_real_loss = s.run([model.d_real_op, model.d_real_loss],
-                                   feed_dict={
-                                       model.x: batch_x,
-                                   })
-
-            if iter_ % train_step['logging_interval'] == 0:
-                print("[+] pre-train %04d" % iter_,
-                      "=> d_real_loss : {:.8f}".format(d_real_loss))
+                s.run([model.d_real_op, model.d_real_loss],
+                      feed_dict={
+                          model.x: batch_x,
+                      })
 
         # Initial margin value
         margin = s.run(model.d_real_loss,
@@ -77,7 +75,7 @@ def main():
 
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
-            for i in range(train_step['n_iter'] + 1):
+            for i in range(N):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
                 batch_x = np.reshape(batch_x, model.image_shape)
 
