@@ -1,4 +1,13 @@
-## Information Maximizing Generative Adversarial Networks
+# Information Maximizing Generative Adversarial Networks
+
+## Loss Function
+
+
+## Architecture Networks
+
+
+## Tensorboard Result
+
 
 ## To-Do
 * Add tensorboard results
