@@ -1,4 +1,8 @@
-## Initial file
+## Boundary Equilibrium Generative Adversarial Networks
+
+## To-Do
+* Add Loss Function & Explains 
+* Tune D/G networks
 
 ## Tensorbaord Result
 
