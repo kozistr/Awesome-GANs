@@ -5,12 +5,12 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
+from tensorflow.examples.tutorials.mnist import input_data
+
 import sys
 import time
 
 import infogan_model as infogan
-from dataset import DataIterator
-from dataset import CelebADataSet as DataSet
 
 sys.path.append('../')
 import image_utils as iu
@@ -22,14 +22,16 @@ results = {
 }
 
 train_step = {
-    'epoch': 50,
-    'batch_size': 64,
-    'logging_step': 1050,
+    'global_step': 200001,
+    'logging_interval': 2000,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
+
+    # MNIST Dataset load
+    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -37,97 +39,79 @@ def main():
 
     with tf.Session(config=config) as s:
         # InfoGAN Model
-        model = infogan.InfoGAN(s)  # InfoGAN
+        model = infogan.InfoGAN(s)
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
-                     input_channel=3,
-                     mode='r').images
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                    label_off=True)
-
-        sample_x = ds[:model.sample_num]
+        sample_x, sample_y = mnist.test.next_batch(model.sample_num)
         sample_x = np.reshape(sample_x, model.image_shape)
-        sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        sample_c = np.concatenate((sample_y, np.zeros([model.sample_num, model.n_cont])), axis=1)
 
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
+        for step in range(train_step['global_step']):
+            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+            batch_x = np.reshape(batch_x, model.image_shape)
+            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
 
-        # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+            # Update D network
+            _, d_loss = s.run([model.d_op, model.d_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.z: batch_z,
+                                  model.c: batch_c,
+                              })
 
-        global_step = 0
-        for epoch in range(train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, model.image_shape)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+            # Update G network
+            _, g_loss = s.run([model.g_op, model.g_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.z: batch_z,
+                                  model.c: batch_c,
+                              })
 
-                # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+            # Logging
+            if step % train_step['logging_interval'] == 0:
+                batch_x, batch_y = mnist.test.next_batch(model.batch_size)
+                batch_x = np.reshape(batch_x, model.image_shape)
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
 
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.z: batch_z,
-                                  })
+                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                feed_dict={
+                                                    model.x: batch_x,
+                                                    model.z: batch_z,
+                                                    model.c: batch_c,
+                                                })
 
-                # Update k_t
-                _, k, m_global = s.run([model.k_update, model.k, model.m_global],
-                                       feed_dict={
-                                            model.x: batch_x,
-                                            model.z: batch_z,
-                                       })
+                # Print loss
+                print("[+] Step %08d => " % step,
+                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
 
-                if global_step % train_step['logging_step'] == 0:
-                    # Summary
-                    _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                     model.d_loss, model.g_loss, model.merged],
-                                                                    feed_dict={
-                                                                        model.x: batch_x,
-                                                                        model.z: batch_z,
-                                                                    })
+                # Training G model with sample image and noise
+                samples = s.run(model.g,
+                                feed_dict={
+                                    model.x: sample_x,
+                                    model.z: sample_z,
+                                    model.c: sample_c,
+                                })
 
-                    # Print loss
-                    print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss),
-                          " k : {:.8f}".format(k),
-                          " M : {:.8f}".format(m_global))
+                # Summary saver
+                model.writer.add_summary(summary, step)
 
-                    # Summary saver
-                    model.writer.add_summary(summary, epoch)
+                # Export image generated by model G
+                sample_image_height = model.sample_size
+                sample_image_width = model.sample_size
+                sample_dir = results['output'] + 'train_{:08d}.png'.format(step)
 
-                    # Training G model with sample image and noise
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.x: sample_x,
-                                        model.z: sample_z,
-                                    })
+                # Generated image save
+                iu.save_images(samples,
+                               size=[sample_image_height, sample_image_width],
+                               image_path=sample_dir)
 
-                    # Export image generated by model G
-                    sample_image_height = model.sample_size
-                    sample_image_width = model.sample_size
-                    sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, global_step)
-
-                    # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
-
-                    # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
-
-                global_step += 1
+                # Model save
+                model.saver.save(s, results['model'], global_step=step)
 
     end_time = time.time() - start_time  # Clocking end
 
