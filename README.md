@@ -79,28 +79,28 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 *Name* | *Global Step 50k~* | *Global Step 100k~*
 :---: | :---: | :---:
 **ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00050000.png) | 
-**AdaGAN**    |  |  
+**AdaGAN**    |  | 
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_16_51450.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_38_121800.png) 
-**BSGAN**     |  |  
+**BSGAN**     |  | 
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png) 
-**CoGAN**     |  |  
-**CycleGAN**  |  |  
+**CoGAN**     |  | 
+**CycleGAN**  |  | 
 **DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_144_90000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_240_150000.png)
-**DiscoGAN**  |  |  
+**DiscoGAN**  |  | 
 **EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00068000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00182000.png) 
-**f-GAN**     |  |  
+**f-GAN**     |  | 
 **GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00250000.png) 
-**3D-GAN**    |  |  
-**GAP**       |  |  
-**GEGAN**     |  |  
-**InfoGAN**   |  |  
+**3D-GAN**    |  | 
+**GAP**       |  | 
+**GEGAN**     |  | 
+**InfoGAN**   |  | 
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_128_80000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_224_140000.png) 
 **LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00200000.png) 
 **MAGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00100000.png)
-**MRGAN**     |  |  
-**SalGAN**    |  |  
-**SeqGAN**    |  |  
-**SGAN**      |  |  
+**MRGAN**     |  | 
+**SalGAN**    |  | 
+**SeqGAN**    |  | 
+**SGAN**      |  | 
 **WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) |  
 **WGAN-GP**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00080000_2.png) |  
 
