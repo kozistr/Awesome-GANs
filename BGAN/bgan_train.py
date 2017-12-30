@@ -93,6 +93,7 @@ def main():
                                     model.x: sample_x,
                                     model.z: sample_z,
                                 })
+
                 samples = np.reshape(samples, model.image_shape)
 
                 # Summary saver

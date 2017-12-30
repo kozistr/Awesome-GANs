@@ -6,7 +6,7 @@ tf.set_random_seed(777)  # reproducibility
 
 class BGAN:
 
-    def __init__(self, s, batch_size=32, input_height=28, input_width=28, input_channel=1, n_classes=10,
+    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
                  n_input=784, n_hidden_layer_1=128,
                  z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
@@ -137,7 +137,7 @@ class BGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
+        g = tf.reshape(self.g, shape=self.image_shape)
         tf.summary.image("generated", g)  # generated images by Generative Model
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
