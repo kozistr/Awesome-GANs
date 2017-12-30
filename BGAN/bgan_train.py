@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'global_step': 200001,
+    'global_step': 150001,
     'logging_interval': 2000,
 }
 
@@ -44,7 +44,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.train.next_batch(model.sample_num)
+        sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
@@ -56,11 +56,12 @@ def main():
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                              })
+            if not d_overpowered:
+                _, d_loss = s.run([model.d_op, model.d_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.z: batch_z,
+                                  })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
@@ -69,8 +70,10 @@ def main():
                                   model.z: batch_z,
                               })
 
+            d_overpowered = d_loss < g_loss / 2
+
             if step % train_step['logging_interval'] == 0:
-                batch_x, _ = mnist.test.next_batch(model.batch_size)
+                batch_x, _ = mnist.train.next_batch(model.batch_size)
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],

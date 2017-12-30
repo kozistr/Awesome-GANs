@@ -4,12 +4,56 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
+def conv2d(x, f=64, k=4, d=2, pad='SAME', name='conv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param d: strides, default 2
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default conv2d
+    :return: covn2d net
+    """
+    return tf.layers.conv2d(x,
+                            filters=f, kernel_size=k, strides=d,
+                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                            bias_initializer=tf.zeros_initializer(),
+                            padding=pad, name=name)
+
+
+def deconv2d(x, f=64, k=4, d=2, pad='SAME', name='deconv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param d: strides, default 2
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default deconv2d
+    :return: decovn2d net
+    """
+    return tf.layers.conv2d_transpose(x,
+                                      filters=f, kernel_size=k, strides=d,
+                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                                      bias_initializer=tf.zeros_initializer(),
+                                      padding=pad, name=name)
+
+
+def batch_norm(x, momentum=0.9, eps=1e-9):
+    return tf.layers.batch_normalization(inputs=x,
+                                         momentum=momentum,
+                                         epsilon=eps,
+                                         scale=True,
+                                         training=True)
+
+
 class BGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, n_hidden_layer_1=128,
-                 z_dim=100, g_lr=1e-3, d_lr=1e-3, epsilon=1e-9):
+                 n_input=784, fc_unit=256,
+                 z_dim=100, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -30,7 +74,7 @@ class BGAN:
 
         # For DNN model
         :param n_input: input image size, default 784(28x28)
-        :param n_hidden_layer_1: first NN hidden layer, default 128
+        :param fc_unit: fully connected units, default 256
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 100
@@ -54,37 +98,13 @@ class BGAN:
         self.output_width = output_width
 
         self.n_input = n_input
-        self.n_hl_1 = n_hidden_layer_1
+        self.fc_unit = fc_unit
 
         self.z_dim = z_dim
+        self.beta1 = 0.95
+        self.beta2 = 0.5
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
-
-        self.W = {
-            # for discriminator
-            'd_h1': tf.get_variable('d_h1',
-                                    shape=[self.n_input, self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'd_h_out': tf.get_variable('d_h_out',
-                                       shape=[self.n_hl_1, 1],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-            # for generator
-            'g_h1': tf.get_variable('g_h1',
-                                    shape=[self.z_dim, self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'g_h_out': tf.get_variable('g_h_out',
-                                       shape=[self.n_hl_1, self.n_input],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-        }
-
-        self.b = {
-            # for discriminator
-            'd_b1': tf.Variable(tf.zeros([self.n_hl_1])),
-            'd_b_out': tf.Variable(tf.zeros([1])),
-            # for generator
-            'g_b1': tf.Variable(tf.zeros([self.n_hl_1])),
-            'g_b_out': tf.Variable(tf.zeros([self.n_input])),
-        }
 
         self.d_loss = 0.
         self.g_loss = 0.
@@ -97,20 +117,28 @@ class BGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            net = tf.nn.bias_add(tf.matmul(x, self.W['d_h1']), self.b['d_b1'])
-            net = tf.nn.leaky_relu(net)
+            x = tf.layers.flatten(x)
 
-            logits = tf.nn.bias_add(tf.matmul(net, self.W['d_h_out']), self.b['d_b_out'])
+            for i in range(2):
+                x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-%d' % i)
+                x = batch_norm(x)
+                x = tf.nn.leaky_relu(x)
+
+            logits = tf.layers.dense(x, units=1, name='d-fc-2')
             prob = tf.nn.sigmoid(logits)
 
         return prob, logits
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            de_net = tf.nn.bias_add(tf.matmul(z, self.W['g_h1']), self.b['g_b1'])
-            de_net = tf.nn.leaky_relu(de_net)
+            x = tf.layers.flatten(z)
 
-            logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
+            for i in range(2):
+                x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-%d' % i)
+                x = batch_norm(x)
+                x = tf.nn.leaky_relu(x)
+
+            logits = tf.layers.dense(x, units=self.n_input, name='g-fc-2')
             prob = tf.nn.sigmoid(logits)
 
         return prob
@@ -147,8 +175,10 @@ class BGAN:
         d_params = [v for v in vars if v.name.startswith('d')]
         g_params = [v for v in vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.d_lr).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.g_lr).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
