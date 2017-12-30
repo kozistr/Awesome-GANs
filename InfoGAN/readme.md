@@ -8,6 +8,7 @@
 
 ## Tensorboard Result
 
+![result](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/infogan_tb.png)
 
 ## To-Do
 * Add tensorboard results
