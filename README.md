@@ -81,7 +81,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00050000.png) | 
 **AdaGAN**    |  | 
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_16_51450.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_38_121800.png) 
-**BGAN**      |  | 
+**BGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00150000.png)
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00075000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png) 
 **CoGAN**     |  | 
 **CycleGAN**  |  | 
