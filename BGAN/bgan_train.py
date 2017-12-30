@@ -90,7 +90,6 @@ def main():
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
                                 feed_dict={
-                                    model.x: sample_x,
                                     model.z: sample_z,
                                 })
 
