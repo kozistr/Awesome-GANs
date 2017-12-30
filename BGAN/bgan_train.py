@@ -56,12 +56,11 @@ def main():
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+            _, d_loss = s.run([model.d_op, model.d_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.z: batch_z,
+                              })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
@@ -80,12 +79,9 @@ def main():
                                                     model.z: batch_z,
                                                 })
 
-                d_overpowered = d_loss < (g_loss / 2)
-
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss),
-                      "Overpowered :", d_overpowered)
+                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
