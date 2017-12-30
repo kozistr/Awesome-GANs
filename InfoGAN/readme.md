@@ -14,3 +14,4 @@
 * Add tensorboard results
 * Add Loss Function & Explains 
 * Tune D/G networks
+* Add d_overpowered check
