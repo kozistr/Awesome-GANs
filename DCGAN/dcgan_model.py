@@ -62,9 +62,9 @@ class DCGAN:
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 128
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
+        :param batch_size: training batch size, default 64
+        :param input_height: input image height, default 32
+        :param input_width: input image width, default 32
         :param input_channel: input image channel, default 3 (RGB)
         - in case of CIFAR, image size is 32x32x3(HWC).
 
@@ -106,14 +106,7 @@ class DCGAN:
         # Training Options
         self.beta1 = 0.5
         self.beta2 = 0.9
-        self.learning_rate = 2e-4
-        self.lr = tf.train.exponential_decay(
-            learning_rate=self.learning_rate,
-            decay_rate=0.95,
-            decay_steps=150,
-            global_step=750,
-            staircase=False,
-        )
+        self.lr = 2e-4
 
         self.bulid_dcgan()  # build DCGAN model
 
@@ -147,15 +140,15 @@ class DCGAN:
 
             x = tf.reshape(x, [self.batch_size, 4, 4, self.gf_dim * 8])
             x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
+            x = tf.nn.relu(x)
 
             x = deconv2d(x, self.gf_dim * 4, name='g-deconv-1')
             x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
+            x = tf.nn.relu(x)
 
             x = deconv2d(x,  self.gf_dim * 2, name='g-deconv-2')
             x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
+            x = tf.nn.relu(x)
 
             logits = deconv2d(x, self.input_channel, name='g-deconv-3')
             prob = tf.nn.tanh(logits)
@@ -191,13 +184,13 @@ class DCGAN:
 
         # Collect trainer values
         vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('discriminator')]
-        g_params = [v for v in vars if v.name.startswith('generator')]
+        d_params = [v for v in vars if v.name.startswith('d')]
+        g_params = [v for v in vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
