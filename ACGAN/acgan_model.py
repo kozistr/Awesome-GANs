@@ -53,7 +53,7 @@ class ACGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, df_dim=16, gf_dim=128, fc_unit=1024,
+                 n_input=784, df_dim=16, gf_dim=128, fc_unit=256,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4, c_lr=1e-3, epsilon=1e-12):
 
         """
@@ -131,7 +131,7 @@ class ACGAN:
         :return: logits
         """
         with tf.variable_scope("classifier", reuse=reuse):
-            x = tf.layers.dense(x, self.fc_unit / 4, activation=tf.nn.leaky_relu, name='c-fc-1')
+            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='c-fc-1')
             x = tf.layers.dense(x, self.n_classes, name='c-fc-2')
 
             return x
@@ -157,7 +157,7 @@ class ACGAN:
 
             x = tf.layers.flatten(x)
 
-            net = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-1')
+            net = tf.layers.dense(x, self.fc_unit * 2, activation=tf.nn.leaky_relu, name='d-fc-1')
 
             x = tf.layers.dense(net, 1, name='d-fc-2')  # logits
 
@@ -187,7 +187,8 @@ class ACGAN:
             x = tf.nn.relu(x)
 
             x = deconv2d(x, f=1, k=5, d=2, name='g-deconv-2')  # channel
-            x = tf.nn.tanh(x)
+            # x = tf.nn.tanh(x)
+            x = tf.nn.sigmoid(x)
 
             return x
 
