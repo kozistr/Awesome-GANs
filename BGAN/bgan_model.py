@@ -101,8 +101,8 @@ class BGAN:
         self.fc_unit = fc_unit
 
         self.z_dim = z_dim
-        self.beta1 = 0.95
-        self.beta2 = 0.5
+        self.beta1 = 0.5
+        self.beta2 = 0.95
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
@@ -117,11 +117,8 @@ class BGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = tf.layers.flatten(x)
-
             for i in range(2):
                 x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-%d' % i)
-                x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
             logits = tf.layers.dense(x, units=1, name='d-fc-2')
@@ -129,10 +126,8 @@ class BGAN:
 
         return prob, logits
 
-    def generator(self, z, reuse=None):
+    def generator(self, x, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.flatten(z)
-
             for i in range(2):
                 x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-%d' % i)
                 x = batch_norm(x)
