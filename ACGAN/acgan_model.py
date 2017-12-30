@@ -4,24 +4,56 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad='same', name="Conv2D"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d(inputs=input_,
-                                filters=filter_,
-                                kernel_size=k,
-                                strides=d,
-                                padding=pad,
-                                activation=activation,
-                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                bias_initializer=tf.constant_initializer(0.),
-                                name=name)
+def conv2d(x, f=64, k=3, d=2, pad='SAME', name='conv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param d: strides, default 2
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default conv2d
+    :return: conv2d net
+    """
+    return tf.layers.conv2d(x,
+                            filters=f, kernel_size=k, strides=d,
+                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                            bias_initializer=tf.zeros_initializer(),
+                            padding=pad, name=name)
+
+
+def deconv2d(x, f=64, k=3, d=2, pad='SAME', name='deconv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param d: strides, default 2
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default deconv2d
+    :return: decovn2d net
+    """
+    return tf.layers.conv2d_transpose(x,
+                                      filters=f, kernel_size=k, strides=d,
+                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                                      bias_initializer=tf.zeros_initializer(),
+                                      padding=pad, name=name)
+
+
+def batch_norm(x, momentum=0.9, eps=1e-9, name='batch_norm'):
+    return tf.layers.batch_normalization(inputs=x,
+                                         momentum=momentum,
+                                         epsilon=eps,
+                                         scale=True,
+                                         training=True,
+                                         name=name)
 
 
 class ACGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
+                 n_input=784, df_dim=16, gf_dim=128, fc_unit=1024,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4, c_lr=1e-3, epsilon=1e-12):
 
         """
@@ -43,8 +75,8 @@ class ACGAN:
 
         # For CNN model
         :param n_input: input image size, default 784(28x28)
-        :param df_dim: discriminator filter, default 64
-        :param gf_dim: generator filter, default 64
+        :param df_dim: discriminator filter, default 16
+        :param gf_dim: generator filter, default 128
         :param fc_unit: the number of fully connected filters, default 1024
 
         # Training Option
@@ -76,7 +108,7 @@ class ACGAN:
 
         self.z_dim = z_dim
         self.beta1 = 0.5
-        self.beta2 = 0.9
+        self.beta2 = 0.999
         self.d_lr, self.g_lr, self.c_lr = d_lr, g_lr, c_lr
         self.eps = epsilon
 
@@ -93,6 +125,7 @@ class ACGAN:
 
     def classifier(self, x, reuse=None):
         """
+        # Following a C Network, CiFar-like-hood, referred in the paper
         :param x: image, shape=(batch_size, 28, 28, 1)
         :param reuse: re-usable
         :return: logits
@@ -105,28 +138,34 @@ class ACGAN:
 
     def discriminator(self, x, reuse=None):
         """
+        # Following a D Network, CiFar-like-hood, referred in the paper
         :param x: image, shape=(batch_size, 28, 28, 1)
         :param reuse: re-usable
         :return: logits, networks
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = conv2d(x, self.df_dim, name='d_conv_1')
-            # x = tf.layers.dropout(x, 0.5, name='d_dropout_1')
+            x = conv2d(x, self.df_dim, k=3, d=2, name='d-conv-0')
+            x = tf.nn.leaky_relu(x)
+            x = tf.layers.dropout(x, 0.5, name='d-dropout-0')
 
-            x = conv2d(x, self.df_dim * 2, name='d_conv_2')
-            # x = tf.layers.dropout(x, 0.5, name='d_dropout_2')
+            for i in range(1, 2 * 2 + 1):
+                f = self.df_dim * (i + 1)
+                x = conv2d(x, f=f, k=3, d=(i % 2 + 1), name='d-conv-%d' % i)
+                x = batch_norm(x, name='d-batch_norm-%d' % i)
+                x = tf.nn.leaky_relu(x)
+                x = tf.layers.dropout(x, 0.5, name='d-dropout-%d' % i)
 
             x = tf.layers.flatten(x)
 
-            net = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d_fc_1')
-            # x = tf.layers.dropout(x, 0.5, name='d_dropout_3')
+            net = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-1')
 
-            x = tf.layers.dense(net, 1, name='d_fc_2')  # logits
+            x = tf.layers.dense(net, 1, name='d-fc-2')  # logits
 
             return x, net
 
     def generator(self, y, z, reuse=None):
         """
+        # Following a G Network, CiFar-like-hood, referred in the paper
         :param y: image label
         :param z: image noise
         :param reuse: re-usable
@@ -135,18 +174,20 @@ class ACGAN:
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.concat([z, y], axis=1)
 
-            x = tf.layers.dense(x, self.fc_unit / 2, name='g_fc_0')
-            x = tf.layers.dense(x, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_1')
-            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim * 2])
+            x = tf.layers.dense(x, self.gf_dim * 2, name='g-fc-0')
+            x = tf.nn.relu(x)
 
-            # x = tf.layers.flatten(x)
+            x = tf.layers.dense(x, self.gf_dim * 7 * 7, name='g-fc-1')
+            x = tf.nn.relu(x)
 
-            x = tf.layers.conv2d_transpose(x, filters=self.gf_dim,
-                                           kernel_size=2, strides=2,
-                                           activation=tf.nn.leaky_relu, name='g_deconv_1')
-            x = tf.layers.conv2d_transpose(x, filters=1,
-                                           kernel_size=2, strides=2,
-                                           activation=tf.nn.sigmoid, name='g_deconv_2')
+            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim])
+
+            x = deconv2d(x, f=self.gf_dim // 2, k=5, d=2, name='g-deconv-1')
+            x = batch_norm(x, name='g-batch_norm-1')
+            x = tf.nn.relu(x)
+
+            x = deconv2d(x, f=1, k=5, d=2, name='g-deconv-2')  # channel
+            x = tf.nn.tanh(x)
 
             return x
 
@@ -205,5 +246,5 @@ class ACGAN:
         self.merged = tf.summary.merge_all()
 
         # Model saver
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
