@@ -118,7 +118,7 @@ class AdaGAN:
 
         # Placeholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 128)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 100)
 
         self.build_adagan()  # build AdaGAN model
 
