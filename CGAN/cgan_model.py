@@ -108,6 +108,9 @@ class CGAN:
             'g_b_out': tf.Variable(tf.zeros([self.n_input])),
         }
 
+        self.d_loss = 0.
+        self.g_loss = 0.
+
         # Placeholders
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")        # (-1, 784)
         self.c = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='c-condition')  # (-1, 10)
@@ -117,7 +120,7 @@ class CGAN:
 
     def discriminator(self, x, y, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            inputs = tf.concat(axis=1, values=[x, y])
+            inputs = tf.concat([x, y], axis=1)
 
             net = tf.nn.bias_add(tf.matmul(inputs, self.W['d_h1']), self.b['d_b1'])
             net = tf.reshape(net, [-1, self.maxout_unit, self.n_hl_1])
@@ -132,7 +135,7 @@ class CGAN:
 
     def generator(self, z, y, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            inputs = tf.concat(axis=1, values=[z, y])
+            inputs = tf.concat([z, y], axis=1)
 
             de_net = tf.nn.bias_add(tf.matmul(inputs, self.W['g_h1']), self.b['g_b1'])
             de_net = tf.nn.leaky_relu(de_net)
@@ -143,6 +146,9 @@ class CGAN:
         return prob
 
     def build_cgan(self):
+        def log(x):
+            return tf.log(x + self.eps)
+
         # Generator
         self.g = self.generator(self.z, self.c)
 
@@ -150,40 +156,39 @@ class CGAN:
         d_real = self.discriminator(self.x, self.c)
         d_fake = self.discriminator(self.g, self.c, reuse=True)
 
-        # Maximize log(D(G(z)))
-        # Maximize log(D(x)) + log(1 - D(G(z)))
-        log = lambda x: tf.log(x + self.eps)
-
-        self.g_loss = -tf.reduce_mean(tf.log(d_fake + self.eps))
-        self.d_loss = -tf.reduce_mean(log(d_real) + log(1. - d_fake))
+        # Losses
+        d_real_loss = -tf.reduce_mean(log(d_real))
+        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        self.d_loss = d_real_loss + d_fake_loss
+        self.g_loss = -tf.reduce_mean(log(d_fake))
 
         # Summary
-        self.z_sum = tf.summary.histogram("z-noise", self.z)
-        self.c_sum = tf.summary.histogram("c-condition", self.c)
+        tf.summary.histogram("z-noise", self.z)
+        tf.summary.histogram("c-condition", self.c)
 
-        self.g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
-        g_sum = tf.summary.image("G", self.g)  # generated image from G model
-        d_real_sum = tf.summary.histogram("d_real", d_real)
-        d_fake_sum = tf.summary.histogram("d_fake", d_fake)
-        d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
-        g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
+        g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
+        tf.summary.image("G", g)  # generated image from G model
+        tf.summary.histogram("d_real", d_real)
+        tf.summary.histogram("d_fake", d_fake)
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("d_loss", self.d_loss)
+        tf.summary.scalar("g_loss", self.g_loss)
 
         # Collect trainer values
         vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d_')]
-        g_params = [v for v in vars if v.name.startswith('g_')]
+        d_params = [v for v in vars if v.name.startswith('d')]
+        g_params = [v for v in vars if v.name.startswith('g')]
 
-        # model saver
-        self.saver = tf.train.Saver()
+        # Optimizer
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
-        # optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1).\
-            minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1).\
-            minimize(self.g_loss, var_list=g_params)
-
-        # merge summary
-        self.g_sum = tf.summary.merge([self.z_sum, self.c_sum, d_fake_sum, g_sum, g_loss_sum])
-        self.d_sum = tf.summary.merge([self.z_sum, self.c_sum, d_real_sum, d_loss_sum])
+        # Merge summary
         self.merged = tf.summary.merge_all()
+
+        # Model saver
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
