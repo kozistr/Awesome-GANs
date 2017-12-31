@@ -4,7 +4,7 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=4, d=2, pad='SAME', name='conv2d'):
+def conv2d(x, f=16, k=5, d=2, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
@@ -22,7 +22,7 @@ def conv2d(x, f=64, k=4, d=2, pad='SAME', name='conv2d'):
                             padding=pad, name=name)
 
 
-def deconv2d(x, f=64, k=4, d=2, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=16, k=5, d=2, pad='SAME', name='deconv2d'):
     """
     :param x: input
     :param f: filters, default 64
@@ -52,8 +52,8 @@ class AdaGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=64, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, fc_unit=256,
-                 z_dim=100, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
+                 n_input=784, df_dim=16, gf_dim=16, fc_unit=256,
+                 z_dim=100, g_lr=5e-3, d_lr=1e-3, c_lr=1e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -72,14 +72,17 @@ class AdaGAN:
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
-        # For DNN model
+        # Hyper Parameters
         :param n_input: input image size, default 784(28x28)
+        :param df_dim: D net filter, default 16
+        :param gf_dim: G net filter, default 16
         :param fc_unit: fully connected units, default 256
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 100
-        :param g_lr: generator learning rate, default 1e-3
+        :param g_lr: generator learning rate, default 5e-3
         :param d_lr: discriminator learning rate, default 1e-3
+        :param c_lr: classifier learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-9
         """
 
@@ -98,42 +101,57 @@ class AdaGAN:
         self.output_width = output_width
 
         self.n_input = n_input
+        self.df_dim = df_dim
+        self.gf_dim = gf_dim
         self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
-        self.beta2 = 0.95
-        self.d_lr, self.g_lr = d_lr, g_lr
+        self.d_lr = d_lr
+        self.g_lr = g_lr
+        self.c_lr = c_lr
         self.eps = epsilon
 
         self.d_loss = 0.
         self.g_loss = 0.
+        self.c_loss = 0.
 
         # Placeholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 100)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 128)
 
         self.build_adagan()  # build AdaGAN model
 
+    def classifier(self, x, reuse=None):
+        with tf.variable_scope("classifier", reuse=reuse):
+            pass
+
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            for i in range(2):
-                x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-%d' % i)
-                x = tf.nn.leaky_relu(x)
+            for i in range(1, 3):
+                x = conv2d(x, self.df_dim * i, name='d-conv2d-%d' % i)
+                x = batch_norm(x)
+                x = tf.nn.leaky_relu(x, alpha=0.3)
 
-            logits = tf.layers.dense(x, units=1, name='d-fc-2')
+            logits = tf.layers.dense(x, units=1, name='d-fc-1')
             prob = tf.nn.sigmoid(logits)
 
         return prob, logits
 
-    def generator(self, x, reuse=None):
+    def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            for i in range(2):
-                x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-%d' % i)
+            x = tf.layers.dense(z, self.gf_dim * 7 * 7, name='g-fc-1')
+            x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.3)
+
+            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim])
+
+            for i in range(1, 3):
+                x = deconv2d(x, self.gf_dim, name='g-fc-%d' % i)
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
-            logits = tf.layers.dense(x, units=self.n_input, name='g-fc-2')
+            logits = deconv2d(x, f=1, d=1, name='g-deconv-3')
             prob = tf.nn.sigmoid(logits)
 
         return prob
@@ -151,9 +169,9 @@ class AdaGAN:
 
         # Losses
         d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))  # proposed way : log(1. - d_fake) TO -log(d_fake)
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = tf.reduce_mean(tf.square(log(d_fake) + log(1. - d_fake))) / 2
+        self.g_loss = tf.reduce_mean(log(d_fake))
 
         # Summary
         tf.summary.histogram("z-noise", self.z)
@@ -164,16 +182,20 @@ class AdaGAN:
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("c_loss", self.c_loss)
 
         # Optimizer
         vars = tf.trainable_variables()
         d_params = [v for v in vars if v.name.startswith('d')]
         g_params = [v for v in vars if v.name.startswith('g')]
+        c_params = [v for v in vars if v.name.startswith('c')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr,
+                                           beta1=self.beta1).minimize(self.c_loss, var_list=c_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
