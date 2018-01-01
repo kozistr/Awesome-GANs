@@ -5,15 +5,16 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
 import sgan_model as sgan
+from dataset import DataIterator
+from dataset import CiFarDataSet as DataSet
 
 sys.path.append('../')
 import image_utils as iu
+
 
 results = {
     'output': './gen_img/',
@@ -22,102 +23,105 @@ results = {
 }
 
 train_step = {
-    'global_step': 200001,
-    'logging_interval': 2000,
+    'epoch': 250,
+    'batch_size': 64,
+    'logging_interval': 5000,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
-
-    # GPU configure
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        # SGAN Model
-        model = sgan.SGAN(s)
+        # SGAN model
+        model = sgan.SGAN(s, batch_size=train_step['batch_size'])
 
-        # Initializing
+        # Initializing variables
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        # Training, test data set
+        dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-10')
+        dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        d_overpowered = False
-        for step in range(train_step['global_step']):
-            batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_x = batch_x.reshape(-1, model.n_input)
+        sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
-            # Generate z
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+        d_overpowered = False  # G loss > D loss * 2
 
-            # Update D network
-            if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
+        step = 0
+        for epoch in range(train_step['epoch']):
+            for batch_images, _ in dataset_iter.iterate():
+                batch_images = batch_images.astype(np.float32) / 255.0
+                batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
+                                            [train_step['batch_size'], model.z_dim]).astype(np.float32)
+
+                # Update D network
+                if not d_overpowered:
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x: batch_images,
+                                          model.z: batch_z
+                                      })
+
+                # Update G network
+                _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
+                                      model.z: batch_z
                                   })
+                # Logging
+                d_overpowered = d_loss < g_loss / 2
 
-            # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                              })
+                if step % train_step['logging_interval'] == 0:
+                    batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.
+                    batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
-            d_overpowered = d_loss < g_loss / 2
+                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                    feed_dict={
+                                                        model.x: batch_images,
+                                                        model.z: batch_z
+                                                    })
 
-            if step % train_step['logging_interval'] == 0:
-                batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                    # Update overpowered
+                    d_overpowered = d_loss < g_loss / 2
 
-                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                feed_dict={
-                                                    model.x: batch_x,
-                                                    model.z: batch_z,
-                                                })
+                    # Print loss
+                    print("[+] Epoch %03d Step %05d => " % (epoch, step),
+                          " D loss : {:.8f}".format(d_loss),
+                          " G loss : {:.8f}".format(g_loss))
 
-                # Print loss
-                print("[+] Step %08d => " % step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                    # Training G model with sample image and noise
+                    samples = s.run(model.g,
+                                    feed_dict={
+                                        model.x: sample_images,
+                                        model.z: sample_z,
+                                    })
 
-                # Training G model with sample image and noise
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.z: sample_z,
-                                })
+                    # Summary saver
+                    model.writer.add_summary(summary, step)
 
-                samples = np.reshape(samples, model.image_shape)
+                    # Export image generated by model G
+                    sample_image_height = model.sample_size
+                    sample_image_width = model.sample_size
+                    sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, step)
 
-                # Summary saver
-                model.writer.add_summary(summary, step)
+                    # Generated image save
+                    iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
 
-                # Export image generated by model G
-                sample_image_height = model.sample_size
-                sample_image_width = model.sample_size
-                sample_dir = results['output'] + 'train_{:08d}.png'.format(step)
+                    # Model save
+                    model.saver.save(s, results['model'], global_step=step)
 
-                # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
+                step += 1
 
-                # Model save
-                model.saver.save(s, results['model'], global_step=step)
+        end_time = time.time() - start_time  # Clocking end
 
-    end_time = time.time() - start_time  # Clocking end
+        # Elapsed time
+        print("[+] Elapsed time {:.8f}s".format(end_time))
 
-    # Elapsed time
-    print("[+] Elapsed time {:.8f}s".format(end_time))
-
-    # Close tf.Session
-    s.close()
+        # Close tf.Session
+        s.close()
 
 
 if __name__ == '__main__':
