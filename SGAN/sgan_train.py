@@ -15,6 +15,10 @@ import sgan_model as sgan
 sys.path.append('../')
 import image_utils as iu
 
+
+np.random.seed(777)
+
+
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
@@ -25,7 +29,6 @@ train_step = {
     'global_step': 150001,
     'logging_interval': 2000,
 }
-
 
 def main():
     start_time = time.time()  # Clocking start
@@ -44,39 +47,47 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        sample_x, sample_y = mnist.test.next_batch(model.sample_num)
+        sample_z_0 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        sample_z_1 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
-            batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+            batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
+                _, d_loss = s.run([model.d_op, model.d_0_loss],
                                   feed_dict={
                                       model.x: batch_x,
-                                      model.z: batch_z,
+                                      model.y: batch_y,
+                                      model.z_1: batch_z_1,
+                                      model.z_0: batch_z_0,
                                   })
 
             # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
+            _, g_loss = s.run([model.g_op, model.g_0_loss],
                               feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
+                                  model.y: batch_y,
+                                  model.z_1: batch_z_1,
+                                  model.z_0: batch_z_0,
                               })
 
             d_overpowered = d_loss < g_loss / 2
 
             if step % train_step['logging_interval'] == 0:
-                batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+                batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                d_loss, g_loss, summary = s.run([model.d_0_loss, model.g_0_loss, model.merged],
                                                 feed_dict={
                                                     model.x: batch_x,
-                                                    model.z: batch_z,
+                                                    model.y: batch_y,
+                                                    model.z_1: batch_z_1,
+                                                    model.z_0: batch_z_0,
                                                 })
 
                 # Print loss
@@ -86,7 +97,9 @@ def main():
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
                                 feed_dict={
-                                    model.z: sample_z,
+                                    model.y: sample_y,
+                                    model.z_1: sample_z_1,
+                                    model.z_0: sample_z_0,
                                 })
 
                 samples = np.reshape(samples, model.image_shape)
