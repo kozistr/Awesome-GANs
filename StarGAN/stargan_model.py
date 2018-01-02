@@ -1,74 +1,113 @@
 import tensorflow as tf
-import numpy as np
 
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def instance_normalize(x, eps=1e-9):
-    mean, var = tf.nn.moments(x, [1, 2], keep_dims=True)
+def instance_normalize(x, eps=1e-5, affine=True):
+    mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
 
-    return tf.div(x - mean, tf.sqrt(var + eps))
+    normalized = tf.div(x - mean, tf.sqrt(variance + eps))
+
+    if not affine:
+        return normalized
+    else:
+        depth = x.get_shape()[3]  # input channel
+
+        scale = tf.get_variable('scale', [depth],
+                                initializer=tf.random_normal(1., 0.02, dtype=tf.float32))
+        offset = tf.get_variable('offset', [depth],
+                                 initializer=tf.zeros_initializer())
+
+        return scale * normalized + offset
 
 
-def conv2d(x, f=64, k=3, d=1, pad='SAME', name='conv2d'):
+def batch_normalize(x, eps=1e-5):
+    return tf.layers.batch_normalization(x,
+                                         momentum=0.9,
+                                         epsilon=eps,
+                                         scale=True,
+                                         training=True)
+
+
+def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
-    :param d: strides, default 2
+    :param s: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
-    :return: covn2d net
+    :return: conv2d net
     """
     return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
+                            filters=f, kernel_size=k, strides=s,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             use_bias=False,
                             padding=pad, name=name)
 
 
-def residual_block(x, f):
-    with tf.variable_scope("residual_block"):
-        x = conv2d(x, f)
-        x = instance_normalize(x)
-        x = tf.nn.leaky_relu(x)
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deonv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param s: strides, default 2
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default conv2d
+    :return: deconv2d net
+    """
+    return tf.layers.conv2d_transpose(x,
+                                      filters=f, kernel_size=k, strides=s,
+                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                                      use_bias=False,
+                                      padding=pad, name=name)
 
-        x = conv2d(x, f)
-        x = instance_normalize(x)
+
+def residual_block(x, f, name="0"):
+    with tf.variable_scope("residual_block-" + name):
+        x = conv2d(x, f=f, k=3, s=1)
+        x = instance_normalize(x, affine=True)
+        x = tf.nn.relu(x)
+
+        x = conv2d(x, f=f, k=3, s=1)
+        x = instance_normalize(x, affine=True)
 
         return x
 
 
 class StarGAN:
 
-    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=64, sample_size=8, output_height=32, output_width=32,
+    def __init__(self, s, batch_size=32, input_height=64, input_width=64, input_channel=3,
+                 n_classes_1=5, n_classes_2=8,
+                 sample_num=1, sample_size=64, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
-                 gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=0.0001, d_lr=0.0001, epsilon=1e-12):
+                 g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 32
-        :param input_width: input image width, default 32
+        :param batch_size: training batch size, default 32
+        :param input_height: input image height, default 4
+        :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 32x32x3(HWC).
+        - in case of Celeb-A, image size is 64x64x3(HWC).
+        :param n_classes_1: the classes, default 5
+        :param n_classes_1: the classes, default 8
 
         # Output Settings
-        :param sample_num: the number of output images, default 9
-        :param sample_size: sample image size, default 32
-        :param output_height: output images height, default 32
-        :param output_width: output images width, default 32
+        :param sample_num: the number of output images, default 1
+        :param sample_size: sample image size, default 64
+        :param output_height: output images height, default 64
+        :param output_width: output images width, default 64
 
         # Hyper Parameters
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-12
@@ -80,38 +119,56 @@ class StarGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.n_classes_1 = n_classes_1  # Celeb-A
+        self.n_classes_2 = n_classes_2  # RaFD
+        self.image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
         self.sample_num = sample_num
         self.sample_size = sample_size
         self.output_height = output_height
         self.output_width = output_width
 
+        # Model Hyper-Parameters
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
-        self.gamma = gamma  # 0.3 ~ 0.7
-        self.lambda_k = lambda_k
-        self.z_dim = z_dim
+        self.d_lr = d_lr
+        self.g_lr = g_lr
+        self.eps = epsilon
+
+        self.lambda_cls = 1.   #
+        self.lambda_rec = 10.  #
+        self.lambda_gp = 10.   # gradient penalty
+
+        # Training Setting
         self.beta1 = 0.5
         self.beta2 = 0.999
-        self.d_lr = tf.Variable(d_lr, name='d_lr')
-        self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = 0.5
-        self.lr_low_boundary = 1e-5
-        self.eps = epsilon
 
         self.d_real = 0
         self.d_fake = 0
-
         self.g_loss = 0.
         self.d_loss = 0.
-        self.m_global = 0.
-        self.balance = 0.
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 32, 32, 3)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
+        self.x_A = tf.placeholder(tf.float32,
+                                  shape=[None,
+                                         self.input_height, self.input_width, self.input_channel + self.n_classes_1],
+                                  name='x-image-A')  # facial image # Celeb-A
+        self.x_B = tf.placeholder(tf.float32,
+                                  shape=[None,
+                                         self.input_height, self.input_width, self.input_channel + self.n_classes_2],
+                                  name='x-image-B')  # expression   # RaFD
+        self.y_B = tf.placeholder(tf.float32, shape=[None, self.n_classes_2], name='y-label-B')
+        self.fake_x_B = tf.placeholder(tf.float32, shape=self.image_shape, name='x-image-B-fake')
+        self.eps = tf.placeholder(tf.float32, shape=[None, 1, 1, 1], name='epsilon')
+
+        # pre-defined
+        self.d_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
 
         self.build_stargan()  # build StarGAN model
 
@@ -122,30 +179,64 @@ class StarGAN:
         :return: logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            # ...
+            def conv_lrelu(x, f, k, s):
+                x = conv2d(x, f=f, k=k, s=s)
+                x = tf.nn.leaky_relu(x)
 
-            return x
+                return x
 
-    def generator(self, z, reuse=None):
+            for i in range(6):
+                x = conv_lrelu(x, f=self.df_dim * (2 ** (i + 1)), k=4, s=2)
+
+            x = conv2d(x, f=1 + self.n_classes_1, k=1, s=1)
+
+            x = tf.layers.flatten(x)  # (-1, 1 + n_classes_1)
+
+            out_real = x[:, 0]
+            out_aux = x[:, 1:]
+
+            return out_real, out_aux
+
+    def generator(self, x, reuse=None):
         """
-        :param z: embeddings
+        :param x: images
         :param reuse: re-usable
         :return: logits
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = conv2d(z, k=7)
-            x = instance_normalize(x)
-            x = tf.nn.leaky_relu(x)
+            def conv_in_relu(x, f, k, s, de=False):
+                if not de:
+                    x = conv2d(x, f=f, k=k, s=s)
+                else:
+                    x = deconv2d(x, f=f, k=k, s=s)
 
-            # ...
+                x = instance_normalize(x)
+                x = tf.nn.relu(x)
+
+                return x
+
+            x = conv_in_relu(x, f=self.gf_dim * 1, k=7, s=1)
+
+            # down-sampling
+            x = conv_in_relu(x, f=self.gf_dim * 2, k=4, s=2)
+            x = conv_in_relu(x, f=self.gf_dim * 4, k=4, s=2)
+
+            # bottleneck
+            for i in range(6):
+                x = residual_block(x, f=self.gf_dim * 4, name=str(i))
+
+            # up-sampling
+            x = conv_in_relu(x, self.gf_dim * 2, k=4, s=2, de=True)
+            x = conv_in_relu(x, self.gf_dim * 1, k=4, s=2, de=True)
+
+            x = deconv2d(x, f=3, k=7, s=1)
+            x = tf.nn.tanh(x)  # x = tf.nn.sigmoid(x)
 
             return x
 
     def build_stargan(self):
         def l1_loss(x, y):
             return tf.reduce_mean(tf.abs(x - y))
-
-        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
 
         # Generator
         self.g = self.generator(self.z)
@@ -161,8 +252,6 @@ class StarGAN:
         self.g_loss = d_fake_loss
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
         tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", d_real_loss)
@@ -170,14 +259,14 @@ class StarGAN:
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
