@@ -4,6 +4,22 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
+def sub_pixel_conv2d(x, f, s=2):
+    """
+    # ref : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py
+    """
+    if f is None:
+        f = int(int(x.get_shape()[-1]) / (s ** 2))
+
+    bsize, a, b, c = x.get_shape().as_list()
+    bsize = tf.shape(x)[0]
+
+    x_s = tf.split(x, s, 3)
+    x_r = tf.concat(x_s, 2)
+
+    return tf.reshape(x_r, (bsize, s * a, s * b, f))
+
+
 def conv2d(x, f=64, k=3, d=1, act=None, pad='SAME', name='conv2d'):
     """
     :param x: input
@@ -112,18 +128,20 @@ class SRGAN:
 
     def discriminator(self, x, reuse=None):
         """
-        :param x: images (-1, 32, 32, 3)
+        # Following a network architecture referred in the paper
+        :param x: images (-1, 64, 64, 3)
         :param reuse: re-usability
         :return: prob
         """
         with tf.variable_scope("discriminator", reuse=reuse):
             x = conv2d(x, self.df_dim, act=tf.nn.leaky_relu, name='d-conv2d-0')
 
+            strides = [2, 1]
             filters = [1, 2, 2, 4, 4, 8, 8]
             filters = list(map(lambda fs: fs * self.df_dim, filters))
 
             for i, f in enumerate(filters):
-                x = conv2d(x, f=f, k=3, d=i % 2, act=tf.nn.leaky_relu, name='d-conv2d-%d' % (i + 1))
+                x = conv2d(x, f=f, d=strides[i % 2], act=tf.nn.leaky_relu, name='d-conv2d-%d' % (i + 1))
                 x = batch_norm(x)
 
             # x : (-1, 4, 4, 8 * 64)
@@ -134,16 +152,44 @@ class SRGAN:
 
             return x
 
-    def generator(self, z, reuse=None):
+    def generator(self, x, reuse=None):
         """
-        :param z: embeddings
-        :param reuse: re-usable
-        :return: logits
+        :param x: LR (Low Resolution) images, (-1, 32, 32, 3)
+        :param reuse: re-usability
+        :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            # z : (batch_size, 128)
+            def residual_block(x, name):
+                x = conv2d(x, self.gf_dim, name=name)
+                x = batch_norm(x)
+                x = tf.nn.relu(x)
 
-            return z
+                return x
+
+            x = conv2d(x, self.gf_dim, act=tf.nn.relu, name='g-conv2d-0')
+            x_ = x  # for later, used at layer concat
+
+            # B residual blocks
+            for i in range(1, 9):  # (1, 17)
+                xx = residual_block(x, name='g-residual_block_%d' % (i * 2 - 1))
+                xx = residual_block(xx, name='g-residual_block_%d' % (i * 2))
+                xx = tf.add(x, xx)
+                x = xx
+
+            x = conv2d(x, self.gf_dim, name='g-conv2d-1')
+            x = batch_norm(x)
+
+            x = tf.add(x_, x)
+
+            for i in range(1, 3):
+                x = conv2d(x, self.gf_dim * 4, name='g-conv2d-%d' % (i + 2))
+                x = sub_pixel_conv2d(x, f=None, s=2)
+                x = tf.nn.relu(x)
+
+            x = conv2d(x, self.input_channel, k=1, name='g-conv2d-5')  # (-1, 64, 64, 3)
+            x = tf.nn.sigmoid(x)
+
+            return x
 
     def build_began(self):
         def mse_loss(pred, data):
