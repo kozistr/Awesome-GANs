@@ -81,7 +81,6 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 *Name* | *Global Step 50k~* | *Global Step 100k~*
 :---: | :---: | :---:
 **ACGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/ACGAN/gen_img/train_00250000.png)
-**AdaGAN**    |  | 
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_16_51450.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_38_121800.png)
 **BGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00150000.png)
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00220000.png)
@@ -99,7 +98,6 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_128_80000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_224_140000.png) 
 **LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00200000.png) 
 **MAGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN/gen_img/train_00100000.png)
-**MRGAN**     |  | 
 **SalGAN**    |  | 
 **SeqGAN**    |  | 
 **SGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN/gen_img/train_00150000.png)
