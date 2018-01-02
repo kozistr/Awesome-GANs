@@ -1,3 +1,6 @@
+# will be changed to another DataSet, e.g ImageNet
+# this is for temporary
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
