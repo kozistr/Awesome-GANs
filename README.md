@@ -36,7 +36,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## Repo Tree
 ```
-│ <br/>
+│
 ├── gan_img (generated images)
 │   ├── train_xxx.png
 │   └── train_xxx.png
