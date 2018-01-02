@@ -22,14 +22,22 @@ results = {
 }
 
 train_step = {
-    'epoch': 50,
-    'batch_size': 64,
-    'logging_step': 1050,
+    'epoch': 100,
+    'batch_size': 16,
+    'logging_step': 500,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
+
+    # Celeb-A DataSet images
+    ds = DataSet(input_height=64,
+                 input_width=64,
+                 input_channel=3,
+                 mode='w').images
+    dataset_iter = DataIterator(ds, None, train_step['batch_size'],
+                                label_off=True)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -41,14 +49,6 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
-                     input_channel=3,
-                     mode='r').images
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                    label_off=True)
 
         sample_x = ds[:model.sample_num]
         sample_x = np.reshape(sample_x, model.image_shape)
