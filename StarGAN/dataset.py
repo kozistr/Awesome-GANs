@@ -16,7 +16,7 @@ This dataset is for Celeb-A
     Celeb-A DataSets can be downloaded at http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
     Celeb-A link : https://drive.google.com/drive/folders/0B7EVK8r0v71pTUZsaXdaSnZBZzg
-        
+
     OR you can download following python code (but it doesn't work as well when i'm trying)
     code link : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/download.py
 '''
@@ -27,7 +27,8 @@ DataSets = {
     # 'celeb-a-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a.h5',
     # Windows
     'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
-    'celeb-a-h5': 'D:\\DataSet\\Celeb-A\\celeb-a.h5',
+    'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
+    'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
 }
 
 
@@ -74,13 +75,14 @@ class CelebADataSet:
         self.num_threads = num_threads  # change this value to the fitted value for ur system
         self.mode = mode
 
-        self.path = ""      # DataSet path
-        self.files = ""     # files' name
+        self.path = ""  # DataSet path
+        self.files = ""  # files' name
         self.n_classes = 0  # DataSet the number of classes, default 10
 
-        self.data = []      # loaded images
+        self.data = []  # loaded images
         self.num_images = 202599
         self.images = []
+        self.ds_name = ""  # DataSet Name (by image size)
 
         self.celeb_a(mode=self.mode)  # load Celeb-A
 
@@ -95,6 +97,13 @@ class CelebADataSet:
             margin = int(round((new_h - h) / 2))
 
             return img[margin:margin + h]
+
+        if self.input_height == 32:
+            self.ds_name = 'celeb-a-32x32-h5'
+        elif self.input_height == 64:
+            self.ds_name = 'celeb-a-64x64-h5'
+        else:
+            self.ds_name = ""
 
         if mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
@@ -112,7 +121,7 @@ class CelebADataSet:
                 self.data[n] = image.flatten()
 
             # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets['celeb-a-h5']]), 'w') as f:
+            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
                 f.create_dataset("images", data=self.data)
 
         self.images = self.load_data(size=self.num_images)
@@ -122,7 +131,7 @@ class CelebADataSet:
             From great jupyter notebook by Tim Sainburg:
             http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
         """
-        with h5py.File(DataSets['celeb-a-h5'], 'r') as hf:
+        with h5py.File(DataSets[self.ds_name], 'r') as hf:
             faces = hf['images']
 
             full_size = len(faces)
