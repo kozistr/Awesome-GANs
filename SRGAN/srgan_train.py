@@ -8,7 +8,7 @@ import numpy as np
 import sys
 import time
 
-import began_model as began
+import srgan_model as srgan
 from dataset import DataIterator
 from dataset import CelebADataSet as DataSet
 
@@ -18,11 +18,11 @@ import image_utils as iu
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
-    'model': './model/BEGAN-model.ckpt'
+    'model': './model/SRGAN-model.ckpt'
 }
 
 train_step = {
-    'epoch': 50,
+    'epoch': 100,
     'batch_size': 64,
     'logging_step': 1050,
 }
@@ -36,15 +36,15 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        # BEGAN Model
-        model = began.BEGAN(s)  # BEGAN
+        # SRGAN Model
+        model = srgan.BEGAN(s)  # SRGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
+        ds = DataSet(input_height=64,
+                     input_width=64,
                      input_channel=3,
                      mode='r').images
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
