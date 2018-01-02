@@ -212,7 +212,8 @@ class WGAN:
             return tf.nn.tanh(h3)
 
     def build_wgan(self):
-        # Using DCGAN D/G Model
+        def log(x, eps=self.eps):
+            return tf.log(x + eps)
 
         # Generator
         self.g = self.generator(self.z)
@@ -222,15 +223,10 @@ class WGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # The WGAN losses
-        # maximize log(D(G(z)))
-        # maximize log(D(x)) + log(1 - D(G(z)))
-
-        log = lambda x: tf.log(x + self.eps)
-
-        self.g_loss = -tf.reduce_mean(log(d_fake))
         d_real_loss = -tf.reduce_mean(log(d_real))
         d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
+        self.g_loss = -tf.reduce_mean(log(d_fake))
 
         # The gradient penalty loss
         if self.EnableGP:
@@ -247,26 +243,24 @@ class WGAN:
             self.d_loss += self.d_lambda * gradient_penalty
 
         # Summary
-        z_sum = tf.summary.histogram("z", self.z)
-        g = tf.reshape(self.g, shape=[-1] + self.image_shape)
-        g_sum = tf.summary.image("g", g)  # generated image from G model
-        d_real_sum = tf.summary.histogram("d_real", d_real)
-        d_fake_sum = tf.summary.histogram("d_fake", d_fake)
+        tf.summary.histogram("z", self.z)
 
-        d_real_loss_sum = tf.summary.scalar("d_real_loss", d_real_loss)
-        d_fake_loss_sum = tf.summary.scalar("d_fake_loss", d_fake_loss)
-        d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
-        g_loss_sum = tf.summary.scalar("g_loss", self.g_loss)
+        g = tf.reshape(self.g, shape=[-1] + self.image_shape)
+        tf.summary.image("g", g)  # generated image from G model
+        tf.summary.histogram("d_real", d_real)
+        tf.summary.histogram("d_fake", d_fake)
+
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("d_loss", self.d_loss)
+        tf.summary.scalar("g_loss", self.g_loss)
 
         # Collect trainer values
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('discriminator')]
-        g_params = [v for v in vars if v.name.startswith('generator')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('discriminator')]
+        g_params = [v for v in t_vars if v.name.startswith('generator')]
 
         self.d_clip = [v.assign(tf.clip_by_value(v, -self.clip, self.clip)) for v in d_params]
-
-        # Model Saver
-        self.saver = tf.train.Saver()
 
         # Optimizer
         if self.EnableAdam:
@@ -281,7 +275,8 @@ class WGAN:
                                                   decay=self.decay).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
-        self.g_sum = tf.summary.merge([z_sum, d_fake_sum, g_sum, d_fake_loss_sum, g_loss_sum])
-        self.d_sum = tf.summary.merge([z_sum, d_real_sum, d_real_loss_sum, d_loss_sum])
         self.merged = tf.summary.merge_all()
+
+        # Model Saver
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
