@@ -192,8 +192,8 @@ class SRGAN:
             return x
 
     def build_began(self):
-        def mse_loss(pred, data):
-            return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / self.batch_size
+        def mse_loss(pred, data, n=self.batch_size):
+            return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n
 
         # Generator
         self.g = self.generator(self.z)
@@ -212,9 +212,9 @@ class SRGAN:
         tf.summary.histogram("z-noise", self.z)
 
         tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer
