@@ -35,19 +35,21 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * (more DataSets will be added soon!)
 
 ## Repo Tree
-> │ <br/>
-> ├── gan_img (generated images) <br/>
-> │   ├── train_xxx.png <br/>
-> │   └── train_xxx.png <br/>
-> ├── model (model) <br/>
-> │   ├── checkpoint <br/>
-> │   ├── ... <br/>
-> │   └── xxx.ckpt <br/>
-> ├── gan_model.py (gan model) <br/>
-> ├── gan_train.py (gan trainer) <br/>
-> ├── dataset.py   (DataSet loader) <br/>
-> ├── gan_tb.png   (Tensor-Board result) <br/>
-> └── readme.md    (results & explains) <br/>
+```
+│ <br/>
+├── gan_img (generated images)
+│   ├── train_xxx.png
+│   └── train_xxx.png
+├── model (model)
+│   ├── checkpoint
+│   ├── ...
+│   └── xxx.ckpt
+├── gan_model.py (gan model)
+├── gan_train.py (gan trainer)
+├── dataset.py   (DataSet loader)
+├── gan_tb.png   (Tensor-Board result)
+└── readme.md    (results & explains)
+```
 
 ## Papers & Codes
 
