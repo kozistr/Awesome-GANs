@@ -62,27 +62,23 @@ def main():
         sample_x = np.reshape(sample_x, [-1] + model.hr_image_shape[1:])
         sample_x_small, sample_x_nearest = resize(s, sample_x)
 
-        d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
             batch_x = np.reshape(batch_x, [-1] + model.hr_image_shape[1:])
             batch_x_small, batch_x_nearest = resize(s, batch_x)
 
             # Update D network
-            if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x_lr: batch_x_small,
-                                      model.x_hr: batch_x_nearest,
-                                  })
+            _, d_loss = s.run([model.d_op, model.d_loss],
+                              feed_dict={
+                                  model.x_lr: batch_x_small,
+                                  model.x_hr: batch_x_nearest,
+                              })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
                               feed_dict={
                                   model.x_lr: batch_x_small,
                               })
-
-            d_overpowered = d_loss < g_loss / 2
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, _ = mnist.train.next_batch(model.batch_size)
@@ -94,9 +90,6 @@ def main():
                                                     model.x_lr: batch_x_small,
                                                     model.x_hr: batch_x_nearest,
                                                 })
-
-                d_overpowered = d_loss < g_loss / 2
-
                 # Print loss
                 print("[+] Step %08d => " % step,
                       " D loss : {:.8f}".format(d_loss),
