@@ -30,6 +30,7 @@ train_step = {
     'logging_interval': 2000,
 }
 
+
 def main():
     start_time = time.time()  # Clocking start
 
@@ -48,61 +49,70 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, sample_y = mnist.test.next_batch(model.sample_num)
+        sample_x = np.reshape(sample_x, [model.batch_size, model.n_input])
         sample_z_0 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
         sample_z_1 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+            batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
             batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
             batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_0_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.y: batch_y,
-                                      model.z_1: batch_z_1,
-                                      model.z_0: batch_z_0,
-                                  })
+                _, d_0_loss, _, _ = s.run([model.d_0_op, model.d_0_loss, model.d_1_op, model.d_1_loss],
+                                          feed_dict={
+                                              model.x: batch_x,
+                                              model.y: batch_y,
+                                              model.z_1: batch_z_1,
+                                              model.z_0: batch_z_0,
+                                          })
 
             # Update G network
-            _, g_loss = s.run([model.g_op, model.g_0_loss],
-                              feed_dict={
-                                  model.y: batch_y,
-                                  model.z_1: batch_z_1,
-                                  model.z_0: batch_z_0,
-                              })
+            _, g_0_loss, _, _ = s.run([model.g_0_op, model.g_0_loss, model.g_1_op, model.g_1_loss],
+                                      feed_dict={
+                                          model.x: batch_x,
+                                          model.y: batch_y,
+                                          model.z_1: batch_z_1,
+                                          model.z_0: batch_z_0,
+                                      })
 
-            d_overpowered = d_loss < g_loss / 2
+            d_overpowered = d_0_loss < g_0_loss / 2
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+                batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
                 batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
                 batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                d_loss, g_loss, summary = s.run([model.d_0_loss, model.g_0_loss, model.merged],
-                                                feed_dict={
-                                                    model.x: batch_x,
-                                                    model.y: batch_y,
-                                                    model.z_1: batch_z_1,
-                                                    model.z_0: batch_z_0,
-                                                })
+                d_0_loss, _, g_0_loss, _, summary = s.run([model.d_0_loss, model.d_1_loss,
+                                                           model.g_0_loss, model.g_1_loss,
+                                                           model.merged],
+                                                          feed_dict={
+                                                              model.x: batch_x,
+                                                              model.y: batch_y,
+                                                              model.z_1: batch_z_1,
+                                                              model.z_0: batch_z_0,
+                                                          })
+
+                d_overpowered = d_0_loss < g_0_loss / 2
 
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                      " D loss : {:.8f}".format(d_0_loss),
+                      " G loss : {:.8f}".format(g_0_loss))
 
                 # Training G model with sample image and noise
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.y: sample_y,
-                                    model.z_1: sample_z_1,
-                                    model.z_0: sample_z_0,
-                                })
+                _, samples = s.run([model.g_1, model.g_0],
+                                   feed_dict={
+                                       model.y: sample_y,
+                                       model.z_1: sample_z_1,
+                                       model.z_0: sample_z_0,
+                                   })
 
-                samples = np.reshape(samples, model.image_shape)
+                samples = np.reshape(samples, [model.batch_size] + model.image_shape)
 
                 # Summary saver
                 model.writer.add_summary(summary, step)
