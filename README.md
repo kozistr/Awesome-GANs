@@ -69,7 +69,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **MRGAN**        | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) |
 **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
-**SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) |
+**SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN/sgan_model.py)
 **SGAN++**       | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/pdf/1710.10916.pdf) | 
 **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/pdf/1609.04802.pdf) | 
 **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | 
@@ -102,7 +102,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **MRGAN**     |  | 
 **SalGAN**    |  | 
 **SeqGAN**    |  | 
-**SGAN**      |  | 
+**SGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN/gen_img/train_00150000.png)
 **SGAN++**    |  | 
 **SRGAN**     |  | 
 **WGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN/gen_img/train_00090000_1.png) |  
