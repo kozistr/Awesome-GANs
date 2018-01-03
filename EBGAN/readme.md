@@ -12,11 +12,9 @@
 
 ## Result
 
-*Name* | *Global Step 50k~* | *Global Step 100k~*
-:---: | :---: | :---:
-**EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00068000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00182000.png)
+*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
+:---: | :---: | :---: | :---:
+**EBGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN/gen_img/train_00200000.png)
 
 ## To-Do
-* Add tensorboard results
-* Add Loss Function & Explains 
-* Tune D/G networks
+* Add Loss Function & Explains
