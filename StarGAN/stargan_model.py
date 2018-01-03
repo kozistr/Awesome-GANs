@@ -80,8 +80,7 @@ def residual_block(x, f, name="0"):
 
 class StarGAN:
 
-    def __init__(self, s, batch_size=32, input_height=64, input_width=64, input_channel=3,
-                 n_classes_1=5, n_classes_2=8,
+    def __init__(self, s, batch_size=32, input_height=64, input_width=64, input_channel=3, n_classes=10,
                  sample_num=1, sample_size=64, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
                  g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
@@ -94,8 +93,7 @@ class StarGAN:
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 64x64x3(HWC).
-        :param n_classes_1: the classes, default 5
-        :param n_classes_1: the classes, default 8
+        :param n_classes: the classes, default 10
 
         # Output Settings
         :param sample_num: the number of output images, default 1
@@ -119,8 +117,7 @@ class StarGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
-        self.n_classes_1 = n_classes_1  # Celeb-A
-        self.n_classes_2 = n_classes_2  # RaFD
+        self.n_classes = n_classes
         self.image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
         self.sample_num = sample_num
@@ -138,7 +135,7 @@ class StarGAN:
 
         self.lambda_cls = 1.   #
         self.lambda_rec = 10.  #
-        self.lambda_gp = 10.   # gradient penalty
+        self.lambda_gp = .25   # gradient penalty
 
         # Training Setting
         self.beta1 = 0.5
@@ -152,17 +149,20 @@ class StarGAN:
         # Placeholders
         self.x_A = tf.placeholder(tf.float32,
                                   shape=[None,
-                                         self.input_height, self.input_width, self.input_channel + self.n_classes_1],
+                                         self.input_height, self.input_width, self.input_channel + self.n_classes],
                                   name='x-image-A')  # facial image # Celeb-A
         self.x_B = tf.placeholder(tf.float32,
                                   shape=[None,
-                                         self.input_height, self.input_width, self.input_channel + self.n_classes_2],
+                                         self.input_height, self.input_width, self.input_channel + self.n_classes],
                                   name='x-image-B')  # expression   # RaFD
-        self.y_B = tf.placeholder(tf.float32, shape=[None, self.n_classes_2], name='y-label-B')
+        self.y_B = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label-B')
         self.fake_x_B = tf.placeholder(tf.float32, shape=self.image_shape, name='x-image-B-fake')
         self.eps = tf.placeholder(tf.float32, shape=[None, 1, 1, 1], name='epsilon')
 
         # pre-defined
+        self.fake_A = None
+        self.fake_B = None
+
         self.d_op = None
         self.g_op = None
 
@@ -192,8 +192,8 @@ class StarGAN:
 
             x = tf.layers.flatten(x)  # (-1, 1 + n_classes_1)
 
-            out_real = x[:, 0]
-            out_aux = x[:, 1:]
+            out_real = x[:, 0]  # (-1, 1)
+            out_aux = x[:, 1:]  # (-1, n_classes_1)
 
             return out_real, out_aux
 
@@ -235,27 +235,47 @@ class StarGAN:
             return x
 
     def build_stargan(self):
-        def l1_loss(x, y):
-            return tf.reduce_mean(tf.abs(x - y))
+        def gp_loss(real, fake):
+            alpha = tf.random_uniform(shape=real.get_shape(),
+                                      minval=0., maxval=1., name='alpha')
+            diff = fake - real  # fake data - real data
+            interpolates = real + alpha * diff
+            d_interp = self.discriminator(interpolates, reuse=True)
+            gradients = tf.gradients(d_interp, [interpolates])[0]
+            slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
+            gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.))
+
+            return gradient_penalty
 
         # Generator
-        self.g = self.generator(self.z)
+        self.fake_B = self.generator(self.x_A)
+        gen_in = tf.concat([self.fake_B, self.x_A[:, :, :, self.input_channel:]], axis=3)
+        self.fake_A = self.generator(gen_in, reuse=True)
 
         # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        d_src_real_b, d_aux_real_b = self.discriminator(self.x_B[:, :, :, :self.input_channel])
+        g_src_fake_b, g_aux_fake_b = self.discriminator(self.fake_B, reuse=True)
+        d_src_fake_b, d_aux_fake_b = self.discriminator(self.fake_x_B, reuse=True)
 
-        # Loss
-        d_real_loss = l1_loss(self.x, d_real)
-        d_fake_loss = l1_loss(self.g, d_fake)
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = d_fake_loss
+        # WGAN-GP Losses
+        gp = gp_loss(self.x_B[:, :, :, :self.input_channel], self.fake_x_B)
+        d_src_loss = tf.reduce_mean(d_src_fake_b) - tf.reduce_mean(d_src_real_b) + self.lambda_gp * gp
+        d_aux_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_aux_real_b,
+                                                                            labels=self.y_B))
+        self.d_loss = d_src_loss + self.lambda_cls * d_aux_loss
+        g_src_loss = -tf.reduce_mean(g_src_fake_b)
+        g_aux_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=g_aux_fake_b,
+                                                                                 labels=self.y_B))
+        g_rec_loss = tf.reduce_mean(tf.abs(self.x_A[:, :, :, :self.input_channel] - self.fake_A))
+        self.g_loss = g_src_loss + self.lambda_cls * g_aux_fake_loss + self.lambda_rec * g_rec_loss
 
         # Summary
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        tf.summary.scalar("d_src_loss", d_src_loss)
+        tf.summary.scalar("d_aux_loss", d_aux_loss)
         tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("g_src_loss", g_src_loss)
+        tf.summary.scalar("g_aux_fake_loss", g_aux_fake_loss)
+        tf.summary.scalar("g_rec_loss", g_rec_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer

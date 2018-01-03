@@ -16,7 +16,6 @@
 :---: | :---: | :---:
 
 ## To-Do
-* Add Implementation of StarGAN
 * Add Tensorboard result
 * Add Loss Function & Explains 
 * Tune D/G networks
