@@ -50,7 +50,7 @@ class WGAN:
 
     def __init__(self, s, batch_size=32, input_height=28, input_width=28, input_channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 z_dim=128, gf_dim=64, df_dim=64, epsilon=1e-12,
+                 z_dim=100, gf_dim=32, df_dim=32, epsilon=1e-12,
                  enable_bn=False, enable_adam=False, enable_gp=False):
 
         """
@@ -69,9 +69,9 @@ class WGAN:
         :param sample_size: sample image size, default 10
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 128
-        :param gf_dim: the number of generator filters, default 64
-        :param df_dim: the number of discriminator filters, default 64
+        :param z_dim: z dimension (kinda noise), default 100
+        :param gf_dim: the number of generator filters, default 32
+        :param df_dim: the number of discriminator filters, default 32
         :param epsilon: epsilon, default 1e-12
         :param enable_bn: enabling batch normalization, default False
         :param enable_adam: enabling adam optimizer, default False
@@ -103,7 +103,7 @@ class WGAN:
 
         # Training Options - based on the WGAN paper
         self.beta1 = 0.5
-        self.learning_rate = 5e-5  # very slow
+        self.learning_rate = 1e-4  # very slow
         self.critic = 5
         self.clip = .01
         self.d_clip = []  # (-0.01 ~ 0.01)
@@ -129,7 +129,7 @@ class WGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = conv2d(x, self.df_dim, s=1)
+            x = conv2d(x, self.df_dim)
             if self.EnableBN:
                 x = batch_normalize(x)
             else:
@@ -141,7 +141,7 @@ class WGAN:
             else:
                 x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = conv2d(x, self.df_dim * 4)
+            x = conv2d(x, self.df_dim * 4, s=1)
             if self.EnableBN:
                 x = batch_normalize(x)
             else:
@@ -149,7 +149,7 @@ class WGAN:
 
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, 1, activation=tf.nn.sigmoid)
+            x = tf.layers.dense(x, 1)
 
             return x
 
@@ -176,8 +176,9 @@ class WGAN:
                 x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = deconv2d(x, 1, s=1)
+            x = tf.nn.sigmoid(x)  # tf.nn.tanh(x)
 
-            return tf.nn.tanh(x)
+            return x
 
     def build_wgan(self):
         def log(x, eps=self.eps):
@@ -191,10 +192,17 @@ class WGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # The WGAN losses
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        # d_real_loss = -tf.reduce_mean(log(d_real))
+        # d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        # self.d_loss = d_real_loss + d_fake_loss
+        # self.g_loss = -tf.reduce_mean(log(d_fake))
+        d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real,
+                                                                             labels=tf.ones_like(d_real)))
+        d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
+                                                                             labels=tf.zeros_like(d_fake)))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(log(d_fake))
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
+                                                                             labels=tf.ones_like(d_fake)))
 
         # The gradient penalty loss
         if self.EnableGP:
@@ -232,9 +240,9 @@ class WGAN:
 
         # Optimizer
         if self.EnableAdam:
-            self.d_op = tf.train.AdamOptimizer(learning_rate=2e-4,
+            self.d_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate * 2,
                                                beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-            self.g_op = tf.train.AdamOptimizer(learning_rate=2e-4,
+            self.g_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate * 2,
                                                beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
         else:
             self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate,

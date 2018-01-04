@@ -40,7 +40,7 @@ def main():
     with tf.Session(config=config) as s:
         # WGAN Model
         model = wgan.WGAN(s,
-                          enable_bn=True,
+                          enable_bn=False,
                           enable_adam=True,
                           enable_gp=True)  # Improved-WGAN with gradient penalty
 
@@ -61,8 +61,7 @@ def main():
 
             for _ in range(model.critic):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
-
+                batch_x = batch_x.reshape([-1] + model.image_shape)
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update d_clip
@@ -76,7 +75,8 @@ def main():
                                       model.z: batch_z
                                   })
 
-            # Generate z
+            batch_x, _ = mnist.train.next_batch(model.batch_size)
+            batch_x = batch_x.reshape([-1] + model.image_shape)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update G network
