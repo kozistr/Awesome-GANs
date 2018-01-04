@@ -68,6 +68,7 @@ def main():
         # ds_b_iter = DataIterator(img_b, attr_b, train_step['batch_size'])
 
         print("[+] pre-processing elapsed time : {:.8f}s".format(time.time() - start_time))
+        print("[*] image_A     :", img_a.shape, " attribute A :", attr_a.shape)
 
         global_step = 0
         for epoch in range(train_step['epoch']):
@@ -95,11 +96,12 @@ def main():
 
                 end = pointer
 
-                x_a, y_a = img_a[start:end], attr_a[start:end]
-                x_b, y_b = img_a[start:end], attr_a[start:end]
+                x_a, y_a = img_a[start:end], attr_a[start:end][:]
+                x_b, y_b = img_a[start:end], attr_a[start:end][:]
+                print(x_a.shape, y_a.shape, x_b.shape, y_b.shape)
 
-                batch_a = DataSet.concat_data(x_a, y_a)
-                batch_b = DataSet.concat_data(x_b, y_b)
+                batch_a = ds.concat_data(x_a, y_a)
+                batch_b = ds.concat_data(x_b, y_b)
                 eps = np.random.rand(train_step['batch_size'], 1, 1, 1)
 
                 # Generate fake_B
