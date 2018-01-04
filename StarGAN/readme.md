@@ -12,10 +12,10 @@
 
 ## Result
 
-*Name* | *Global Step 50k~* | *Global Step 100k~*
+*Name* | *Input Image* | *Output Image*
 :---: | :---: | :---:
+**StarGAN** | |
 
 ## To-Do
 * Add Tensorboard result
 * Add Loss Function & Explains 
-* Tune D/G networks
