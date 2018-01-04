@@ -17,5 +17,6 @@
 **StarGAN** | |
 
 ## To-Do
-* Add Tensorboard result
-* Add Loss Function & Explains 
+* It takes so much time and needs lots of resources because of a large scale of the networks & DataSets
+* so i can't test it on my machine. Skip the results
+* Add Loss Function & Explains
