@@ -22,8 +22,8 @@ results = {
 }
 
 train_step = {
-    'global_step': 100001,
-    'logging_interval': 10000,
+    'global_step': 250001,
+    'logging_interval': 2500,
 }
 
 
@@ -41,7 +41,6 @@ def main():
         # WGAN Model
         model = wgan.WGAN(s,
                           enable_bn=True,
-                          enable_selu=False,
                           enable_adam=True,
                           enable_gp=True)  # Improved-WGAN with gradient penalty
 
@@ -51,19 +50,7 @@ def main():
         sample_x, _ = mnist.train.next_batch(model.sample_num)
         sample_x = sample_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
 
-        sample_z = np.random.uniform(-1., 1.,  # range -1. ~ 1.
-                                     [model.sample_num, model.z_dim]).astype(np.float32)
-
-        # original sample image
-        # original_image_height = model.sample_size
-        # original_image_width = model.sample_size
-        # original_dir = results['output'] + 'original.png'
-
-        # original image save
-        # original_x = sample_x.reshape([-1, model.input_height, model.input_width, model.channel])
-        # iu.save_images(original_x,
-        #                size=[original_image_height, original_image_width],
-        #                image_path=original_dir)
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         for step in range(train_step['global_step']):
             # Update critic
@@ -91,18 +78,14 @@ def main():
                                       model.z: batch_z
                                   })
 
-            # batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
-            # batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
-
             # Generate z
-            batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                        size=[model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
                               feed_dict={
                                   model.x: batch_x,
-                                  model.z: batch_z
+                                  model.z: batch_z,
                               })
 
             # Logging
@@ -116,18 +99,19 @@ def main():
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
                                                     model.x: batch_x,
-                                                    model.z: batch_z
+                                                    model.z: batch_z,
                                                 })
 
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                      " D loss : {:.8f}".format(d_loss),
+                      " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
                                 feed_dict={
                                     model.x: sample_x,
-                                    model.z: sample_z
+                                    model.z: sample_z,
                                 })
 
                 # Summary saver
