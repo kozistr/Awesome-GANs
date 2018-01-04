@@ -83,8 +83,10 @@ class CelebADataSet:
         self.n_classes = 0  # DataSet the number of classes, default 10
 
         self.data = []  # loaded images
+        self.attr = []
         self.num_images = 202599
         self.images = []
+        self.labels = []
         self.ds_name = ""  # DataSet Name (by image size)
 
         self.celeb_a(mode=self.mode)  # load Celeb-A
@@ -105,8 +107,8 @@ class CelebADataSet:
             self.ds_name = 'celeb-a-32x32-h5'
         elif self.input_height == 64:
             self.ds_name = 'celeb-a-64x64-h5'
-        else:
-            self.ds_name = ""
+
+        self.labels = self.load_attr()  # attributes info (dict)
 
         if mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
@@ -149,7 +151,6 @@ class CelebADataSet:
             if offset == n_chunks - 1:
                 print("[-] Not enough data available, clipping to end.")
                 faces = faces[offset * size:]
-
             else:
                 faces = faces[offset * size:(offset + 1) * size]
 
@@ -159,20 +160,36 @@ class CelebADataSet:
 
         return faces / 255.
 
+    def load_attr(self):
+        with open(DataSets['celeb-a-attr'], 'r') as f:
+            img_attr = {}
+
+            self.num_images = int(f.readline().strip())
+            self.attr = (f.readline().strip()).split(' ')
+
+            for fn in f:
+                row = fn.strip().split(' ')
+                img_name = row[0]
+                attr = [int(x) for x in row[1:]]
+
+                img_attr[img_name] = attr
+
+            return img_attr
+
 
 class DataIterator:
 
     def __init__(self, x, y, batch_size, label_off=False):
         self.x = x
         self.label_off = label_off
-        if not label_off:
+        if not self.label_off:
             self.y = y
         self.batch_size = batch_size
         self.num_examples = num_examples = x.shape[0]
         self.num_batches = num_examples // batch_size
         self.pointer = 0
 
-        assert self.batch_size <= self.num_examples
+        assert (self.batch_size <= self.num_examples)
 
     def next_batch(self):
         start = self.pointer
