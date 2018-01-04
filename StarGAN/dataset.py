@@ -48,7 +48,7 @@ class CelebADataSet:
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 64x64x3(HWC).
-        :param attr_labels: attributes of Celeb-A image, default empty list
+        :param attr_labels: attributes of Celeb-A image, default empty tuple
         - in case of Celeb-A, the number of attributes is 40
 
         # Output Settings
@@ -180,7 +180,10 @@ class CelebADataSet:
             self.num_images = int(f.readline().strip())
             self.attr = (f.readline().strip()).split(' ')
 
-            for fn in f:
+            print("[*] the number of images     : %d" % self.num_images)
+            print("[*] the number of attributes : %d/%d" % (len(self.attr_labels), len(self.attr)))
+
+            for fn in f.readlines():
                 row = fn.strip().split()
                 # img_name = row[0]
                 attr = [int(x) for x in row[1:]]
