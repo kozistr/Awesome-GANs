@@ -23,10 +23,13 @@ This dataset is for Celeb-A
 
 DataSets = {
     # Linux
-    # 'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba',
-    # 'celeb-a-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a.h5',
+    # 'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
+    # 'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
+    # 'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
+    # 'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
     # Windows
     'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
+    'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
     'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
     'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
 }
