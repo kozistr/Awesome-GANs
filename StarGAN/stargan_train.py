@@ -31,63 +31,91 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
-    # Celeb-A DataSet images
-    ds = DataSet(input_height=64,
-                 input_width=64,
-                 input_channel=3,
-                 mode='r').images
-    dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                label_off=True)
-
     # GPU configure
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
+        # pre-chosen
+        attr_labels = [
+            'Big_Nose', 'Black_Hair', 'Blond_Hair', 'Blurry', 'Brown_Hair',
+            'Bushy_Eyebrows', 'Chubby', 'Double_Chin', 'Eyeglasses', 'Gray_Hair'
+        ]
+
         # StarGAN Model
-        model = stargan.StarGAN(s)  # StarGAN
+        model = stargan.StarGAN(s, attr_labels=attr_labels)  # StarGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, model.image_shape)
-        sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+        # Celeb-A DataSet images
+        ds = DataSet(input_height=64,
+                     input_width=64,
+                     input_channel=3,
+                     mode='r')
 
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
+        # x_A # Celeb-A
+        img_a = ds.images
+        attr_a = ds.labels
 
-        # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+        # x_B # Celeb-A # copied from x_A
+        img_b = img_a[:]
+        attr_b = attr_a[:]
+
+        # data_a(img_a, attr_a), data_b(img_b, attr_b) (concat)
+        # data_a = DataSet.concat_data()
+        # data_b = data_a[:]
+
+        ds_a_iter = DataIterator(img_a, attr_a, train_step['batch_size'])
+        ds_b_iter = DataIterator(img_b, attr_b, train_step['batch_size'])
 
         global_step = 0
         for epoch in range(train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, model.image_shape)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+            # learning rate decay
+            lr_decay = 1.
+            if epoch >= train_step['epoch']:
+                lr_decay = (train_step['epoch'] - epoch) / (train_step['epoch'] / 2.)
 
-                # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+            for x_a, y_a, x_b, y_b in ds_a_iter.iterate(), ds_b_iter.iterate():
+                batch_a = DataSet.concat_data(x_a, y_a)
+                batch_b = DataSet.concat_data(x_b, y_b)
+                eps = np.random.rand(model.bach_size, 1, 1, 1)
 
-                # Update G network
+                # Generate fake_B
+                fake_b = s.run(model.fake_B, feed_dict={model.x_A: batch_a})
+
+                # Update D network - 5 times
+                for _ in range(5):
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x_B: batch_b,
+                                          model.y_B: y_b,
+                                          model.fake_x_B: fake_b,
+                                          model.lr_decay: lr_decay,
+                                          model.epsilon: eps,
+                                    })
+
+                # Update G network - 1 time
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
-                                      model.z: batch_z,
+                                      model.x_A: batch_a,
+                                      model.x_B: batch_b,
+                                      model.y_B: y_b,
+                                      model.lr_decay: lr_decay,
+                                      model.epsilon: eps,
                                   })
 
                 if global_step % train_step['logging_step'] == 0:
                     # Summary
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                    })
+                    samples, d_loss, g_loss, summary = s.run([model.g, model.d_loss, model.g_loss, model.merged],
+                                                             feed_dict={
+                                                                 model.x_A: batch_a,
+                                                                 model.x_B: batch_b,
+                                                                 model.y_B: y_b,
+                                                                 model.fake_x_B: fake_b,
+                                                                 model.lr_decay: lr_decay,
+                                                                 model.epsilon: eps,
+                                                             })
 
                     # Print loss
                     print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
@@ -96,13 +124,6 @@ def main():
 
                     # Summary saver
                     model.writer.add_summary(summary, epoch)
-
-                    # Training G model with sample image and noise
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.x: sample_x,
-                                        model.z: sample_z,
-                                    })
 
                     # Export image generated by model G
                     sample_image_height = model.sample_size
