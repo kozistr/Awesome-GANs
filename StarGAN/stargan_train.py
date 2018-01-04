@@ -52,10 +52,11 @@ def main():
         ds = DataSet(input_height=64,
                      input_width=64,
                      input_channel=3,
+                     attr_labels=attr_labels,
                      mode='r')
 
         # x_A # Celeb-A
-        img_a = ds.images
+        img_a = np.reshape(ds.images, [-1, 64, 64, 3])
         attr_a = ds.labels
 
         # x_B # Celeb-A # copied from x_A
@@ -98,7 +99,6 @@ def main():
 
                 x_a, y_a = img_a[start:end], attr_a[start:end][:]
                 x_b, y_b = img_a[start:end], attr_a[start:end][:]
-                print(x_a.shape, y_a.shape, x_b.shape, y_b.shape)
 
                 batch_a = ds.concat_data(x_a, y_a)
                 batch_b = ds.concat_data(x_b, y_b)
@@ -132,7 +132,7 @@ def main():
                     eps = np.random.rand(train_step['batch_size'], 1, 1, 1)
 
                     # Summary
-                    samples, d_loss, g_loss, summary = s.run([model.g, model.d_loss, model.g_loss, model.merged],
+                    samples, d_loss, g_loss, summary = s.run([model.fake_A, model.d_loss, model.g_loss, model.merged],
                                                              feed_dict={
                                                                  model.x_A: batch_a,
                                                                  model.x_B: batch_b,
