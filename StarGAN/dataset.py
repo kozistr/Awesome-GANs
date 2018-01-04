@@ -182,7 +182,7 @@ class CelebADataSet:
             self.attr = (f.readline().strip()).split(' ')
 
             for fn in f:
-                row = fn.strip().split(' ')
+                row = fn.strip().split()
                 img_name = row[0]
                 attr = [int(x) for x in row[1:]]
 
