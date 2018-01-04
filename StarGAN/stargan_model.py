@@ -271,7 +271,7 @@ class StarGAN:
 
         # using WGAN-GP losses
         gp = gp_loss(x_img_b, self.fake_x_B)
-        d_src_loss = tf.reduce_mean(d_src_fake_b) - tf.reduce_mean(d_src_real_b) + self.lambda_gp * gp
+        d_src_loss = tf.reduce_mean(d_src_fake_b) - tf.reduce_mean(d_src_real_b) + gp
         d_aux_loss = sce_loss(logits=d_aux_real_b, labels=self.y_B)
 
         self.d_loss = d_src_loss + self.lambda_cls * d_aux_loss
