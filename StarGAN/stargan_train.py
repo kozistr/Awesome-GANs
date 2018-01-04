@@ -23,7 +23,7 @@ results = {
 
 train_step = {
     'epoch': 100,
-    'batch_size': 16,
+    'batch_size': 32,
     'logging_step': 500,
 }
 
@@ -59,15 +59,15 @@ def main():
         attr_a = ds.labels
 
         # x_B # Celeb-A # copied from x_A
-        img_b = img_a[:]
-        attr_b = attr_a[:]
+        # later it'll be replaced to another DataSet like RaFD, used in the paper
+        # but i can't find proper(good) DataSets, so i just do with single-domain (Celeb-A)
+        # img_b = img_a[:]
+        # attr_b = attr_a[:]
 
-        # data_a(img_a, attr_a), data_b(img_b, attr_b) (concat)
-        # data_a = DataSet.concat_data()
-        # data_b = data_a[:]
+        # ds_a_iter = DataIterator(img_a, attr_a, train_step['batch_size'])
+        # ds_b_iter = DataIterator(img_b, attr_b, train_step['batch_size'])
 
-        ds_a_iter = DataIterator(img_a, attr_a, train_step['batch_size'])
-        ds_b_iter = DataIterator(img_b, attr_b, train_step['batch_size'])
+        print("[+] pre-processing elapsed time : {:.8f}s".format(time.time() - start_time))
 
         global_step = 0
         for epoch in range(train_step['epoch']):
@@ -76,10 +76,31 @@ def main():
             if epoch >= train_step['epoch']:
                 lr_decay = (train_step['epoch'] - epoch) / (train_step['epoch'] / 2.)
 
-            for x_a, y_a, x_b, y_b in ds_a_iter.iterate(), ds_b_iter.iterate():
+            # re-implement DataIterator for multi-input
+            pointer = 0
+            for i in range(ds.num_images // train_step['batch_size']):
+                start = pointer
+                pointer += train_step['batch_size']
+
+                if pointer > ds.num_images:  # if ended 1 epoch
+                    # Shuffle training DataSet
+                    perm = np.arange(ds.num_images)
+                    np.random.shuffle(perm)
+
+                    img_a, img_b = img_a[perm], img_a[perm]
+                    attr_a, attr_b = attr_a[perm], attr_a[perm]
+
+                    start = 0
+                    pointer = train_step['batch_size']
+
+                end = pointer
+
+                x_a, y_a = img_a[start:end], attr_a[start:end]
+                x_b, y_b = img_a[start:end], attr_a[start:end]
+
                 batch_a = DataSet.concat_data(x_a, y_a)
                 batch_b = DataSet.concat_data(x_b, y_b)
-                eps = np.random.rand(model.bach_size, 1, 1, 1)
+                eps = np.random.rand(train_step['batch_size'], 1, 1, 1)
 
                 # Generate fake_B
                 fake_b = s.run(model.fake_B, feed_dict={model.x_A: batch_a})
@@ -106,6 +127,8 @@ def main():
                                   })
 
                 if global_step % train_step['logging_step'] == 0:
+                    eps = np.random.rand(train_step['batch_size'], 1, 1, 1)
+
                     # Summary
                     samples, d_loss, g_loss, summary = s.run([model.g, model.d_loss, model.g_loss, model.merged],
                                                              feed_dict={
