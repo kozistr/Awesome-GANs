@@ -48,8 +48,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_x = sample_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
-
+        sample_x = sample_x.reshape([-1] + model.image_shape)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         for step in range(train_step['global_step']):
@@ -61,11 +60,10 @@ def main():
                 model.critic = 1
 
             for _ in range(model.critic):
-                batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
+                batch_x, _ = mnist.train.next_batch(model.batch_size)
                 batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
 
-                batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                            size=[model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update d_clip
                 if not model.EnableGP:
@@ -91,10 +89,8 @@ def main():
             # Logging
             if step % train_step['logging_interval'] == 0:
                 batch_x, _ = mnist.test.next_batch(model.batch_size)
-                batch_x = batch_x.reshape([-1] + model.image_shape)  # (-1, 28, 28, 1)
-
-                batch_z = np.random.uniform(-1., 1.,  # range -1. ~ 1.
-                                            [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_x = batch_x.reshape([-1] + model.image_shape)
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
