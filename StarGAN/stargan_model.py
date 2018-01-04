@@ -80,7 +80,7 @@ def residual_block(x, f, name="0"):
 
 class StarGAN:
 
-    def __init__(self, s, batch_size=32, input_height=64, input_width=64, input_channel=3, n_classes=10,
+    def __init__(self, s, batch_size=32, input_height=64, input_width=64, input_channel=3,
                  sample_num=1, sample_size=64, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
                  g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
@@ -93,7 +93,6 @@ class StarGAN:
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 64x64x3(HWC).
-        :param n_classes: the classes, default 10
 
         # Output Settings
         :param sample_num: the number of output images, default 1
@@ -117,7 +116,21 @@ class StarGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
-        self.n_classes = n_classes
+        '''
+        # Available attributes
+        [
+         5_o_Clock_Shadow, Arched_Eyebrows, Attractive, Bags_Under_Eyes, Bald, Bangs, Big_Lips, Big_Nose, Black_Hair,
+         Blond_Hair, Blurry, Brown_Hair, Bushy_Eyebrows, Chubby, Double_Chin, Eyeglasses, Goatee, Gray_Hair,
+         Heavy_Makeup, High_Cheekbones, Male, Mouth_Slightly_Open, Mustache, Narrow_Eyes, No_Beard, Oval_Face,
+         Pale_Skin, Pointy_Nose, Receding_Hairline, Rosy_Cheeks, Sideburns, Smiling, Straight_Hair, Wavy_Hair,
+         Wearing_Earrings, Wearing_Hat, Wearing_Lipstick, Wearing_Necklace, Wearing_Necktie, Young
+        ]
+        '''
+        self.attr_labels = [
+            'Big_Nose', 'Black_Hair', 'Blond_Hair', 'Blurry', 'Brown_Hair',
+            'Bushy_Eyebrows', 'Chubby', 'Double_Chin', 'Eyeglasses', 'Gray_Hair'
+        ]
+        self.n_classes = len(self.attr_labels)  # Select 10 of them
         self.image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
         self.sample_num = sample_num
@@ -150,14 +163,15 @@ class StarGAN:
         self.x_A = tf.placeholder(tf.float32,
                                   shape=[None,
                                          self.input_height, self.input_width, self.input_channel + self.n_classes],
-                                  name='x-image-A')  # facial image # Celeb-A
+                                  name='x-image-A')  # input image
         self.x_B = tf.placeholder(tf.float32,
                                   shape=[None,
                                          self.input_height, self.input_width, self.input_channel + self.n_classes],
-                                  name='x-image-B')  # expression   # RaFD
+                                  name='x-image-B')  # target image
+        self.fake_x_B = tf.placeholder(tf.float32, shape=self.image_shape, name='x-image-fake-B')
         self.y_B = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label-B')
-        self.fake_x_B = tf.placeholder(tf.float32, shape=self.image_shape, name='x-image-B-fake')
-        self.eps = tf.placeholder(tf.float32, shape=[None, 1, 1, 1], name='epsilon')
+
+        self.lr_decay = tf.placeholder(tf.float32, shape=None, name='lr-decay')
 
         # pre-defined
         self.fake_A = None
@@ -188,7 +202,7 @@ class StarGAN:
             for i in range(6):
                 x = conv_lrelu(x, f=self.df_dim * (2 ** (i + 1)), k=4, s=2)
 
-            x = conv2d(x, f=1 + self.n_classes_1, k=1, s=1)
+            x = conv2d(x, f=1 + self.n_classes, k=1, s=1)
 
             x = tf.layers.flatten(x)  # (-1, 1 + n_classes_1)
 
@@ -230,7 +244,7 @@ class StarGAN:
             x = conv_in_relu(x, self.gf_dim * 1, k=4, s=2, de=True)
 
             x = deconv2d(x, f=3, k=7, s=1)
-            x = tf.nn.tanh(x)  # x = tf.nn.sigmoid(x)
+            x = tf.nn.sigmoid(x)  # x = tf.nn.tanh(x)
 
             return x
 
@@ -247,26 +261,33 @@ class StarGAN:
 
             return gradient_penalty
 
+        def sce_loss(logits, labels):
+            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+
+        x_img_a = self.x_A[:, :, :, :self.input_channel]
+        x_attr_a = self.x_A[:, :, :, self.input_channel:]
+        x_img_b = self.x_B[:, :, :, :self.input_channel]
+        # x_attr_b = self.x_B[:, :, :, self.input_channel:]
+
         # Generator
         self.fake_B = self.generator(self.x_A)
-        gen_in = tf.concat([self.fake_B, self.x_A[:, :, :, self.input_channel:]], axis=3)
+        gen_in = tf.concat([self.fake_B, x_attr_a], axis=3)
         self.fake_A = self.generator(gen_in, reuse=True)
 
         # Discriminator
-        d_src_real_b, d_aux_real_b = self.discriminator(self.x_B[:, :, :, :self.input_channel])
-        g_src_fake_b, g_aux_fake_b = self.discriminator(self.fake_B, reuse=True)
-        d_src_fake_b, d_aux_fake_b = self.discriminator(self.fake_x_B, reuse=True)
+        d_src_real_b, d_aux_real_b = self.discriminator(x_img_b)
+        g_src_fake_b, g_aux_fake_b = self.discriminator(self.fake_B, reuse=True)    # used at updating G net
+        d_src_fake_b, d_aux_fake_b = self.discriminator(self.fake_x_B, reuse=True)  # used at updating D net
 
-        # WGAN-GP Losses
-        gp = gp_loss(self.x_B[:, :, :, :self.input_channel], self.fake_x_B)
+        # using WGAN-GP losses
+        gp = gp_loss(x_img_b, self.fake_x_B)
         d_src_loss = tf.reduce_mean(d_src_fake_b) - tf.reduce_mean(d_src_real_b) + self.lambda_gp * gp
-        d_aux_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_aux_real_b,
-                                                                            labels=self.y_B))
+        d_aux_loss = sce_loss(logits=d_aux_real_b, labels=self.y_B)
+
         self.d_loss = d_src_loss + self.lambda_cls * d_aux_loss
         g_src_loss = -tf.reduce_mean(g_src_fake_b)
-        g_aux_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=g_aux_fake_b,
-                                                                                 labels=self.y_B))
-        g_rec_loss = tf.reduce_mean(tf.abs(self.x_A[:, :, :, :self.input_channel] - self.fake_A))
+        g_aux_fake_loss = sce_loss(logits=g_aux_fake_b, labels=self.y_B)
+        g_rec_loss = tf.reduce_mean(tf.abs(x_img_a - self.fake_A))
         self.g_loss = g_src_loss + self.lambda_cls * g_aux_fake_loss + self.lambda_rec * g_rec_loss
 
         # Summary
@@ -283,9 +304,9 @@ class StarGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr * self.lr_decay,
                                            beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr * self.lr_decay,
                                            beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
