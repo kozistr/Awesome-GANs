@@ -99,7 +99,7 @@ class CelebADataSet:
         self.attr = []
         self.num_images = 202599
         self.images = []
-        self.labels = []
+        self.labels = {}
         self.ds_name = ""  # DataSet Name (by image size)
 
         self.celeb_a(mode=self.mode)  # load Celeb-A
@@ -121,8 +121,7 @@ class CelebADataSet:
         elif self.input_height == 64:
             self.ds_name = 'celeb-a-64x64-h5'
 
-        self.labels = self.load_attr()    # whole attributes info (dict)
-        self.labels = self.select_attr()  # selected attributes info (list)
+        self.labels = self.load_attr()    # selected attributes info (list)
 
         if mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
@@ -176,29 +175,22 @@ class CelebADataSet:
 
     def load_attr(self):
         with open(DataSets['celeb-a-attr'], 'r') as f:
-            img_attr = {}
+            img_attr = []
 
             self.num_images = int(f.readline().strip())
             self.attr = (f.readline().strip()).split(' ')
 
             for fn in f:
                 row = fn.strip().split()
-                img_name = row[0]
+                # img_name = row[0]
                 attr = [int(x) for x in row[1:]]
 
-                img_attr[img_name] = attr
+                tmp = [attr[self.attr.index(x)] for x in self.attr_labels]
+                tmp = [1. if x == 1 else 0. for x in tmp]  # one-hot labeling
 
-            return img_attr
+                img_attr.append(tmp)
 
-    def select_attr(self):
-        attr = []
-
-        for i in range(self.num_images):
-            tmp = [self.labels[i][self.attr.index(x)] for x in self.attr_labels]
-            tmp = [1. if x == 1 else 0. for x in tmp]  # one-hot labeling
-            attr.append(tmp)
-
-        return attr
+            return np.asarray(img_attr)
 
     def concat_data(self, img, label):
         label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]),
