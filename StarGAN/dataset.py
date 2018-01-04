@@ -37,21 +37,23 @@ DataSets = {
 
 class CelebADataSet:
 
-    def __init__(self, batch_size=128, input_height=32, input_width=32, input_channel=3,
-                 output_height=32, output_width=32, output_channel=3,
+    def __init__(self, batch_size=128, input_height=64, input_width=64, input_channel=3, attr_labels=(),
+                 output_height=64, output_width=64, output_channel=3,
                  split_rate=0.2, random_state=42, num_threads=8, mode='w'):
 
         """
         # General Settings
         :param batch_size: training batch size, default 128
-        :param input_height: input image height, default 32
-        :param input_width: input image width, default 32
+        :param input_height: input image height, default 64
+        :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 32x32x3(HWC).
+        - in case of Celeb-A, image size is 64x64x3(HWC).
+        :param attr_labels: attributes of Celeb-A image, default empty list
+        - in case of Celeb-A, the number of attributes is 40
 
         # Output Settings
-        :param output_height: output images height, default 32
-        :param output_width: output images width, default 32
+        :param output_height: output images height, default 64
+        :param output_width: output images width, default 64
         :param output_channel: output images channel, default 3
 
         # Pre-Processing Option
@@ -67,6 +69,17 @@ class CelebADataSet:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+        '''
+        # Available attributes
+        [
+         5_o_Clock_Shadow, Arched_Eyebrows, Attractive, Bags_Under_Eyes, Bald, Bangs, Big_Lips, Big_Nose, Black_Hair,
+         Blond_Hair, Blurry, Brown_Hair, Bushy_Eyebrows, Chubby, Double_Chin, Eyeglasses, Goatee, Gray_Hair,
+         Heavy_Makeup, High_Cheekbones, Male, Mouth_Slightly_Open, Mustache, Narrow_Eyes, No_Beard, Oval_Face,
+         Pale_Skin, Pointy_Nose, Receding_Hairline, Rosy_Cheeks, Sideburns, Smiling, Straight_Hair, Wavy_Hair,
+         Wearing_Earrings, Wearing_Hat, Wearing_Lipstick, Wearing_Necklace, Wearing_Necktie, Young
+        ]
+        '''
+        self.attr_labels = attr_labels
         self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
 
         self.output_height = output_height
@@ -108,7 +121,8 @@ class CelebADataSet:
         elif self.input_height == 64:
             self.ds_name = 'celeb-a-64x64-h5'
 
-        self.labels = self.load_attr()  # attributes info (dict)
+        self.labels = self.load_attr()    # whole attributes info (dict)
+        self.labels = self.select_attr()  # selected attributes info (list)
 
         if mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
@@ -175,6 +189,22 @@ class CelebADataSet:
                 img_attr[img_name] = attr
 
             return img_attr
+
+    def select_attr(self):
+        attr = []
+
+        for i in range(self.num_images):
+            tmp = [self.labels[i][self.attr.index(x)] for x in self.attr_labels]
+            tmp = [1. if x == 1 else 0. for x in tmp]  # one-hot labeling
+            attr.append(tmp)
+
+        return attr
+
+    def concat_data(self, img, label):
+        label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]),
+                        [1, self.input_height, self.input_width, 1])
+
+        return np.concatenate([img, label], axis=3)
 
 
 class DataIterator:
