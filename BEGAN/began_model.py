@@ -32,9 +32,9 @@ def resize_nn(x, size):
 class BEGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=64, sample_size=8, output_height=32, output_width=32,
+                 sample_num=100, sample_size=10, output_height=32, output_width=32,
                  df_dim=64, gf_dim=64,
-                 gamma=0.4, lambda_k=1e-3, z_dim=128, g_lr=0.0001, d_lr=0.0001, epsilon=1e-12):
+                 gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
         """
         # General Settings
@@ -83,29 +83,41 @@ class BEGAN:
         self.gamma = gamma  # 0.3 ~ 0.7
         self.lambda_k = lambda_k
         self.z_dim = z_dim
-        self.beta1 = 0.5
-        self.beta2 = 0.999
+        self.beta1 = .5
+        self.beta2 = .999
         self.d_lr = tf.Variable(d_lr, name='d_lr')
         self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = 0.5
+        self.lr_decay_rate = .5
         self.lr_low_boundary = 1e-5
         self.eps = epsilon
 
-        self.d_real = 0
-        self.d_fake = 0
-
+        # pre-defined
+        self.d_real = 0.
+        self.d_fake = 0.
         self.g_loss = 0.
         self.d_loss = 0.
         self.m_global = 0.
         self.balance = 0.
 
-        # LR update
+        self.k_update = None
+        self.d_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
+        # LR/k update
+        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
+
         self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
         self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 32, 32, 3)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                name="x-image")                                        # (-1, 32, 32, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_began()  # build BEGAN model
 
@@ -128,8 +140,8 @@ class BEGAN:
 
                 if i < repeat:
                     # x = tf.layers.max_pooling2d(x, 2, 2)
-                    # x = conv2d(x, f=f, d=2)  # conv pooling
-                    x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
+                    x = conv2d(x, f=f, d=2, name='enc-conv-pool-%d' % i)  # conv pooling
+                    # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
             x = tf.layers.flatten(x)
             x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')
@@ -146,7 +158,7 @@ class BEGAN:
             repeat = int(np.log2(self.input_height)) - 2
 
             # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
-            x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
+            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
                 x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
@@ -198,8 +210,6 @@ class BEGAN:
         def l1_loss(x, y):
             return tf.reduce_mean(tf.abs(x - y))
 
-        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
-
         # Generator
         self.g = self.generator(self.z)
 
@@ -218,13 +228,12 @@ class BEGAN:
         self.m_global = d_real_loss + tf.abs(self.balance)
 
         # k_t update
-        self.k_update = tf.assign(self.k,
-                                  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
+        self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
@@ -234,9 +243,9 @@ class BEGAN:
         tf.summary.scalar("k_t", self.k)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)

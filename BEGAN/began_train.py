@@ -15,6 +15,7 @@ import image_utils as iu
 from datasets import DataIterator
 from datasets import CelebADataSet as DataSet
 
+
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
@@ -22,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 50,
+    'epoch': 300,
     'batch_size': 64,
-    'logging_step': 1050,
+    'logging_step': 2500,
 }
 
 
@@ -51,7 +52,7 @@ def main():
                                     label_off=True)
 
         sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, model.image_shape)
+        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
         sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 
         # Export real image
@@ -65,7 +66,7 @@ def main():
         global_step = 0
         for epoch in range(train_step['epoch']):
             for batch_images in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, model.image_shape)
+                batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
 
                 # Update D network
