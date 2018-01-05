@@ -22,9 +22,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 120,
+    'epoch': 250,
     'n_iter': 1000,
-    'logging_interval': 2000,
+    'logging_interval': 2500,
 }
 
 
@@ -95,15 +95,15 @@ def main():
                 # Update G network
                 _, g_loss, d_fake_loss = s.run([model.g_op, model.g_loss, model.d_fake_loss],
                                                feed_dict={
-                                                   model.x: sample_x,
-                                                   model.z: sample_z,
+                                                   model.x: batch_x,
+                                                   model.z: batch_z,
                                                    model.m: margin,
                                                })
 
                 # Update G fake sample
                 s_g += np.sum(d_fake_loss)
 
-                d_overpowered = d_loss < g_loss / 2
+                d_overpowered = d_loss < g_loss / 2.
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
@@ -118,7 +118,7 @@ def main():
                                                         model.m: margin,
                                                     })
 
-                    d_overpowered = d_loss < g_loss / 2
+                    d_overpowered = d_loss < g_loss / 2.
 
                     # Print loss
                     print("[+] Epoch %03d Global Step %05d => " % (epoch, global_step),
@@ -128,8 +128,8 @@ def main():
                     # Training G model with sample image and noise
                     samples = s.run(model.g,
                                     feed_dict={
-                                        model.x: batch_x,
-                                        model.z: batch_z,
+                                        model.x: sample_x,
+                                        model.z: sample_z,
                                         model.m: margin,
                                     })
 

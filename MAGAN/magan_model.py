@@ -232,11 +232,6 @@ class MAGAN:
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
                                            beta1=self.beta1,
                                            beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        """
-        To-Do
-        : Implement AdaMaxOptimizer
-        : Using AdaMax instead of Adam
-        """
 
         # Merge summary
         self.merged = tf.summary.merge_all()
