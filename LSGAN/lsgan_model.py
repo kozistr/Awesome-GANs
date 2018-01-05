@@ -33,7 +33,7 @@ def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='sam
 class LSGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
                  n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
                  z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-12):
 
@@ -90,12 +90,22 @@ class LSGAN:
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
+        # pre-defined
         self.g_loss = 0.
         self.d_loss = 0.
 
+        self.d_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
         # Placeholder
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 28, 28, 1)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.channel],
+                                name="x-image")                                        # (-1, 28, 28, 1)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_lsgan()  # build LSGAN model
 
@@ -119,7 +129,7 @@ class LSGAN:
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_1')
-            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim * 2])
+            x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 2])
 
             x = tf.layers.conv2d_transpose(x, self.gf_dim, 2, strides=2, activation=tf.nn.leaky_relu, name='g_deconv_1')
             x = tf.layers.conv2d_transpose(x, 1, 2, strides=2, activation=tf.nn.sigmoid, name='g_deconv_2')
@@ -127,6 +137,8 @@ class LSGAN:
             return x
 
     def build_lsgan(self):
+        def mse_loss(pred, data, n=self.batch_size):
+            return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n
         # Generator
         self.g = self.generator(self.z)
 
@@ -135,8 +147,6 @@ class LSGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # LSGAN Loss
-        mse_loss = lambda pred, data: tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / self.batch_size
-
         d_real_loss = tf.reduce_sum(mse_loss(d_real, tf.ones_like(d_real)))
         d_fake_loss = tf.reduce_sum(mse_loss(d_fake, tf.zeros_like(d_fake)))
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
@@ -145,16 +155,18 @@ class LSGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.histogram("d_real", d_real)
         tf.summary.histogram("d_fake", d_fake)
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(self.d_lr).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(self.g_lr).minimize(self.g_loss, var_list=g_params)
@@ -163,5 +175,5 @@ class LSGAN:
         self.merged = tf.summary.merge_all()
 
         # model saver
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
