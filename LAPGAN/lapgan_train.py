@@ -43,10 +43,13 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Training, test data set
-        dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-10')
+        dataset = DataSet(input_height=32,
+                          input_width=32,
+                          input_channel=3,
+                          name='cifar-10')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        # sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.
+        # sample_images = dataset.valid_images[:model.sample_num].astype(np.float32)
         # sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
         # Export real image
@@ -61,7 +64,7 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, batch_labels in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 255.
+                batch_images = batch_images.astype(np.float32)
 
                 z = []
                 for i in range(3):
