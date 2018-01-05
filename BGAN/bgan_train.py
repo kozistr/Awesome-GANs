@@ -68,7 +68,7 @@ def main():
                                   model.z: batch_z,
                               })
 
-            d_overpowered = d_loss < g_loss / 2
+            d_overpowered = d_loss < g_loss / 2.
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, _ = mnist.train.next_batch(model.batch_size)
@@ -82,7 +82,8 @@ def main():
 
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                      " D loss : {:.8f}".format(d_loss),
+                      " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 samples = s.run(model.g,
@@ -111,7 +112,7 @@ def main():
     end_time = time.time() - start_time  # Clocking end
 
     # Elapsed time
-    print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 370s on my machine
+    print("[+] Elapsed time {:.8f}s".format(end_time))
 
     # Close tf.Session
     s.close()
