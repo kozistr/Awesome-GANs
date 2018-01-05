@@ -14,7 +14,7 @@ import cgan_model as cgan
 
 sys.path.append('../')
 import image_utils as iu
-
+from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
@@ -24,7 +24,7 @@ results = {
 
 train_step = {
     'global_step': 250001,
-    'logging_interval': 5000,
+    'logging_interval': 2500,
 }
 
 
@@ -32,7 +32,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset Load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -48,8 +48,7 @@ def main():
         sample_x, _ = mnist.train.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
-            sample_y[6 * i:6 * (i + 1), i] = 1
-        sample_y[60:, 9] = 1
+            sample_y[10 * i:10 * (i + 1), i] = 1
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
@@ -73,7 +72,7 @@ def main():
                                   model.z: batch_z,
                               })
 
-            d_overpowered = d_loss < (g_loss / 2)
+            d_overpowered = d_loss < g_loss / 2
 
             # Logging
             if step % train_step['logging_interval'] == 0:
@@ -88,7 +87,7 @@ def main():
                                                 })
 
                 # Update d_overpowered
-                d_overpowered = d_loss < (g_loss / 2)
+                d_overpowered = d_loss < g_loss / 2
 
                 # Print Loss
                 print("[+] Step %08d => " % step,
@@ -123,7 +122,7 @@ def main():
     end_time = time.time() - start_time  # Clocking end
 
     # Elapsed time
-    print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 600s on my machine
+    print("[+] Elapsed time {:.8f}s".format(end_time))
 
     # Close tf.Session
     s.close()

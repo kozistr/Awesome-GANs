@@ -51,9 +51,9 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
 class BGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 sample_num=100, sample_size=10, output_height=28, output_width=28,
                  n_input=784, fc_unit=256,
-                 z_dim=100, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
+                 z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -67,8 +67,8 @@ class BGAN:
         - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
-        :param sample_num: the number of output images, default 64
-        :param sample_size: sample image size, default 8
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
@@ -77,7 +77,7 @@ class BGAN:
         :param fc_unit: fully connected units, default 256
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 100
+        :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-3
         :param d_lr: discriminator learning rate, default 1e-3
         :param epsilon: epsilon, default 1e-9
@@ -106,8 +106,16 @@ class BGAN:
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
+        # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
+
+        self.d_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
 
         # Placeholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
@@ -158,17 +166,17 @@ class BGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        g = tf.reshape(self.g, shape=self.image_shape)
-        tf.summary.image("generated", g)  # generated images by Generative Model
+        # g = tf.reshape(self.g, shape=self.image_shape)
+        # tf.summary.image("generated", g)  # generated images by Generative Model
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)

@@ -12,9 +12,9 @@
 
 ## Result
 
-*Name* | *Global Step 50k~* | *Global Step 100k~*
-:---: | :---: | :---:
-**CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00220000.png)
+*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
+:---: | :---: | :---: | :---:
+**CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00200000.png)
 
 ## To-Do
 * Add Loss Function & Explains 
