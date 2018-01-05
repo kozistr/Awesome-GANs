@@ -18,4 +18,3 @@
 
 ## To-Do
 * Add Loss Function & Explains 
-* Tune D/G networks

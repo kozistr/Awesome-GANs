@@ -46,8 +46,8 @@ class BEGAN:
         - in case of Celeb-A, image size is 32x32x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 9
-        :param sample_size: sample image size, default 32
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
         :param output_height: output images height, default 32
         :param output_width: output images width, default 32
 
