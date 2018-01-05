@@ -9,11 +9,11 @@ import sys
 import time
 
 import began_model as began
-from dataset import DataIterator
-from dataset import CelebADataSet as DataSet
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import DataIterator
+from datasets import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
