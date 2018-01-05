@@ -215,9 +215,9 @@ class CiFarDataSet:
                              test_size=self.split_rate,
                              random_state=self.random_state)
 
-        self.train_images = train_images / 225.
-        self.valid_images = valid_images / 225.
-        self.test_images = test_images / 225.
+        self.train_images = train_images
+        self.valid_images = valid_images
+        self.test_images = test_images
 
         self.train_labels = one_hot(train_labels, self.n_classes)
         self.valid_labels = one_hot(valid_labels, self.n_classes)
@@ -253,9 +253,9 @@ class CiFarDataSet:
                              test_size=self.split_rate,
                              random_state=self.random_state)
 
-        self.train_images = train_images / 225.
-        self.valid_images = valid_images / 225.
-        self.test_images = test_images / 225.
+        self.train_images = train_images
+        self.valid_images = valid_images
+        self.test_images = test_images
 
         self.train_labels = one_hot(train_labels, self.n_classes)
         self.valid_labels = one_hot(valid_labels, self.n_classes)
