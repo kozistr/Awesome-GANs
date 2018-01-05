@@ -12,14 +12,15 @@ def conv2d(x, f=64, k=3, d=2, pad='SAME', name='conv2d'):
     :param d: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
-    :return: covn2d net
+    :return: conv2d net
     """
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
-                            padding=pad, name=name)
+                            padding=pad,
+                            name=name)
 
 
 def deconv2d(x, f=64, k=3, d=2, pad='SAME', name='deconv2d'):
@@ -30,17 +31,18 @@ def deconv2d(x, f=64, k=3, d=2, pad='SAME', name='deconv2d'):
     :param d: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default deconv2d
-    :return: decovn2d net
+    :return: deconv2d net
     """
     return tf.layers.conv2d_transpose(x,
                                       filters=f, kernel_size=k, strides=d,
                                       kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                                       bias_initializer=tf.zeros_initializer(),
-                                      padding=pad, name=name)
+                                      padding=pad,
+                                      name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-9):
+def batch_norm(x, momentum=0.9, eps=1e-5):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
@@ -114,7 +116,6 @@ class DCGAN:
 
         # Training Options
         self.beta1 = 0.5
-        self.beta2 = 0.9
         self.lr = 2e-4
 
         self.bulid_dcgan()  # build DCGAN model
@@ -125,39 +126,39 @@ class DCGAN:
             x = tf.nn.leaky_relu(x)
 
             x = conv2d(x, self.df_dim * 2, name='d-conv-1')
-            x = batch_norm(x)
+            # x = batch_norm(x)
             x = tf.nn.leaky_relu(x)
 
             x = conv2d(x, self.df_dim * 4, name='d-conv-2')
-            x = batch_norm(x)
+            # x = batch_norm(x)
             x = tf.nn.leaky_relu(x)
 
-            x = conv2d(x, self.df_dim * 8, name='d-conv-3')
-            x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
+            # x = conv2d(x, self.df_dim * 8, name='d-conv-3')
+            # x = batch_norm(x)
+            # x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
             logits = tf.layers.dense(x, 1, name='d-fc-1')
             prob = tf.nn.sigmoid(logits)
 
-            return prob
+            return prob, logits
 
     def generator(self, z, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
             x = tf.layers.dense(z, self.gf_dim * 8 * 4 * 4)
 
             x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
-            x = batch_norm(x)
-            x = tf.nn.relu(x)
+            # x = batch_norm(x)
+            x = tf.nn.leaky_relu(x)
 
             x = deconv2d(x, self.gf_dim * 4, name='g-deconv-1')
-            x = batch_norm(x)
-            x = tf.nn.relu(x)
+            # x = batch_norm(x)
+            x = tf.nn.leaky_relu(x)
 
             x = deconv2d(x,  self.gf_dim * 2, name='g-deconv-2')
-            x = batch_norm(x)
-            x = tf.nn.relu(x)
+            # x = batch_norm(x)
+            x = tf.nn.leaky_relu(x)
 
             logits = deconv2d(x, self.input_channel, name='g-deconv-3')
             prob = tf.nn.tanh(logits)
@@ -168,18 +169,27 @@ class DCGAN:
         def log(x, eps=self.eps):
             return tf.log(x + eps)
 
+        def sce_loss(logits, labels):
+            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+
         # Generator
         self.g = self.generator(self.z)
 
         # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        _, d_real = self.discriminator(self.x)
+        _, d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
+        """
         d_real_loss = -tf.reduce_mean(log(d_real))
         d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = -tf.reduce_mean(log(d_fake))
+        """
+        d_real_loss = sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = sce_loss(d_fake, tf.zeros_like(d_fake))
+        self.d_loss = d_real_loss + d_fake_loss
+        self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
         tf.summary.histogram("z", self.z)
@@ -199,9 +209,9 @@ class DCGAN:
 
         # Optimizer
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
