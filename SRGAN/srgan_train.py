@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -14,6 +12,8 @@ import srgan_model as srgan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -22,8 +22,8 @@ results = {
 }
 
 train_step = {
-    'global_step': 250001,
-    'logging_interval': 2500,
+    'global_step': 200001,
+    'logging_interval': 2000,
 }
 
 
@@ -45,7 +45,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()

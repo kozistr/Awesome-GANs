@@ -51,7 +51,7 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
 class SRGAN:
 
     def __init__(self, s, batch_size=16, input_height=28, input_width=28, input_channel=1,
-                 sample_num=100, sample_size=28, output_height=28, output_width=28,
+                 sample_num=28 * 28, sample_size=28, output_height=28, output_width=28,
                  df_dim=64, gf_dim=64,
                  g_lr=1e-4, d_lr=1e-4):
 
@@ -65,7 +65,7 @@ class SRGAN:
         - in case of MNIST, image size is 28x28x1(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 4
+        :param sample_num: the number of output images, default 784
         :param sample_size: sample image size, default 28
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
