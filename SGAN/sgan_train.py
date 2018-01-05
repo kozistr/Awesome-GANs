@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -14,9 +12,7 @@ import sgan_model as sgan
 
 sys.path.append('../')
 import image_utils as iu
-
-
-np.random.seed(777)
+from datasets import MNISTDataSet as DataSet
 
 
 results = {
@@ -26,8 +22,8 @@ results = {
 }
 
 train_step = {
-    'global_step': 150001,
-    'logging_interval': 2000,
+    'global_step': 200001,
+    'logging_interval': 2500,
 }
 
 
@@ -35,7 +31,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -49,7 +45,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, sample_y = mnist.test.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, [model.batch_size, model.n_input])
+        sample_x = np.reshape(sample_x, [model.sample_num, model.n_input])
         sample_z_0 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
         sample_z_1 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 

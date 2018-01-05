@@ -1,13 +1,7 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import tensorflow as tf
-import numpy as np
 
 
 tf.set_random_seed(777)
-np.random.seed(777)
 
 
 def conv2d(x, f=64, k=5, d=2, pad='SAME', name='conv2d'):
@@ -63,8 +57,7 @@ class SGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1,
                  n_classes=10, n_input=784, sample_size=8, sample_num=64,
-                 z_dim=100, gf_dim=128, df_dim=96, fc_unit=256,
-                 eps=1e-12):
+                 z_dim=100, gf_dim=128, df_dim=96, fc_unit=256):
 
         """
         # General Settings
@@ -87,9 +80,6 @@ class SGAN:
         :param gf_dim: the number of generator filters, default 128
         :param df_dim: the number of discriminator filters, default 32
         :param fc_unit: fully connected units, default 256
-
-        # Training Settings
-        :param eps: epsilon, default 1e-12
         """
 
         self.s = s
@@ -106,8 +96,6 @@ class SGAN:
         self.image_shape = [self.input_height, self.input_width, self.input_channel]
 
         self.z_dim = z_dim
-
-        self.eps = eps
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
