@@ -55,19 +55,14 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Training, test data set
-        dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-100')
+        dataset = DataSet(input_height=32,
+                          input_width=32,
+                          input_channel=3,
+                          name='cifar-100')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.
+        sample_x = dataset.valid_images[:model.sample_num].astype(np.float32)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
-
-        # Export real image
-        # valid_image_height = model.sample_size
-        # valid_image_width = model.sample_size
-        # sample_dir = results['output'] + 'valid.png'
-
-        # Generated image save
-        # iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
 
         d_overpowered = False  # G loss > D loss * 2
 
@@ -75,14 +70,14 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 255.
+                batch_x = batch_images.astype(np.float32)
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
                 if not d_overpowered:
                     _, d_loss = s.run([model.d_op, model.d_loss],
                                       feed_dict={
-                                          model.x: batch_images,
+                                          model.x: batch_x,
                                           model.z: batch_z
                                       })
 
@@ -91,31 +86,29 @@ def main():
                                   feed_dict={
                                       model.z: batch_z
                                   })
-                # Logging
+
                 d_overpowered = d_loss < g_loss / 2
 
                 if step % train_step['logging_interval'] == 0:
-                    batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.
                     batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                     feed_dict={
-                                                        model.x: batch_images,
-                                                        model.z: batch_z
+                                                        model.x: batch_x,
+                                                        model.z: batch_z,
                                                     })
+
+                    d_overpowered = d_loss < g_loss / 2
 
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss))
 
-                    # Update overpowered
-                    d_overpowered = d_loss < g_loss / 2
-
                     # Training G model with sample image and noise
                     samples = s.run(model.g,
                                     feed_dict={
-                                        model.x: sample_images,
+                                        model.x: sample_x,
                                         model.z: sample_z,
                                     })
 

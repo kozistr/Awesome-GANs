@@ -113,8 +113,8 @@ class DCGAN:
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
-        self.beta1 = .5
-        self.beta2 = .9
+        self.beta1 = 0.5
+        self.beta2 = 0.9
         self.lr = 2e-4
 
         self.bulid_dcgan()  # build DCGAN model
