@@ -19,4 +19,3 @@
 ## To-Do
 * Add tensorboard results
 * Add Loss Function & Explains 
-* Add d_overpowered check
