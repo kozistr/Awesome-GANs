@@ -53,7 +53,7 @@ def main():
 
         sample_x = ds[:model.sample_num]
         sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-        sample_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # Export real image
         valid_image_height = model.sample_size
@@ -67,7 +67,7 @@ def main():
         for epoch in range(train_step['epoch']):
             for batch_images in dataset_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 32 x 128
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],

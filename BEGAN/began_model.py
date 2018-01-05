@@ -32,7 +32,7 @@ def resize_nn(x, size):
 class BEGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=100, sample_size=10, output_height=32, output_width=32,
+                 sample_num=10 * 10, sample_size=10, output_height=32, output_width=32,
                  df_dim=64, gf_dim=64,
                  gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
@@ -193,7 +193,7 @@ class BEGAN:
             repeat = int(np.log2(self.input_height)) - 2
 
             x = tf.layers.dense(z, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='g-fc-1')
-            x = tf.reshape(x, [self.batch_size, 8, 8, self.z_dim])
+            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
                 x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
