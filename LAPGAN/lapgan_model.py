@@ -34,9 +34,8 @@ def image_sampling(img, sampling_type='down'):
 class LAPGAN:
 
     def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
-                 sample_num=100, sample_size=10,
-                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=512,
-                 eps=1e-12):
+                 sample_num=10 * 10, sample_size=10,
+                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=512):
 
         """
         # General Settings
@@ -57,9 +56,6 @@ class LAPGAN:
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
         :param fc_unit: the number of fully connected filters, default 512
-
-        # Training Settings
-        :param eps: epsilon, default 1e-12
         """
 
         self.s = s
@@ -76,17 +72,16 @@ class LAPGAN:
 
         self.z_dim = z_dim
 
-        self.eps = eps
-
         self.gf_dim = gf_dim
         self.df_dim = df_dim
         self.fc_unit = fc_unit
 
         # Placeholders
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name='y-classes')  # one_hot
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')  # one_hot
 
-        self.x1_fine = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape,
-                                      name='x-images')  # [32, 32]
+        self.x1_fine = tf.placeholder(tf.float32,
+                                      shape=[None, self.input_height, self.input_width, self.input_channel],
+                                      name='x-images')
         self.x1_scaled = image_sampling(self.x1_fine, 'down')
         self.x1_coarse = image_sampling(self.x1_scaled, 'up')
         self.x1_diff = self.x1_fine - self.x1_coarse
@@ -102,7 +97,7 @@ class LAPGAN:
         self.z_noises = [32 * 32, 16 * 16, self.z_dim]
         for i in range(3):
             self.z.append(tf.placeholder(tf.float32,
-                                         shape=[self.batch_size, self.z_noises[i]],
+                                         shape=[None, self.z_noises[i]],
                                          name='z-noise_{0}'.format(i)))
 
         self.g = []       # generators
@@ -166,7 +161,7 @@ class LAPGAN:
 
                 h = tf.concat([x, y], axis=3)
 
-                h = conv2d(h, filter_=self.df_dim, pad="VALID", name='d-conv-1')
+                h = conv2d(h, filter_=self.df_dim, pad='valid', name='d-conv-1')
                 h = conv2d(h, filter_=self.df_dim, activation=None, pad='valid', name='d-conv-2')
 
                 h = tf.layers.flatten(h)
@@ -255,8 +250,8 @@ class LAPGAN:
 
         # Summary
         for i in range(len(self.g)):
-            tf.summary.scalar('d_real_{0}'.format(i), self.d_reals[i])
-            tf.summary.scalar('d_fake_{0}'.format(i), self.d_fakes[i])
+            # tf.summary.scalar('d_real_{0}'.format(i), self.d_reals[i])
+            # tf.summary.scalar('d_fake_{0}'.format(i), self.d_fakes[i])
             tf.summary.scalar('d_real_prob_{0}'.format(i), self.d_reals_prob[i])
             tf.summary.scalar('d_fake_prob_{0}'.format(i), self.d_fakes_prob[i])
             tf.summary.scalar('d_loss_{0}'.format(i), self.d_loss[i])
