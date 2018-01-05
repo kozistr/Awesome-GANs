@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import tensorflow as tf
 
 
@@ -38,7 +34,7 @@ def image_sampling(img, sampling_type='down'):
 class LAPGAN:
 
     def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
-                 sample_size=8, sample_num=64,
+                 sample_num=100, sample_size=10,
                  z_dim=100, gf_dim=64, df_dim=64, fc_unit=1024,
                  eps=1e-12):
 
@@ -153,7 +149,7 @@ class LAPGAN:
 
         with tf.variable_scope('discriminator_{0}'.format(scale), reuse=reuse):
             if scale == 8:
-                x1 = tf.reshape(x1, [self.batch_size, scale * scale * 3])
+                x1 = tf.reshape(x1, [-1, scale * scale * 3])
 
                 h = tf.concat([x1, y], axis=1)
 
@@ -221,6 +217,9 @@ class LAPGAN:
             return h
 
     def bulid_lapgan(self):
+        def sce_loss(x, y):
+            return tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y)
+
         # Generator & Discriminator
         g1 = self.generator(x=self.x1_coarse, y=self.y, z=self.z[0], scale=32)
         d1_fake = self.discriminator(x1=g1, x2=self.x1_coarse, y=self.y, scale=32)
@@ -240,20 +239,18 @@ class LAPGAN:
 
         # Prob
         m_sigmoid = lambda x: tf.reduce_mean(tf.sigmoid(x))
-        with tf.variable_scope('prob') as scope:
+        with tf.variable_scope('prob'):
             for i in range(len(self.g)):
                 self.d_reals_prob.append(m_sigmoid(self.d_reals[i]))
                 self.d_fakes_prob.append(m_sigmoid(self.d_fakes[i]))
 
-        # Loss
-        # maximize log(D(G(z))) # maximize log(D(x)) + log(1 - D(G(z)))
-        sigmoid_CE = lambda x, y: tf.nn.sigmoid_cross_entropy_with_logits(labels=x, logits=y)  # using sigmoid CE loss
-        with tf.variable_scope('loss') as scope:
+        # Losses
+        with tf.variable_scope('loss'):
             for i in range(len(self.g)):
-                self.d_loss.append(tf.reduce_mean(sigmoid_CE(tf.ones_like(self.d_reals[i]), self.d_reals[i]) +
-                                                  sigmoid_CE(tf.zeros_like(self.d_fakes[i]), self.d_fakes[i]),
+                self.d_loss.append(tf.reduce_mean(sce_loss(self.d_reals[i], tf.ones_like(self.d_reals[i])) +
+                                                  sce_loss(self.d_fakes[i], tf.zeros_like(self.d_fakes[i])),
                                                   name="d_loss_{0}".format(i)))
-                self.g_loss.append(tf.reduce_mean(sigmoid_CE(tf.ones_like(self.d_fakes[i]), self.d_fakes[i]),
+                self.g_loss.append(tf.reduce_mean(sce_loss(self.d_fakes[i], tf.ones_like(self.d_fakes[i])),
                                                   name="g_loss_{0}".format(i)))
 
         # Summary
@@ -267,23 +264,23 @@ class LAPGAN:
 
             tf.summary.histogram("z_{0}".format(i), self.z[i])
 
-        tf.summary.image("g", g1)  # generated image from G model
+        # tf.summary.image("g", g1)  # generated image from G model
 
         # Optimizer
-        vars = tf.trainable_variables()
+        t_vars = tf.trainable_variables()
         for idx, i in enumerate([32, 16, 8]):
             self.d_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
                                                     beta1=self.beta1, beta2=self.beta2).
                              minimize(loss=self.d_loss[idx],
-                                      var_list=[v for v in vars if v.name.startswith('discriminator_{0}'.format(i))]))
+                                      var_list=[v for v in t_vars if v.name.startswith('discriminator_{0}'.format(i))]))
             self.g_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
                                                     beta1=self.beta1, beta2=self.beta2).
                              minimize(loss=self.g_loss[idx],
-                                      var_list=[v for v in vars if v.name.startswith('generator_{0}'.format(i))]))
+                                      var_list=[v for v in t_vars if v.name.startswith('generator_{0}'.format(i))]))
 
         # Merge summary
         self.merged = tf.summary.merge_all()
 
         # Model Saver
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)

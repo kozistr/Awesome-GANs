@@ -9,11 +9,11 @@ import sys
 import time
 
 import lapgan_model as lapgan
-from dataset import DataIterator
-from dataset import CiFarDataSet as DataSet
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import DataIterator
+from datasets import CiFarDataSet as DataSet
 
 
 results = {
@@ -23,7 +23,7 @@ results = {
 }
 
 train_step = {
-    'epoch': 250,
+    'epoch': 300,
     'batch_size': 64,
     'logging_interval': 5000,
 }
@@ -46,19 +46,16 @@ def main():
         dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-10')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.0
-        sample_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                     size=(model.sample_num, model.z_dim))
+        # sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.
+        # sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
         # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
+        # valid_image_height = model.sample_size
+        # valid_image_width = model.sample_size
+        # sample_dir = results['output'] + 'valid.png'
 
         # Generated image save
-        iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
-
-        d_overpowered = False  # G loss > D loss * 2
+        # iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
 
         step = 0
         cont = int(step / 750)
@@ -85,11 +82,11 @@ def main():
                     model.x3_fine, model.g[2], model.d_reals_prob[2], model.d_fakes_prob[2],
                     model.d_loss[2], model.g_loss[2],
 
-                    model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2]  # D/G ops
+                    model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2],  # D/G ops
                 ],
                     feed_dict={
                         model.x1_fine: batch_images,  # images
-                        model.y: batch_labels,  # classes
+                        model.y: batch_labels,        # classes
                         model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2]  # z-noises
                     })
 
@@ -97,7 +94,8 @@ def main():
                 if step % train_step['logging_interval'] == 0:
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
-                          "D loss : {:.8f}".format(d_loss_1.mean()), " G loss : {:.8f}".format(g_loss_1.mean()))
+                          " D loss : {:.8f}".format(d_loss_1.mean()),
+                          " G loss : {:.8f}".format(g_loss_1.mean()))
 
                     # Training G model with sample image and noise
                     samples = img_fake + img_coarse
@@ -121,7 +119,7 @@ def main():
         end_time = time.time() - start_time  # Clocking end
 
         # Elapsed time
-        print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 100s on my machine
+        print("[+] Elapsed time {:.8f}s".format(end_time))
 
         # Close tf.Session
         s.close()
