@@ -4,12 +4,12 @@ import tensorflow as tf
 tf.set_random_seed(777)
 
 
-def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad="SAME", name="Conv2D"):
+def conv2d(input_, filter_=64, k=5, s=1, activation=tf.nn.leaky_relu, pad='same', name="conv2d"):
     with tf.variable_scope(name):
         return tf.layers.conv2d(inputs=input_,
                                 filters=filter_,
                                 kernel_size=k,
-                                strides=d,
+                                strides=s,
                                 padding=pad,
                                 activation=activation,
                                 kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
@@ -35,7 +35,7 @@ class LAPGAN:
 
     def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
                  sample_num=100, sample_size=10,
-                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=1024,
+                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=512,
                  eps=1e-12):
 
         """
@@ -56,7 +56,7 @@ class LAPGAN:
         :param z_dim: z noise dimension, default 100
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
-        :param fc_unit: the number of fully connected filters
+        :param fc_unit: the number of fully connected filters, default 512
 
         # Training Settings
         :param eps: epsilon, default 1e-12
@@ -155,7 +155,7 @@ class LAPGAN:
 
                 h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-1')
                 h = tf.layers.dropout(h, 0.5, name='d-dropout-1')
-                h = tf.layers.dense(h, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-2')
+                h = tf.layers.dense(h, self.fc_unit // 2, activation=tf.nn.leaky_relu, name='d-fc-2')
                 h = tf.layers.dropout(h, 0.5, name='d-dropout-2')
                 h = tf.layers.dense(h, 1, name='d-fc-3')
             else:
@@ -167,7 +167,7 @@ class LAPGAN:
                 h = tf.concat([x, y], axis=3)
 
                 h = conv2d(h, filter_=self.df_dim, pad="VALID", name='d-conv-1')
-                h = conv2d(h, filter_=self.df_dim, activation=None, pad="VALID", name='d-conv-2')
+                h = conv2d(h, filter_=self.df_dim, activation=None, pad='valid', name='d-conv-2')
 
                 h = tf.layers.flatten(h)
                 h = tf.nn.leaky_relu(h)
@@ -196,7 +196,7 @@ class LAPGAN:
                 # FC Layers
                 h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
                 h = tf.layers.dropout(h, 0.5, name='g-dropout-1')
-                h = tf.layers.dense(h, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='g-fc-2')
+                h = tf.layers.dense(h, self.fc_unit // 2, activation=tf.nn.leaky_relu, name='g-fc-2')
                 h = tf.layers.dropout(h, 0.5, name='g-dropout-2')
                 h = tf.layers.dense(h, 3 * 8 * 8, name='g-fc-3')
 
