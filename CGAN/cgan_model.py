@@ -7,9 +7,9 @@ tf.set_random_seed(777)
 class CGAN:
 
     def __init__(self, s, batch_size=32, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=100, sample_size=10, output_height=28, output_width=28,
-                 n_input=784, maxout_unit=8, n_hidden_layer_1=128,
-                 z_dim=100, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
+                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
+                 n_input=784, maxout_unit=8, fc_unit=128,
+                 z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -31,10 +31,10 @@ class CGAN:
         # For DNN model
         :param n_input: input image size, default 784(28x28)
         :param maxout_unit : max-out unit, default 8
-        :param n_hidden_layer_1: first NN hidden layer, default 128
+        :param fc_unit: fully connected units, default 128
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 100
+        :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 8e-4
         :param d_lr: discriminator learning rate, default 8e-4
         :param epsilon: epsilon, default 1e-9
@@ -54,59 +54,13 @@ class CGAN:
 
         self.n_input = n_input
         self.maxout_unit = maxout_unit
-        self.n_hl_1 = n_hidden_layer_1
+        self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.g_lr = g_lr
         self.d_lr = d_lr
         self.beta1 = 0.5
         self.eps = epsilon
-
-        ''' Weights
-
-         - discriminator
-         (784 + 10, 8 * 128) -> (128, 1)
-
-         - generator
-         (100 + 10, 128) -> (128, 784)
-
-         Initializer : HE initializer
-         '''
-        self.W = {
-            # for discriminator
-            'd_h1': tf.get_variable('d_h1',
-                                    shape=[self.n_input + self.n_classes, self.maxout_unit * self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'd_h_out': tf.get_variable('d_h_out',
-                                       shape=[self.n_hl_1, 1],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-            # for generator
-            'g_h1': tf.get_variable('g_h1',
-                                    shape=[self.z_dim + self.n_classes, self.n_hl_1],
-                                    initializer=tf.contrib.layers.variance_scaling_initializer()),
-            'g_h_out': tf.get_variable('g_h_out',
-                                       shape=[self.n_hl_1, self.n_input],
-                                       initializer=tf.contrib.layers.variance_scaling_initializer()),
-        }
-
-        ''' Biases
-
-        - discriminator
-        (8 * 128), (1)
-
-        - generator
-        (128), (784)
-
-        Initializer : zero initializer
-        '''
-        self.b = {
-            # for discriminator
-            'd_b1': tf.Variable(tf.zeros([self.maxout_unit * self.n_hl_1])),
-            'd_b_out': tf.Variable(tf.zeros([1])),
-            # for generator
-            'g_b1': tf.Variable(tf.zeros([self.n_hl_1])),
-            'g_b_out': tf.Variable(tf.zeros([self.n_input])),
-        }
 
         # pre-defined
         self.d_loss = 0.
@@ -128,30 +82,27 @@ class CGAN:
 
     def discriminator(self, x, y, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            inputs = tf.concat([x, y], axis=1)
+            x = tf.concat([x, y], axis=1)
 
-            net = tf.nn.bias_add(tf.matmul(inputs, self.W['d_h1']), self.b['d_b1'])
-            net = tf.reshape(net, [-1, self.maxout_unit, self.n_hl_1])
+            x = tf.layers.dense(x, self.maxout_unit * self.fc_unit, name='d-fc-1')
 
-            net = tf.reduce_max(net, reduction_indices=[1])
-            net = tf.nn.dropout(net, 0.5)
+            x = tf.reshape(x, [-1, self.maxout_unit, self.fc_unit])
 
-            logits = tf.nn.bias_add(tf.matmul(net, self.W['d_h_out']), self.b['d_b_out'])
-            prob = tf.nn.sigmoid(logits)
+            x = tf.reduce_max(x, reduction_indices=[1], name='d-reduce_max-1')
+            x = tf.nn.dropout(x, .5)
 
-        return prob
+            x = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d-fc-2')
+
+        return x
 
     def generator(self, z, y, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            inputs = tf.concat([z, y], axis=1)
+            x = tf.concat([z, y], axis=1)
 
-            de_net = tf.nn.bias_add(tf.matmul(inputs, self.W['g_h1']), self.b['g_b1'])
-            de_net = tf.nn.leaky_relu(de_net)
+            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
+            x = tf.layers.dense(x, self.n_input, activation=tf.nn.sigmoid, name='g-fc-2')
 
-            logits = tf.nn.bias_add(tf.matmul(de_net, self.W['g_h_out']), self.b['g_b_out'])
-            prob = tf.nn.tanh(logits)
-
-        return prob
+        return x
 
     def build_cgan(self):
         def log(x):
@@ -178,6 +129,7 @@ class CGAN:
         # tf.summary.image("G", g)  # generated image from G model
         tf.summary.histogram("d_real", d_real)
         tf.summary.histogram("d_fake", d_fake)
+
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
