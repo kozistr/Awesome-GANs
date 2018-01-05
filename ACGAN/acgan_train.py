@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -14,6 +12,8 @@ import acgan_model as acgan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -23,16 +23,15 @@ results = {
 
 train_step = {
     'global_step': 250001,
-    'logging_interval': 5000,
-    'update_overpowered': 50,
+    'logging_interval': 2500,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    # MNIST DataSet load
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -46,14 +45,14 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, sample_y = mnist.train.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, model.image_shape)
+        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
-            batch_x, batch_y = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
-            batch_x = np.reshape(batch_x, model.image_shape)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
+            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+            batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             if not d_overpowered:
@@ -72,11 +71,11 @@ def main():
                                              model.z: batch_z,
                                          })
 
-            d_overpowered = d_loss < (g_loss / 2)
+            d_overpowered = d_loss < g_loss / 2
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, model.image_shape)
+                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, c_loss, summary = s.run([model.d_loss, model.g_loss, model.c_loss, model.merged],
@@ -86,7 +85,7 @@ def main():
                                                             model.z: batch_z,
                                                         })
 
-                d_overpowered = d_loss < (g_loss / 2)
+                d_overpowered = d_loss < g_loss / 2
 
                 # Print loss
                 print("[+] Step %08d => " % step,

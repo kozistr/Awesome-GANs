@@ -52,7 +52,7 @@ def batch_norm(x, momentum=0.9, eps=1e-9, name='batch_norm'):
 class ACGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
                  n_input=784, df_dim=16, gf_dim=128, fc_unit=256,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4, c_lr=1e-3, epsilon=1e-12):
 
@@ -68,8 +68,8 @@ class ACGAN:
         - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
-        :param sample_num: the number of output images, default 64
-        :param sample_size: sample image size, default 8
+        :param sample_num: the number of output images, default 128
+        :param sample_size: sample image size, default 10
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
@@ -80,7 +80,7 @@ class ACGAN:
         :param fc_unit: the number of fully connected filters, default 1024
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 128
+        :param z_dim: z dimension (kinda noise), default 100
         :param g_lr: generator learning rate, default 1e-3
         :param d_lr: discriminator learning rate, default 2e-4
         :param c_lr: classifier learning rate, default 1e-3
@@ -112,21 +112,32 @@ class ACGAN:
         self.d_lr, self.g_lr, self.c_lr = d_lr, g_lr, c_lr
         self.eps = epsilon
 
+        # pre-defined
         self.g_loss = 0.
         self.d_loss = 0.
         self.c_loss = 0.
 
+        self.d_op = None
+        self.g_op = None
+        self.c_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")                   # (bs, 28, 28, 1)
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")  # (bs, 10)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")      # (bs, 128)
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                name="x-image")  # (-1, 28, 28, 1)
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")      # (-1, 128)
 
         self.build_acgan()  # build ACGAN model
 
     def classifier(self, x, reuse=None):
         """
         # Following a C Network, CiFar-like-hood, referred in the paper
-        :param x: image, shape=(batch_size, 28, 28, 1)
+        :param x: image, shape=(-1, 28, 28, 1)
         :param reuse: re-usable
         :return: logits
         """
@@ -139,7 +150,7 @@ class ACGAN:
     def discriminator(self, x, reuse=None):
         """
         # Following a D Network, CiFar-like-hood, referred in the paper
-        :param x: image, shape=(batch_size, 28, 28, 1)
+        :param x: image, shape=(-1, 28, 28, 1)
         :param reuse: re-usable
         :return: logits, networks
         """
@@ -180,15 +191,14 @@ class ACGAN:
             x = tf.layers.dense(x, self.gf_dim * 7 * 7, name='g-fc-1')
             x = tf.nn.relu(x)
 
-            x = tf.reshape(x, [self.batch_size, 7, 7, self.gf_dim])
+            x = tf.reshape(x, [-1, 7, 7, self.gf_dim])
 
             x = deconv2d(x, f=self.gf_dim // 2, k=5, d=2, name='g-deconv-1')
             x = batch_norm(x, name='g-batch_norm-1')
             x = tf.nn.relu(x)
 
             x = deconv2d(x, f=1, k=5, d=2, name='g-deconv-2')  # channel
-            # x = tf.nn.tanh(x)
-            x = tf.nn.sigmoid(x)
+            x = tf.nn.sigmoid(x)  # x = tf.nn.tanh(x)
 
             return x
 
@@ -221,20 +231,24 @@ class ACGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
-        tf.summary.histogram("c_real", c_real)
-        tf.summary.histogram("c_fake", c_fake)
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.histogram("d_real", d_real)
+        # tf.summary.histogram("d_fake", d_fake)
+        # tf.summary.histogram("c_real", c_real)
+        # tf.summary.histogram("c_fake", c_fake)
+        tf.summary.scalar("d_real_loss", d_real_loss)
+        tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("c_real_loss", c_real_loss)
+        tf.summary.scalar("c_fake_loss", c_fake_loss)
         tf.summary.scalar("c_loss", self.c_loss)
+        tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
-        c_params = [v for v in vars if v.name.startswith('c')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
+        c_params = [v for v in t_vars if v.name.startswith('c')]
 
         self.d_op = tf.train.AdamOptimizer(self.d_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
