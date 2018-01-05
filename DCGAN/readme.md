@@ -12,9 +12,9 @@
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
+*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
 :---: | :---: | :---: | :---:
-**DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_88_55000.png) |  | 
+**DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_80_50000.png) |  | 
 
 ## To-Do
 * Add Loss Function & Explains 
