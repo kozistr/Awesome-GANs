@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -14,6 +12,8 @@ import magan_model as magan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -32,7 +32,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -76,10 +76,9 @@ def main():
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
             for i in range(N):
-                batch_x, _ = mnist.train.next_batch(model.batch_size)  # with batch_size, 64
+                batch_x, _ = mnist.train.next_batch(model.batch_size)
                 batch_x = np.reshape(batch_x, model.image_shape)
-
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)  # 64 x 128
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
                 if not d_overpowered:
@@ -104,11 +103,12 @@ def main():
                 # Update G fake sample
                 s_g += np.sum(d_fake_loss)
 
+                d_overpowered = d_loss < g_loss / 2
+
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
                     batch_x, _ = mnist.test.next_batch(model.batch_size)
                     batch_x = np.reshape(batch_x, model.image_shape)
-
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],

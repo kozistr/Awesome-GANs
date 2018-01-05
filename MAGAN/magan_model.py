@@ -24,7 +24,7 @@ class AdaMaxOptimizer:
 class MAGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
                  n_input=784, df_dim=64, gf_dim=64, fc_d_unit=32, fc_g_unit=1024,
                  z_dim=128, g_lr=5e-4, d_lr=5e-4, epsilon=1e-12):
 
@@ -40,8 +40,8 @@ class MAGAN:
         - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
-        :param sample_num: the number of output images, default 64
-        :param sample_size: sample image size, default 8
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
@@ -86,14 +86,25 @@ class MAGAN:
         self.eps = epsilon
         self.pt_lambda = 0.1
 
+        # pre-defined
         self.g_loss = 0.
         self.d_loss = 0.
         self.d_real_loss = 0.
         self.d_fake_loss = 0.
 
+        self.d_op = None
+        self.d_real_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 28, 28, 1)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.channel],
+                                name="x-image")                                        # (-1, 28, 28, 1)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
         self.m = tf.placeholder(tf.float32, name='margin')
 
         self.build_magan()  # build MAGAN model
@@ -126,7 +137,7 @@ class MAGAN:
             x = tf.layers.dense(x, units=self.fc_d_unit * 2 * 14 * 14, name='dec-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [self.batch_size, 14, 14, self.fc_d_unit * 2])
+            x = tf.reshape(x, [-1, 14, 14, self.fc_d_unit * 2])
 
             x = tf.layers.conv2d_transpose(x, filters=1,
                                            kernel_size=4, strides=2, padding='SAME', name='dec-deconv-1')
@@ -160,10 +171,10 @@ class MAGAN:
             # x = tf.layers.dense(z, units=self.fc_g_unit, name='g-fc-1')
             # x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.dense(z, units=7 * 7 * int(self.fc_g_unit / 4), name='g-fc-2')
+            x = tf.layers.dense(z, units=7 * 7 * self.fc_g_unit // 4, name='g-fc-2')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [self.batch_size, 7, 7, int(self.fc_g_unit / 4)])
+            x = tf.reshape(x, [-1, 7, 7, self.fc_g_unit // 4])
 
             x = tf.layers.conv2d_transpose(x, filters=self.gf_dim,
                                            kernel_size=4, strides=2, padding='SAME', name='g-deconv-1')
@@ -200,16 +211,16 @@ class MAGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", self.d_real_loss)
         tf.summary.scalar("d_fake_loss", self.d_fake_loss)
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_real_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
                                                 beta1=self.beta1,
