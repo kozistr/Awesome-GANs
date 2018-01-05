@@ -4,7 +4,7 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, pad='same', name="Conv2D"):
+def conv2d(input_, filter_=64, k=5, d=1, activation=tf.nn.leaky_relu, pad='same', name="conv2d"):
     with tf.variable_scope(name):
         return tf.layers.conv2d(inputs=input_,
                                 filters=filter_,
@@ -17,7 +17,7 @@ def conv2d(input_, filter_=64, k=(5, 5), d=(1, 1), activation=tf.nn.leaky_relu, 
                                 name=name)
 
 
-def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="DeConv2D"):
+def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="deconv2d"):
     with tf.variable_scope(name):
         return tf.layers.conv2d_transpose(inputs=input_,
                                           filters=filter_,
@@ -87,6 +87,7 @@ class LSGAN:
         self.fc_unit = fc_unit
 
         self.z_dim = z_dim
+        self.beta1 = 0.5
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
@@ -111,34 +112,35 @@ class LSGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = conv2d(x, self.df_dim, name='d_conv_1')
-            x = tf.layers.dropout(x, 0.5, name='d_dropout_1')
+            x = conv2d(x, self.df_dim, name='d-conv-1')
+            x = tf.layers.dropout(x, 0.5, name='d_dropout-1')
 
-            x = conv2d(x, self.df_dim * 2, name='d_conv_2')
-            x = tf.layers.dropout(x, 0.5, name='d_dropout_2')
+            x = conv2d(x, self.df_dim * 2, name='d-conv-2')
+            x = tf.layers.dropout(x, 0.5, name='d-dropout-2')
 
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d_fc_1')
-            x = tf.layers.dropout(x, 0.5, name='d_dropout_3')
+            x = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-1')
+            x = tf.layers.dropout(x, 0.5, name='d-dropout-3')
 
-            x = tf.layers.dense(x, 1, name='d_fc_2')  # logits
+            x = tf.layers.dense(x, 1, name='d-fc-2')  # logits
 
             return x
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g_fc_1')
+            x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g-fc-1')
             x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 2])
 
-            x = tf.layers.conv2d_transpose(x, self.gf_dim, 2, strides=2, activation=tf.nn.leaky_relu, name='g_deconv_1')
-            x = tf.layers.conv2d_transpose(x, 1, 2, strides=2, activation=tf.nn.sigmoid, name='g_deconv_2')
+            x = deconv2d(x, self.gf_dim, k=2, d=2, name='g-deconv-1')
+            x = deconv2d(x, 1, k=2, d=2, activation=tf.nn.sigmoid, name='g-deconv-2')
 
             return x
 
     def build_lsgan(self):
         def mse_loss(pred, data, n=self.batch_size):
             return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n
+
         # Generator
         self.g = self.generator(self.z)
 
@@ -158,6 +160,7 @@ class LSGAN:
         # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.histogram("d_real", d_real)
         tf.summary.histogram("d_fake", d_fake)
+
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
@@ -168,12 +171,14 @@ class LSGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.d_lr).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.g_lr).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
-        # merge summary
+        # Merge summary
         self.merged = tf.summary.merge_all()
 
-        # model saver
+        # Model saver
         self.saver = tf.train.Saver(max_to_keep=1)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
