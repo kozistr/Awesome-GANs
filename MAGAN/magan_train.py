@@ -46,7 +46,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, model.image_shape)
+        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         global_step = 0
@@ -57,7 +57,7 @@ def main():
         for _ in range(2):
             for iter_ in range(N):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, model.image_shape)
+                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
 
                 s.run([model.d_real_op, model.d_real_loss],
                       feed_dict={
@@ -77,7 +77,7 @@ def main():
             s_d, s_g = 0., 0.
             for i in range(N):
                 batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, model.image_shape)
+                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -108,7 +108,7 @@ def main():
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
                     batch_x, _ = mnist.test.next_batch(model.batch_size)
-                    batch_x = np.reshape(batch_x, model.image_shape)
+                    batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
