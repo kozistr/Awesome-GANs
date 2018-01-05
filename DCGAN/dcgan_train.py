@@ -9,11 +9,11 @@ import sys
 import time
 
 import dcgan_model as dcgan
-from dataset import DataIterator
-from dataset import CiFarDataSet as DataSet
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import DataIterator
+from datasets import CiFarDataSet as DataSet
 
 
 results = {
@@ -23,10 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 250,
+    'epoch': 300,
     'batch_size': 64,
-    'logging_interval': 5000,
-    'update_overpowered': 100,
+    'logging_interval': 2500,
 }
 
 
@@ -59,17 +58,16 @@ def main():
         dataset = DataSet(input_height=32, input_width=32, input_channel=3, name='cifar-100')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.0
-        sample_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                     size=(model.sample_num, model.z_dim))
+        sample_images = dataset.valid_images[:model.sample_num].astype(np.float32) / 255.
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
         # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
+        # valid_image_height = model.sample_size
+        # valid_image_width = model.sample_size
+        # sample_dir = results['output'] + 'valid.png'
 
         # Generated image save
-        iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+        # iu.save_images(sample_images, size=[valid_image_height, valid_image_width], image_path=sample_dir)
 
         d_overpowered = False  # G loss > D loss * 2
 
@@ -77,9 +75,8 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 255.0
-                batch_z = np.random.uniform(-1., 1.,  # range -1 ~ 1
-                                            [train_step['batch_size'], model.z_dim]).astype(np.float32)
+                batch_images = batch_images.astype(np.float32) / 255.
+                batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
                 if not d_overpowered:
@@ -98,7 +95,7 @@ def main():
                 d_overpowered = d_loss < g_loss / 2
 
                 if step % train_step['logging_interval'] == 0:
-                    batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.0
+                    batch_images = dataset.valid_images[:train_step['batch_size']].astype(np.float32) / 255.
                     batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
@@ -109,7 +106,8 @@ def main():
 
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
-                          "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                          " D loss : {:.8f}".format(d_loss),
+                          " G loss : {:.8f}".format(g_loss))
 
                     # Update overpowered
                     d_overpowered = d_loss < g_loss / 2
@@ -140,7 +138,7 @@ def main():
         end_time = time.time() - start_time  # Clocking end
 
         # Elapsed time
-        print("[+] Elapsed time {:.8f}s".format(end_time))  # took about 100s on my machine
+        print("[+] Elapsed time {:.8f}s".format(end_time))
 
         # Close tf.Session
         s.close()

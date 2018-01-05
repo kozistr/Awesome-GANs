@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import tensorflow as tf
 
 
@@ -99,9 +95,22 @@ class DCGAN:
         self.gf_dim = gf_dim
         self.df_dim = df_dim
 
+        # pre-defined
+        self.d_loss = 0.
+        self.g_loss = 0.
+
+        self.d_op = None
+        self.g_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[self.batch_size] + self.image_shape, name='x-images')
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                name='x-images')
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
         self.beta1 = 0.5
@@ -138,7 +147,7 @@ class DCGAN:
         with tf.variable_scope('generator', reuse=reuse):
             x = tf.layers.dense(z, self.gf_dim * 8 * 4 * 4)
 
-            x = tf.reshape(x, [self.batch_size, 4, 4, self.gf_dim * 8])
+            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
             x = batch_norm(x)
             x = tf.nn.relu(x)
 
@@ -156,6 +165,9 @@ class DCGAN:
             return prob
 
     def bulid_dcgan(self):
+        def log(x, eps=self.eps):
+            return tf.log(x + eps)
+
         # Generator
         self.g = self.generator(self.z)
 
@@ -164,8 +176,6 @@ class DCGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        log = lambda x: tf.log(x + self.eps)
-
         d_real_loss = -tf.reduce_mean(log(d_real))
         d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
@@ -173,7 +183,7 @@ class DCGAN:
 
         # Summary
         tf.summary.histogram("z", self.z)
-        tf.summary.image("g", self.g)  # generated image from G model
+        # tf.summary.image("g", self.g)  # generated image from G model
         tf.summary.histogram("d_real", d_real)
         tf.summary.histogram("d_fake", d_fake)
 
@@ -183,9 +193,9 @@ class DCGAN:
         tf.summary.scalar("g_loss", self.g_loss)
 
         # Collect trainer values
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
