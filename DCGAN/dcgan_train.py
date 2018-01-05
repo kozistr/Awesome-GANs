@@ -61,7 +61,7 @@ def main():
                           name='cifar-100')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        sample_x = dataset.valid_images[:model.sample_num].astype(np.float32)
+        sample_x = dataset.valid_images[:model.sample_num].astype(np.float32) / 225.
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
         d_overpowered = False  # G loss > D loss * 2
@@ -70,7 +70,7 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
-                batch_x = batch_images.astype(np.float32)
+                batch_x = batch_images.astype(np.float32) / 225.
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -87,7 +87,7 @@ def main():
                                       model.z: batch_z
                                   })
 
-                d_overpowered = d_loss < g_loss / 2
+                d_overpowered = d_loss < g_loss / 2.
 
                 if step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
@@ -98,7 +98,7 @@ def main():
                                                         model.z: batch_z,
                                                     })
 
-                    d_overpowered = d_loss < g_loss / 2
+                    d_overpowered = d_loss < g_loss / 2.
 
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
