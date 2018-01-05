@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -14,6 +12,8 @@ import infogan_model as infogan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -31,7 +31,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -49,6 +49,7 @@ def main():
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
         sample_c = np.concatenate((sample_y, np.zeros([model.sample_num, model.n_cont])), axis=1)
 
+        d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_x = np.reshape(batch_x, model.image_shape)
@@ -56,12 +57,13 @@ def main():
             batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                                  model.c: batch_c,
-                              })
+            if not d_overpowered:
+                _, d_loss = s.run([model.d_op, model.d_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.z: batch_z,
+                                      model.c: batch_c,
+                                })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
@@ -70,6 +72,8 @@ def main():
                                   model.z: batch_z,
                                   model.c: batch_c,
                               })
+
+            d_overpowered = d_loss < g_loss / 2
 
             # Logging
             if step % train_step['logging_interval'] == 0:
@@ -85,9 +89,12 @@ def main():
                                                     model.c: batch_c,
                                                 })
 
+                d_overpowered = d_loss < g_loss / 2
+
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                      " D loss : {:.8f}".format(d_loss),
+                      " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 samples = s.run(model.g,

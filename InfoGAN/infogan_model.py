@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 
 
 tf.set_random_seed(777)  # reproducibility
@@ -13,7 +12,7 @@ def conv2d(x, f=64, k=4, d=2, pad='SAME', name='conv2d'):
     :param d: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
-    :return: covn2d net
+    :return: conv2d net
     """
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
@@ -31,7 +30,7 @@ def deconv2d(x, f=64, k=4, d=2, pad='SAME', name='deconv2d'):
     :param d: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default deconv2d
-    :return: decovn2d net
+    :return: deconv2d net
     """
     return tf.layers.conv2d_transpose(x,
                                       filters=f, kernel_size=k, strides=d,
@@ -52,7 +51,7 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
 class InfoGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1,
-                 sample_num=64, sample_size=8, output_height=28, output_width=28,
+                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
                  df_dim=64, gf_dim=64, fc_unit=1024,
                  n_categories=10, n_continous_factor=2, z_dim=62,
                  g_lr=1e-3, d_lr=2e-4):
@@ -67,8 +66,8 @@ class InfoGAN:
         - in case of MNIST, image size is 28x28x1(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 9
-        :param sample_size: sample image size, default 8
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
@@ -120,17 +119,28 @@ class InfoGAN:
         self.d_lr = d_lr
         self.g_lr = g_lr
 
-        self.d_real = 0
-        self.d_fake = 0
+        # pre-defined
+        self.d_real = 0.
+        self.d_fake = 0.
 
         self.g_loss = 0.
         self.d_loss = 0.
         self.q_loss = 0.
 
+        self.d_op = None
+        self.g_op = None
+        self.c_op = None
+
+        self.merged = None
+        self.writer = None
+        self.saver = None
+
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")               # (-1, 32, 32, 3)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')  # (-1, 128)
-        self.c = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_cat + self.n_cont], name='c')  # (-1, 12)
+        self.x = tf.placeholder(tf.float32,
+                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                name="x-image")                                                # (-1, 32, 32, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 128)
+        self.c = tf.placeholder(tf.float32, shape=[None, self.n_cat + self.n_cont], name='c')  # (-1, 12)
 
         self.build_infogan()  # build InfoGAN model
 
@@ -197,7 +207,7 @@ class InfoGAN:
             x = batch_norm(x)
             x = tf.nn.relu(x)
 
-            x = tf.reshape(x, shape=[self.batch_size, 7, 7, self.gf_dim * 2])
+            x = tf.reshape(x, shape=[-1, 7, 7, self.gf_dim * 2])
 
             x = deconv2d(x, f=self.gf_dim, name='g-conv2d-0')
             x = batch_norm(x)
@@ -245,7 +255,7 @@ class InfoGAN:
         # Summary
         tf.summary.histogram("z-noise", self.z)
 
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
@@ -253,10 +263,10 @@ class InfoGAN:
         tf.summary.scalar("q_loss", self.q_loss)
 
         # Optimizer
-        vars = tf.trainable_variables()
-        d_params = [v for v in vars if v.name.startswith('d')]
-        g_params = [v for v in vars if v.name.startswith('g')]
-        q_params = [v for v in vars if v.name.startswith('d') or v.name.startswith('g') or v.name.startswith('c')]
+        t_vars = tf.trainable_variables()
+        d_params = [v for v in t_vars if v.name.startswith('d')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
+        q_params = [v for v in t_vars if v.name.startswith('d') or v.name.startswith('g') or v.name.startswith('c')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
