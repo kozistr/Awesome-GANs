@@ -51,7 +51,7 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
 class DCGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_size=8, sample_num=64,
+                 sample_num=10 * 10, sample_size=10,
                  z_dim=128, gf_dim=64, df_dim=64,
                  eps=1e-12):
 
@@ -65,8 +65,8 @@ class DCGAN:
         - in case of CIFAR, image size is 32x32x3(HWC).
 
         # Output Settings
-        :param sample_size: sample image size, default 8
-        :param sample_num: the number of sample images, default 64
+        :param sample_num: the number of sample images, default 100
+        :param sample_size: sample image size, default 10
 
         # Model Settings
         :param z_dim: z noise dimension, default 128
@@ -113,8 +113,8 @@ class DCGAN:
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
-        self.beta1 = 0.5
-        self.beta2 = 0.9
+        self.beta1 = .5
+        self.beta2 = .9
         self.lr = 2e-4
 
         self.bulid_dcgan()  # build DCGAN model
