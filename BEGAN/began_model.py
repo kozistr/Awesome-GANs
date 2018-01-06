@@ -157,7 +157,7 @@ class BEGAN:
         with tf.variable_scope('decoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='dec-fc-1')
+            # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
