@@ -1,20 +1,43 @@
 # Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)[![Build Status](https://travis-ci.org/dwyl/esta.svg?branch=master)](https://travis-ci.org/)
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
-## Test Environments
-* OS : Windows 10 Edu x86-64 / Linux Ubuntu 16.04 x86-64
-* CPU : i7-7700K, GPU : GTX 1060 6GB
-* Tensorflow 1.4.1 with CUDA 8.0 + cuDNN 7.0
+## Environments
+### Local Environment
+* OS  : Windows 10 Edu x86-64 / Linux Ubuntu 16.04 x86-64
+* CPU : i7-7700K
+* GPU : GTX 1060 6GB
+* RAM : DDR4 16GB
+* Library : TF 1.4.1 with CUDA 8.0 + cuDNN 7.0
 * Python 3.x
+### Minimum Environment
+* OS  : Any
+* CPU : Any
+* GPU : None or Any ('compute capability of GPU' must be over 3.0)
+* RAM : 2GB ~ 
+* Library : TF 1.4.0 ~ with CUDA 8.0 + cuDNN 7.0 ~
+* Python 3.x
+### Preferred Environment
+* OS  : Linux Ubuntu 14.04 x86-64 ~
+* CPU : any (quad core ~)
+* GPU : GTX 1060 6GB ~
+* RAM : DDR4 16GB ~
+* Library : TF 1.4.0 ~ with CUDA 8.0 + cuDNN 7.0 ~
+* Python 3.x
+
+Because of the image and model size, (especially **BEGAN**, **SGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
+if you want to train them comfortably, you need a GPU which has more than 8GB.
+
+But, of course, the most of the implementations use MNIST or CiFar-10, 100 DataSets.
+Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
 * python 3.5+
-* tensorflow 1.1.0+
+* tensorflow-gpu or tensorflow 1.4.0
 * scipy
 * pillow
 * h5py
 * pickle
-* glob, tqdm
+* tqdm
 * sklearn
 * Internet :)
 
