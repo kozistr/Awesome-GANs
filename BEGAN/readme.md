@@ -17,4 +17,6 @@
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_16_51450.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_38_121800.png) | 
 
 ## To-Do
-* Add Loss Function & Explains 
+* It takes a lot of times & resources, so i can't train/test it on my machine.
+* Skip the results
+* Add Loss Function & Explains
