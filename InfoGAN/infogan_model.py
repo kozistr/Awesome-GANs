@@ -153,8 +153,8 @@ class InfoGAN:
         """
         with tf.variable_scope("classifier", reuse=reuse):
             x = tf.layers.dense(x, units=128, name='d-fc-1')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             logits = tf.layers.dense(x, units=self.n_cat + self.n_cont, name='d-fc-2')
             prob = tf.nn.softmax(logits)
@@ -173,14 +173,14 @@ class InfoGAN:
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = conv2d(x, f=self.df_dim * 2, name='d-conv2d-1')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = tf.layers.flatten(x)
 
             x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-0')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             logits = tf.layers.dense(x, units=1, name='d-fc-1')
             prob = tf.nn.sigmoid(logits)
@@ -199,18 +199,18 @@ class InfoGAN:
             x = tf.concat([z, c], axis=1)  # (-1, 74)
 
             x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-0')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = tf.layers.dense(x, units=7 * 7 * self.gf_dim * 2, name='g-fc-1')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = tf.reshape(x, shape=[-1, 7, 7, self.gf_dim * 2])
 
             x = deconv2d(x, f=self.gf_dim, name='g-conv2d-0')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = deconv2d(x, f=1, name='g-conv2d-2')
             x = tf.nn.sigmoid(x)  # x = tf.nn.tanh(x)
