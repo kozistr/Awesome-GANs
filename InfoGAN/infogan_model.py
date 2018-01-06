@@ -40,7 +40,7 @@ def deconv2d(x, f=64, k=4, d=2, pad='SAME', name='deconv2d'):
                                       padding=pad, name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-9):
+def batch_norm(x, momentum=0.9, eps=1e-5):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
@@ -129,7 +129,7 @@ class InfoGAN:
 
         self.d_op = None
         self.g_op = None
-        self.c_op = None
+        self.q_op = None
 
         self.merged = None
         self.writer = None
@@ -153,11 +153,10 @@ class InfoGAN:
         """
         with tf.variable_scope("classifier", reuse=reuse):
             x = tf.layers.dense(x, units=128, name='d-fc-1')
-            x = batch_norm(x)
             x = tf.nn.leaky_relu(x, alpha=0.1)
+            x = batch_norm(x)
 
             logits = tf.layers.dense(x, units=self.n_cat + self.n_cont, name='d-fc-2')
-
             prob = tf.nn.softmax(logits)
 
             return prob, logits
@@ -174,14 +173,14 @@ class InfoGAN:
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = conv2d(x, f=self.df_dim * 2, name='d-conv2d-1')
-            x = batch_norm(x)
             x = tf.nn.leaky_relu(x, alpha=0.1)
+            x = batch_norm(x)
 
             x = tf.layers.flatten(x)
 
             x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-0')
-            x = batch_norm(x)
             x = tf.nn.leaky_relu(x, alpha=0.1)
+            x = batch_norm(x)
 
             logits = tf.layers.dense(x, units=1, name='d-fc-1')
             prob = tf.nn.sigmoid(logits)
@@ -200,22 +199,21 @@ class InfoGAN:
             x = tf.concat([z, c], axis=1)  # (-1, 74)
 
             x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-0')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
-            x = tf.nn.relu(x)
 
             x = tf.layers.dense(x, units=7 * 7 * self.gf_dim * 2, name='g-fc-1')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
-            x = tf.nn.relu(x)
 
             x = tf.reshape(x, shape=[-1, 7, 7, self.gf_dim * 2])
 
             x = deconv2d(x, f=self.gf_dim, name='g-conv2d-0')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
             x = batch_norm(x)
-            x = tf.nn.relu(x)
 
             x = deconv2d(x, f=1, name='g-conv2d-2')
-            # x = tf.nn.tanh(x)
-            x = tf.nn.sigmoid(x)  # tanh is used in the paper
+            x = tf.nn.sigmoid(x)  # x = tf.nn.tanh(x)
 
             return x
 

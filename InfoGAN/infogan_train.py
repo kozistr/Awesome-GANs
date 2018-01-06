@@ -45,14 +45,14 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, sample_y = mnist.test.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, model.image_shape)
+        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
         sample_c = np.concatenate((sample_y, np.zeros([model.sample_num, model.n_cont])), axis=1)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_x = np.reshape(batch_x, model.image_shape)
+            batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
             batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
 
@@ -78,7 +78,7 @@ def main():
             # Logging
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, model.image_shape)
+                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
                 batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
 
