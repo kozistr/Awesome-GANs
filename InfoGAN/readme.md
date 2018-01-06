@@ -17,5 +17,4 @@
 **InfoGAN**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/InfoGAN/gen_img/train_00200000.png)
 
 ## To-Do
-* Add tensorboard results
 * Add Loss Function & Explains 
