@@ -31,8 +31,8 @@ def resize_nn(x, size):
 
 class BEGAN:
 
-    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=10 * 10, sample_size=10, output_height=32, output_width=32,
+    def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
+                 sample_num=16 * 16, sample_size=16, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
                  gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
@@ -40,16 +40,16 @@ class BEGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 32
-        :param input_width: input image width, default 32
+        :param input_height: input image height, default 64
+        :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 32x32x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 100
-        :param sample_size: sample image size, default 10
-        :param output_height: output images height, default 32
-        :param output_width: output images width, default 32
+        :param sample_num: the number of output images, default 256
+        :param sample_size: sample image size, default 16
+        :param output_height: output images height, default 64
+        :param output_width: output images width, default 64
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
@@ -157,7 +157,7 @@ class BEGAN:
         with tf.variable_scope('decoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='dec-fc-1')
+            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
@@ -167,7 +167,7 @@ class BEGAN:
                 if i < repeat:
                     x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
-            x = conv2d(x, 3)
+            x = conv2d(x, self.input_channel)
 
             return x
 
@@ -224,7 +224,7 @@ class BEGAN:
         self.g_loss = d_fake_loss
 
         # Convergence Metric
-        self.balance = self.gamma * d_real_loss - d_fake_loss
+        self.balance = self.gamma * d_real_loss - self.g_loss  # (=d_fake_loss)
         self.m_global = d_real_loss + tf.abs(self.balance)
 
         # k_t update
