@@ -9,13 +9,6 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 * RAM : DDR4 16GB
 * Library : TF 1.4.1 with CUDA 8.0 + cuDNN 7.0
 * Python 3.x
-### Minimum Environment
-* OS  : Any
-* CPU : Any
-* GPU : None or Any ('compute capability of GPU' must be over 3.0)
-* RAM : 2GB ~ 
-* Library : TF 1.4.0 ~ with CUDA 8.0 + cuDNN 7.0 ~
-* Python 3.x
 ### Preferred Environment
 * OS  : Linux Ubuntu 14.04 x86-64 ~
 * CPU : any (quad core ~)
