@@ -8,7 +8,7 @@ import numpy as np
 import sys
 import time
 
-import began_model as began
+import dualgan_model as dualgan
 
 sys.path.append('../')
 import image_utils as iu
@@ -19,7 +19,7 @@ from datasets import CelebADataSet as DataSet
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
-    'model': './model/BEGAN-model.ckpt'
+    'model': './model/DualGAN-model.ckpt'
 }
 
 train_step = {
@@ -37,8 +37,8 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        # BEGAN Model
-        model = began.BEGAN(s)  # BEGAN
+        # DualGAN Model
+        model = dualgan.BEGAN(s)  # DualGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
