@@ -29,7 +29,6 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * scipy
 * pillow
 * h5py
-* pickle
 * tqdm
 * sklearn
 * Internet :)
