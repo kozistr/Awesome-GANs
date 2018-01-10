@@ -25,7 +25,7 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
 * python 3.5+
-* tensorflow-gpu or tensorflow 1.4.0
+* tensorflow 1.4.0
 * scipy
 * pillow
 * h5py
