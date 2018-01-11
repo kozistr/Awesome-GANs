@@ -14,20 +14,18 @@ from sklearn.model_selection import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
 
 
-# Linux
-"""
-# MNIST
-'mnist': '/home/zero/hdd/DataSet/MNIST/',
-# CiFar-10, 100
-'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
-'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
-# Celeb-A DataSet
-'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
-'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
-'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
-'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
-"""
 DataSets = {
+    # Linux
+    # MNIST
+    # 'mnist': '/home/zero/hdd/DataSet/MNIST/',
+    # CiFar-10, 100
+    # 'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
+    # 'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
+    # Celeb-A DataSet
+    # 'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
+    # 'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
+    # 'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
+    # 'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
     # Windows
     # MNIST
     'mnist': 'D:\\DataSet\\MNIST\\',
@@ -39,6 +37,16 @@ DataSets = {
     'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
     'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
     'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
+    # pix2pix DataSets
+    'apple2orange': 'D:\\DataSet\\pix2pix\\apple2orange\\',
+    'cityscapes': 'D:\\DataSet\\pix2pix\\cityscapes\\',
+    'edges2handbags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
+    'edges2shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
+    'facades': 'D:\\DataSet\\pix2pix\\facades\\',
+    'horse2zebra': 'D:\\DataSet\\pix2pix\\horse2zebra\\',
+    'maps': 'D:\\DataSet\\pix2pix\\maps\\',
+    'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
+    'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
 }
 
 
