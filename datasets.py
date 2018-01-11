@@ -38,14 +38,19 @@ DataSets = {
     'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
     'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
     # pix2pix DataSets
+    'ae_photos': 'D:\\DataSet\\pix2pix\\ae_photos\\',
     'apple2orange': 'D:\\DataSet\\pix2pix\\apple2orange\\',
+    'cezanne2photo': 'D:\\DataSet\\pix2pix\\cezanne2photo\\',
     'cityscapes': 'D:\\DataSet\\pix2pix\\cityscapes\\',
     'edges2handbags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
     'edges2shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
     'facades': 'D:\\DataSet\\pix2pix\\facades\\',
     'horse2zebra': 'D:\\DataSet\\pix2pix\\horse2zebra\\',
+    'iphone2dslr_flower': 'D:\\DataSet\\pix2pix\\iphone2dslr_flower\\',
     'maps': 'D:\\DataSet\\pix2pix\\maps\\',
     'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
+    'summer2winter_yosemite': 'D:\\DataSet\\pix2pix\\summer2winter_yosemite\\',
+    'ukiyoe2photo': 'D:\\DataSet\\pix2pix\\vukiyoe2photo\\',
     'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
 }
 
@@ -435,6 +440,85 @@ class CelebADataSet:
                         [1, self.input_height, self.input_width, 1])
 
         return np.concatenate([img, label], axis=3)
+
+
+class Pix2PixDataSet:
+
+    def __init__(self, batch_size=64, input_height=64, input_width=64, input_channel=3,
+                 output_height=64, output_width=64, output_channel=3,
+                 split_rate=0.2, random_state=42, num_threads=8, mode='w', name=''):
+
+        """
+        # General Settings
+        :param batch_size: training batch size, default 64
+        :param input_height: input image height, default 64
+        :param input_width: input image width, default 64
+        :param input_channel: input image channel, default 3 (RGB)
+
+        # Output Settings
+        :param output_height: output images height, default 64
+        :param output_width: output images width, default 64
+        :param output_channel: output images channel, default 3
+
+        # Pre-Processing Option
+        :param split_rate: image split rate (into train & test), default 0.2
+        :param random_state: random seed for shuffling, default 42
+        :param num_threads: the number of threads for multi-threading, default 8
+
+        # DataSet Option
+        :param mode: h5 file mode(RW), default w
+        :param name: DataSet name
+        """
+
+        self.batch_size = batch_size
+        self.input_height = input_height
+        self.input_width = input_width
+        self.input_channel = input_channel
+
+        self.image_shape = [-1, self.input_height, self.input_width, self.input_channel]
+
+        self.output_height = output_height
+        self.output_width = output_width
+        self.output_channel = output_channel
+
+        self.split_rate = split_rate
+        self.random_state = random_state
+        self.num_threads = num_threads  # change this value to the fitted value for ur system
+        self.mode = mode
+
+        self.path = ""  # DataSet path
+        self.files = ""  # files' name
+
+        self.data = []  # loaded images
+        self.images = []
+        self.ds_name = name
+
+        self.train_images = []
+        self.train_labels = []
+
+        self.valid_images = []
+        self.valid_labels = []
+
+        self.test_images = []
+        self.test_labels = []
+
+        # testA, testB, (trainA, trainB)
+        if self.ds_name == "apple2orange" or self.ds_name == "horse2zebra" or self.ds_name == "monet2photo" or \
+                self.ds_name == "summer2winter_yosemite" or self.ds_name == "vangogh2photo" or \
+                self.ds_name == "ae_photos" or self.ds_name == "cezanne2photo" or self.ds_name == "ukiyoe2photo" or \
+                self.ds_name == "iphone2dslr_flower":
+            self.single_img_process()
+
+        # train, val, (test, sample) # double grid
+        elif self.ds_name == "cityscapes" or self.ds_name == "edges2handbags" or self.ds_name == "edges2shoes" or \
+                self.ds_name == "facades" or self.ds_name == "maps":
+            self.double_img_process()
+
+    def single_img_process(self):
+        pass
+
+    def double_img_process(self):
+        pass
 
 
 class DataIterator:
