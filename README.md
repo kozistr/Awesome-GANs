@@ -44,8 +44,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * CiFar-10
 * CiFar-100
 * Celeb-A
-* ~~pix2pix shoes~~
-* ~~pix2pix bags~~
+* pix2pix DataSets
 * ~~ImageNet~~
 * (more DataSets will be added soon!)
 
