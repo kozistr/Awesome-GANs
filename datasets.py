@@ -6,6 +6,7 @@ import os
 import h5py
 import pickle as p
 import numpy as np
+import tensorflow as tf
 
 from glob import glob
 from tqdm import tqdm
@@ -446,7 +447,7 @@ class Pix2PixDataSet:
 
     def __init__(self, batch_size=64, input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, mode='w', name=''):
+                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, mode='train', name=''):
 
         """
         # General Settings
@@ -461,13 +462,14 @@ class Pix2PixDataSet:
         :param output_channel: output images channel, default 3
 
         # Pre-Processing Option
+        :param crop_size: image crop size, default 128
         :param split_rate: image split rate (into train & test), default 0.2
         :param random_state: random seed for shuffling, default 42
         :param num_threads: the number of threads for multi-threading, default 8
 
         # DataSet Option
         :param mode: h5 file mode(RW), default w
-        :param name: DataSet name
+        :param name: train/test DataSet, default train
         """
 
         self.batch_size = batch_size
@@ -481,6 +483,7 @@ class Pix2PixDataSet:
         self.output_width = output_width
         self.output_channel = output_channel
 
+        self.crop_size = crop_size
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads  # change this value to the fitted value for ur system
@@ -515,7 +518,68 @@ class Pix2PixDataSet:
             self.double_img_process()
 
     def single_img_process(self):
-        pass
+        def fn_queue(name):
+            # load DataSet
+            path = DataSets[self.ds_name] + self.mode
+
+            fn = tf.train.match_filenames_once(path + name)
+
+            queue = lambda x: tf.train.string_input_producer(x, shuffle=True)  # for train
+            if self.mode == "test":
+                queue = lambda x: tf.train.string_input_producer(x, num_epochs=1, shuffle=False)
+
+            return queue(fn)
+
+        def pre_process(img):
+            if self.mode == "test":
+                image = tf.identity(img)  # just copy
+                image = tf.image.resize_image_with_crop_or_pad(image, self.crop_size, self.crop_size)
+            else:
+                image = tf.image.random_flip_left_right(img)  # augmentation # optional
+                image = tf.random_crop(image, [self.crop_size, self.crop_size, 3])
+
+            image = tf.transpose(image, [2, 0, 1])  # C, H, W
+            image = tf.cast(image, tf.float32) / 255.  # normalize
+
+            return image
+
+        def img_batch(fn, img):
+            batch = tf.train.shuffle_batch([fn, img],
+                                           batch_size=self.batch_size,
+                                           num_threads=self.num_threads,
+                                           capacity=self.batch_size * 5,
+                                           min_after_dequeue=self.batch_size * 3)
+            if self.mode == "test":
+                batch = tf.train.batch([fn, img],
+                                       batch_size=self.batch_size,
+                                       num_threads=self.num_threads,
+                                       allow_smaller_final_batch=False)
+
+            return batch
+
+        with tf.device('/cpu:0'):  # using CPU
+            # queue
+            img_reader = tf.WholeFileReader()
+            fn_queue_a, fn_queue_b = fn_queue("A"), fn_queue("B")
+
+            fn_a, img_file_a = img_reader.read(fn_queue_a)
+            fn_b, img_file_b = img_reader.read(fn_queue_b)
+
+            # decode images
+            img_a = tf.image.decode_jpeg(img_file_a, channels=self.input_channel)
+            img_b = tf.image.decode_jpeg(img_file_b, channels=self.input_channel)
+
+            # resize
+            img_a = tf.image.resize_images(img_a, [self.input_height, self.input_width], tf.image.ResizeMethod.BILINEAR)
+            img_b = tf.image.resize_images(img_b, [self.input_height, self.input_width], tf.image.ResizeMethod.BILINEAR)
+
+            img_a = pre_process(img_a)
+            img_b = pre_process(img_b)
+
+            fn_a, img_a = img_batch(fn_a, img_a)
+            fn_b, img_b = img_batch(fn_b, img_b)
+
+        return [fn_a, img_a], [fn_b, img_b]
 
     def double_img_process(self):
         pass
