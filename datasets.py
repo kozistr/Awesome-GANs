@@ -496,21 +496,24 @@ class Pix2PixDataSet:
         self.images = []
         self.ds_name = name
 
-        self.train_images = []
-        self.train_labels = []
+        self.train_fns_a = None
+        self.train_images_a = None
 
-        self.valid_images = []
-        self.valid_labels = []
-
-        self.test_images = []
-        self.test_labels = []
+        self.train_fns_b = None
+        self.train_images_b = None
 
         # testA, testB, (trainA, trainB)
         if self.ds_name == "apple2orange" or self.ds_name == "horse2zebra" or self.ds_name == "monet2photo" or \
                 self.ds_name == "summer2winter_yosemite" or self.ds_name == "vangogh2photo" or \
                 self.ds_name == "ae_photos" or self.ds_name == "cezanne2photo" or self.ds_name == "ukiyoe2photo" or \
                 self.ds_name == "iphone2dslr_flower":
-            self.single_img_process()
+            train_a, train_b = self.single_img_process()
+
+            self.train_fns_a = train_a[0]
+            self.train_images_a = train_a[1]
+
+            self.train_fns_b = train_b[0]
+            self.train_images_b = train_b[1]
 
         # train, val, (test, sample) # double grid
         elif self.ds_name == "cityscapes" or self.ds_name == "edges2handbags" or self.ds_name == "edges2shoes" or \
