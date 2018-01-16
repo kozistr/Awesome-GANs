@@ -247,9 +247,9 @@ class CycleGAN:
             self.g_b2a = self.enc_dec(b, name="b2a")  # b to a
 
         with tf.variable_scope("generator-a2b2a", reuse=True):
-            self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="a2b")  # a to b to a
+            self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="b2a")  # a to b to a
         with tf.variable_scope("generator-b2a2b", reuse=True):
-            self.g_b2a2b = self.enc_dec(self.g_b2a, reuse=True, name="b2a")  # b to a to b
+            self.g_b2a2b = self.enc_dec(self.g_b2a, reuse=True, name="a2b")  # b to a to b
 
         # Classifier
         with tf.variable_scope("classifier-a"):
