@@ -477,7 +477,7 @@ class Pix2PixDataSet:
         self.input_width = input_width
         self.input_channel = input_channel
 
-        self.image_shape = [-1, self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
 
         self.output_height = output_height
         self.output_width = output_width
@@ -489,11 +489,6 @@ class Pix2PixDataSet:
         self.num_threads = num_threads  # change this value to the fitted value for ur system
         self.mode = mode
 
-        self.path = ""  # DataSet path
-        self.files = ""  # files' name
-
-        self.data = []  # loaded images
-        self.images = []
         self.ds_name = name
 
         self.train_fns_a = None
@@ -547,12 +542,13 @@ class Pix2PixDataSet:
             return image
 
         def img_batch(fn, img):
-            batch = tf.train.shuffle_batch([fn, img],
-                                           batch_size=self.batch_size,
-                                           num_threads=self.num_threads,
-                                           capacity=self.batch_size * 5,
-                                           min_after_dequeue=self.batch_size * 3)
-            if self.mode == "test":
+            if self.mode == "train":
+                batch = tf.train.shuffle_batch([fn, img],
+                                               batch_size=self.batch_size,
+                                               num_threads=self.num_threads,
+                                               capacity=self.batch_size * 5,
+                                               min_after_dequeue=self.batch_size * 3)
+            elif self.mode == "test":
                 batch = tf.train.batch([fn, img],
                                        batch_size=self.batch_size,
                                        num_threads=self.num_threads,
@@ -562,11 +558,12 @@ class Pix2PixDataSet:
 
         with tf.device('/cpu:0'):  # using CPU
             # queue
-            img_reader = tf.WholeFileReader()
+            img_reader_a = tf.WholeFileReader()
+            img_reader_b = tf.WholeFileReader()
             fn_queue_a, fn_queue_b = fn_queue("A"), fn_queue("B")
 
-            fn_a, img_file_a = img_reader.read(fn_queue_a)
-            fn_b, img_file_b = img_reader.read(fn_queue_b)
+            fn_a, img_file_a = img_reader_a.read(fn_queue_a)
+            fn_b, img_file_b = img_reader_b.read(fn_queue_b)
 
             # decode images
             img_a = tf.image.decode_jpeg(img_file_a, channels=self.input_channel)

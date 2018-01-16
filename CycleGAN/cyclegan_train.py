@@ -23,7 +23,7 @@ results = {
 
 train_step = {
     'global_steps': 200001,
-    'batch_size': 64,
+    'batch_size': 8,
     'logging_step': 2500,
 }
 
@@ -37,7 +37,7 @@ def main():
 
     with tf.Session(config=config) as s:
         # CycleGAN Model
-        model = cyclegan.CycleGAN(s)
+        model = cyclegan.CycleGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
@@ -55,7 +55,6 @@ def main():
         x_a = tf.transpose(ds.train_images_a, (0, 2, 3, 1))  # N, H, W, C
         x_b = tf.transpose(ds.train_images_b, (0, 2, 3, 1))
 
-        print("[*] %s loaded : took %.8fs" % (data_set_name, time.time() - start_time))
         print("image A shape : ", x_a.shape)
         print("image B shape : ", x_b.shape)
 
@@ -78,7 +77,9 @@ def main():
                        size=[valid_image_height, valid_image_width], image_path=results['output'] + 'valid_b.png')
         """
 
-        threads = tf.train.start_queue_runners(sess=s)
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=s, coord=coord)
+
         for global_step in range(train_step['global_steps']):
             for _ in range(model.n_train_critic):
                 s.run(model.c_op)
@@ -115,6 +116,9 @@ def main():
 
                 # Model save
                 model.saver.save(s, results['model'], global_step=global_step)
+
+        coord.request_stop()
+        coord.join(threads)
 
     end_time = time.time() - start_time  # Clocking end
 
