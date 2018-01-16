@@ -5,35 +5,76 @@ import numpy as np
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
-    :param d: strides, default 2
-    :param act: activation function, default elu
+    :param s: strides, default 1
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: conv2d net
     """
     return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
+                            filters=f, kernel_size=k, strides=s,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                             bias_initializer=tf.zeros_initializer(),
-                            activation=act,
-                            padding=pad, name=name)
+                            padding=pad,
+                            name=name)
 
 
-def resize_nn(x, size):
-    return tf.image.resize_nearest_neighbor(x, size=(int(size), int(size)))
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param s: strides, default 1
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default deconv2d
+    :return: deconv2d net
+    """
+    return tf.layers.conv2d_transpose(x,
+                                      filters=f, kernel_size=k, strides=s,
+                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                                      bias_initializer=tf.zeros_initializer(),
+                                      padding=pad,
+                                      name=name)
+
+
+def instance_normalize(x, eps=1e-5, affine=True, name=""):
+    with tf.variable_scope('instance_normalize-affine_%s' % name):
+        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
+
+        normalized = tf.div(x - mean, tf.sqrt(variance + eps))
+
+        if not affine:
+            return normalized
+        else:
+            depth = x.get_shape()[3]  # input channel
+
+            scale = tf.get_variable('scale', [depth],
+                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
+            offset = tf.get_variable('offset', [depth],
+                                     initializer=tf.zeros_initializer())
+
+        return scale * normalized + offset
+
+
+def batch_normalize(x, eps=1e-5):
+    return tf.layers.batch_normalization(x,
+                                         momentum=0.9,
+                                         epsilon=eps,
+                                         scale=False,
+                                         center=False,
+                                         training=True)
 
 
 class CycleGAN:
 
     def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
                  sample_num=16 * 16, sample_size=16, output_height=64, output_width=64,
-                 df_dim=64, gf_dim=64,
-                 gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+                 df_dim=32, gf_dim=32, fc_unit=256,
+                 g_lr=1e-4, c_lr=1e-4, epsilon=1e-12):
 
         """
         # General Settings
@@ -51,15 +92,13 @@ class CycleGAN:
         :param output_width: output images width, default 64
 
         # For CNN model
-        :param df_dim: discriminator filter, default 64
-        :param gf_dim: generator filter, default 64
+        :param df_dim: discriminator filter, default 32
+        :param gf_dim: generator filter, default 32
+        :param fc_unit: fully connected units, default 256
 
         # Training Option
-        :param gamma: gamma value, default 0.4
-        :param lambda_k: lr adjustment value lambda k, default 1e-3
-        :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-4
-        :param d_lr: discriminator learning rate, default 1e-4
+        :param c_lr: classifier learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-12
         """
 
@@ -78,47 +117,45 @@ class CycleGAN:
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
+        self.fc_unit = fc_unit
 
-        self.gamma = gamma  # 0.3 ~ 0.7
-        self.lambda_k = lambda_k
-        self.z_dim = z_dim
         self.beta1 = .5
-        self.beta2 = .999
-        self.d_lr = tf.Variable(d_lr, name='d_lr')
-        self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = .5
-        self.lr_low_boundary = 1e-5
+        self.beta2 = .9
+        self.c_lr = c_lr
+        self.g_lr = g_lr
+        self.lambda_ = 10.
+        self.lambda_cycle = 10
+        self.n_train_critic = 10
         self.eps = epsilon
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.m_global = 0.
-        self.balance = 0.
+        self.g_a2b = None
+        self.g_b2a = None
+        self.g_a2b2a = None
+        self.g_b2a2b = None
 
-        self.k_update = None
-        self.d_op = None
+        self.w_a = None
+        self.w_b = None
+        self.w = None
+
+        self.gp_a = None
+        self.gp_b = None
+        self.gp = None
+
+        self.g_loss = 0.
+        self.g_a_loss = 0.
+        self.g_b_loss = 0.
+        self.c_loss = 0.
+        self.cycle_loss = 0.
+
+        self.c_op = None
         self.g_op = None
 
         self.merged = None
         self.writer = None
         self.saver = None
 
-        # LR/k update
-        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
-
-        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
-        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
-
-        # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.input_height, self.input_width, self.input_channel],
-                                name="x-image")                                        # (-1, 32, 32, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
-
-        self.build_cyclegan()  # build CycleGAN model
+        # self.build_cyclegan()  # build CycleGAN model
 
     def encoder(self, x, reuse=None):
         """
@@ -126,24 +163,30 @@ class CycleGAN:
         :param reuse: re-usable
         :return: embeddings
         """
+
         with tf.variable_scope('encoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+            def residual_block(x, f, name='residual_block'):
+                with tf.variable_scope(name):
+                    x = conv2d(x, f=f, k=3, s=1, name='encoder-residual_block-conv2d-1')
+                    x = instance_normalize(x, name='encoder-residual_block-instance_norm-1')
+                    x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = conv2d(x, f=self.df_dim, name="enc-conv-0")
+                    x = conv2d(x, f=f, k=3, s=1, name='encoder-residual_block-conv2d-2')
 
-            for i in range(1, repeat + 1):
-                f = self.df_dim * i
+                return x
 
-                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2))
+            x = conv2d(x, f=self.df_dim, k=7, s=1, name='encoder-conv2d-1')
+            x = tf.nn.leaky_relu(x)
 
-                if i < repeat:
-                    # x = tf.layers.max_pooling2d(x, 2, 2)
-                    x = conv2d(x, f=f, d=2, name='enc-conv-pool-%d' % i)  # conv pooling
-                    # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
+            for i in range(1, 3):
+                x = conv2d(x, f=self.df_dim * i, k=4, s=2, name='encoder-conv2d-%d' % (i + 1))
+                x = instance_normalize(x, name='encoder-instance_norm-%d' % (i + 1))
+                x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.flatten(x)
-            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')
+            for i in range(1, 10):
+                x = residual_block(x, f=self.df_dim * 4, name='encoder-residual_block-%d' % i)
+
+            # x = tf.layers.flatten(x)  # embeddings
 
             return x
 
@@ -153,102 +196,115 @@ class CycleGAN:
         :param reuse: re-usable
         :return: logits
         """
+
         with tf.variable_scope('decoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+            for i in range(1, 3):
+                x = deconv2d(x, f=self.gf_dim * 4 // i, k=4, s=2, name='decoder-deconv2d-%d' % i)
+                x = instance_normalize(x, name='decoder-instance_norm-%d' % i)
+                x = tf.nn.leaky_relu(x)
 
-            # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='dec-fc-1')
-            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
-
-            for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2))
-
-                if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
-
-            x = conv2d(x, self.input_channel)
+            x = conv2d(x, f=self.gf_dim, k=7, s=1, name='decoder-conv2d-1')
+            # x = tf.nn.tanh(x)
 
             return x
 
-    def discriminator(self, x, reuse=None):
+    def enc_dec(self, x, reuse=None, name=""):
         """
-        :param x: images
+        :param x: embeddings
         :param reuse: re-usable
+        :param name: name
+
         :return: logits
         """
-        with tf.variable_scope("discriminator", reuse=reuse):
+
+        with tf.variable_scope('encoder-decoder-%s' % name, reuse=reuse):
             x = self.encoder(x, reuse=reuse)
             x = self.decoder(x, reuse=reuse)
 
             return x
 
-    def generator(self, z, reuse=None):
-        """
-        :param z: embeddings
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope("generator", reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+    def classifier(self, x, reuse=None):
+        with tf.variable_scope('classifier', reuse=reuse):
+            f = self.gf_dim * 2
+            for i, f_ in enumerate([f, f * 2, f * 4, f * 4, f * 4]):
+                x = conv2d(x, f=f_, k=4, s=2, name='classifier-conv2d-%d' % (i + 1))
+                # x = instance_norm(x, name='classifier-instance_norm-%d' % (i + 1))
+                x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='g-fc-1')
-            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
+            x = tf.layers.flatten(x)
 
-            for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2))
-
-                if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
-
-            x = conv2d(x, 3)
+            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='classifier-fc-1')
+            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='classifier-fc-2')
+            x = tf.layers.dense(x, 1, name='classifier-fc-3')
 
             return x
 
-    def build_cyclegan(self):
-        def l1_loss(x, y):
-            return tf.reduce_mean(tf.abs(x - y))
-
+    def build_cyclegan(self, a, b):
         # Generator
-        self.g = self.generator(self.z)
+        with tf.variable_scope("generator-a2b"):
+            self.g_a2b = self.enc_dec(a, name="a2b")  # a to b
+        with tf.variable_scope("generator-b2a"):
+            self.g_b2a = self.enc_dec(b, name="b2a")  # b to a
 
-        # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        with tf.variable_scope("generator-a2b2a", reuse=True):
+            self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="a2b")  # a to b to a
+        with tf.variable_scope("generator-b2a2b", reuse=True):
+            self.g_b2a2b = self.enc_dec(self.g_b2a, reuse=True, name="b2a")  # b to a to b
 
-        # Loss
-        d_real_loss = l1_loss(self.x, d_real)
-        d_fake_loss = l1_loss(self.g, d_fake)
-        self.d_loss = d_real_loss - self.k * d_fake_loss
-        self.g_loss = d_fake_loss
+        # Classifier
+        with tf.variable_scope("classifier-a"):
+            alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
+            a_hat = alpha * a + (1. - alpha) * self.g_b2a
 
-        # Convergence Metric
-        self.balance = self.gamma * d_real_loss - self.g_loss  # (=d_fake_loss)
-        self.m_global = d_real_loss + tf.abs(self.balance)
+            c_a = self.classifier(a)
+            c_b2a = self.classifier(self.g_b2a, reuse=True)
+            c_a_hat = self.classifier(a_hat, reuse=True)
+        with tf.variable_scope("classifier-b"):
+            alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
+            b_hat = alpha * b + (1. - alpha) * self.g_a2b
 
-        # k_t update
-        self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
+            c_b = self.classifier(b)
+            c_a2b = self.classifier(self.g_a2b, reuse=True)
+            c_b_hat = self.classifier(b_hat, reuse=True)
+
+        # Training Ops
+        self.w_a = tf.reduce_mean(c_a) - tf.reduce_mean(c_b2a)
+        self.w_b = tf.reduce_mean(c_b) - tf.reduce_mean(c_a2b)
+        self.w = self.w_a + self.w_b
+
+        self.gp_a = tf.reduce_mean(
+            (tf.sqrt(tf.reduce_sum(tf.gradients(c_a_hat, a_hat)[0]**2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+        )
+        self.gp_b = tf.reduce_mean(
+            (tf.sqrt(tf.reduce_sum(tf.gradients(c_b_hat, b_hat)[0]**2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+        )
+        self.gp = self.gp_a + self.gp_b
+
+        # loss
+        self.c_loss = self.lambda_ * self.gp - self.w
+
+        cycle_a_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(a - self.g_a2b2a), reduction_indices=[1, 2, 3]))
+        cycle_b_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(b - self.g_b2a2b), reduction_indices=[1, 2, 3]))
+        self.cycle_loss = cycle_a_loss + cycle_b_loss
+
+        self.g_a_loss = -1. * tf.reduce_mean(c_b2a)
+        self.g_b_loss = -1. * tf.reduce_mean(c_a2b)
+        self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * cycle_loss
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
+        tf.summary.scalar("c_loss", self.c_loss)
         tf.summary.scalar("g_loss", self.g_loss)
-        tf.summary.scalar("balance", self.balance)
-        tf.summary.scalar("m_global", self.m_global)
-        tf.summary.scalar("k_t", self.k)
+        tf.summary.scalar("g_a_loss", self.g_a_loss)
+        tf.summary.scalar("g_b_loss", self.g_b_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
-        d_params = [v for v in t_vars if v.name.startswith('d')]
-        g_params = [v for v in t_vars if v.name.startswith('g')]
+        c_params = [v for v in t_vars if v.name.startswith('classifier')]
+        g_params = [v for v in t_vars if v.name.startswith('encoder-decoder')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update,
+        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
