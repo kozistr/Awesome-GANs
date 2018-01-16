@@ -155,8 +155,6 @@ class CycleGAN:
         self.writer = None
         self.saver = None
 
-        # self.build_cyclegan()  # build CycleGAN model
-
     def encoder(self, x, reuse=None):
         """
         :param x: images
@@ -166,7 +164,7 @@ class CycleGAN:
 
         with tf.variable_scope('encoder', reuse=reuse):
             def residual_block(x, f, name='residual_block'):
-                with tf.variable_scope(name):
+                with tf.variable_scope(name, reuse=reuse):
                     x = conv2d(x, f=f, k=3, s=1, name='encoder-residual_block-conv2d-1')
                     x = instance_normalize(x, name='encoder-residual_block-instance_norm-1')
                     x = tf.nn.leaky_relu(x, alpha=0.2)
@@ -180,7 +178,7 @@ class CycleGAN:
 
             for i in range(1, 3):
                 x = conv2d(x, f=self.df_dim * i, k=4, s=2, name='encoder-conv2d-%d' % (i + 1))
-                x = instance_normalize(x, name='encoder-instance_norm-%d' % (i + 1))
+                x = instance_normalize(x, name='encoder-instance_norm-%d' % i)
                 x = tf.nn.leaky_relu(x)
 
             for i in range(1, 10):
@@ -203,7 +201,7 @@ class CycleGAN:
                 x = instance_normalize(x, name='decoder-instance_norm-%d' % i)
                 x = tf.nn.leaky_relu(x)
 
-            x = conv2d(x, f=self.gf_dim, k=7, s=1, name='decoder-conv2d-1')
+            x = conv2d(x, f=self.input_channel, k=7, s=1, name='decoder-conv2d-1')
             # x = tf.nn.tanh(x)
 
             return x
@@ -246,9 +244,9 @@ class CycleGAN:
         with tf.variable_scope("generator-b2a"):
             self.g_b2a = self.enc_dec(b, name="b2a")  # b to a
 
-        with tf.variable_scope("generator-a2b2a", reuse=True):
+        with tf.variable_scope("generator-b2a", reuse=True):
             self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="b2a")  # a to b to a
-        with tf.variable_scope("generator-b2a2b", reuse=True):
+        with tf.variable_scope("generator-a2b", reuse=True):
             self.g_b2a2b = self.enc_dec(self.g_b2a, reuse=True, name="a2b")  # b to a to b
 
         # Classifier
@@ -289,7 +287,7 @@ class CycleGAN:
 
         self.g_a_loss = -1. * tf.reduce_mean(c_b2a)
         self.g_b_loss = -1. * tf.reduce_mean(c_a2b)
-        self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * cycle_loss
+        self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * self.cycle_loss
 
         # Summary
         tf.summary.scalar("c_loss", self.c_loss)
@@ -299,8 +297,8 @@ class CycleGAN:
 
         # Optimizer
         t_vars = tf.trainable_variables()
-        c_params = [v for v in t_vars if v.name.startswith('classifier')]
-        g_params = [v for v in t_vars if v.name.startswith('encoder-decoder')]
+        c_params = [v for v in t_vars if v.name.startswith('c')]
+        g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)

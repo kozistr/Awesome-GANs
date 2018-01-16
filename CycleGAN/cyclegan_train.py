@@ -52,19 +52,20 @@ def main():
                      mode='train',
                      name=data_set_name)
 
-        x_a = ds.train_images_a
-        x_b = ds.train_images_b
-
-        model.build_cyclegan(x_a, x_b)  # CycleGAN
+        x_a = tf.transpose(ds.train_images_a, (0, 2, 3, 1))  # N, H, W, C
+        x_b = tf.transpose(ds.train_images_b, (0, 2, 3, 1))
 
         print("[*] %s loaded : took %.8fs" % (data_set_name, time.time() - start_time))
         print("image A shape : ", x_a.shape)
         print("image B shape : ", x_b.shape)
 
+        model.build_cyclegan(x_a, x_b)  # CycleGAN
+
+        """
         sample_x_a = x_a[:model.sample_num]
-        sample_x_a = np.reshape(sample_x_a, [-1] + model.image_shape[1:])
+        sample_x_a = tf.reshape(sample_x_a, [-1] + model.image_shape[1:])
         sample_x_b = x_b[:model.sample_num]
-        sample_x_b = np.reshape(sample_x_b, [-1] + model.image_shape[1:])
+        sample_x_b = tf.reshape(sample_x_b, [-1] + model.image_shape[1:])
 
         # Export real image
         valid_image_height = model.sample_size
@@ -75,6 +76,7 @@ def main():
                        size=[valid_image_height, valid_image_width], image_path=results['output'] + 'valid_a.png')
         iu.save_images(sample_x_b,
                        size=[valid_image_height, valid_image_width], image_path=results['output'] + 'valid_b.png')
+        """
 
         threads = tf.train.start_queue_runners(sess=s)
         for global_step in range(train_step['global_steps']):
