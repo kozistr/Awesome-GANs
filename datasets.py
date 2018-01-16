@@ -560,7 +560,7 @@ class Pix2PixDataSet:
             # queue
             img_reader_a = tf.WholeFileReader()
             img_reader_b = tf.WholeFileReader()
-            fn_queue_a, fn_queue_b = fn_queue("A"), fn_queue("B")
+            fn_queue_a, fn_queue_b = fn_queue("A/*"), fn_queue("B/*")
 
             fn_a, img_file_a = img_reader_a.read(fn_queue_a)
             fn_b, img_file_b = img_reader_b.read(fn_queue_b)

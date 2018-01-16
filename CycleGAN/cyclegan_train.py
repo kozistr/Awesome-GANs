@@ -24,7 +24,7 @@ results = {
 train_step = {
     'global_steps': 200001,
     'batch_size': 8,
-    'logging_step': 2500,
+    'logging_step': 1000,
 }
 
 
@@ -38,9 +38,6 @@ def main():
     with tf.Session(config=config) as s:
         # CycleGAN Model
         model = cyclegan.CycleGAN(s, batch_size=train_step['batch_size'])
-
-        # Initializing
-        s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
         data_set_name = 'vangogh2photo'
@@ -77,14 +74,21 @@ def main():
                        size=[valid_image_height, valid_image_width], image_path=results['output'] + 'valid_b.png')
         """
 
+        # Initializing
+        s.run(tf.local_variables_initializer())
+        s.run(tf.global_variables_initializer())
+
         coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(sess=s, coord=coord)
+        threads = tf.train.start_queue_runners(coord=coord)
 
         for global_step in range(train_step['global_steps']):
+            if coord.should_stop():
+                break
+
             for _ in range(model.n_train_critic):
                 s.run(model.c_op)
 
-            w, wp, g_loss, cycle_loss, _ = s.run([model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op])
+            w, gp, g_loss, cycle_loss, _ = s.run([model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op])
 
             if global_step % train_step['logging_step'] == 0:
                 # Summary
