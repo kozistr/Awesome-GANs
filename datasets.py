@@ -653,7 +653,7 @@ class Pix2PixDataSet:
     def double_img_process(self):
         pass
 
-    def load_data(self, size, offset=0, name):
+    def load_data(self, size, offset=0, name=""):
         """
             From great jupyter notebook by Tim Sainburg:
             http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
