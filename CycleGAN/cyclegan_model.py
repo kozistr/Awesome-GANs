@@ -71,7 +71,7 @@ def batch_normalize(x, eps=1e-5):
 class CycleGAN:
 
     def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
-                 sample_num=16 * 16, sample_size=16, output_height=64, output_width=64,
+                 sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
                  df_dim=32, gf_dim=32, fc_unit=256,
                  g_lr=1e-4, c_lr=1e-4, epsilon=1e-12):
 
