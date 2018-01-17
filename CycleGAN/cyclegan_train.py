@@ -47,7 +47,7 @@ def main():
                      input_channel=3,
                      crop_size=32,
                      batch_size=train_step['batch_size'],
-                     mode='w',
+                     mode='r',
                      name=data_set_name)
 
         img_a = ds.images_a
@@ -65,8 +65,8 @@ def main():
         for epoch in range(train_step['epochs']):
             # learning rate decay
             lr_decay = 1.
-            if epoch >= train_step['epoch']:
-                lr_decay = (train_step['epoch'] - epoch) / (train_step['epoch'] / 2.)
+            if epoch >= train_step['epochs']:
+                lr_decay = (train_step['epochs'] - epoch) / (train_step['epochs'] / 2.)
 
             # re-implement DataIterator for multi-input
             pointer = 0
@@ -89,8 +89,8 @@ def main():
 
                 end = pointer
 
-                batch_a = img_a[start:end]
-                batch_b = img_a[start:end]
+                batch_a = np.reshape(img_a[start:end], model.image_shape)
+                batch_b = np.reshape(img_a[start:end], model.image_shape)
 
                 for _ in range(model.n_train_critic):
                     s.run(model.c_op,
@@ -145,6 +145,8 @@ def main():
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
+
+                global_step += 1
 
     end_time = time.time() - start_time  # Clocking end
 
