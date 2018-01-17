@@ -27,6 +27,21 @@ DataSets = {
     # 'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
     # 'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
     # 'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
+    # pix2pix DataSets
+    # 'ae_photos': '/home/zero/hdd/DataSet/pix2pix/ae_photos/',
+    # 'apple2orange': '/home/zero/hdd/DataSet/pix2pix/apple2orange/',
+    # 'cezanne2photo': '/home/zero/hdd/DataSet/pix2pix/cezanne2photo/',
+    # 'cityscapes': '/home/zero/hdd/DataSet/pix2pix/cityscapes/',
+    # 'edges2handbags': '/home/zero/hdd/DataSet/pix2pix/edges2handbags/',
+    # 'edges2shoes': '/home/zero/hdd/DataSet/pix2pix/edges2shoes/',
+    # 'facades': '/home/zero/hdd/DataSet/pix2pix/facades/',
+    # 'horse2zebra': '/home/zero/hdd/DataSet/pix2pix/horse2zebra/',
+    # 'iphone2dslr_flower': 'D/home/zero/hdd/DataSet/pix2pix/iphone2dslr_flower/',
+    # 'maps': '/home/zero/hdd/DataSet/pix2pix/maps/',
+    # 'monet2photo': '/home/zero/hdd/DataSet/pix2pix/monet2photo/',
+    # 'summer2winter_yosemite': '/home/zero/hdd/DataSet/pix2pix/summer2winter_yosemite/',
+    # 'ukiyoe2photo': '/home/zero/hdd/DataSet/pix2pix/vukiyoe2photo/',
+    'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
     # Windows
     # MNIST
     'mnist': 'D:\\DataSet\\MNIST\\',
@@ -52,7 +67,7 @@ DataSets = {
     'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
     'summer2winter_yosemite': 'D:\\DataSet\\pix2pix\\summer2winter_yosemite\\',
     'ukiyoe2photo': 'D:\\DataSet\\pix2pix\\vukiyoe2photo\\',
-    'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
 }
 
 
