@@ -531,73 +531,6 @@ class Pix2PixDataSet:
             self.double_img_process()
 
     def single_img_process(self, mode):
-        """
-        def fn_queue(name):
-            # load DataSet
-            path = DataSets[self.ds_name] + self.mode
-
-            fn = tf.train.match_filenames_once(path + name)
-
-            queue = lambda x: tf.train.string_input_producer(x, shuffle=True)  # for train
-            if self.mode == "test":
-                queue = lambda x: tf.train.string_input_producer(x, num_epochs=1, shuffle=False)
-
-            return queue(fn)
-
-        def pre_process(img):
-            if self.mode == "test":
-                image = tf.identity(img)  # just copy
-                image = tf.image.resize_image_with_crop_or_pad(image, self.crop_size, self.crop_size)
-            else:
-                image = tf.image.random_flip_left_right(img)  # augmentation # optional
-                image = tf.random_crop(image, [self.crop_size, self.crop_size, 3])
-
-            image = tf.transpose(image, [2, 0, 1])  # C, H, W
-            image = tf.cast(image, tf.float32) / 255.  # normalize
-
-            return image
-
-        def img_batch(fn, img):
-            if self.mode == "train":
-                batch = tf.train.shuffle_batch([fn, img],
-                                               batch_size=self.batch_size,
-                                               num_threads=self.num_threads,
-                                               capacity=self.batch_size * 5,
-                                               min_after_dequeue=self.batch_size * 3)
-            elif self.mode == "test":
-                batch = tf.train.batch([fn, img],
-                                       batch_size=self.batch_size,
-                                       num_threads=self.num_threads,
-                                       allow_smaller_final_batch=False)
-
-            return batch
-
-        with tf.device('/cpu:0'):  # using CPU
-            # queue
-            img_reader_a = tf.WholeFileReader()
-            img_reader_b = tf.WholeFileReader()
-            fn_queue_a, fn_queue_b = fn_queue("A/*"), fn_queue("B/*")
-
-            fn_a, img_file_a = img_reader_a.read(fn_queue_a)
-            fn_b, img_file_b = img_reader_b.read(fn_queue_b)
-
-            # decode images
-            img_a = tf.image.decode_jpeg(img_file_a, channels=self.input_channel)
-            img_b = tf.image.decode_jpeg(img_file_b, channels=self.input_channel)
-
-            # resize
-            img_a = tf.image.resize_images(img_a, [self.input_height, self.input_width], tf.image.ResizeMethod.BILINEAR)
-            img_b = tf.image.resize_images(img_b, [self.input_height, self.input_width], tf.image.ResizeMethod.BILINEAR)
-
-            img_a = pre_process(img_a)
-            img_b = pre_process(img_b)
-
-            fn_a, img_a = img_batch(fn_a, img_a)
-            fn_b, img_b = img_batch(fn_b, img_b)
-
-        return [fn_a, img_a], [fn_b, img_b]
-        """
-
         def get_image(path, w, h):
             img = imread(path).astype(np.float)
 
@@ -654,11 +587,6 @@ class Pix2PixDataSet:
         pass
 
     def load_data(self, size, offset=0, name=""):
-        """
-            From great jupyter notebook by Tim Sainburg:
-            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
-        """
-
         with h5py.File(DataSets[self.ds_name] + name, 'r') as hf:
             pix2pix = hf['images']
 
