@@ -3,7 +3,6 @@ from __future__ import print_function
 from __future__ import division
 
 import tensorflow as tf
-import numpy as np
 
 import sys
 import time
@@ -11,6 +10,7 @@ import time
 import cyclegan_model as cyclegan
 
 sys.path.append('../')
+
 import image_utils as iu
 from datasets import Pix2PixDataSet as DataSet
 
