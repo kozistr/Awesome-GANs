@@ -79,7 +79,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
+        threads = tf.train.start_queue_runners(sess=s, coord=coord)
 
         for global_step in range(train_step['global_steps']):
             if coord.should_stop():

@@ -154,6 +154,14 @@ class CycleGAN:
         self.writer = None
         self.saver = None
 
+        # placeholders
+        self.a = tf.placeholder(tf.float32,
+                                [None, self.input_height, self.input_width, self.input_channel], name='image-a')
+        self.b = tf.placeholder(tf.float32,
+                                [None, self.input_height, self.input_width, self.input_channel], name='image-b')
+
+        self.build_cyclegan()  # build CycleGAN
+
     def encoder(self, x, reuse=None):
         """
         :param x: images
@@ -236,12 +244,12 @@ class CycleGAN:
 
             return x
 
-    def build_cyclegan(self, a, b):
+    def build_cyclegan(self):
         # Generator
         with tf.variable_scope("generator-a2b"):
-            self.g_a2b = self.enc_dec(a, name="a2b")  # a to b
+            self.g_a2b = self.enc_dec(self.a, name="a2b")  # a to b
         with tf.variable_scope("generator-b2a"):
-            self.g_b2a = self.enc_dec(b, name="b2a")  # b to a
+            self.g_b2a = self.enc_dec(self.b, name="b2a")  # b to a
 
         with tf.variable_scope("generator-b2a", reuse=True):
             self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="b2a")  # a to b to a
@@ -251,14 +259,14 @@ class CycleGAN:
         # Classifier
         with tf.variable_scope("classifier-a"):
             alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
-            a_hat = alpha * a + (1. - alpha) * self.g_b2a
+            a_hat = alpha * self.a + (1. - alpha) * self.g_b2a
 
             c_a = self.classifier(a)
             c_b2a = self.classifier(self.g_b2a, reuse=True)
             c_a_hat = self.classifier(a_hat, reuse=True)
         with tf.variable_scope("classifier-b"):
             alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
-            b_hat = alpha * b + (1. - alpha) * self.g_a2b
+            b_hat = alpha * self.b + (1. - alpha) * self.g_a2b
 
             c_b = self.classifier(b)
             c_a2b = self.classifier(self.g_a2b, reuse=True)
@@ -280,8 +288,8 @@ class CycleGAN:
         # loss
         self.c_loss = self.lambda_ * self.gp - self.w
 
-        cycle_a_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(a - self.g_a2b2a), reduction_indices=[1, 2, 3]))
-        cycle_b_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(b - self.g_b2a2b), reduction_indices=[1, 2, 3]))
+        cycle_a_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(self.a - self.g_a2b2a), reduction_indices=[1, 2, 3]))
+        cycle_b_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(self.b - self.g_b2a2b), reduction_indices=[1, 2, 3]))
         self.cycle_loss = cycle_a_loss + cycle_b_loss
 
         self.g_a_loss = -1. * tf.reduce_mean(c_b2a)
@@ -290,6 +298,9 @@ class CycleGAN:
 
         # Summary
         tf.summary.scalar("c_loss", self.c_loss)
+        tf.summary.scalar("cycle_loss", self.cycle_loss)
+        tf.summary.scalar("cycle_a_loss", cycle_a_loss)
+        tf.summary.scalar("cycle_b_loss", cycle_b_loss)
         tf.summary.scalar("g_loss", self.g_loss)
         tf.summary.scalar("g_a_loss", self.g_a_loss)
         tf.summary.scalar("g_b_loss", self.g_b_loss)
