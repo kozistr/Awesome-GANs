@@ -259,14 +259,14 @@ class CycleGAN:
 
         # Classifier
         with tf.variable_scope("classifier-a"):
-            alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
             a_hat = alpha * self.a + (1. - alpha) * self.g_b2a
 
             c_a = self.classifier(self.a)
             c_b2a = self.classifier(self.g_b2a, reuse=True)
             c_a_hat = self.classifier(a_hat, reuse=True)
         with tf.variable_scope("classifier-b"):
-            alpha = tf.random_uniform(shape=[-1, 1, 1, 1], minval=0., maxval=1.)
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
             b_hat = alpha * self.b + (1. - alpha) * self.g_a2b
 
             c_b = self.classifier(self.b)
