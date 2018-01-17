@@ -41,9 +41,9 @@ DataSets = {
     # 'monet2photo': '/home/zero/hdd/DataSet/pix2pix/monet2photo/',
     # 'summer2winter_yosemite': '/home/zero/hdd/DataSet/pix2pix/summer2winter_yosemite/',
     # 'ukiyoe2photo': '/home/zero/hdd/DataSet/pix2pix/vukiyoe2photo/',
-    'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
-    'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
-    'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
+    # 'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
+    # 'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
+    # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # Windows
     # MNIST
     'mnist': 'D:\\DataSet\\MNIST\\',
@@ -69,7 +69,9 @@ DataSets = {
     'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
     'summer2winter_yosemite': 'D:\\DataSet\\pix2pix\\summer2winter_yosemite\\',
     'ukiyoe2photo': 'D:\\DataSet\\pix2pix\\vukiyoe2photo\\',
-    # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
+    'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
 }
 
 
@@ -464,7 +466,7 @@ class Pix2PixDataSet:
 
     def __init__(self, batch_size=64, input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, mode='train', name=''):
+                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, mode='w', name=''):
 
         """
         # General Settings
@@ -506,18 +508,15 @@ class Pix2PixDataSet:
         self.num_threads = num_threads  # change this value to the fitted value for ur system
         self.mode = mode
 
-        self.files = []
-        self.data = []
-        self.images = []
+        self.files_a = []
+        self.files_b = []
+        self.data_a = []
+        self.data_b = []
+        self.images_a = []
+        self.images_b = []
         self.num_images_a = 400
         self.num_images_b = 6053
         self.ds_name = name
-
-        self.train_fns_a = None
-        self.train_images_a = None
-
-        self.train_fns_b = None
-        self.train_images_b = None
 
         # testA, testB, (trainA, trainB)
         if self.ds_name == "apple2orange" or self.ds_name == "horse2zebra" or self.ds_name == "monet2photo" or \
@@ -616,39 +615,54 @@ class Pix2PixDataSet:
             self.ds_name = 'vangogh2photo-64x64-h5'
 
         if mode == 'w':
-            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
-            self.files = np.sort(self.files)
+            data_set_name = self.ds_name.split('-')[0]
 
-            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
-                                 dtype=np.uint8)
+            self.files_a = glob(os.path.join(DataSets[data_set_name] + 'trainA\\', "*.jpg"))
+            self.files_b = glob(os.path.join(DataSets[data_set_name] + 'trainB\\', "*.jpg"))
+            self.files_a = np.sort(self.files_a)
+            self.files_b = np.sort(self.files_b)
 
-            print("[*] Image size : ", self.data.shape)
+            self.data_a = np.zeros((len(self.files_a), self.input_height * self.input_width * self.input_channel),
+                                   dtype=np.uint8)
+            self.data_b = np.zeros((len(self.files_b), self.input_height * self.input_width * self.input_channel),
+                                   dtype=np.uint8)
 
-            assert (len(self.files) == self.num_images)
+            print("[*] Image A size : ", self.data_a.shape)
+            print("[*] Image B size : ", self.data_b.shape)
 
-            for n, f_name in tqdm(enumerate(self.files)):
+            assert (len(self.files_a) == self.num_images_a) and (len(self.files_b) == self.num_images_b)
+
+            for n, f_name in tqdm(enumerate(self.files_a)):
                 image = get_image(f_name, self.input_width, self.input_height)
-                self.data[n] = image.flatten()
+                self.data_a[n] = image.flatten()
+
+            for n, f_name in tqdm(enumerate(self.files_b)):
+                image = get_image(f_name, self.input_width, self.input_height)
+                self.data_b[n] = image.flatten()
 
             # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
-                f.create_dataset("images", data=self.data)
+            with h5py.File(''.join([DataSets[self.ds_name] + 'a.h5']), 'w') as f:
+                f.create_dataset("images", data=self.data_a)
 
-        self.images = self.load_data(size=self.num_images)
+            with h5py.File(''.join([DataSets[self.ds_name] + 'b.h5']), 'w') as f:
+                f.create_dataset("images", data=self.data_b)
+
+        self.images_a = self.load_data(size=self.num_images_a, name='a.h5')
+        self.images_b = self.load_data(size=self.num_images_b, name='b.h5')
 
     def double_img_process(self):
         pass
 
-    def load_data(self, size, offset=0):
+    def load_data(self, size, offset=0, name):
         """
             From great jupyter notebook by Tim Sainburg:
             http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
         """
 
-        with h5py.File(DataSets[self.ds_name], 'r') as hf:
-            faces = hf['images']
+        with h5py.File(DataSets[self.ds_name] + name, 'r') as hf:
+            pix2pix = hf['images']
 
-            full_size = len(faces)
+            full_size = len(pix2pix)
             if size is None:
                 size = full_size
 
@@ -659,15 +673,15 @@ class Pix2PixDataSet:
 
             if offset == n_chunks - 1:
                 print("[-] Not enough data available, clipping to end.")
-                faces = faces[offset * size:]
+                pix2pix = pix2pix[offset * size:]
             else:
-                faces = faces[offset * size:(offset + 1) * size]
+                pix2pix = pix2pix[offset * size:(offset + 1) * size]
 
-            faces = np.array(faces, dtype=np.float16)
+                pix2pix = np.array(pix2pix, dtype=np.float16)
 
-        print("[+] Image size : ", faces.shape)
+        print("[+] Image size : ", pix2pix.shape)
 
-        return faces / 255.
+        return pix2pix / 255.
 
 
 class DataIterator:
