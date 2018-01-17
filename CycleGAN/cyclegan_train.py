@@ -76,7 +76,7 @@ def main():
 
             # re-implement DataIterator for multi-input
             pointer = 0
-            num_images = np.minimum(ds.num_images_a, ds.num_images_b)
+            num_images = min(ds.num_images_a, ds.num_images_b)
             for i in range(num_images // train_step['batch_size']):
                 start = pointer
                 pointer += train_step['batch_size']
@@ -115,7 +115,13 @@ def main():
 
                 if global_step % train_step['logging_step'] == 0:
                     # Summary
-                    summary = s.run([model.merged])
+                    w, gp, g_loss, cycle_loss, _, summary = s.run(
+                        [model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op, model.merged],
+                        feed_dict={
+                            model.a: batch_a,
+                            model.b: batch_b,
+                            model.lr_decay: lr_decay,
+                        })
 
                     # Print loss
                     print("[+] Global Step %08d =>" % global_step,
@@ -125,16 +131,18 @@ def main():
                           " gp : {:.8f}".format(gp))
 
                     # Summary saver
-                    model.writer.add_summary(summary, global_step)
+                    model.writer.add_summary(summary, global_step=global_step)
 
                     # Training G model with sample image and noise
                     samples_a2b = s.run(model.g_a2b,
                                         feed_dict={
                                             model.a: batch_a,
+                                            model.b: batch_b,
                                             model.lr_decay: lr_decay,
                                         })
                     samples_b2a = s.run(model.g_b2a,
                                         feed_dict={
+                                            model.a: batch_a,
                                             model.b: batch_b,
                                             model.lr_decay: lr_decay,
                                         })
