@@ -159,6 +159,7 @@ class CycleGAN:
                                 [None, self.input_height, self.input_width, self.input_channel], name='image-a')
         self.b = tf.placeholder(tf.float32,
                                 [None, self.input_height, self.input_width, self.input_channel], name='image-b')
+        self.lr_decay = tf.placeholder(tf.float32, None, name='learning_rate-decay')
 
         self.build_cyclegan()  # build CycleGAN
 
@@ -310,9 +311,9 @@ class CycleGAN:
         c_params = [v for v in t_vars if v.name.startswith('c')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr,
+        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr * self.lr_decay,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr * self.lr_decay,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
