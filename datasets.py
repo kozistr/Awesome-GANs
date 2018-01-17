@@ -42,6 +42,8 @@ DataSets = {
     # 'summer2winter_yosemite': '/home/zero/hdd/DataSet/pix2pix/summer2winter_yosemite/',
     # 'ukiyoe2photo': '/home/zero/hdd/DataSet/pix2pix/vukiyoe2photo/',
     'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
+    'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
+    'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # Windows
     # MNIST
     'mnist': 'D:\\DataSet\\MNIST\\',
@@ -504,6 +506,11 @@ class Pix2PixDataSet:
         self.num_threads = num_threads  # change this value to the fitted value for ur system
         self.mode = mode
 
+        self.files = []
+        self.data = []
+        self.images = []
+        self.num_images_a = 400
+        self.num_images_b = 6053
         self.ds_name = name
 
         self.train_fns_a = None
@@ -517,20 +524,15 @@ class Pix2PixDataSet:
                 self.ds_name == "summer2winter_yosemite" or self.ds_name == "vangogh2photo" or \
                 self.ds_name == "ae_photos" or self.ds_name == "cezanne2photo" or self.ds_name == "ukiyoe2photo" or \
                 self.ds_name == "iphone2dslr_flower":
-            train_a, train_b = self.single_img_process()
-
-            self.train_fns_a = train_a[0]
-            self.train_images_a = train_a[1]
-
-            self.train_fns_b = train_b[0]
-            self.train_images_b = train_b[1]
+            self.single_img_process(self.mode)
 
         # train, val, (test, sample) # double grid
         elif self.ds_name == "cityscapes" or self.ds_name == "edges2handbags" or self.ds_name == "edges2shoes" or \
                 self.ds_name == "facades" or self.ds_name == "maps":
             self.double_img_process()
 
-    def single_img_process(self):
+    def single_img_process(self, mode):
+        """
         def fn_queue(name):
             # load DataSet
             path = DataSets[self.ds_name] + self.mode
@@ -595,9 +597,77 @@ class Pix2PixDataSet:
             fn_b, img_b = img_batch(fn_b, img_b)
 
         return [fn_a, img_a], [fn_b, img_b]
+        """
+
+        def get_image(path, w, h):
+            img = imread(path).astype(np.float)
+
+            orig_h, orig_w = img.shape[:2]
+            new_h = int(orig_h * w / orig_w)
+
+            img = imresize(img, (new_h, w))
+            margin = int(round((new_h - h) / 2))
+
+            return img[margin:margin + h]
+
+        if self.input_height == 32:
+            self.ds_name = 'vangogh2photo-32x32-h5'
+        elif self.input_height == 64:
+            self.ds_name = 'vangogh2photo-64x64-h5'
+
+        if mode == 'w':
+            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            self.files = np.sort(self.files)
+
+            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
+                                 dtype=np.uint8)
+
+            print("[*] Image size : ", self.data.shape)
+
+            assert (len(self.files) == self.num_images)
+
+            for n, f_name in tqdm(enumerate(self.files)):
+                image = get_image(f_name, self.input_width, self.input_height)
+                self.data[n] = image.flatten()
+
+            # write .h5 file for reusing later...
+            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
+                f.create_dataset("images", data=self.data)
+
+        self.images = self.load_data(size=self.num_images)
 
     def double_img_process(self):
         pass
+
+    def load_data(self, size, offset=0):
+        """
+            From great jupyter notebook by Tim Sainburg:
+            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
+        """
+
+        with h5py.File(DataSets[self.ds_name], 'r') as hf:
+            faces = hf['images']
+
+            full_size = len(faces)
+            if size is None:
+                size = full_size
+
+            n_chunks = int(np.ceil(full_size / size))
+            if offset >= n_chunks:
+                print("[*] Looping from back to start.")
+                offset = offset % n_chunks
+
+            if offset == n_chunks - 1:
+                print("[-] Not enough data available, clipping to end.")
+                faces = faces[offset * size:]
+            else:
+                faces = faces[offset * size:(offset + 1) * size]
+
+            faces = np.array(faces, dtype=np.float16)
+
+        print("[+] Image size : ", faces.shape)
+
+        return faces / 255.
 
 
 class DataIterator:
