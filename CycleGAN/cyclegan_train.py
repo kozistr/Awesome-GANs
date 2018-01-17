@@ -37,17 +37,23 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
+        image_size = crop_size = 64
+
         # CycleGAN Model
-        model = cyclegan.CycleGAN(s, batch_size=train_step['batch_size'])
+        model = cyclegan.CycleGAN(s,
+                                  input_height=image_size,
+                                  input_width=image_size,
+                                  input_channel=3,
+                                  batch_size=train_step['batch_size'])
 
         # Celeb-A DataSet images
         data_set_name = 'vangogh2photo'
-        ds = DataSet(input_height=32,
-                     input_width=32,
+        ds = DataSet(input_height=image_size,
+                     input_width=image_size,
                      input_channel=3,
-                     crop_size=32,
+                     crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='r',
+                     mode='w',
                      name=data_set_name)
 
         img_a = ds.images_a
