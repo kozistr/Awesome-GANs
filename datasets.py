@@ -515,7 +515,7 @@ class Pix2PixDataSet:
         self.images_a = []
         self.images_b = []
         self.num_images_a = 400
-        self.num_images_b = 6053
+        self.num_images_b = 6287
         self.ds_name = name
 
         # testA, testB, (trainA, trainB)
