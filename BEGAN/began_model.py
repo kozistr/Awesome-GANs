@@ -19,6 +19,7 @@ def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
                             activation=act,
                             padding=pad, name=name)
