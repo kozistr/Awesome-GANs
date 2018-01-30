@@ -48,6 +48,9 @@ def main():
                      input_width=32,
                      input_channel=3,
                      mode='r').images
+        # To-Do
+        # Getting anomaly data
+
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
@@ -82,30 +85,20 @@ def main():
                                       model.z: batch_z,
                                   })
 
-                # Update k_t
-                _, k, m_global = s.run([model.k_update, model.k, model.m_global],
-                                       feed_dict={
-                                            model.x: batch_x,
-                                            model.z: batch_z,
-                                       })
-
                 if global_step % train_step['logging_step'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     # Summary
-                    _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                     model.d_loss, model.g_loss, model.merged],
-                                                                    feed_dict={
-                                                                        model.x: batch_x,
-                                                                        model.z: batch_z,
-                                                                    })
+                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                    feed_dict={
+                                                        model.x: batch_x,
+                                                        model.z: batch_z,
+                                                    })
 
                     # Print loss
                     print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss),
-                          " k : {:.8f}".format(k),
-                          " M : {:.8f}".format(m_global))
+                          " G loss : {:.8f}".format(g_loss))
 
                     # Summary saver
                     model.writer.add_summary(summary, epoch)
