@@ -4,12 +4,12 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, s=2, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
-    :param s: strides, default 1
+    :param s: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: conv2d net
@@ -22,12 +22,12 @@ def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
                             padding=pad, name=name)
 
 
-def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=3, s=2, pad='SAME', name='deconv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
-    :param s: strides, default 1
+    :param s: strides, default 2
     :param pad: padding (valid or same), default same
     :param name: scope name, default deconv2d
     :return: decovn2d net
@@ -53,7 +53,8 @@ class AnoGAN:
     def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
                  sample_num=16 * 16, sample_size=16, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
-                 lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12):
+                 lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12,
+                 detect=False):
 
         """
         # General Settings
@@ -80,10 +81,12 @@ class AnoGAN:
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-12
+        :param detect: anomalies detection if True, just training a model, default False
         """
 
         self.s = s
         self.batch_size = batch_size
+        self.test_batch_size = 1
 
         self.input_height = input_height
         self.input_width = input_width
@@ -108,12 +111,20 @@ class AnoGAN:
         self.lr_low_boundary = 1e-5
         self.eps = epsilon
 
+        self.detect = detect
+
         # pre-defined
         self.d_real = 0.
         self.d_fake = 0.
         self.d_loss = 0.
         self.g_loss = 0.
         self.anomaly_loss = 0.
+
+        self.g = None
+        self.g_ano = None
+
+        self.fm_fake = None
+        self.fm_real = None
 
         self.d_op = None
         self.g_op = None
@@ -130,9 +141,14 @@ class AnoGAN:
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
                                 name="x-image")                                        # (-1, 32, 32, 3)
+        self.x_ano = None  # used at anomaly_detector
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
+        self.z_ano = None  # used at anomaly_detector
 
-        self.build_anogan()  # build AnoGAN model
+        if self.detect:
+            self.anomaly_detector()  # build anomalies detector
+
+        self.build_anogan()      # build AnoGAN model
 
     def sampler(self, z, reuse=None):
         """
@@ -147,12 +163,29 @@ class AnoGAN:
             x = tf.reshape(x, [-1, 4, 4, self.z_dim])
 
             for i in range(1, 4):
-                x = deconv2d(x, f=self.gf_dim * (2 ** i), k=3, s=2, name="s-conv2d-%d" % i)
+                x = deconv2d(x, f=self.gf_dim * (2 ** i), name="s-deconv2d-%d" % i)
                 x = batch_norm(x, train=False)
                 x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, f=3, k=3, s=1, name="s-conv2d-4")
+            x = deconv2d(x, f=3, k=3, s=1, name="s-deconv2d-4")
             x = tf.nn.tanh(x)
+
+            return x
+
+    def feature_match(self, x, reuse=None):
+        """
+        :param x: images
+        :param reuse: re-usable
+        :return: logits
+        """
+        with tf.variable_scope("feature_match", reuse=reuse):
+            x = conv2d(x, f=self.gf_dim * 1, name="fm-conv2d-0")
+            x = tf.nn.leaky_relu(x)
+
+            for i in range(1, 4):
+                x = conv2d(x, f=self.gf_dim * (2 ** i), name="fm-conv2d-%d" % i)
+                x = batch_norm(x)
+                x = tf.nn.leaky_relu(x)
 
             return x
 
@@ -164,11 +197,10 @@ class AnoGAN:
         """
         with tf.variable_scope("discriminator", reuse=reuse):
             x = conv2d(x, f=self.gf_dim * 1, name="d-conv2d-0")
-            x = batch_norm(x)
             x = tf.nn.leaky_relu(x)
 
             for i in range(1, 4):
-                x = conv2d(x, f=self.gf_dim * (2 ** i), k=3, s=2, name="d-conv2d-%d" % i)
+                x = conv2d(x, f=self.gf_dim * (2 ** i), name="d-conv2d-%d" % i)
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
@@ -192,7 +224,7 @@ class AnoGAN:
             x = tf.reshape(x, [-1, 4, 4, self.z_dim])
 
             for i in range(1, 4):
-                x = deconv2d(x, f=self.gf_dim * (2 ** i), k=3, s=2, name="g-conv2d-%d" % i)
+                x = deconv2d(x, f=self.gf_dim * (2 ** i), name="g-conv2d-%d" % i)
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
@@ -201,12 +233,34 @@ class AnoGAN:
 
             return x
 
+    def anomaly_detector(self):
+        def l1_loss(x, y):
+            return tf.reduce_sum(tf.abs(x - y))
+
+        self.x_ano = tf.placeholder(tf.float32,
+                                    shape=[self.test_batch_size,
+                                           self.input_height, self.input_width, self.input_channel],
+                                    name="x-test-image")
+        self.z_ano = tf.placeholder(tf.float32,
+                                    shape=[self.test_batch_size, self.z_dim],
+                                    name="z-test-noise")
+
+        # Sampler (kinda generator)
+        self.g_ano = self.sampler(self.z)
+
+        # Feature matcher (kinda discriminator)
+        self.fm_real = self.feature_match(self.x_ano)
+        self.fm_fake = self.feature_match(self.g_ano, reuse=True)
+
+        # Loss
+        g_ano_loss = tf.reduce_mean(l1_loss(self.x_ano, self.g_ano))
+        fm_ano_loss = tf.reduce_mean(l1_loss(self.fm_real, self.fm_fake))
+
+        self.anomaly_loss = (1. - self.lambda_) * g_ano_loss + self.lambda_ * fm_ano_loss
+
     def build_anogan(self):
         def l1_loss(x, y):
             return tf.reduce_mean(tf.abs(x - y))
-
-        def sce_loss(logits, label):
-            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label))
 
         # Generator
         self.g = self.generator(self.z)
@@ -220,7 +274,6 @@ class AnoGAN:
         d_fake_loss = tf.reduce_mean(l1_loss(self.g, d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = d_fake_loss
-        self.anomaly_loss = (1. - self.lambda_) * 1 + self.lambda_ * self.d_loss
 
         # Summary
         # tf.summary.histogram("z-noise", self.z)

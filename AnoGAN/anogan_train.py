@@ -5,6 +5,7 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
+import os
 import sys
 import time
 
@@ -38,21 +39,40 @@ def main():
 
     with tf.Session(config=config) as s:
         # AnoGAN Model
-        model = anogan.AnoGAN(s)  # AnoGAN
+        # anomalies detect off (just training model)  -> False
+        # anomalies detect on  (based on trained model-> True
+        if not os.path.exists('./model'):
+            detection = False
+        else:
+            detection = True
+
+        model = anogan.AnoGAN(s, detect=detection)  # AnoGAN
+
+        global_step = 0
+        if detection:
+            # Load model & Graph & Weights
+            ckpt = tf.train.get_checkpoint_state('./model/')
+            if ckpt and ckpt.model_checkpoint_path:
+                # Restores from checkpoint
+                model.saver.restore(s, ckpt.model_checkpoint_path)
+
+                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+                print("[+] global step : %s" % global_step, " successfully loaded")
+            else:
+                print('[-] No checkpoint file found')
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
+        ds = DataSet(input_height=64,  # in the paper, 108
+                     input_width=64,   # in the paper, 108
                      input_channel=3,
                      mode='r').images
         # To-Do
         # Getting anomaly data
 
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                    label_off=True)
+        dataset_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
 
         sample_x = ds[:model.sample_num]
         sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
@@ -66,7 +86,6 @@ def main():
         # Generated image save
         iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
 
-        global_step = 0
         for epoch in range(train_step['epoch']):
             for batch_images in dataset_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
