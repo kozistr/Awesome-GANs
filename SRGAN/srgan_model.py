@@ -49,8 +49,8 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
 
 class SRGAN:
 
-    def __init__(self, s, batch_size=16, input_height=28, input_width=28, input_channel=1,
-                 sample_num=28 * 28, sample_size=28, output_height=28, output_width=28,
+    def __init__(self, s, batch_size=16, input_height=384, input_width=384, input_channel=3,
+                 sample_num=1 * 1, sample_size=1, output_height=384, output_width=384,
                  df_dim=64, gf_dim=64,
                  g_lr=1e-4, d_lr=1e-4):
 
@@ -85,7 +85,7 @@ class SRGAN:
         self.input_width = input_width
         self.input_channel = input_channel
 
-        self.lr_image_shape = [None, self.input_height // 2, self.input_width // 2, self.input_channel]
+        self.lr_image_shape = [None, self.input_height // 4, self.input_width // 4, self.input_channel]
         self.hr_image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
         self.sample_num = sample_num
@@ -141,7 +141,7 @@ class SRGAN:
             x = tf.layers.flatten(x)  # (-1, 7 * 7 * 8 * 64)
 
             x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
-            x = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d-fc-1')
+            x = tf.layers.dense(x, 1, name='d-fc-1')
 
             return x
 
@@ -199,13 +199,20 @@ class SRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Following LSGAN Loss
-        d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = (d_real_loss + d_fake_loss) / 2.
-        self.g_loss = mse_loss(d_fake, tf.ones_like(d_fake))
+        # d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
+        # d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
+        # self.d_loss = (d_real_loss + d_fake_loss) / 2.
+        # self.g_loss = mse_loss(d_fake, tf.ones_like(d_fake))
+        d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real,
+                                                                             labels=tf.ones_like(d_real)))
+        d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
+                                                                             labels=tf.zeros_like(d_fake)))
+        self.d_loss = d_real_loss + d_fake_loss
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
+                                                                             labels=tf.ones_like(d_fake)))
+
 
         # Summary
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
