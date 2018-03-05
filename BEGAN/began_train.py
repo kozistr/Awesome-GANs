@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 64,
+    'epoch': 150,
     'batch_size': 64,
-    'logging_step': 2500,
+    'logging_step': 5000,
 }
 
 
@@ -44,10 +44,10 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
+        ds = DataSet(input_height=64,
+                     input_width=64,
                      input_channel=3,
-                     mode='r').images
+                     mode='w').images
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
