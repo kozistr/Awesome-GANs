@@ -12,7 +12,7 @@ import srgan_model as srgan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import MNISTDataSet as DataSet
+from datasets import Div2KDataSet as DataSet
 
 
 results = {
@@ -30,9 +30,9 @@ train_step = {
 def resize(s, x):
     x = tf.convert_to_tensor(x, dtype=tf.float32)  # ndarray to tensor
 
-    x_small = tf.image.resize_images(x, [14, 14],
+    x_small = tf.image.resize_images(x, [96, 96],
                                      tf.image.ResizeMethod.BICUBIC)  # LR image
-    x_nearest = tf.image.resize_images(x_small, [28, 28],
+    x_nearest = tf.image.resize_images(x_small, [384, 384],
                                        tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # HR image
 
     x_small = s.run(x_small)      # tensor to ndarray
@@ -44,8 +44,8 @@ def resize(s, x):
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST Dataset load
-    mnist = DataSet().data
+    # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
+    div2k = DataSet()
 
     # GPU configure
     config = tf.ConfigProto()
