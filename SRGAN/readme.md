@@ -18,3 +18,4 @@
 
 ## To-Do
 * Add Loss Function & Explains
+* Maybe, another time, adding VGG19 feature.
