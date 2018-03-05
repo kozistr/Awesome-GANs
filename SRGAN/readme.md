@@ -14,8 +14,7 @@
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**Skip**  | too much time is | taken on my machine | 
+****  |  |  | 
 
 ## To-Do
-* Skip tensorboard result
 * Add Loss Function & Explains
