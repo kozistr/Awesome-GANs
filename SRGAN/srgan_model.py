@@ -44,8 +44,7 @@ def batch_norm(x, momentum=0.9, eps=1e-9):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
-                                         scale=True,
-                                         training=True)
+                                         scale=True)
 
 
 class SRGAN:
@@ -85,6 +84,7 @@ class SRGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+
         self.lr_image_shape = [None, self.input_height // 2, self.input_width // 2, self.input_channel]
         self.hr_image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
@@ -96,20 +96,14 @@ class SRGAN:
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
-        self.beta1 = 0.9
-        self.beta2 = 0.999
+        self.beta1 = 0.5
+        self.beta2 = 0.9
         self.d_lr = d_lr
         self.g_lr = g_lr
-        self.lr_decay_rate = 0.5
-        self.lr_low_boundary = 1e-5
-
-        # LR update
-        # self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
-        # self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
         # pre-defined
-        self.d_real = 0
-        self.d_fake = 0
+        self.d_real = 0.
+        self.d_fake = 0.
         self.d_loss = 0.
         self.g_loss = 0.
 
@@ -128,20 +122,18 @@ class SRGAN:
     def discriminator(self, x, reuse=None):
         """
         # Following a network architecture referred in the paper
-        # For MNIST
-        :param x: images (-1, 28, 28, 1)
+        :param x: Input images (-1, 28, 28, 1)
         :param reuse: re-usability
-        :return: prob
+        :return: HR (High Resolution) or SR (Super Resolution) images
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = conv2d(x, self.df_dim, act=tf.nn.leaky_relu, name='d-conv2d-0')
+            x = conv2d(x, self.df_dim, act=tf.nn.leaky_relu, name='n64s1-1')
 
-            strides = [1, 2]        # [2, 1]
-            filters = [2, 4, 4, 8]  # [2, 4, 4, 4, 4, 8, 8]
-            filters = list(map(lambda fs: fs * self.df_dim, filters))
+            strides = [2, 1]
+            filters = [1, 2, 2, 4, 4, 8, 8]
 
             for i, f in enumerate(filters):
-                x = conv2d(x, f=f, d=strides[i % 2], name='d-conv2d-%d' % (i + 1))
+                x = conv2d(x, f=f, d=strides[i % 2], name='n%ds%d-%d' % (f, strides[i % 2], i + 1))
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
@@ -157,46 +149,47 @@ class SRGAN:
         """
         # For MNIST
         :param x: LR (Low Resolution) images, (-1, 14, 14, 1)
-        :param reuse: re-usability
-        :return: prob
+        :param reuse: scope re-usability
+        :return: SR (Super Resolution) images, (-1, 28, 28, 1)
         """
+
         with tf.variable_scope("generator", reuse=reuse):
             def residual_block(x, name):
                 with tf.variable_scope(name):
-                    x = conv2d(x, self.gf_dim, name=name)
+                    x = conv2d(x, self.gf_dim, name="n64s1-2")
                     x = batch_norm(x)
                     x = tf.nn.relu(x)
 
                     return x
 
-            x = conv2d(x, self.gf_dim, act=tf.nn.relu, name='g-conv2d-0')
+            x = conv2d(x, self.gf_dim, act=tf.nn.relu, name='n64s1-1')
             x_ = x  # for later, used at layer concat
 
             # B residual blocks
-            for i in range(1, 9):  # (1, 17)
-                xx = residual_block(x, name='g-residual_block_%d' % (i * 2 - 1))
-                xx = residual_block(xx, name='g-residual_block_%d' % (i * 2))
+            for i in range(1, 17):  # (1, 9)
+                xx = residual_block(x, name='b-residual_block_%d' % (i * 2 - 1))
+                xx = residual_block(xx, name='b-residual_block_%d' % (i * 2))
                 xx = tf.add(x, xx)
                 x = xx
 
-            x = conv2d(x, self.gf_dim, name='g-conv2d-1')
+            x = conv2d(x, self.gf_dim, name='n64s1-3')
             x = batch_norm(x)
 
             x = tf.add(x_, x)
 
-            for i in range(1, 2):
-                x = conv2d(x, self.gf_dim * 4, name='g-conv2d-%d' % (i + 2))
+            for i in range(1, 3):
+                x = conv2d(x, self.gf_dim * 4, name='n256s1-%d' % (i + 2))
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, k=1, name='g-conv2d-5')  # (-1, 28, 28, 1)
+            x = conv2d(x, self.input_channel, k=1, name='n3s1')  # (-1, 28, 28, 1)
             x = tf.nn.sigmoid(x)
 
             return x
 
     def build_srgan(self):
         def mse_loss(pred, data, n=self.batch_size):
-            return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n
+            return tf.reduce_sum(tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n)
 
         # Generator
         self.g = self.generator(self.x_lr)
@@ -206,13 +199,13 @@ class SRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Following LSGAN Loss
-        d_real_loss = tf.reduce_sum(mse_loss(d_real, tf.ones_like(d_real)))
-        d_fake_loss = tf.reduce_sum(mse_loss(d_fake, tf.zeros_like(d_fake)))
+        d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
-        self.g_loss = tf.reduce_sum(mse_loss(d_fake, tf.ones_like(d_fake)))
+        self.g_loss = mse_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
-        tf.summary.image("g", self.g)  # generated images by Generative Model
+        # tf.summary.image("g", self.g)  # generated images by Generative Model
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
         tf.summary.scalar("d_loss", self.d_loss)
