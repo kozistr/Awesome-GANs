@@ -22,8 +22,8 @@ results = {
 }
 
 train_step = {
-    'global_step': 200001,
-    'logging_interval': 2000,
+    'global_step': 300001,
+    'logging_interval': 3000,
 }
 
 
