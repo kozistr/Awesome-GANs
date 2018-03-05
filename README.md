@@ -45,7 +45,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * CiFar-100
 * Celeb-A
 * pix2pix DataSets
-* ~~ImageNet~~
+* ~~ImageNet DataSets~~
+* ~~DIV2K DataSets~~
 * (more DataSets will be added soon!)
 
 ## Repo Tree
