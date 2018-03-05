@@ -44,9 +44,11 @@ DataSets = {
     # 'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
     # 'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
     # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
+    # DIV2K DataSet
+    'div2k-dsx4': '/home/zero/Desktop/div2k/',
     # Windows
     # MNIST
-    'mnist': 'D:\\DataSet\\MNIST\\',
+    # 'mnist': 'D:\\DataSet\\MNIST\\',
     # CiFar-10, 100
     'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
     'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
@@ -610,6 +612,18 @@ class Pix2PixDataSet:
         print("[+] Image size : ", pix2pix.shape)
 
         return pix2pix / 255.
+
+
+class ImageNetDataSet:
+
+    def __init__(self):
+        pass
+
+
+class Div2KDataSet:
+
+    def __init__(self):
+        pass
 
 
 class DataIterator:
