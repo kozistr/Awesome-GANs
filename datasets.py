@@ -622,8 +622,36 @@ class ImageNetDataSet:
 
 class Div2KDataSet:
 
-    def __init__(self):
-        pass
+    def __init__(self, batch_size=128, input_height=384, input_width=384, input_channel=3,
+                 output_height=384, output_width=384, output_channel=3,
+                 split_rate=0.2, random_state=42, num_threads=8, mode='w'):
+
+        """
+        # General Settings
+        :param batch_size: training batch size, default 128
+        :param input_height: input image height, default 384
+        :param input_width: input image width, default 384
+        :param input_channel: input image channel, default 3 (RGB)
+        - in case of Div2K - ds x4, image size is 384x384x3(HWC).
+
+        # Output Settings
+        :param output_height: output images height, default 384
+        :param output_width: output images width, default 384
+        :param output_channel: output images channel, default 3
+
+        # Pre-Processing Option
+        :param split_rate: image split rate (into train & test), default 0.2
+        :param random_state: random seed for shuffling, default 42
+        :param num_threads: the number of threads for multi-threading, default 8
+
+        # DataSet Option
+        :param mode: h5 file mode(RW), default w
+        """
+
+        self.batch_size = batch_size
+        self.input_height = input_height
+        self.input_width = input_width
+        self.input_channel = input_channel
 
 
 class DataIterator:
