@@ -101,11 +101,11 @@ def main():
                                                                     })
 
                     # Print loss
-                    print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss),
-                          " k : {:.8f}".format(k),
-                          " M : {:.8f}".format(m_global))
+                    print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
+                          " D loss : {:.6f}".format(d_loss),
+                          " G loss : {:.6f}".format(g_loss),
+                          " k : {:.6f}".format(k),
+                          " M : {:.6f}".format(m_global))
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
