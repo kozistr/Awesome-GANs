@@ -4,17 +4,17 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 ## Environments
 ### Local Environment
 * OS  : Windows 10 Edu x86-64 / Linux Ubuntu 16.04 x86-64
-* CPU : i7-7700K
+* CPU : i7-7700K / E3-1270 v5
 * GPU : GTX 1060 6GB
 * RAM : DDR4 16GB
-* Library : TF 1.5 with CUDA 9.0 + cuDNN 7.0
+* Library : TF 1.6 with CUDA 9.0 + cuDNN 7.0
 * Python 3.x
 ### Preferred Environment
 * OS  : Linux Ubuntu 14.04 x86-64 ~
 * CPU : any (quad core ~)
 * GPU : GTX 1060 6GB ~
 * RAM : DDR4 16GB ~
-* Library : TF 1.4~ with CUDA 8.0~ + cuDNN 7.0~
+* Library : TF 1.6~ with CUDA 9.0~ + cuDNN 7.0~
 * Python 3.x
 
 Because of the image and model size, (especially **BEGAN**, **SGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
@@ -25,9 +25,9 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
 * python 3.5+
-* tensorflow 1.4.0
+* tensorflow 1.6.0
 * scipy (some features are **deprecated**, they'll be replaced)
-* imageio 
+* imageio
 * pillow
 * h5py
 * tqdm
