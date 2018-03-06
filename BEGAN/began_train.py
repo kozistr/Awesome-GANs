@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 150,
-    'batch_size': 64,
-    'logging_step': 5000,
+    'epoch': 50,
+    'batch_size': 16,
+    'logging_step': 1000,
 }
 
 
@@ -33,8 +33,8 @@ def main():
     start_time = time.time()  # Clocking start
 
     # GPU configure
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
+    gpu_config = tf.GPUOptions(allow_growth=True)
+    config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
         # BEGAN Model
@@ -47,7 +47,7 @@ def main():
         ds = DataSet(input_height=64,
                      input_width=64,
                      input_channel=3,
-                     mode='w').images
+                     mode='r').images
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
@@ -129,6 +129,10 @@ def main():
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
+
+                # Learning Rate update
+                if global_step and global_step % model.lr_update_step == 0:
+                    s.run([model.g_lr_update, model.d_lr_update])
 
                 global_step += 1
 

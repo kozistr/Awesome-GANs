@@ -5,12 +5,13 @@ import numpy as np
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
     :param d: strides, default 2
+    :param reg: weight regularizer, defaulat 5e-4
     :param act: activation function, default elu
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
@@ -19,7 +20,7 @@ def conv2d(x, f=64, k=3, d=1, act=tf.nn.elu, pad='SAME', name='conv2d'):
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(reg),
                             bias_initializer=tf.zeros_initializer(),
                             activation=act,
                             padding=pad, name=name)
@@ -31,23 +32,23 @@ def resize_nn(x, size):
 
 class BEGAN:
 
-    def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
-                 sample_num=16 * 16, sample_size=16, output_height=64, output_width=64,
+    def __init__(self, s, batch_size=16, input_height=64, input_width=64, input_channel=3,
+                 sample_num=8 * 8, sample_size=64, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
                  gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 64
+        :param batch_size: training batch size, default 16
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 32x32x3(HWC).
+        - in case of Celeb-A, image size is 32x32x3/64x64x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 256
-        :param sample_size: sample image size, default 16
+        :param sample_num: the number of output images, default 64
+        :param sample_size: sample image size, default 64
         :param output_height: output images height, default 64
         :param output_width: output images width, default 64
 
@@ -99,6 +100,8 @@ class BEGAN:
         self.m_global = 0.
         self.balance = 0.
 
+        self.g = None
+
         self.k_update = None
         self.d_op = None
         self.g_op = None
@@ -110,64 +113,71 @@ class BEGAN:
         # LR/k update
         self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
 
+        self.lr_update_step = 100000
         self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
         self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
-                                name="x-image")                                        # (-1, 32, 32, 3)
+                                name="x-image")                                        # (-1, 32 or 64, 32 or 64, 3)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_began()  # build BEGAN model
 
     def encoder(self, x, reuse=None):
         """
-        :param x: images
+        :param x: Input images (32x32x3 or 64x64x3)
         :param reuse: re-usable
         :return: embeddings
         """
         with tf.variable_scope('encoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            x = conv2d(x, f=self.df_dim, name="enc-conv-0")
+            x = conv2d(x, f=self.df_dim, act=tf.nn.elu, name="enc-conv-0")
 
             for i in range(1, repeat + 1):
                 f = self.df_dim * i
 
-                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=f, name="enc-conv-%d" % (i * 2))
+                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2))
 
                 if i < repeat:
+                    """
+                    You can choose one of them. max-pool or avg-pool or conv-pool.
+                    Speed Order : conv-pool > avg-pool > max-pool. i guess :)
+                    """
                     # x = tf.layers.max_pooling2d(x, 2, 2)
-                    x = conv2d(x, f=f, d=2, name='enc-conv-pool-%d' % i)  # conv pooling
+                    x = conv2d(x, f=f, d=2, act=tf.nn.elu, name='enc-conv-pool-%d' % i)  # conv pooling
                     # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
-            x = tf.layers.flatten(x)
-            x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')
+            x = tf.layers.flatten(x)                                 # (-1,)
+            x = tf.reshape(x, shape=(-1, 8, 8, self.input_channel))  # (-1, 8, 8, 3)
 
-            return x
+            z = tf.layers.dense(x, units=self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
 
-    def decoder(self, x, reuse=None):
+            return z
+
+    def decoder(self, z, reuse=None):
         """
-        :param x: embeddings
+        :param z: embeddings
         :param reuse: re-usable
         :return: logits
         """
         with tf.variable_scope('decoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            # x = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='dec-fc-1')
+            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2))
+                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2))
 
                 if i < repeat:
                     x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
-            x = conv2d(x, self.input_channel)
+            x = conv2d(x, f=self.input_channel)
 
             return x
 
@@ -178,8 +188,8 @@ class BEGAN:
         :return: logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = self.encoder(x, reuse=reuse)
-            x = self.decoder(x, reuse=reuse)
+            z = self.encoder(x, reuse=reuse)
+            x = self.decoder(z, reuse=reuse)
 
             return x
 
@@ -196,13 +206,13 @@ class BEGAN:
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2))
+                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2 - 1))
+                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2))
 
                 if i < repeat:
                     x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
-            x = conv2d(x, 3)
+            x = conv2d(x, f=self.input_channel)
 
             return x
 
@@ -231,9 +241,10 @@ class BEGAN:
         self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
+        # tf.summary.histogram("z-noise", self.z)
 
         # tf.summary.image("g", self.g)  # generated images by Generative Model
+
         tf.summary.scalar("d_loss", self.d_loss)
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
