@@ -52,7 +52,7 @@ def main():
         d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
+            # batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
             batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
             batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
@@ -79,7 +79,7 @@ def main():
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
+                # batch_x = np.reshape(batch_x, [model.batch_size, model.n_input])
                 batch_z_0 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
                 batch_z_1 = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 

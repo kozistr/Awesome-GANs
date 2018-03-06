@@ -40,7 +40,7 @@ def deconv2d(x, f=64, k=5, d=2, pad='SAME', name='deconv2d'):
                                       padding=pad, name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-9):
+def batch_norm(x, momentum=0.9, eps=1e-5):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
@@ -57,7 +57,7 @@ class SGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1,
                  n_classes=10, n_input=784, sample_size=8, sample_num=64,
-                 z_dim=100, gf_dim=128, df_dim=96, fc_unit=256):
+                 z_dim=128, gf_dim=128, df_dim=96, fc_unit=256):
 
         """
         # General Settings
@@ -104,8 +104,8 @@ class SGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name='x-images')
         self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')
-        self.z_0 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-1')
-        self.z_1 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-2')
+        self.z_1 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-1')
+        self.z_2 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-2')
 
         # Training Options
         self.beta1 = 0.5
@@ -147,7 +147,7 @@ class SGAN:
 
             for i in range(1, 3):
                 x = conv2d(x, self.df_dim, name='enc-conv2d-%d' % i)
-                x = tf.nn.leaky_relu(x)
+                x = tf.nn.leaky_relu(x)  # tf.nn.relu(x)
                 # x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, name='enc-max_pool2d-%d' % i)
 
             x = tf.layers.flatten(x)
@@ -158,7 +158,7 @@ class SGAN:
             logits = tf.layers.dense(x, self.n_classes, name='enc-fc-2')
             prob = tf.nn.softmax(logits)
 
-            return x, prob
+            return logits, prob
 
     def discriminator_1(self, x, reuse=None):
         """
@@ -171,9 +171,9 @@ class SGAN:
                 x = tf.layers.dense(x, self.fc_unit, name='d_1-fc-%d' % i)
 
             z = tf.layers.dense(x, self.z_dim, activation=tf.nn.sigmoid, name='d_1-fc-3')
-            prob = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d_1-fc-4')
+            logits = tf.layers.dense(x, self.input_channel, name='d_1-fc-4')
 
-            return z, prob
+            return z, logits
 
     def discriminator_0(self, x, reuse=None):
         """
@@ -201,15 +201,15 @@ class SGAN:
             x = tf.layers.dense(x, self.fc_unit, name='d_0-fc-1')
 
             z = tf.layers.dense(x, self.z_dim, activation=tf.nn.sigmoid, name='d_0-fc-2')
-            prob = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d_0-fc-3')
+            logits = tf.layers.dense(x, self.input_channel, name='d_0-fc-3')
 
-            return z, prob
+            return z, logits
 
     def generator_1(self, z, y, reuse=None):
         with tf.variable_scope('generator_1', reuse=reuse):
-            # z : (batch_size, 100)
-            # y : (batch_size, 10)
-            # x : (batch_size, 110)
+            # z1 : (batch_size, 64)
+            # y  : (batch_size, 10)
+            # x  : (batch_size, 74)
             x = tf.concat([z, y], axis=1)
 
             x = tf.layers.dense(x, self.fc_unit * 2, name='g_1-fc-1')
@@ -230,9 +230,9 @@ class SGAN:
             z = tf.layers.dense(z, self.gf_dim, name='g_0-fc-1')
             z = tf.nn.leaky_relu(z)
 
-            # z : (batch_size, 100)
+            # z : (batch_size, 128)
             # h : (batch_size, 256)
-            # x : (batch_size, 356)
+            # x : (batch_size, 374)
             x = tf.concat([h, z], axis=1)
 
             x = tf.layers.dense(x, self.gf_dim * 7 * 7, name='g_0-fc-2')
@@ -248,71 +248,60 @@ class SGAN:
                 x = tf.nn.leaky_relu(x)
 
             logits = deconv2d(x, self.input_channel, d=1, name='g_0-deconv2d-3')  # 28x28x1
-            prob = tf.nn.sigmoid(logits)
+            # prob = tf.nn.sigmoid(logits)
 
-            return prob
+            return logits
 
     def bulid_sgan(self):
         # Generator
-        self.g_1 = self.generator_1(self.z_1, self.y)    # embeddings
-        self.g_0 = self.generator_0(self.z_0, self.g_1)  # generated image
+        self.g_1 = self.generator_1(self.z_2, self.y)    # embeddings
+        self.g_0 = self.generator_0(self.z_1, self.g_1)  # generated image
 
         # Encoder
-        enc_real_f_prob, enc_real_c_prob = self.encoder(self.x)
-        enc_fake_f_prob, enc_fake_c_prob = self.encoder(self.g_0, reuse=True)
+        enc_real_c, enc_real_f_prob = self.encoder(self.x)
+        enc_fake_c, enc_fake_f_prob = self.encoder(self.g_0, reuse=True)
 
         # Discriminator
-        d_1_real_z_prob, d_1_real_prob = self.discriminator_1(enc_real_f_prob)
-        d_1_fake_z_prob, d_1_fake_prob = self.discriminator_1(self.g_1, reuse=True)
-        d_0_real_z_prob, d_0_real_prob = self.discriminator_0(self.x)
-        d_0_fake_z_prob, d_0_fake_prob = self.discriminator_0(self.g_0, reuse=True)
+        d_1_real_z_prob, d_1_real = self.discriminator_1(enc_real_f_prob)
+        d_1_fake_z_prob, d_1_fake = self.discriminator_1(self.g_1, reuse=True)
+        d_0_real_z_prob, d_0_real = self.discriminator_0(self.x)
+        d_0_fake_z_prob, d_0_fake = self.discriminator_0(self.g_0, reuse=True)
 
         # Losses
         # Discriminator 1
-        d_1_real_loss = -tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_real_prob,
-                                                                                labels=tf.ones_like(d_1_real_prob)))
-        d_1_fake_loss = -tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake_prob,
-                                                                                labels=tf.zeros_like(d_1_fake_prob)))
-        g_1_ent = tf.reduce_mean(tf.square(d_1_fake_z_prob - self.z_1))
+        d_1_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_real,
+                                                                               labels=tf.ones_like(d_1_real)))
+        d_1_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake,
+                                                                               labels=tf.zeros_like(d_1_fake)))
+        g_1_ent = tf.reduce_mean(tf.square(d_1_fake_z_prob - self.z_2))
         self.d_1_loss = 0.5 * self.d_w_loss * (d_1_real_loss + d_1_fake_loss) + self.e_w_loss * g_1_ent
 
         # Discriminator 0
-        d_0_real_loss = -tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_real_prob,
-                                                                                labels=tf.ones_like(d_0_real_prob)))
-        d_0_fake_loss = -tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake_prob,
-                                                                                labels=tf.zeros_like(d_0_fake_prob)))
-        g_0_ent = tf.reduce_mean(tf.square(d_0_fake_z_prob - self.z_0))
+        d_0_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_real,
+                                                                               labels=tf.ones_like(d_0_real)))
+        d_0_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake,
+                                                                               labels=tf.zeros_like(d_0_fake)))
+        g_0_ent = tf.reduce_mean(tf.square(d_0_fake_z_prob - self.z_1))
         self.d_0_loss = 0.5 * self.d_w_loss * (d_0_real_loss + d_0_fake_loss) + self.e_w_loss * g_0_ent
 
         # Generator 1
-        g_1_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake_prob,
-                                                                              labels=tf.ones_like(d_1_fake_prob)))
-        g_1_cond_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=enc_real_c_prob,
+        g_1_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake,
+                                                                              labels=tf.ones_like(d_1_fake)))
+        g_1_cond_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=enc_real_c,
                                                                                labels=self.y))
         self.g_1_loss = self.d_w_loss * g_1_adv_loss + self.c_w_loss * g_1_cond_loss + self.e_w_loss * g_1_ent
 
         # Generator 0
-        g_0_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake_prob,
-                                                                              labels=tf.ones_like(d_0_fake_prob)))
+        g_0_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake,
+                                                                              labels=tf.ones_like(d_0_fake)))
         g_0_cond_loss = tf.reduce_mean(tf.square(enc_fake_f_prob - enc_real_f_prob))
         self.g_0_loss = self.d_w_loss * g_0_adv_loss + self.c_w_loss * g_0_cond_loss + self.e_w_loss * g_0_ent
 
         # Summary
-        tf.summary.histogram("z_0", self.z_0)
-        tf.summary.histogram("z_1", self.z_1)
-
-        g_0 = tf.reshape(self.g_0, [-1] + self.image_shape)
-        tf.summary.image("g_0", g_0)  # generated image from G model
-
-        tf.summary.histogram("d_1_real_loss", d_1_real_loss)
-        tf.summary.histogram("d_1_fake_loss", d_1_fake_loss)
-        tf.summary.histogram("d_0_real_loss", d_0_real_loss)
-        tf.summary.histogram("d_0_fake_loss", d_0_fake_loss)
-
-        tf.summary.scalar("d_1_loss", self.d_1_loss)
-        tf.summary.scalar("d_0_loss", self.d_0_loss)
-        tf.summary.scalar("g_1_loss", self.g_1_loss)
-        tf.summary.scalar("g_0_loss", self.g_0_loss)
+        tf.summary.scalar("loss/d_1_loss", self.d_1_loss)
+        tf.summary.scalar("loss/d_0_loss", self.d_0_loss)
+        tf.summary.scalar("loss/g_1_loss", self.g_1_loss)
+        tf.summary.scalar("loss/g_0_loss", self.g_0_loss)
 
         # Collect trainer values
         t_vars = tf.trainable_variables()
