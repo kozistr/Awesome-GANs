@@ -152,9 +152,9 @@ class BEGAN:
                     # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
             x = tf.layers.flatten(x)                                 # (-1,)
-            x = tf.reshape(x, shape=(-1, 8, 8, self.input_channel))  # (-1, 8, 8, 3)
+            # x = tf.reshape(x, shape=(-1, 8, 8, self.input_channel))  # (-1, 8, 8, 3)
 
-            z = tf.layers.dense(x, units=self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
+            z = tf.layers.dense(x, units=self.z_dim * 8 * 8, name='enc-fc-1')  # normally, (-1, 128)
 
             return z
 
@@ -167,8 +167,8 @@ class BEGAN:
         with tf.variable_scope('decoder', reuse=reuse):
             repeat = int(np.log2(self.input_height)) - 2
 
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, name='dec-fc-1')
-            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
+            # x = tf.layers.dense(z, units=self.z_dim * 8 * 8, name='dec-fc-1')
+            x = tf.reshape(z, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
                 x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2 - 1))
