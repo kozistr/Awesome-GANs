@@ -1,5 +1,5 @@
-import scipy.misc
 import numpy as np
+import imageio
 
 import tensorflow as tf
 
@@ -42,7 +42,7 @@ def merge(images, size):
 
 def img_save(images, size, path):
     image = np.squeeze(merge(images, size))
-    return scipy.misc.imsave(path, image)
+    return imageio.imwrite(path, image)
 
 
 def save_images(images, size, image_path):
