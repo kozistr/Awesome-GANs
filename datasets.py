@@ -6,7 +6,6 @@ import os
 import h5py
 import pickle as p
 import numpy as np
-import tensorflow as tf
 
 from glob import glob
 from tqdm import tqdm
