@@ -102,13 +102,14 @@ class SGAN:
         self.fc_unit = fc_unit
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input], name='x-images')
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name='y-classes')
-        self.z_0 = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise-1')
-        self.z_1 = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise-2')
+        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name='x-images')
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')
+        self.z_0 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-1')
+        self.z_1 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise-2')
 
         # Training Options
         self.beta1 = 0.5
+        self.beta2 = 0.9
         self.lr = 2e-4
 
         self.d_1_loss = 0.
@@ -182,7 +183,6 @@ class SGAN:
         """
         with tf.variable_scope('discriminator_0', reuse=reuse):
             x = tf.reshape(x, [-1] + self.image_shape)  # (-1, 28, 28, 1)
-
             x = gaussian_noise(x)
 
             x = conv2d(x, self.df_dim * 1, name='d_0-conv2d-1')
