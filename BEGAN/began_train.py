@@ -90,7 +90,7 @@ def main():
                                        })
 
                 if global_step % train_step['logging_step'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                    # batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     # Summary
                     _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
