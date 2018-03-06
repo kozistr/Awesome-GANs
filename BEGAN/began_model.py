@@ -33,7 +33,7 @@ def resize_nn(x, size):
 class BEGAN:
 
     def __init__(self, s, batch_size=16, input_height=64, input_width=64, input_channel=3,
-                 sample_num=8 * 8, sample_size=64, output_height=64, output_width=64,
+                 sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
                  gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
@@ -120,8 +120,10 @@ class BEGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
-                                name="x-image")                                        # (-1, 32 or 64, 32 or 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
+                                name="x-image")  # (-1, 32 or 64, 32 or 64, 3)
+        self.z = tf.placeholder(tf.float32,
+                                shape=[None, self.z_dim],
+                                name='z-noise')  # (-1, 128)
 
         self.build_began()  # build BEGAN model
 
@@ -241,17 +243,15 @@ class BEGAN:
         self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
-        # tf.summary.histogram("z-noise", self.z)
-
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
-
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
-        tf.summary.scalar("balance", self.balance)
-        tf.summary.scalar("m_global", self.m_global)
-        tf.summary.scalar("k_t", self.k)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("misc/balance", self.balance)
+        tf.summary.scalar("misc/m_global", self.m_global)
+        tf.summary.scalar("misc/k_t", self.k)
+        tf.summary.scalar("misc/d_lr", self.d_lr)
+        tf.summary.scalar("misc/g_lr", self.g_lr)
 
         # Optimizer
         t_vars = tf.trainable_variables()
