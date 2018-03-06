@@ -26,7 +26,8 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 ## Prerequisites
 * python 3.5+
 * tensorflow 1.4.0
-* scipy
+* scipy (some features are **deprecated**, they'll be replaced)
+* imageio 
 * pillow
 * h5py
 * tqdm
