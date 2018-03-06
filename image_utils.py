@@ -1,7 +1,6 @@
+import tensorflow as tf
 import numpy as np
 import imageio
-
-import tensorflow as tf
 
 
 def down_sampling(img):
@@ -10,8 +9,7 @@ def down_sampling(img):
     h2 = int(shape[1] // 2)
     w2 = int(shape[2] // 2)
 
-    return tf.image.resize_images(img, [h2, w2],
-                                  tf.image.ResizeMethod.BILINEAR)
+    return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
 
 
 def up_sampling(img):
@@ -20,12 +18,14 @@ def up_sampling(img):
     h2 = int(shape[1] * 2)
     w2 = int(shape[2] * 2)
 
-    return tf.image.resize_images(img, [h2, w2],
-                                  tf.image.ResizeMethod.BILINEAR)
+    return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
 
 
 def inverse_transform(images):
-    return (images + 1.) / 2.
+    images *= 255.
+    images[images > 255.] = 255.
+    images[images < 0.] = 0.
+    return images
 
 
 def merge(images, size):
