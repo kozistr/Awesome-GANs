@@ -11,7 +11,7 @@ def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
     :param f: filters, default 64
     :param k: kernel size, default 3
     :param d: strides, default 2
-    :param reg: weight regularizer, defaulat 5e-4
+    :param reg: weight regularizer, default 5e-4
     :param act: activation function, default elu
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
@@ -19,8 +19,9 @@ def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
     """
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(reg),
+                            # kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            # kernel_regularizer=tf.contrib.layers.l2_regularizer(reg),
+                            kernel_initializer=tf.random_normal_initializer(0., 0.02),
                             bias_initializer=tf.zeros_initializer(),
                             activation=act,
                             padding=pad, name=name)
