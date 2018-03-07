@@ -53,11 +53,6 @@ def save_images(images, size, image_path):
 
 def get_image(path, w, h):
     img = np.asarray(imageio.imread(path))
+    img = resize(img, (w, h))
 
-    orig_h, orig_w = img.shape[:2]
-    new_h = int(orig_h * w / orig_w)
-
-    img = resize(img, (new_h, w))
-    margin = int(round((new_h - h) / 2))
-
-    return img[margin:margin + h]
+    return img
