@@ -23,7 +23,7 @@ results = {
 
 train_step = {
     'epochs': 100,
-    'batch_size': 16,
+    'batch_size': 8,
     'logging_interval': 50,
 }
 
@@ -59,7 +59,7 @@ def main():
 
     with tf.Session(config=config) as s:
         # SRGAN Model
-        model = srgan.SRGAN(s)
+        model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
