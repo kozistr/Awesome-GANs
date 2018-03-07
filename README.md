@@ -5,7 +5,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 ### Local Environment
 * OS  : Windows 10 Edu x86-64 / Linux Ubuntu 16.04 x86-64
 * CPU : i7-7700K / E3-1270 v5
-* GPU : GTX 1060 6GB
+* GPU : GTX 1060 6GB / 1080 8GB
 * RAM : DDR4 16GB
 * Library : TF 1.6 with CUDA 9.0 + cuDNN 7.0
 * Python 3.x
