@@ -57,7 +57,7 @@ def get_image(path, w, h):
     orig_h, orig_w = img.shape[:2]
     new_h = int(orig_h * w / orig_w)
 
-    img = resize(img, (new_h, w), anti_alising=True)
+    img = resize(img, (new_h, w))
     margin = int(round((new_h - h) / 2))
 
     return img[margin:margin + h]
