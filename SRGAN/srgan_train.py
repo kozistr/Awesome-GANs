@@ -50,6 +50,9 @@ def main():
     hr_lr_images = ds.images
     hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
+    print("[+] Loaded HR image ", hr.shape)
+    print("[+] Loaded LR image ", lr.shape)
+
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
     config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_config)
@@ -79,8 +82,6 @@ def main():
         for epoch in range(train_step['epochs']):
 
             pointer = 0
-            x_hr, x_lr = None, None
-
             for i in range(ds.num_images // train_step['batch_size']):
                 start = pointer
                 pointer += train_step['batch_size']
@@ -90,14 +91,14 @@ def main():
                     perm = np.arange(ds.num_images)
                     np.random.shuffle(perm)
 
-                    x_hr, x_lr = hr[perm], lr[perm]
+                    hr, lr = hr[perm], lr[perm]
 
                     start = 0
                     pointer = train_step['batch_size']
 
                 end = pointer
 
-                batch_x_hr, batch_x_lr = x_hr[start:end], x_lr[start:end]
+                batch_x_hr, batch_x_lr = hr[start:end], lr[start:end]
 
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
