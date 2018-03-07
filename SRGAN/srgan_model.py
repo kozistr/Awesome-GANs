@@ -233,9 +233,6 @@ class SRGAN:
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
                                                                                         var_list=g_params)
-        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=g_real_loss,
-                                                                                             var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()

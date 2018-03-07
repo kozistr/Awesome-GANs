@@ -23,7 +23,7 @@ results = {
 
 train_step = {
     'global_step': 300001,
-    'logging_interval': 3000,
+    'logging_interval': 2500,
 }
 
 
@@ -45,11 +45,12 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    div2k = DataSet()
+    hr_lr_images = DataSet().images
+    hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
     # GPU configure
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
+    gpu_config = tf.GPUOptions(allow_growth=True)
+    config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
         # SRGAN Model
