@@ -110,8 +110,8 @@ def main():
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
-                                      model.x_lr: batch_x_lr,
                                       model.x_hr: batch_x_hr,
+                                      model.x_lr: batch_x_lr,
                                   })
 
                 # Update G network
@@ -123,8 +123,8 @@ def main():
                 if i % train_step['logging_interval'] == 0:
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                     feed_dict={
-                                                        model.x_lr: batch_x_lr,
                                                         model.x_hr: batch_x_hr,
+                                                        model.x_lr: batch_x_lr,
                                                     })
                     # Print loss
                     print("[+] Step %08d => " % global_step,
