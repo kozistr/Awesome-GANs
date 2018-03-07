@@ -66,8 +66,8 @@ def main():
 
         sample_x_hr, sample_x_lr = hr[:model.sample_num], lr[:model.sample_num]
         sample_x_hr, sample_x_lr = \
-            np.reshape(sample_x_hr, [-1] + model.hr_image_shape[1:]),\
-            np.reshape(sample_x_lr, [-1] + model.lr_image_shape[1:])
+            np.reshape(sample_x_hr, [model.sample_num] + model.hr_image_shape[1:]),\
+            np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
 
         sample_x_hr = np.reshape(sample_x_hr, [model.sample_num] + model.hr_image_shape[1:])
         sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
@@ -107,18 +107,12 @@ def main():
                 batch_x_hr = np.reshape(batch_x_hr, [train_step['batch_size']] + model.hr_image_shape[1:])
                 batch_x_lr = np.reshape(batch_x_lr, [train_step['batch_size']] + model.lr_image_shape[1:])
 
-                # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x_hr: batch_x_hr,
-                                      model.x_lr: batch_x_lr,
-                                  })
-
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x_lr: batch_x_lr,
-                                  })
+                # Update G/D network
+                _, d_loss, _, g_loss = s.run([model.d_op, model.d_loss, model.g_op, model.g_loss],
+                                             feed_dict={
+                                                 model.x_hr: batch_x_hr,
+                                                 model.x_lr: batch_x_lr,
+                                             })
 
                 if i % train_step['logging_interval'] == 0:
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
