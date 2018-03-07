@@ -69,6 +69,9 @@ def main():
             np.reshape(sample_x_hr, [-1] + model.hr_image_shape[1:]),\
             np.reshape(sample_x_lr, [-1] + model.lr_image_shape[1:])
 
+        sample_x_hr = np.reshape(sample_x_hr, [model.sample_num] + model.hr_image_shape[1:])
+        sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
+
         # Export real image
         valid_image_height = model.sample_size
         valid_image_width = model.sample_size
@@ -101,8 +104,8 @@ def main():
                 batch_x_hr, batch_x_lr = hr[start:end], lr[start:end]
 
                 # reshape
-                batch_x_hr = np.reshape(batch_x_hr, [-1] + model.hr_image_shape[1:])
-                batch_x_lr = np.reshape(batch_x_lr, [-1] + model.lr_image_shape[1:])
+                batch_x_hr = np.reshape(batch_x_hr, [train_step['batch_size']] + model.hr_image_shape[1:])
+                batch_x_lr = np.reshape(batch_x_lr, [train_step['batch_size']] + model.lr_image_shape[1:])
 
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
@@ -134,7 +137,7 @@ def main():
                                         model.x_lr: sample_x_lr,
                                     })
 
-                    samples = np.reshape(samples, [-1] + model.hr_image_shape[1:])
+                    samples = np.reshape(samples, [model.sample_num] + model.hr_image_shape[1:])
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
