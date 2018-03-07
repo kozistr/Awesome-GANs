@@ -44,7 +44,9 @@ DataSets = {
     # 'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
     # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # DIV2K DataSet
-    'div2k-dsx4': '/home/zero/hdd/DataSet/div2k/',
+    'div2k-hr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_HR/',
+    'div2k-lr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_LR_bicubic/',
+    'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/',
     # Windows
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
