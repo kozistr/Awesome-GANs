@@ -53,6 +53,6 @@ def save_images(images, size, image_path):
 
 def get_image(path, w, h):
     img = np.asarray(imageio.imread(path))
-    img = resize(img, (w, h))
+    img = resize(img, (w, h), mode='reflect')
 
     return img
