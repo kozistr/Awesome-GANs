@@ -1,3 +1,5 @@
+from skimage.transform import resize
+
 import tensorflow as tf
 import numpy as np
 import imageio
@@ -47,3 +49,15 @@ def img_save(images, size, path):
 
 def save_images(images, size, image_path):
     return img_save(inverse_transform(images), size, image_path)
+
+
+def get_image(path, w, h):
+    img = np.asarray(imageio.imread(path))
+
+    orig_h, orig_w = img.shape[:2]
+    new_h = int(orig_h * w / orig_w)
+
+    img = resize(img, (new_h, w), anti_alising=True)
+    margin = int(round((new_h - h) / 2))
+
+    return img[margin:margin + h]

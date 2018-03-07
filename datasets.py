@@ -14,6 +14,9 @@ from sklearn.model_selection import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
 
 
+import image_utils as iu
+
+
 DataSets = {
     # Linux
     # MNIST
@@ -673,17 +676,6 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
-        def get_image(path, w, h):
-            img = imread(path).astype(np.float)
-
-            orig_h, orig_w = img.shape[:2]
-            new_h = int(orig_h * w / orig_w)
-
-            img = imresize(img, (new_h, w))
-            margin = int(round((new_h - h) / 2))
-
-            return img[margin:margin + h]
-
         if mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
@@ -706,12 +698,10 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = get_image(f_name, self.input_hr_width, self.input_hr_height)
-                self.data_hr[n] = image.flatten()
+                self.data_hr[n] = iu.get_image(f_name, self.input_hr_width, self.input_hr_height).flatten()
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = get_image(f_name, self.input_lr_width, self.input_lr_height)
-                self.data_lr[n] = image.flatten()
+                self.data_lr[n] = iu.get_image(f_name, self.input_lr_width, self.input_lr_height).flatten()
 
             # write .h5 file for reusing later...
             with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
