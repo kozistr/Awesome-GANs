@@ -46,10 +46,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    ds = DataSet(input_width=384,
-                 input_height=384,
-                 input_channel=3,
-                 mode='w')
+    ds = DataSet(mode='w')
     hr_lr_images = ds.images
     hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
