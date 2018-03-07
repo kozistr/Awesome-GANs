@@ -667,13 +667,13 @@ class Div2KDataSet:
         self.mode = mode
 
         self.path = ""   # DataSet path
-        self.files = []  # files' name
-
-        self.data = []   # loaded images
+        self.files_hr, self.files_lr = [], []  # HR/LR files' name
+        self.data_hr, self.data_lr = [], []   # loaded images
         self.images = []
         self.num_images = 800
         self.num_images_val = 100
-        self.ds_name = ""  # DataSet Name (by image size)
+        self.hr_ds_name = "div2k_hr"  # DataSet Name
+        self.lr_ds_name = "div2k_lr"  # DataSet Name
 
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
@@ -690,23 +690,33 @@ class Div2KDataSet:
             return img[margin:margin + h]
 
         if mode == 'w':
-            self.files = glob(os.path.join(DataSets['div2k-hr'], "*.jpg"))
-            self.files = np.sort(self.files)
+            self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.jpg")))
+            self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.jpg")))
 
-            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
-                                 dtype=np.uint8)
+            self.data_hr = np.zeros((len(self.files_hr), self.input_height * self.input_width * self.input_channel),
+                                    dtype=np.uint8)
+            self.data_lr = np.zeros((len(self.files_lr), self.input_height * self.input_width * self.input_channel),
+                                    dtype=np.uint8)
 
-            print("[*] Image size : ", self.data.shape)
+            print("[*] HR Image size : ", self.data_hr.shape)
+            print("[*] LR Image size : ", self.data_lr.shape)
 
-            assert (len(self.files) == self.num_images)
+            assert (len(self.files_hr) == self.num_images && len(self.files_lr) == self.num_images)
 
-            for n, f_name in tqdm(enumerate(self.files)):
+            for n, f_name in tqdm(enumerate(self.files_hr)):
                 image = get_image(f_name, self.input_width, self.input_height)
-                self.data[n] = image.flatten()
+                self.data_hr[n] = image.flatten()
+
+            for n, f_name in tqdm(enumerate(self.files_lr)):
+                image = get_image(f_name, self.input_width, self.input_height)
+                self.data_lr[n] = image.flatten()
 
             # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
-                f.create_dataset("images", data=self.data)
+            with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
+                f.create_dataset("images", data=self.data_hr)
+
+            with h5py.File(''.join([DataSets[self.lr_ds_name]]), 'w') as f:
+                f.create_dataset("images", data=self.data_lr)
 
         self.images = self.load_data(size=self.num_images)
 
@@ -715,29 +725,35 @@ class Div2KDataSet:
             From great jupyter notebook by Tim Sainburg:
             http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
         """
-        with h5py.File(DataSets[self.ds_name], 'r') as hf:
-            faces = hf['images']
+        ds_names = [self.hr_ds_name, self.lr_ds_name]
+        hr_lr_images = []
 
-            full_size = len(faces)
-            if size is None:
-                size = full_size
+        for ds_name in ds_names:
+            with h5py.File(DataSets[ds_name], 'r') as hf:
+                faces = hf['images']
 
-            n_chunks = int(np.ceil(full_size / size))
-            if offset >= n_chunks:
-                print("[*] Looping from back to start.")
-                offset = offset % n_chunks
+                full_size = len(faces)
+                if size is None:
+                    size = full_size
 
-            if offset == n_chunks - 1:
-                print("[-] Not enough data available, clipping to end.")
-                faces = faces[offset * size:]
-            else:
-                faces = faces[offset * size:(offset + 1) * size]
+                n_chunks = int(np.ceil(full_size / size))
+                if offset >= n_chunks:
+                    print("[*] Looping from back to start.")
+                    offset = offset % n_chunks
 
-            faces = np.array(faces, dtype=np.float16)
+                if offset == n_chunks - 1:
+                    print("[-] Not enough data available, clipping to end.")
+                    faces = faces[offset * size:]
+                else:
+                    faces = faces[offset * size:(offset + 1) * size]
 
-        print("[+] Image size : ", faces.shape)
+                faces = np.array(faces, dtype=np.float16) / 225.
 
-        return faces / 255.
+                print("[+] Image size : ", faces.shape)
+
+                hr_lr_images.append(faces)
+
+        return hr_lr_images
 
 
 class DataIterator:
