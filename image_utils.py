@@ -51,6 +51,10 @@ def save_images(images, size, image_path):
     return img_save(inverse_transform(images), size, image_path)
 
 
+def save_image(img, path):
+    imageio.imwrite(path, inverse_transform(img))
+
+
 def get_image(path, w, h):
     img = np.asarray(imageio.imread(path))
     img = resize(img, (w, h), mode='reflect')
