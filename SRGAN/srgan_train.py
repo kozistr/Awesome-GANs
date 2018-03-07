@@ -100,6 +100,10 @@ def main():
 
                 batch_x_hr, batch_x_lr = hr[start:end], lr[start:end]
 
+                # reshape
+                batch_x_hr = tf.reshape(batch_x_hr, shape=[-1] + model.hr_image_shape[1:])
+                batch_x_lr = tf.reshape(batch_x_lr, shape=[-1] + model.lr_image_shape[1:])
+
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
