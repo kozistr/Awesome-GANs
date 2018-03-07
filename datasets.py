@@ -667,12 +667,12 @@ class Div2KDataSet:
         self.mode = mode
 
         self.path = ""   # DataSet path
-        self.files = ""  # files' name
+        self.files = []  # files' name
 
-        self.data = []  # loaded images
+        self.data = []   # loaded images
+        self.images = []
         self.num_images = 800
         self.num_images_val = 100
-        self.images = []
         self.ds_name = ""  # DataSet Name (by image size)
 
         self.div2k(mode=self.mode)  # load DIV2K DataSet
@@ -689,13 +689,8 @@ class Div2KDataSet:
 
             return img[margin:margin + h]
 
-        if self.input_height == 32:
-            self.ds_name = 'celeb-a-32x32-h5'
-        elif self.input_height == 64:
-            self.ds_name = 'celeb-a-64x64-h5'
-
         if mode == 'w':
-            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            self.files = glob(os.path.join(DataSets['div2k-hr'], "*.jpg"))
             self.files = np.sort(self.files)
 
             self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
