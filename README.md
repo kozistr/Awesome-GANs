@@ -28,6 +28,7 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * tensorflow 1.6.0
 * scipy (some features are **deprecated**, they'll be replaced)
 * imageio
+* scikit-image
 * pillow
 * h5py
 * tqdm
