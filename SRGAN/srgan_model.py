@@ -37,10 +37,11 @@ def conv2d(x, f=64, k=3, d=1, act=None, pad='SAME', name='conv2d'):
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
                             activation=act,
-                            padding=pad, name=name)
+                            padding=pad,
+                            name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-9):
+def batch_norm(x, momentum=0.9, eps=1e-5):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
@@ -60,14 +61,14 @@ class SRGAN:
         :param batch_size: training batch size, default 16
         :param input_height: input image height, default 28
         :param input_width: input image width, default 28
-        :param input_channel: input image channel, default 1 (RGB)
-        - in case of MNIST, image size is 28x28x1(HWC).
+        :param input_channel: input image channel, default 3 (RGB)
+        - in case of DIV2K-HR, image size is 384x384x1(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 784
-        :param sample_size: sample image size, default 28
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
+        :param sample_num: the number of output images, default 1
+        :param sample_size: sample image size, default 1
+        :param output_height: output images height, default 384
+        :param output_width: output images width, default 384
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
@@ -107,6 +108,7 @@ class SRGAN:
         self.d_loss = 0.
         self.g_loss = 0.
 
+        self.g = None
         self.g_gan_loss_weight = 1e-3
 
         self.d_op = None
@@ -125,7 +127,7 @@ class SRGAN:
     def discriminator(self, x, reuse=None):
         """
         # Following a network architecture referred in the paper
-        :param x: Input images (-1, 28, 28, 1)
+        :param x: Input images (-1, 384, 384, 3)
         :param reuse: re-usability
         :return: HR (High Resolution) or SR (Super Resolution) images
         """
@@ -140,7 +142,6 @@ class SRGAN:
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
-            # x : (-1, 7, 7, 8 * 64)
             x = tf.layers.flatten(x)  # (-1, 7 * 7 * 8 * 64)
 
             x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
@@ -151,9 +152,9 @@ class SRGAN:
     def generator(self, x, reuse=None):
         """
         # For MNIST
-        :param x: LR (Low Resolution) images, (-1, 14, 14, 1)
+        :param x: LR (Low Resolution) images, (-1, 96, 96, 3)
         :param reuse: scope re-usability
-        :return: SR (Super Resolution) images, (-1, 28, 28, 1)
+        :return: SR (Super Resolution) images, (-1, 384, 384, 3)
         """
 
         with tf.variable_scope("generator", reuse=reuse):
@@ -185,8 +186,7 @@ class SRGAN:
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, k=1, name='n3s1')  # (-1, 28, 28, 1)
-            x = tf.nn.sigmoid(x)
+            x = conv2d(x, self.input_channel, k=1, act=tf.nn.sigmoid, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
 
@@ -217,10 +217,10 @@ class SRGAN:
         self.g_loss = self.g_gan_loss_weight * g_gan_loss + g_real_loss
 
         # Summary
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
