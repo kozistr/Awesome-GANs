@@ -16,5 +16,7 @@
 :---: | :---: | :---: | :---:
 **BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_300000.png)
 
+> ```Took about 28800 seconds on GTX 1080.```
+
 ## To-Do
 * Add Loss Function & Explains
