@@ -698,7 +698,7 @@ class Div2KDataSet:
             print("[*] HR Image size : ", self.data_hr.shape)
             print("[*] LR Image size : ", self.data_lr.shape)
 
-            assert (len(self.files_hr) == self.num_images && len(self.files_lr) == self.num_images)
+            assert (len(self.files_hr) == self.num_images and len(self.files_lr) == self.num_images)
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
                 image = get_image(f_name, self.input_hr_width, self.input_hr_height)
