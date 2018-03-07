@@ -698,10 +698,20 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                self.data_hr[n] = iu.get_image(f_name, self.input_hr_width, self.input_hr_height).flatten()
+                image = iu.get_image(f_name, self.input_hr_width, self.input_hr_height).flatten()
+                try:
+                    self.data_hr[n] = image
+                except ValueError:
+                    print("[-] image size is : ", image.shape)
+                    raise ValueError
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                self.data_lr[n] = iu.get_image(f_name, self.input_lr_width, self.input_lr_height).flatten()
+                image = iu.get_image(f_name, self.input_lr_width, self.input_lr_height).flatten()
+                try:
+                    self.data_lr[n] = image
+                except ValueError:
+                    print("[-] image size is : ", image.shape)
+                    raise ValueError
 
             # write .h5 file for reusing later...
             with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
