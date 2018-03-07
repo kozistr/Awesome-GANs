@@ -670,8 +670,8 @@ class Div2KDataSet:
         self.images = []
         self.num_images = 800
         self.num_images_val = 100
-        self.hr_ds_name = "div2k_hr"  # DataSet Name
-        self.lr_ds_name = "div2k_lr"  # DataSet Name
+        self.hr_ds_name = "div2k-hr-h5"  # DataSet Name
+        self.lr_ds_name = "div2k-lr-h5"  # DataSet Name
 
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
