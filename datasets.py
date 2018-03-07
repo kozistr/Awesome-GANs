@@ -685,8 +685,8 @@ class Div2KDataSet:
             return img[margin:margin + h]
 
         if mode == 'w':
-            self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.jpg")))
-            self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.jpg")))
+            self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
+            self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
 
             self.data_hr = np.zeros((len(self.files_hr),
                                      self.input_hr_height * self.input_hr_width * self.input_channel),
@@ -701,8 +701,8 @@ class Div2KDataSet:
             try:
                 assert ((len(self.files_hr) == self.num_images) and (len(self.files_lr) == self.num_images))
             except AssertionError:
-                print("[-] The number of HR images : %d" % self.files_hr)
-                print("[-] The number of LR images : %d" % self.files_lr)
+                print("[-] The number of HR images : %d" % len(self.files_hr))
+                print("[-] The number of LR images : %d" % len(self.files_lr))
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
