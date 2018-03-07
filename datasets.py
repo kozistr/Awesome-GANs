@@ -22,10 +22,10 @@ DataSets = {
     # 'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
     # 'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
     # Celeb-A DataSet
-    'celeb-a': '/home/zero/hdd/Celeb-A/img_align_celeba/',
-    'celeb-a-attr': '/home/zero/hdd/Celeb-A/list_attr_celeba.txt',
-    'celeb-a-32x32-h5': '/home/zero/hdd/Celeb-A/celeb-a-32x32.h5',
-    'celeb-a-64x64-h5': '/home/zero/hdd/Celeb-A/celeb-a-64x64.h5',
+    'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
+    'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
+    'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
+    'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
     # pix2pix DataSets
     # 'ae_photos': '/home/zero/hdd/DataSet/pix2pix/ae_photos/',
     # 'apple2orange': '/home/zero/hdd/DataSet/pix2pix/apple2orange/',
@@ -44,7 +44,7 @@ DataSets = {
     # 'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
     # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # DIV2K DataSet
-    'div2k-dsx4': '/home/zero/Desktop/div2k/',
+    'div2k-dsx4': '/home/zero/hdd/DataSet/div2k/',
     # Windows
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
