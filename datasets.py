@@ -626,22 +626,19 @@ class ImageNetDataSet:
 
 class Div2KDataSet:
 
-    def __init__(self, batch_size=128, input_height=384, input_width=384, input_channel=3,
-                 output_height=384, output_width=384, output_channel=3,
+    def __init__(self, batch_size=128, input_hr_height=384, input_hr_width=384,
+                 input_lr_height=96, input_lr_width=96, input_channel=3,
                  split_rate=0.2, random_state=42, num_threads=16, mode='w'):
 
         """
         # General Settings
         :param batch_size: training batch size, default 128
-        :param input_height: input image height, default 384
-        :param input_width: input image width, default 384
+        :param input_hr_height: input HR image height, default 384
+        :param input_hr_width: input HR image width, default 384
+        :param input_lr_height: input LR image height, default 96
+        :param input_lr_width: input LR image width, default 96
         :param input_channel: input image channel, default 3 (RGB)
         - in case of Div2K - ds x4, image size is 384x384x3(HWC).
-
-        # Output Settings
-        :param output_height: output images height, default 384
-        :param output_width: output images width, default 384
-        :param output_channel: output images channel, default 3
 
         # Pre-Processing Option
         :param split_rate: image split rate (into train & test), default 0.2
@@ -653,13 +650,11 @@ class Div2KDataSet:
         """
 
         self.batch_size = batch_size
-        self.input_height = input_height
-        self.input_width = input_width
+        self.input_hr_height = input_hr_height
+        self.input_hr_width = input_hr_width
+        self.input_lr_height = input_lr_height
+        self.input_lr_width = input_lr_width
         self.input_channel = input_channel
-
-        self.output_height = output_height
-        self.output_width = output_width
-        self.output_channel = output_channel
 
         self.split_rate = split_rate
         self.random_state = random_state
@@ -693,9 +688,11 @@ class Div2KDataSet:
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.jpg")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.jpg")))
 
-            self.data_hr = np.zeros((len(self.files_hr), self.input_height * self.input_width * self.input_channel),
+            self.data_hr = np.zeros((len(self.files_hr),
+                                     self.input_hr_height * self.input_hr_width * self.input_channel),
                                     dtype=np.uint8)
-            self.data_lr = np.zeros((len(self.files_lr), self.input_height * self.input_width * self.input_channel),
+            self.data_lr = np.zeros((len(self.files_lr),
+                                     self.input_lr_height * self.input_lr_width * self.input_channel),
                                     dtype=np.uint8)
 
             print("[*] HR Image size : ", self.data_hr.shape)
@@ -704,11 +701,11 @@ class Div2KDataSet:
             assert (len(self.files_hr) == self.num_images && len(self.files_lr) == self.num_images)
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = get_image(f_name, self.input_width, self.input_height)
+                image = get_image(f_name, self.input_hr_width, self.input_hr_height)
                 self.data_hr[n] = image.flatten()
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = get_image(f_name, self.input_width, self.input_height)
+                image = get_image(f_name, self.input_lr_width, self.input_lr_height)
                 self.data_lr[n] = image.flatten()
 
             # write .h5 file for reusing later...
