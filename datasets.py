@@ -45,8 +45,11 @@ DataSets = {
     # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # DIV2K DataSet
     'div2k-hr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_HR/',
-    'div2k-lr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_LR_bicubic/',
-    'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/',
+    'div2k-hr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5',
+    'div2k-lr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_LR_bicubic/X4/',
+    'div2k-lr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr.h5',
+    'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/X4/',
+    'div2k-lr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr-val.h5',
     # Windows
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
@@ -625,7 +628,7 @@ class Div2KDataSet:
 
     def __init__(self, batch_size=128, input_height=384, input_width=384, input_channel=3,
                  output_height=384, output_width=384, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, mode='w'):
+                 split_rate=0.2, random_state=42, num_threads=16, mode='w'):
 
         """
         # General Settings
@@ -653,6 +656,93 @@ class Div2KDataSet:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+
+        self.output_height = output_height
+        self.output_width = output_width
+        self.output_channel = output_channel
+
+        self.split_rate = split_rate
+        self.random_state = random_state
+        self.num_threads = num_threads  # change this value to the fitted value for ur system
+        self.mode = mode
+
+        self.path = ""   # DataSet path
+        self.files = ""  # files' name
+
+        self.data = []  # loaded images
+        self.num_images = 800
+        self.num_images_val = 100
+        self.images = []
+        self.ds_name = ""  # DataSet Name (by image size)
+
+        self.div2k(mode=self.mode)  # load DIV2K DataSet
+
+    def div2k(self, mode):
+        def get_image(path, w, h):
+            img = imread(path).astype(np.float)
+
+            orig_h, orig_w = img.shape[:2]
+            new_h = int(orig_h * w / orig_w)
+
+            img = imresize(img, (new_h, w))
+            margin = int(round((new_h - h) / 2))
+
+            return img[margin:margin + h]
+
+        if self.input_height == 32:
+            self.ds_name = 'celeb-a-32x32-h5'
+        elif self.input_height == 64:
+            self.ds_name = 'celeb-a-64x64-h5'
+
+        if mode == 'w':
+            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            self.files = np.sort(self.files)
+
+            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
+                                 dtype=np.uint8)
+
+            print("[*] Image size : ", self.data.shape)
+
+            assert (len(self.files) == self.num_images)
+
+            for n, f_name in tqdm(enumerate(self.files)):
+                image = get_image(f_name, self.input_width, self.input_height)
+                self.data[n] = image.flatten()
+
+            # write .h5 file for reusing later...
+            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
+                f.create_dataset("images", data=self.data)
+
+        self.images = self.load_data(size=self.num_images)
+
+    def load_data(self, size, offset=0):
+        """
+            From great jupyter notebook by Tim Sainburg:
+            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
+        """
+        with h5py.File(DataSets[self.ds_name], 'r') as hf:
+            faces = hf['images']
+
+            full_size = len(faces)
+            if size is None:
+                size = full_size
+
+            n_chunks = int(np.ceil(full_size / size))
+            if offset >= n_chunks:
+                print("[*] Looping from back to start.")
+                offset = offset % n_chunks
+
+            if offset == n_chunks - 1:
+                print("[-] Not enough data available, clipping to end.")
+                faces = faces[offset * size:]
+            else:
+                faces = faces[offset * size:(offset + 1) * size]
+
+            faces = np.array(faces, dtype=np.float16)
+
+        print("[+] Image size : ", faces.shape)
+
+        return faces / 255.
 
 
 class DataIterator:
