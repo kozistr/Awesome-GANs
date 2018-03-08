@@ -194,6 +194,11 @@ class SRGAN:
 
     def vgg19(self, x, reuse=None):
         """
+        Download pre-trained model for tensorflow
+
+        Credited by https://github.com/tensorlayer
+        Link : https://mega.nz/#!xZ8glS6J!MAnE91ND_WyfZ_8mvkuSa2YcA7q-1ehfSm-Q1fxOvvs
+
         :param x: 224x224x3 HR images
         :param reuse: re-usability
         :return: prob
