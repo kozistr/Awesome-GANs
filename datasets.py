@@ -679,11 +679,11 @@ class Div2KDataSet:
         import cv2
 
         def hr_pre_processing(path, size=(384, 384)):
-            img = cv2.imread(path, 0) / 255.  # cv2.IMAGE_COLOR
+            img = cv2.imread(path, cv2.IMREAD_COLOR) / 255.
             return cv2.resize(img, size)
 
         def lr_pre_processing(path, size=(96, 96)):
-            img = cv2.imread(path, 0) / 255.
+            img = cv2.imread(path, cv2.IMREAD_COLOR) / 255.
             return cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
 
         if mode == 'w':
