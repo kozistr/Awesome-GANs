@@ -60,7 +60,7 @@ def get_image(path, w, h):
     img = cv2.resize(img, (w, h))
 
     # bgr to rgb
-    b, g, r = cv2.split(img)
-    img = cv2.merge([r, g, b])
+    # b, g, r = cv2.split(img)
+    # img = cv2.merge([r, g, b])
 
     return img
