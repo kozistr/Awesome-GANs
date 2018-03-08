@@ -678,11 +678,11 @@ class Div2KDataSet:
     def div2k(self, mode):
         import cv2
 
-        def hr_pre_processing(path, img, size=(384, 384)):
+        def hr_pre_processing(path, size=(384, 384)):
             img = cv2.imread(path, 0) / 255.  # cv2.IMAGE_COLOR
             return cv2.resize(img, size)
 
-        def lr_pre_processing(path, img, size=(96, 96)):
+        def lr_pre_processing(path, size=(96, 96)):
             img = cv2.imread(path, 0) / 255.
             return cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
 
@@ -708,7 +708,7 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = hr_pre_processing(f_name, self.input_hr_width, self.input_hr_height).flatten()
+                image = hr_pre_processing(f_name).flatten()
                 try:
                     self.data_hr[n] = image
                 except ValueError:
@@ -716,7 +716,7 @@ class Div2KDataSet:
                     raise ValueError
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = lr_pre_processing(f_name, self.input_lr_width, self.input_lr_height).flatten()
+                image = lr_pre_processing(f_name).flatten()
                 try:
                     self.data_lr[n] = image
                 except ValueError:
