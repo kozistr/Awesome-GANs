@@ -1,8 +1,7 @@
-from skimage.transform import resize
-
 import tensorflow as tf
 import numpy as np
 import imageio
+import cv2
 
 
 def down_sampling(img):
@@ -52,11 +51,11 @@ def save_images(images, size, image_path):
 
 
 def save_image(img, path):
-    imageio.imwrite(path, inverse_transform(img))
+    return cv2.imwrite(path, inverse_transform(img))
 
 
 def get_image(path, w, h):
-    img = np.asarray(imageio.imread(path))
-    img = resize(img, (w, h), mode='reflect')
+    img = np.asarray(cv2.imread(path))
+    img = cv2.resize(img, (w, h))
 
     return img
