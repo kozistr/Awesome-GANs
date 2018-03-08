@@ -251,9 +251,9 @@ class SRGAN:
 
             x = tf.layers.dense(x, units=4096, activation=tf.nn.relu, name='fc6')
             x = tf.layers.dense(x, units=4096, activation=tf.nn.relu, name='fc7')
-            x = tf.layers.dense(x, units=1000, activation=tf.nn.relu, name='fc8')
+            x = tf.layers.dense(x, units=1000, name='fc8')
 
-            return x, bottle_neck
+            return tf.identity(x), bottle_neck
 
     def build_srgan(self):
         def mse_loss(pred, data):
