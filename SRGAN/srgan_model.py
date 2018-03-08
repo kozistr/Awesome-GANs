@@ -89,6 +89,8 @@ class SRGAN:
         self.lr_image_shape = [None, self.input_height // 4, self.input_width // 4, self.input_channel]
         self.hr_image_shape = [None, self.input_height, self.input_width, self.input_channel]
 
+        self.vgg_image_shape = [224, 224, 3]
+
         self.sample_num = sample_num
         self.sample_size = sample_size
         self.output_height = output_height
@@ -111,7 +113,8 @@ class SRGAN:
         self.g_loss = 0.
 
         self.g = None
-        self.loss_weight = 1e-3
+        self.content_loss_weight = 1e-3
+        self.vgg_loss_weight = 2e-6
 
         self.d_op = None
         self.g_op = None
@@ -140,14 +143,14 @@ class SRGAN:
             filters = [1, 2, 2, 4, 4, 8, 8]
 
             for i, f in enumerate(filters):
-                x = conv2d(x, f=f, d=strides[i % 2], name='n%ds%d-%d' % (f, strides[i % 2], i + 1))
+                x = conv2d(x, f=f, s=strides[i % 2], name='n%ds%d-%d' % (f, strides[i % 2], i + 1))
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)  # (-1, 96 * 96 * 64)
 
             x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
-            x = tf.layers.dense(x, 1, activation=tf.nn.tanh, name='d-fc-1')
+            x = tf.layers.dense(x, 1, name='d-fc-1')
 
             return x
 
@@ -188,7 +191,7 @@ class SRGAN:
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, act=tf.nn.sigmoid, k=1, name='n3s1')  # (-1, 384, 384, 3)
+            x = conv2d(x, self.input_channel, act=tf.nn.tanh, k=1, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
 
@@ -260,7 +263,7 @@ class SRGAN:
             return tf.reduce_mean(tf.nn.l2_loss(pred - data))
 
         def sigmoid_loss(logits, label):
-            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label))
+            return tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label)
 
         # Generator
         self.g = self.generator(self.x_lr)
@@ -269,17 +272,30 @@ class SRGAN:
         d_real = self.discriminator(self.x_hr)
         d_fake = self.discriminator(self.g, reuse=True)
 
-        # Following LSGAN Loss
-        d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = self.loss_weight * (d_real_loss + d_fake_loss)
+        # VGG19
+        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2], method=0, align_corners=False)
+        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2], method=0, align_corners=False)
 
-        self.g_loss = self.loss_weight * mse_loss(d_fake, tf.ones_like(d_fake))  # + vgg_loss
+        vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1.) / 2.)
+        _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1.) / 2., reuse=True)
+
+        # Losses
+        d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = sigmoid_loss(d_fake, tf.zeros_like(d_fake))
+        self.d_loss = d_real_loss + d_fake_loss
+
+        g_cnt_loss = self.content_loss_weight * sigmoid_loss(d_fake, tf.ones_like(d_fake))
+        g_mse_loss = mse_loss(self.g, self.x_hr)
+        g_vgg_loss = self.vgg_loss_weight * mse_loss(vgg_bottle_fake, vgg_bottle_real)
+        self.g_loss =  g_cnt_loss + g_mse_loss + g_vgg_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_cnt_loss", g_cnt_loss)
+        tf.summary.scalar("loss/g_mse_loss", g_mse_loss)
+        tf.summary.scalar("loss/g_vgg_loss", g_vgg_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
@@ -293,6 +309,11 @@ class SRGAN:
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
                                                                                         var_list=g_params)
+
+        # pre-train
+        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=g_mse_loss,
+                                                                                             var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
