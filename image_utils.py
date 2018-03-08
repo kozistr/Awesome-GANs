@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import imageio
-import cv2
+from PIL import Image
 
 
 def down_sampling(img):
@@ -52,4 +52,4 @@ def save_images(images, size, image_path):
 
 def save_image(img, path):
     img = inverse_transform(img).astype(np.uint8)
-    return cv2.imwrite(path, img)
+    return img.save(path, "PNG")
