@@ -675,7 +675,7 @@ class Div2KDataSet:
     def div2k(self, mode):
         import scipy.misc
 
-        def get_image(path):
+        def _get_image(path):
             return scipy.misc.imread(path, mode='RGB')
 
         def hr_pre_process(img):
@@ -710,10 +710,10 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                self.data_hr[n] = hr_pre_process(get_image(f_name)).flatten()
+                self.data_hr[n] = hr_pre_process(_get_image(f_name)).flatten()
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                self.data_lr[n] = lr_pre_process(get_image(f_name)).flatten()
+                self.data_lr[n] = lr_pre_process(_get_image(f_name)).flatten()
 
             # write .h5 file for reusing later...
             with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
