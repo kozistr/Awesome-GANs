@@ -51,11 +51,16 @@ def save_images(images, size, image_path):
 
 
 def save_image(img, path):
-    return cv2.imwrite(path, inverse_transform(img))
+    img = inverse_transform(img).astype(np.uint8)
+    return cv2.imwrite(path, img)
 
 
 def get_image(path, w, h):
-    img = np.asarray(cv2.imread(path))
+    img = cv2.imread(path)
     img = cv2.resize(img, (w, h))
+
+    # bgr to rgb
+    b, g, r = cv2.split(img)
+    img = cv2.merge([r, g, b])
 
     return img
