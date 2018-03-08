@@ -46,7 +46,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    ds = DataSet(mode='r')
+    ds = DataSet(mode='w')
     hr_lr_images = ds.images
     hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
@@ -75,13 +75,13 @@ def main():
         sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
 
         # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
+        # valid_image_height = model.sample_size
+        # valid_image_width = model.sample_size
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
-        iu.save_images(sample_x_hr, size=[valid_image_height, valid_image_width], image_path=sample_hr_dir)
-        iu.save_images(sample_x_lr, size=[valid_image_height, valid_image_width], image_path=sample_lr_dir)
+        iu.save_image(sample_x_hr, sample_hr_dir)
+        iu.save_image(sample_x_lr, sample_lr_dir)
 
         global_step = 0
         for epoch in range(train_step['epochs']):
