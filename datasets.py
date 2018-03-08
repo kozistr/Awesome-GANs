@@ -14,9 +14,6 @@ from sklearn.model_selection import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
 
 
-import image_utils as iu
-
-
 DataSets = {
     # Linux
     # MNIST
@@ -676,6 +673,21 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
+        import scipy.misc
+
+        def get_image(path):
+            return scipy.misc.imread(path, mode='RGB')
+
+        def hr_pre_process(img):
+            img = scipy.misc.imresize(img, size=(self.input_hr_height, self.input_hr_width))
+            img = (img / 127.5) - 1.
+            return img
+
+        def lr_pre_process(img):
+            img = scipy.misc.imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
+            img = (img / 127.5) - 1.
+            return img
+
         if mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
@@ -698,24 +710,10 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = iu.pre_processing(f_name,
-                                          size=(self.input_hr_height, self.input_hr_width),
-                                          img_mode='antialias').flatten()
-                try:
-                    self.data_hr[n] = image
-                except ValueError:
-                    print("[-] image size is : ", image.shape)
-                    raise ValueError
+                self.data_hr[n] = hr_pre_process(get_image(f_name)).flatten()
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = iu.pre_processing(f_name,
-                                          size=(self.input_lr_height, self.input_lr_width),
-                                          img_mode='bicubic').flatten()
-                try:
-                    self.data_lr[n] = image
-                except ValueError:
-                    print("[-] image size is : ", image.shape)
-                    raise ValueError
+                self.data_lr[n] = lr_pre_process(get_image(f_name)).flatten()
 
             # write .h5 file for reusing later...
             with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
@@ -753,7 +751,7 @@ class Div2KDataSet:
                 else:
                     faces = faces[offset * size:(offset + 1) * size]
 
-                faces = np.array(faces, dtype=np.float16) / 225.
+                faces = np.array(faces, dtype=np.float32)
 
                 print("[+] Image size : ", faces.shape)
 
