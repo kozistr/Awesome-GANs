@@ -20,19 +20,19 @@ def sub_pixel_conv2d(x, f, s=2):
     return tf.reshape(x_r, (bsize, s * a, s * b, f))
 
 
-def conv2d(x, f=64, k=3, d=1, act=None, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, s=1, act=None, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
-    :param d: strides, default 2
+    :param s: strides, default 1
     :param act: activation function, default None
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: covn2d net
     """
     return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
+                            filters=f, kernel_size=k, strides=s,
                             kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
@@ -97,10 +97,12 @@ class SRGAN:
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
-        self.beta1 = 0.5
-        self.beta2 = 0.9
+        self.beta1 = 0.9
+        self.beta2 = 0.999
         self.d_lr = d_lr
         self.g_lr = g_lr
+
+        self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
         self.d_real = 0.
@@ -189,6 +191,64 @@ class SRGAN:
             x = conv2d(x, self.input_channel, act=tf.nn.sigmoid, k=1, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
+
+    def vgg19(self, x, reuse=None):
+        """
+        :param x: 224x224x3 HR images
+        :param reuse: re-usability
+        :return: prob
+        """
+        with tf.variable_scope("vgg19", reuse=reuse):
+            rgb_scaled = x * 255.  # inverse_transform
+
+            # rgb to bgr
+            r, g, b = tf.split(3, 3, rgb_scaled)
+            bgr = tf.concat([b - self.vgg_mean[0],
+                             g - self.vgg_mean[1],
+                             r - self.vgg_mean[2]], axis=3)
+
+            # VGG19
+            """ Conv1 """
+            x = conv2d(bgr, f=64, k=3, s=1, act=tf.nn.relu, name='conv1_1')
+            x = conv2d(x, f=64, k=3, s=1, act=tf.nn.relu, name='conv1_2')
+            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME', name='pool1')
+
+            """ Conv2 """
+            x = conv2d(x, f=128, k=3, s=1, act=tf.nn.relu, name='conv2_1')
+            x = conv2d(x, f=128, k=3, s=1, act=tf.nn.relu, name='conv2_2')
+            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME', name='pool2')
+
+            """ Conv3 """
+            x = conv2d(x, f=256, k=3, s=1, act=tf.nn.relu, name='conv3_1')
+            x = conv2d(x, f=256, k=3, s=1, act=tf.nn.relu, name='conv3_2')
+            x = conv2d(x, f=256, k=3, s=1, act=tf.nn.relu, name='conv3_3')
+            x = conv2d(x, f=256, k=3, s=1, act=tf.nn.relu, name='conv3_4')
+            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME', name='pool3')
+
+            """ Conv4 """
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv4_1')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv4_2')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv4_3')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv4_4')
+            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME', name='pool4')
+
+            bottle_neck = x
+
+            """ Conv5 """
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv5_1')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv5_2')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv5_3')
+            x = conv2d(x, f=512, k=3, s=1, act=tf.nn.relu, name='conv5_4')
+            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME', name='pool5')
+
+            """ fc layers """
+            x = tf.layers.flatten(x)
+
+            x = tf.layers.dense(x, units=4096, activation=tf.nn.relu, name='fc6')
+            x = tf.layers.dense(x, units=4096, activation=tf.nn.relu, name='fc7')
+            x = tf.layers.dense(x, units=1000, activation=tf.nn.relu, name='fc8')
+
+            return x, bottle_neck
 
     def build_srgan(self):
         def mse_loss(pred, data):
