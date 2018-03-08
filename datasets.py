@@ -676,15 +676,19 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
-        import cv2
+        from PIL import Image
 
         def hr_pre_processing(path, size=(384, 384)):
-            img = cv2.imread(path, cv2.IMREAD_COLOR) / 255.
-            return cv2.resize(img, size)
+            img = Image.open(path).convert('RGB')
+            img = img.resize(size, Image.ANTIALIAS)
+            img = img.load() / 255.
+            return img
 
         def lr_pre_processing(path, size=(96, 96)):
-            img = cv2.imread(path, cv2.IMREAD_COLOR) / 255.
-            return cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
+            img = Image.open(path).convert('RGB')
+            img = img.resize(size, Image.BICUBIC)
+            img = img.load() / 255.
+            return img
 
         if mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
