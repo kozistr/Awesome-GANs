@@ -59,10 +59,10 @@ class SRGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 16
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
+        :param input_height: input image height, default 384
+        :param input_width: input image width, default 384
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of DIV2K-HR, image size is 384x384x1(HWC).
+        - in case of DIV2K-HR, image size is 384x384x3(HWC).
 
         # Output Settings
         :param sample_num: the number of output images, default 1
@@ -142,10 +142,10 @@ class SRGAN:
                 x = batch_norm(x)
                 x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.flatten(x)  # (-1, 7 * 7 * 8 * 64)
+            x = tf.layers.flatten(x)  # (-1, 96 * 96 * 64)
 
             x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
-            x = tf.layers.dense(x, 1, name='d-fc-1')
+            x = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d-fc-1')
 
             return x
 
