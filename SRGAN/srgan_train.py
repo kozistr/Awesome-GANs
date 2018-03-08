@@ -46,7 +46,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    ds = DataSet(mode='w')
+    ds = DataSet(mode='r')
     hr_lr_images = ds.images
     hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
@@ -68,11 +68,11 @@ def main():
 
         sample_x_hr, sample_x_lr = hr[:model.sample_num], lr[:model.sample_num]
         sample_x_hr, sample_x_lr = \
-            np.reshape(sample_x_hr, [model.sample_num] + model.hr_image_shape[1:]),\
-            np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
+            np.reshape(sample_x_hr, model.hr_image_shape[1:]),\
+            np.reshape(sample_x_lr, model.lr_image_shape[1:])
 
-        sample_x_hr = np.reshape(sample_x_hr, [model.sample_num] + model.hr_image_shape[1:])
-        sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
+        print(sample_x_hr.shape, sample_x_lr.shape)
+        print(sample_x_hr, sample_x_lr)
 
         # Export real image
         # valid_image_height = model.sample_size
@@ -134,7 +134,7 @@ def main():
                                         model.x_lr: sample_x_lr,
                                     })
 
-                    samples = np.reshape(samples, [model.sample_num] + model.hr_image_shape[1:])
+                    samples = np.reshape(samples, model.hr_image_shape[1:])
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
