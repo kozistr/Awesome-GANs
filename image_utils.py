@@ -53,3 +53,17 @@ def save_images(images, size, image_path):
 def save_image(img, path):
     img = inverse_transform(img).astype(np.uint8)
     return img.save(path, "PNG")
+
+
+def pre_processing(path, size=(384, 384), img_mode='antialias'):
+    if img_mode == 'antialias':
+        img_mode = Image.ANTIALIAS
+    elif img_mode == 'bicubic':
+        img_mode = Image.BICUBIC
+    else:
+        raise NotImplemented
+
+    img = Image.open(path).convert('RGB')
+    img = img.resize(size, img_mode)
+    img = np.array(img, dtype=np.uint8) / 255.
+    return img

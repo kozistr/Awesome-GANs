@@ -676,20 +676,6 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
-        from PIL import Image
-
-        def hr_pre_processing(path, size=(384, 384)):
-            img = Image.open(path).convert('RGB')
-            img = img.resize(size, Image.ANTIALIAS)
-            img = np.ndarray(img, dtype=np.uint8) / 255.
-            return img
-
-        def lr_pre_processing(path, size=(96, 96)):
-            img = Image.open(path).convert('RGB')
-            img = img.resize(size, Image.BICUBIC)
-            img = np.ndarray(img, dtype=np.uint8) / 255.
-            return img
-
         if mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
@@ -712,7 +698,9 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = hr_pre_processing(f_name).flatten()
+                image = iu.pre_processing(f_name,
+                                          size=(self.input_hr_height, self.input_hr_width),
+                                          img_mode='antialias').flatten()
                 try:
                     self.data_hr[n] = image
                 except ValueError:
@@ -720,7 +708,9 @@ class Div2KDataSet:
                     raise ValueError
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = lr_pre_processing(f_name).flatten()
+                image = iu.pre_processing(f_name,
+                                          size=(self.input_lr_height, self.input_lr_width),
+                                          img_mode='bicubic').flatten()
                 try:
                     self.data_lr[n] = image
                 except ValueError:
