@@ -55,7 +55,7 @@ def main():
 
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
-    config = tf.ConfigProto(allow_soft_placement=True,
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False,
                             gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
