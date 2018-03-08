@@ -51,7 +51,8 @@ def save_images(images, size, image_path):
 
 
 def save_image(img, path):
-    img = inverse_transform(img).astype(np.uint8)
+    img = inverse_transform(img)
+    img = Image.fromarray(img)
     return img.save(path, "PNG")
 
 
