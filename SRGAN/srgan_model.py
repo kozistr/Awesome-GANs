@@ -109,7 +109,7 @@ class SRGAN:
         self.g_loss = 0.
 
         self.g = None
-        self.loss_weight = 1e-5
+        self.loss_weight = 1e-3
 
         self.d_op = None
         self.g_op = None
