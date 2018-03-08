@@ -186,7 +186,7 @@ class SRGAN:
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, k=1, name='n3s1')  # (-1, 384, 384, 3)
+            x = conv2d(x, self.input_channel, act=tf.nn.sigmoid, k=1, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
 
