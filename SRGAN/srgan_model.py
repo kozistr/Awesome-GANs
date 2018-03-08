@@ -109,7 +109,7 @@ class SRGAN:
         self.g_loss = 0.
 
         self.g = None
-        self.g_gan_loss_weight = 1e-3
+        self.loss_weight = 1e-5
 
         self.d_op = None
         self.g_op = None
@@ -186,13 +186,16 @@ class SRGAN:
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, k=1, act=tf.nn.sigmoid, name='n3s1')  # (-1, 384, 384, 3)
+            x = conv2d(x, self.input_channel, k=1, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
 
     def build_srgan(self):
-        def mse_loss(pred, data, n=self.batch_size):
-            return tf.reduce_sum(tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n)
+        def mse_loss(pred, data):
+            return tf.reduce_mean(tf.nn.l2_loss(pred - data))
+
+        def sigmoid_loss(logits, label):
+            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label))
 
         # Generator
         self.g = self.generator(self.x_lr)
@@ -202,19 +205,11 @@ class SRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Following LSGAN Loss
-        # d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
-        # d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
-        # self.d_loss = (d_real_loss + d_fake_loss) / 2.
-        # self.g_loss = mse_loss(d_fake, tf.ones_like(d_fake))
-        d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real,
-                                                                             labels=tf.ones_like(d_real)))
-        d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
-                                                                             labels=tf.zeros_like(d_fake)))
-        self.d_loss = d_real_loss + d_fake_loss
-        g_gan_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
-                                                                            labels=tf.ones_like(d_fake)))
-        g_real_loss = mse_loss(self.g, self.x_hr)
-        self.g_loss = self.g_gan_loss_weight * g_gan_loss + g_real_loss
+        d_real_loss = mse_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = mse_loss(d_fake, tf.zeros_like(d_fake))
+        self.d_loss = self.loss_weight * (d_real_loss + d_fake_loss)
+
+        self.g_loss = self.loss_weight * mse_loss(d_fake, tf.ones_like(d_fake))  # + vgg_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
