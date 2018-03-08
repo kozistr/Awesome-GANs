@@ -681,13 +681,13 @@ class Div2KDataSet:
         def hr_pre_processing(path, size=(384, 384)):
             img = Image.open(path).convert('RGB')
             img = img.resize(size, Image.ANTIALIAS)
-            img = img.load() / 255.
+            img = np.ndarray(img, dtype=np.uint8) / 255.
             return img
 
         def lr_pre_processing(path, size=(96, 96)):
             img = Image.open(path).convert('RGB')
             img = img.resize(size, Image.BICUBIC)
-            img = img.load() / 255.
+            img = np.ndarray(img, dtype=np.uint8) / 255.
             return img
 
         if mode == 'w':
