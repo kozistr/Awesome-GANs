@@ -676,6 +676,16 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
+        import cv2
+
+        def hr_pre_processing(path, img, size=(384, 384)):
+            img = cv2.imread(path, 0) / 255.  # cv2.IMAGE_COLOR
+            return cv2.resize(img, size)
+
+        def lr_pre_processing(path, img, size=(96, 96)):
+            img = cv2.imread(path, 0) / 255.
+            return cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
+
         if mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
@@ -698,7 +708,7 @@ class Div2KDataSet:
                 raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files_hr)):
-                image = iu.get_image(f_name, self.input_hr_width, self.input_hr_height).flatten()
+                image = hr_pre_processing(f_name, self.input_hr_width, self.input_hr_height).flatten()
                 try:
                     self.data_hr[n] = image
                 except ValueError:
@@ -706,7 +716,7 @@ class Div2KDataSet:
                     raise ValueError
 
             for n, f_name in tqdm(enumerate(self.files_lr)):
-                image = iu.get_image(f_name, self.input_lr_width, self.input_lr_height).flatten()
+                image = lr_pre_processing(f_name, self.input_lr_width, self.input_lr_height).flatten()
                 try:
                     self.data_lr[n] = image
                 except ValueError:
