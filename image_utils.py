@@ -1,7 +1,8 @@
+from PIL import Image
+
 import tensorflow as tf
 import numpy as np
 import imageio
-from PIL import Image
 
 
 def down_sampling(img):
@@ -56,7 +57,7 @@ def save_image(img, path):
     return img.save(path, "PNG")
 
 
-def pre_processing(path, size=(384, 384), img_mode='antialias'):
+def pre_processing(path, size, img_mode='antialias'):
     if img_mode == 'antialias':
         img_mode = Image.ANTIALIAS
     elif img_mode == 'bicubic':
