@@ -436,7 +436,7 @@ class SRGAN:
                 fc6 = tf.nn.relu(out)
 
             with tf.name_scope("fc7") as scope:
-                fc6_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+                fc6_size = int(np.prod(fc6.get_shape()[1:]))  # (-1, x)
 
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 4096], stddev=std, dtype=tf.float32),
                                      name='weights')
@@ -450,7 +450,7 @@ class SRGAN:
                 fc7 = tf.nn.relu(out)
 
             with tf.name_scope("fc8") as scope:
-                fc7_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+                fc7_size = int(np.prod(fc6.get_shape()[1:]))  # (-1, x)
 
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 1000], stddev=std, dtype=tf.float32),
                                      name='weights')
