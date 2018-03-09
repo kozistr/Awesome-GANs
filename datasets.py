@@ -751,7 +751,7 @@ class Div2KDataSet:
                 else:
                     faces = faces[offset * size:(offset + 1) * size]
 
-                faces = np.array(faces, dtype=np.float32)
+                faces = np.array(faces, dtype=np.float16)
 
                 print("[+] Image size : ", faces.shape)
 
