@@ -493,15 +493,7 @@ class SRGAN:
 
     def build_srgan(self):
         def mse_loss(pred, data):
-            dim = pred.get_shape().ndims
-
-            ax = 1
-            if dim == 3:
-                ax = [1, 2]
-            elif dim == 4:
-                ax = [1, 2, 3]
-
-            return tf.reduce_mean(tf.reduce_mean(tf.nn.l2_loss(pred - data), axis=ax))
+            return tf.reduce_mean(tf.reduce_mean(tf.nn.l2_loss(pred - data)))
 
         def sigmoid_loss(logits, label):
             return tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label)
