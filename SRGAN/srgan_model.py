@@ -422,39 +422,42 @@ class SRGAN:
             import numpy as np
 
             with tf.name_scope("fc6") as scope:
+                pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
+
                 weight = tf.Variable(tf.truncated_normal(shape=[pool5_size, 4096], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
                 x = tf.reshape(pool5, (-1, pool5_size))
 
                 out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
                 fc6 = tf.nn.relu(out)
 
             with tf.name_scope("fc7") as scope:
+                fc6_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 4096], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                fc6_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
                 x = tf.reshape(fc6, (-1, fc6_size))
 
                 out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
                 fc7 = tf.nn.relu(out)
 
             with tf.name_scope("fc8") as scope:
+                fc7_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 1000], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[1000], dtype=tf.float32),
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                fc7_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
                 x = tf.reshape(fc7, (-1, fc7_size))
 
                 out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
