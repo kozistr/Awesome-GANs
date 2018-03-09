@@ -36,7 +36,7 @@ class BEGAN:
     def __init__(self, s, batch_size=16, input_height=64, input_width=64, input_channel=3,
                  sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
                  df_dim=64, gf_dim=64,
-                 gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+                 gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
 
         """
         # General Settings
@@ -60,7 +60,7 @@ class BEGAN:
         # Training Option
         :param gamma: gamma value, default 0.4
         :param lambda_k: lr adjustment value lambda k, default 1e-3
-        :param z_dim: z dimension (kinda noise), default 128
+        :param z_dim: z dimension (kinda noise), default 256
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-12
