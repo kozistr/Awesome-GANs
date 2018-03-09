@@ -497,7 +497,7 @@ class SRGAN:
             return tf.reduce_mean(tf.reduce_sum(tf.square(pred - data), axis=[3]))
 
         def sigmoid_loss(logits, label):
-            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label))
+            return tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label)
 
         # Generator
         self.g = self.generator(self.x_lr)
