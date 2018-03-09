@@ -77,7 +77,7 @@ def main():
         global_step = 0
         for epoch in range(train_step['train_epochs']):
 
-            if epoch and epoch % model.lr_deacy_epoch == 0:
+            if epoch and epoch % model.lr_decay_epoch == 0:
                 lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
 
                 # Update learning rate
