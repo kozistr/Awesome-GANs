@@ -432,7 +432,7 @@ class SRGAN:
                 self.vgg_params.append([kernel, bias])
 
                 out = tf.nn.bias_add(tf.matmul(pool5, weight), bias)
-                fc1 = tf.nn.relu(out, name=scope)
+                fc6 = tf.nn.relu(out, name=scope)
 
             with tf.name_scope("fc7") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 4096], stddev=std, dtype=tf.float32),
@@ -441,8 +441,8 @@ class SRGAN:
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                out = tf.nn.bias_add(tf.matmul(fc1, weight), bias)
-                fc2 = tf.nn.relu(out, name=scope)
+                out = tf.nn.bias_add(tf.matmul(fc6, weight), bias)
+                fc7 = tf.nn.relu(out, name=scope)
 
             with tf.name_scope("fc8") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 1000], stddev=std, dtype=tf.float32),
@@ -451,8 +451,8 @@ class SRGAN:
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                fc3 = tf.nn.bias_add(tf.matmul(fc2, weight), bias)
-                prob = tf.nn.softmax(fc3)
+                fc8 = tf.nn.bias_add(tf.matmul(fc7, weight), bias, name=scope)
+                prob = tf.nn.softmax(fc8)
 
         # Loading vgg19-pre_trained.npz weights
         if reuse is None:
@@ -462,12 +462,23 @@ class SRGAN:
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
             for i, k in enumerate(vgg19_model.keys()):
-                print("[+] Loading %d %s" % (i, k))
+                print("[+] Loading VGG19 - %d layer : %s" % (i, k))
 
-                self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
-                self.s.run(self.vgg_params[i][1].assign(tf.convert_to_tensor(vgg19_model[k][1], dtype=tf.float32)))
+                try:
+                    self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
+                except ValueError:
+                    print("[-] model weight's shape :", self.vgg_params[i][0].get_shape())
+                    print("[-] file  weight's shape :", vgg19_model[k][0].get_shape())
+                    raise ValueError
 
-        return tf.identity(fc3), bottle_neck
+                try:
+                    self.s.run(self.vgg_params[i][1].assign(tf.convert_to_tensor(vgg19_model[k][1], dtype=tf.float32)))
+                except ValueError:
+                    print("[-] model bias's shape :", self.vgg_params[i][1].get_shape())
+                    print("[-] file  bias's shape :", vgg19_model[k][1].get_shape())
+                    raise ValueError
+
+        return tf.identity(fc8), bottle_neck
 
     def build_srgan(self):
         def mse_loss(pred, data):
