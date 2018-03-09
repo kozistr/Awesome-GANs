@@ -45,8 +45,7 @@ def main():
 
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False,
-                            gpu_options=gpu_config)
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
         with tf.device("/gpu:1"):
@@ -67,8 +66,9 @@ def main():
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
-        iu.save_images(sample_x_hr, (valid_image_height, valid_image_width), sample_hr_dir)
-        iu.save_images(sample_x_lr, (valid_image_height, valid_image_width), sample_lr_dir)
+        with tf.device("/cpu:0"):
+            iu.save_images(sample_x_hr, (valid_image_height, valid_image_width), sample_hr_dir)
+            iu.save_images(sample_x_lr, (valid_image_height, valid_image_width), sample_lr_dir)
 
         global_step = 0
         for epoch in range(train_step['train_epochs']):
@@ -154,7 +154,8 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    iu.save_images(samples, (sample_image_height, sample_image_width), sample_dir)
+                    with tf.device("/cpu:0"):
+                        iu.save_images(samples, (sample_image_height, sample_image_width), sample_dir)
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
