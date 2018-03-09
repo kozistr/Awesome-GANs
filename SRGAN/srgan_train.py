@@ -59,7 +59,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        rnd = np.random.randint(0, DataSet.num_images_val)
+        rnd = np.random.randint(0, ds.num_images_val)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
         sample_x_hr, sample_x_lr = \
             np.reshape(sample_x_hr, model.hr_image_shape[1:]),\
