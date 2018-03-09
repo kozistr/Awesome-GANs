@@ -158,7 +158,7 @@ class SRGAN:
             x = tf.layers.flatten(x)  # (-1, 96 * 96 * 64)
 
             x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
-            x = tf.layers.dense(x, 1, activation=tf.nn.sigmoid, name='d-fc-1')
+            x = tf.layers.dense(x, 1, name='d-fc-1')
 
             return x
 
