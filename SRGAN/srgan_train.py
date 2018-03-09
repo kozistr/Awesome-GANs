@@ -76,13 +76,13 @@ def main():
             np.reshape(sample_x_lr, model.lr_image_shape[1:])
 
         # Export real image
-        # valid_image_height = model.sample_size
-        # valid_image_width = model.sample_size
+        valid_image_height = model.sample_size
+        valid_image_width = model.sample_size
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
-        iu.save_image(sample_x_hr, sample_hr_dir)
-        iu.save_image(sample_x_lr, sample_lr_dir)
+        iu.save_images(sample_x_hr, (valid_image_height, valid_image_width), sample_hr_dir)
+        iu.save_images(sample_x_lr, (valid_image_height, valid_image_width), sample_lr_dir)
 
         global_step = 0
         for epoch in range(train_step['train_epochs']):
@@ -168,7 +168,7 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    iu.save_image(samples, sample_dir)
+                    iu.save_images(samples, (model.sample_size, model.sample_size), sample_dir)
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
