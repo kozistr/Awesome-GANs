@@ -105,6 +105,7 @@ class SRGAN:
         self.g_lr = g_lr
 
         self.vgg_params = []
+        self.vgg_weights = '/home/zero/hdd/vgg19.npz'  # for temporary path; it'll be moved to another place...
         self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
@@ -196,7 +197,7 @@ class SRGAN:
 
             return x
 
-    def vgg19(self, x, weights=None, reuse=None):
+    def vgg19(self, x, weights, reuse=None):
         """
         Download pre-trained model for tensorflow
 
@@ -204,7 +205,7 @@ class SRGAN:
         Link : https://mega.nz/#!xZ8glS6J!MAnE91ND_WyfZ_8mvkuSa2YcA7q-1ehfSm-Q1fxOvvs
 
         :param x: 224x224x3 HR images
-        :param weights: vgg19 pre-trained weight, default None
+        :param weights: vgg19 pre-trained weight
         :param reuse: re-usability
         :return: prob
         """
@@ -384,9 +385,10 @@ class SRGAN:
                 prob = tf.nn.softmax(fc3)
 
         # Loading vgg19-pre_trained.npz weights
-        weights = np.load(weights, encoding='latin1')
-        for i, k in enumerate(sorted(weights.keys())):
-            self.s.run(self.vgg_params[i].assign(weights[k]))
+        if reuse is None:
+            weights = np.load(weights, encoding='latin1')
+            for i, k in enumerate(sorted(weights.keys())):
+                self.s.run(self.vgg_params[i].assign(weights[k]))
 
         return tf.identity(fc3), bottle_neck
 
@@ -408,8 +410,8 @@ class SRGAN:
         x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
         x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1.) / 2.)
-        _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1.) / 2., reuse=True)
+        vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1.) / 2., weights=self.vgg_weights)
+        _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1.) / 2., reuse=True, weights=self.vgg_weights)
 
         # Losses
         d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
