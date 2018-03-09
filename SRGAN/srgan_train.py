@@ -91,7 +91,7 @@ def main():
 
         for epoch in range(start_epoch, train_step['train_epochs']):
 
-            if epoch and epoch % model.lr_decay_epoch == 0:
+            if epoch >= train_step['init_epochs'] and epoch % model.lr_decay_epoch == 0:
                 lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
 
                 # Update learning rate
@@ -131,11 +131,17 @@ def main():
                                            })
                 # Update G/D network
                 else:
-                    _, d_loss, _, g_loss = s.run([model.d_op, model.d_loss, model.g_op, model.g_loss],
-                                                 feed_dict={
-                                                     model.x_hr: batch_x_hr,
-                                                     model.x_lr: batch_x_lr,
-                                                 })
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x_hr: batch_x_hr,
+                                          model.x_lr: batch_x_lr,
+                                      })
+                    _, g_loss, _, _, _ = s.run([model.g_op,
+                                                model.g_loss, model.g_adv_loss, model.g_mse_loss, model.g_cnt_loss],
+                                               feed_dict={
+                                                   model.x_hr: batch_x_hr,
+                                                   model.x_lr: batch_x_lr,
+                                               })
 
                 if i % train_step['logging_interval'] == 0:
                     summary = s.run(model.merged,
