@@ -16,7 +16,7 @@ import image_utils as iu
 from datasets import Div2KDataSet as DataSet
 
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 results = {
     'output': './gen_img/',
