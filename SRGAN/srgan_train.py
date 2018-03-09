@@ -133,10 +133,10 @@ def main():
 
                     # Print loss
                     if epoch <= train_step['init_epochs']:
-                        print("[+] Step %08d => " % global_step,
+                        print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                               " G init loss : {:.8f}".format(g_init_loss))
                     else:
-                        print("[+] Step %08d => " % global_step,
+                        print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                               " D loss : {:.8f}".format(d_loss),
                               " G loss : {:.8f}".format(g_loss))
 
