@@ -513,11 +513,11 @@ class SRGAN:
         _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1) / 2, reuse=True, weights=self.vgg_weights)
 
         # Losses
-        d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = sigmoid_loss(d_fake, tf.zeros_like(d_fake))
+        d_real_loss = tf.reduce_mean(sigmoid_loss(d_real, tf.ones_like(d_real)))
+        d_fake_loss = tf.reduce_mean(sigmoid_loss(d_fake, tf.zeros_like(d_fake)))
         self.d_loss = d_real_loss + d_fake_loss
 
-        g_cnt_loss = self.content_loss_weight * sigmoid_loss(d_fake, tf.ones_like(d_fake))
+        g_cnt_loss = self.content_loss_weight * tf.reduce_mean(sigmoid_loss(d_fake, tf.ones_like(d_fake)))
         self.g_mse_loss = mse_loss(self.g, self.x_hr)
         g_vgg_loss = self.vgg_loss_weight * mse_loss(vgg_bottle_fake, vgg_bottle_real)
         self.g_loss = g_cnt_loss + self.g_mse_loss + g_vgg_loss
