@@ -22,9 +22,10 @@ results = {
 }
 
 train_step = {
-    'epochs': 100,
+    'train_epochs': 2000,
+    'init_epochs': 100,
     'batch_size': 16,
-    'logging_interval': 50,
+    'logging_interval': 100,
 }
 
 
@@ -81,7 +82,14 @@ def main():
         iu.save_image(sample_x_lr, sample_lr_dir)
 
         global_step = 0
-        for epoch in range(train_step['epochs']):
+        for epoch in range(train_step['train_epochs']):
+
+            if epoch and epoch % model.lr_deacy_epoch == 0:
+                lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
+
+                # Update learning rate
+                s.run(tf.assign(model.d_lr, model.d_lr * lr_decay_rate))
+                s.run(tf.assign(model.g_lr, model.g_lr * lr_decay_rate))
 
             pointer = 0
             for i in range(ds.num_images // train_step['batch_size']):
@@ -106,12 +114,21 @@ def main():
                 batch_x_hr = np.reshape(batch_x_hr, [train_step['batch_size']] + model.hr_image_shape[1:])
                 batch_x_lr = np.reshape(batch_x_lr, [train_step['batch_size']] + model.lr_image_shape[1:])
 
+                # Update Only G network
+                d_loss, g_loss, g_init_loss = 0., 0., 0.
+                if epoch <= train_step['init_epochs']:
+                    _, g_init_loss = s.run([model.g_init_op, model.g_mse_loss],
+                                           feed_dict={
+                                               model.x_hr: batch_x_hr,
+                                               model.x_lr: batch_x_lr,
+                                           })
                 # Update G/D network
-                _, d_loss, _, g_loss = s.run([model.d_op, model.d_loss, model.g_op, model.g_loss],
-                                             feed_dict={
-                                                 model.x_hr: batch_x_hr,
-                                                 model.x_lr: batch_x_lr,
-                                             })
+                else:
+                    _, d_loss, _, g_loss = s.run([model.d_op, model.d_loss, model.g_op, model.g_loss],
+                                                 feed_dict={
+                                                     model.x_hr: batch_x_hr,
+                                                     model.x_lr: batch_x_lr,
+                                                 })
 
                 if i % train_step['logging_interval'] == 0:
                     summary = s.run(model.merged,
@@ -121,9 +138,13 @@ def main():
                                     })
 
                     # Print loss
-                    print("[+] Step %08d => " % global_step,
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss))
+                    if epoch <= train_step['init_epochs']:
+                        print("[+] Step %08d => " % global_step,
+                              " D loss : {:.8f}".format(d_loss),
+                              " G loss : {:.8f}".format(g_loss))
+                    else:
+                        print("[+] Step %08d => " % global_step,
+                              " G init loss : {:.8f}".format(g_init_loss))
 
                     # Training G model with sample image and noise
                     sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])

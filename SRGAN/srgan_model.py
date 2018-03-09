@@ -101,8 +101,11 @@ class SRGAN:
 
         self.beta1 = 0.9
         self.beta2 = 0.999
+
         self.d_lr = d_lr
         self.g_lr = g_lr
+        self.lr_decay_rate = 1e-1
+        self.lr_decay_epoch = 100
 
         self.vgg_params = []
         self.vgg_weights = '/home/zero/hdd/vgg19.npz'  # for temporary path; it'll be moved to another place...
@@ -112,6 +115,7 @@ class SRGAN:
         self.d_real = 0.
         self.d_fake = 0.
         self.d_loss = 0.
+        self.g_mse_loss = 0.
         self.g_loss = 0.
 
         self.g = None
@@ -419,16 +423,16 @@ class SRGAN:
         self.d_loss = d_real_loss + d_fake_loss
 
         g_cnt_loss = self.content_loss_weight * sigmoid_loss(d_fake, tf.ones_like(d_fake))
-        g_mse_loss = mse_loss(self.g, self.x_hr)
+        self.g_mse_loss = mse_loss(self.g, self.x_hr)
         g_vgg_loss = self.vgg_loss_weight * mse_loss(vgg_bottle_fake, vgg_bottle_real)
-        self.g_loss = g_cnt_loss + g_mse_loss + g_vgg_loss
+        self.g_loss = g_cnt_loss + self.g_mse_loss + g_vgg_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_cnt_loss", g_cnt_loss)
-        tf.summary.scalar("loss/g_mse_loss", g_mse_loss)
+        tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_vgg_loss", g_vgg_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
@@ -446,7 +450,7 @@ class SRGAN:
 
         # pre-train
         self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=g_mse_loss,
+                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_mse_loss,
                                                                                              var_list=g_params)
 
         # Merge summary
