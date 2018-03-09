@@ -23,10 +23,15 @@ def up_sampling(img):
     return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
 
 
-def inverse_transform(images):
-    images *= 255.
-    images[images > 255.] = 255.
-    images[images < 0.] = 0.
+def inverse_transform(images, inv_type='225'):
+    if inv_type == '225':
+        images *= 255.
+        images[images > 255.] = 255.
+        images[images < 0.] = 0.
+    elif inv_type == '127':
+        images = (images + 1.) * 127.
+        images[images > 255.] = 255.
+        images[images < 0.] = 0.
     return images
 
 
@@ -47,12 +52,12 @@ def img_save(images, size, path):
     return imageio.imwrite(path, image)
 
 
-def save_images(images, size, image_path):
-    return img_save(inverse_transform(images), size, image_path)
+def save_images(images, size, image_path, inv_type='225'):
+    return img_save(inverse_transform(images, inv_type), size, image_path)
 
 
-def save_image(img, path):
-    img = np.ndarray(inverse_transform(img), dtype=np.uint8)
+def save_image(img, path, inv_type='225'):
+    img = np.ndarray(inverse_transform(img, inv_type), dtype=np.uint8)
     img = Image.fromarray(img)
     return img.save(path, "PNG")
 
