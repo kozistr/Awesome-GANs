@@ -287,7 +287,7 @@ class SRGAN:
         g_cnt_loss = self.content_loss_weight * sigmoid_loss(d_fake, tf.ones_like(d_fake))
         g_mse_loss = mse_loss(self.g, self.x_hr)
         g_vgg_loss = self.vgg_loss_weight * mse_loss(vgg_bottle_fake, vgg_bottle_real)
-        self.g_loss =  g_cnt_loss + g_mse_loss + g_vgg_loss
+        self.g_loss = g_cnt_loss + g_mse_loss + g_vgg_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
