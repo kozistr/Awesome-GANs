@@ -82,8 +82,8 @@ def main():
                 lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
 
                 # Update learning rate
-                s.run(tf.assign(model.d_lr, model.d_lr * lr_decay_rate))
-                s.run(tf.assign(model.g_lr, model.g_lr * lr_decay_rate))
+                model.d_lr *= lr_decay_rate
+                model.g_lr *= lr_decay_rate
 
             pointer = 0
             for i in range(ds.num_images // train_step['batch_size']):
