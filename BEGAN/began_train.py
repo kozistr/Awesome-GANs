@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 25,
+    'epoch': 24,
     'batch_size': 16,
-    'logging_step': 1000,
+    'logging_step': 2000,
 }
 
 
@@ -90,9 +90,6 @@ def main():
                                        })
 
                 if global_step % train_step['logging_step'] == 0:
-                    # batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    # Summary
                     _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
                                                                      model.d_loss, model.g_loss, model.merged],
                                                                     feed_dict={
