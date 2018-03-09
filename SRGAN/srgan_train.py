@@ -56,6 +56,20 @@ def main():
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
+        # Load model & Graph & Weights
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % global_step, " successfully loaded")
+        else:
+            global_step = 0
+            print('[-] No checkpoint file found')
+
+        start_epoch = global_step // train_step['batch_size']
+
         # Initializing
         s.run(tf.global_variables_initializer())
 
@@ -75,8 +89,7 @@ def main():
             iu.img_save(sample_x_hr, sample_hr_dir)
             iu.img_save(sample_x_lr, sample_lr_dir)
 
-        global_step = 0
-        for epoch in range(train_step['train_epochs']):
+        for epoch in range(start_epoch, train_step['train_epochs']):
 
             if epoch and epoch % model.lr_decay_epoch == 0:
                 lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
