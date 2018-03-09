@@ -24,7 +24,6 @@ def up_sampling(img):
 
 
 def inverse_transform(images, inv_type='255'):
-    print(images.shape, images.size, images)
     if inv_type == '255':
         images *= 255
         images[images > 255] = 255
@@ -33,7 +32,6 @@ def inverse_transform(images, inv_type='255'):
         images = (images + 1) * 127
         images[images > 255] = 255
         images[images < 0] = 0
-
     return images
 
 
