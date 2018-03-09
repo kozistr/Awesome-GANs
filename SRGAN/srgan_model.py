@@ -309,7 +309,18 @@ class SRGAN:
                 out = tf.nn.bias_add(conv, bias)
                 conv3_3 = tf.nn.relu(out, name=scope)
 
-            pool3 = tf.nn.max_pool(conv3_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool3')
+            with tf.name_scope("conv3_4") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 256, 256], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[256], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv3_3, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv3_4 = tf.nn.relu(out, name=scope)
+
+            pool3 = tf.nn.max_pool(conv3_4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool3')
 
             """ Conv4 """
             with tf.name_scope("conv4_1") as scope:
@@ -345,7 +356,18 @@ class SRGAN:
                 out = tf.nn.bias_add(conv, bias)
                 conv4_3 = tf.nn.relu(out, name=scope)
 
-            pool4 = tf.nn.max_pool(conv4_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool4')
+            with tf.name_scope("conv4_4") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 512, 512], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv4_3, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv4_4 = tf.nn.relu(out, name=scope)
+
+            pool4 = tf.nn.max_pool(conv4_4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool4')
 
             bottle_neck = pool4
 
@@ -383,7 +405,18 @@ class SRGAN:
                 out = tf.nn.bias_add(conv, bias)
                 conv5_3 = tf.nn.relu(out, name=scope)
 
-            pool5 = tf.nn.max_pool(conv5_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
+            with tf.name_scope("conv5_4") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 512, 512], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv5_3, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv5_4 = tf.nn.relu(out, name=scope)
+
+            pool5 = tf.nn.max_pool(conv5_4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
 
             """ fc layers """
             import numpy as np
