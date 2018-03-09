@@ -420,9 +420,6 @@ class SRGAN:
 
             """ fc layers """
             import numpy as np
-            pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
-
-            pool5 = tf.reshape(pool5, (-1, pool5_size))
 
             with tf.name_scope("fc6") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[pool5_size, 4096], stddev=std, dtype=tf.float32),
@@ -431,8 +428,11 @@ class SRGAN:
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                out = tf.nn.bias_add(tf.matmul(pool5, weight), bias)
-                fc6 = tf.nn.relu(out, name=scope)
+                pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
+                x = tf.reshape(pool5, (-1, pool5_size))
+
+                out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
+                fc6 = tf.nn.relu(out)
 
             with tf.name_scope("fc7") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 4096], stddev=std, dtype=tf.float32),
@@ -441,8 +441,11 @@ class SRGAN:
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                out = tf.nn.bias_add(tf.matmul(fc6, weight), bias)
-                fc7 = tf.nn.relu(out, name=scope)
+                fc6_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+                x = tf.reshape(fc6, (-1, fc6_size))
+
+                out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
+                fc7 = tf.nn.relu(out)
 
             with tf.name_scope("fc8") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 1000], stddev=std, dtype=tf.float32),
@@ -451,8 +454,11 @@ class SRGAN:
                                    trainable=True, name='biases')
                 self.vgg_params.append([kernel, bias])
 
-                fc8 = tf.nn.bias_add(tf.matmul(fc7, weight), bias, name=scope)
-                prob = tf.nn.softmax(fc8)
+                fc7_size = int(np.prod(fc6.gett_shape()[1:]))  # (-1, x)
+                x = tf.reshape(fc7, (-1, fc7_size))
+
+                out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
+                prob = tf.nn.softmax(out)
 
         # Loading vgg19-pre_trained.npz weights
         if reuse is None:
@@ -462,7 +468,7 @@ class SRGAN:
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
             for i, k in enumerate(vgg19_model.keys()):
-                print("[+] Loading VGG19 - %d layer : %s" % (i, k))
+                print("[+] Loading VGG19 - %-2d layer : %-8s" % (i, k))
 
                 try:
                     self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
