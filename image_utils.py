@@ -56,6 +56,17 @@ def save_images(images, size, image_path, inv_type='255'):
 
 
 def img_save(img, path, inv_type='255'):
-    img = np.ndarray(inverse_transform(img, inv_type), dtype=np.uint8)
+    try:
+        print(type(img), img.shape, img.size, img)
+    except:
+        pass
+
+    img = inverse_transform(img, inv_type)
+
+    try:
+        print(type(img), img.shape, img.size, img)
+    except:
+        pass
+
     img = Image.fromarray(img)
     return img.save(path, "PNG")
