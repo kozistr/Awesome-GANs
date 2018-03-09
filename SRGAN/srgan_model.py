@@ -214,7 +214,7 @@ class SRGAN:
         :return: prob
         """
         with tf.variable_scope("vgg19", reuse=reuse):
-            rgb_scaled = x * 255.  # inverse_transform
+            rgb_scaled = tf.cast(x * 255., dtype=tf.float32)  # inverse_transform
 
             # rgb to bgr
             r, g, b = tf.split(3, 3, rgb_scaled)
