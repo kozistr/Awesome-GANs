@@ -396,7 +396,7 @@ class SRGAN:
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
             for i, k in enumerate(vgg19_model.keys()):
-                self.s.run(self.vgg_params[i].assign(vgg19_model[k]))
+                self.s.run(self.vgg_params[i].assign(tf.convert_to_tensor(vgg19_model[k], dtype=tf.float32)))
 
         return tf.identity(fc3), bottle_neck
 
