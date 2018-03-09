@@ -2,9 +2,11 @@
 
 ## Loss Function
 
+* using ```l1 loss```. You can see the details in ```began_model.py line 233~236```.
 
 ## Architecture Networks
 
+* Maybe, same as in the *BEGAN paper*. But *different *hyper-parameters* :).
 
 ## Tensorboard
 
