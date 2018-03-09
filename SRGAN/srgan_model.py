@@ -273,8 +273,8 @@ class SRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # VGG19
-        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2], method=0, align_corners=False)
-        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2], method=0, align_corners=False)
+        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
+        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
         vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1.) / 2.)
         _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1.) / 2., reuse=True)
