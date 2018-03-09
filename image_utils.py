@@ -23,8 +23,9 @@ def up_sampling(img):
     return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
 
 
-def inverse_transform(images, inv_type='225'):
-    if inv_type == '225':
+def inverse_transform(images, inv_type='255'):
+    print(images.shape, images.size, images)
+    if inv_type == '255':
         images *= 255
         images[images > 255] = 255
         images[images < 0] = 0
@@ -52,11 +53,11 @@ def save_image(images, size, path):
     return scipy.misc.imsave(path, merge(images, size))
 
 
-def save_images(images, size, image_path, inv_type='225'):
+def save_images(images, size, image_path, inv_type='255'):
     return save_image(inverse_transform(images, inv_type), size, image_path)
 
 
-def img_save(img, path, inv_type='225'):
+def img_save(img, path, inv_type='255'):
     img = np.ndarray(inverse_transform(img, inv_type), dtype=np.uint8)
     img = Image.fromarray(img)
     return img.save(path, "PNG")

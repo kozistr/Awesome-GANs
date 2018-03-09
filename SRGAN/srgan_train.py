@@ -40,7 +40,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    ds = DataSet(mode='r')
+    ds = DataSet(mode='w')
     hr_lr_images = ds.images
     hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
@@ -65,8 +65,8 @@ def main():
             np.reshape(sample_x_lr, model.lr_image_shape[1:])
 
         # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
+        # valid_image_height = model.sample_size
+        # valid_image_width = model.sample_size
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
