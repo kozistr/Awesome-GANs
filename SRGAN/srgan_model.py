@@ -460,8 +460,8 @@ class SRGAN:
 
                 x = tf.reshape(fc7, (-1, fc7_size))
 
-                out = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
-                prob = tf.nn.softmax(out)
+                fc8 = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
+                prob = tf.nn.softmax(fc8)
 
         # Loading vgg19-pre_trained.npz weights
         if reuse is None:
@@ -472,22 +472,22 @@ class SRGAN:
 
             for i, k in enumerate(vgg19_model.keys()):
                 print("[+] Loading VGG19 - %2d layer : %8s " % (i, k),
-                      self.vgg_params[i][0].get_shape(),
-                      self.vgg_params[i][1].get_shape())
+                      self.vgg_params[i][0].get_shape(), self.vgg_params[i][1].get_shape())
 
-                try:
-                    self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
-                except ValueError:
-                    print("[-] model weight's shape :", self.vgg_params[i][0].get_shape())
-                    print("[-] file  weight's shape :", vgg19_model[k][0].shape)
-                    raise ValueError
+                with tf.device('/cpu:0'):
+                    try:
+                        self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
+                    except ValueError:
+                        print("[-] model weight's shape :", self.vgg_params[i][0].get_shape())
+                        print("[-] file  weight's shape :", vgg19_model[k][0].shape)
+                        raise ValueError
 
-                try:
-                    self.s.run(self.vgg_params[i][1].assign(tf.convert_to_tensor(vgg19_model[k][1], dtype=tf.float32)))
-                except ValueError:
-                    print("[-] model bias's shape :", self.vgg_params[i][1].get_shape())
-                    print("[-] file  bias's shape :", vgg19_model[k][1].shape)
-                    raise ValueError
+                    try:
+                        self.s.run(self.vgg_params[i][1].assign(tf.convert_to_tensor(vgg19_model[k][1], dtype=tf.float32)))
+                    except ValueError:
+                        print("[-] model bias's shape :", self.vgg_params[i][1].get_shape())
+                        print("[-] file  bias's shape :", vgg19_model[k][1].shape)
+                        raise ValueError
 
         return tf.identity(fc8), bottle_neck
 
