@@ -358,7 +358,7 @@ class SRGAN:
 
             pool5 = tf.layers.flatten(pool5)
 
-            with tf.name_scope("fc1") as scope:
+            with tf.name_scope("fc6") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[pool5_size, 4096], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
@@ -366,9 +366,9 @@ class SRGAN:
                 self.vgg_params += [weight, bias]
 
                 out = tf.nn.bias_add(tf.matmul(pool5, weight), bias)
-                fc1 = tf.nn.relu(out)
+                fc1 = tf.nn.relu(out, name=scope)
 
-            with tf.name_scope("fc2") as scope:
+            with tf.name_scope("fc7") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 4096], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
@@ -376,9 +376,9 @@ class SRGAN:
                 self.vgg_params += [weight, bias]
 
                 out = tf.nn.bias_add(tf.matmul(fc1, weight), bias)
-                fc2 = tf.nn.relu(out)
+                fc2 = tf.nn.relu(out, name=scope)
 
-            with tf.name_scope("fc3") as scope:
+            with tf.name_scope("fc8") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[4096, 1000], stddev=std, dtype=tf.float32),
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[1000], dtype=tf.float32),
@@ -390,9 +390,13 @@ class SRGAN:
 
         # Loading vgg19-pre_trained.npz weights
         if reuse is None:
-            weights = np.load(weights, encoding='latin1')
-            for i, k in enumerate(sorted(weights.keys())):
-                self.s.run(self.vgg_params[i].assign(weights[k]))
+            from collections import OrderedDict
+
+            vgg19_model = np.load(weights, encoding='latin1').item()
+            vgg19_model = OrderedDict(sorted(vgg19_model.items()))
+
+            for i, k in enumerate(vgg19_model.keys()):
+                self.s.run(self.vgg_params[i].assign(vgg19_model[k]))
 
         return tf.identity(fc3), bottle_neck
 
