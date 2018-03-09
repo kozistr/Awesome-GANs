@@ -108,7 +108,7 @@ class SRGAN:
         self.lr_decay_epoch = 100
 
         self.vgg_params = []
-        self.vgg_weights = '/home/zero/hdd/vgg19.npz'  # for temporary path; it'll be moved to another place...
+        self.vgg_weights = '/home/zero/hdd/vgg19.npy'  # for temporary path; it'll be moved to another place...
         self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
