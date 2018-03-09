@@ -32,20 +32,6 @@ train_step = {
 }
 
 
-def resize(s, x):
-    x = tf.convert_to_tensor(x, dtype=tf.float32)  # ndarray to tensor
-
-    x_small = tf.image.resize_images(x, [96, 96],
-                                     tf.image.ResizeMethod.BICUBIC)  # LR image
-    x_nearest = tf.image.resize_images(x_small, [384, 384],
-                                       tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # HR image
-
-    x_small = s.run(x_small)      # tensor to ndarray
-    x_nearest = s.run(x_nearest)  # tensor to ndarray
-
-    return x_small, x_nearest
-
-
 def main():
     start_time = time.time()  # Clocking start
 
@@ -72,8 +58,7 @@ def main():
 
         sample_x_hr, sample_x_lr = hr[:model.sample_num], lr[:model.sample_num]
         sample_x_hr, sample_x_lr = \
-            np.reshape(sample_x_hr, model.hr_image_shape[1:]),\
-            np.reshape(sample_x_lr, model.lr_image_shape[1:])
+            np.reshape(sample_x_hr, model.hr_image_shape), np.reshape(sample_x_lr, model.lr_image_shape)
 
         # Export real image
         valid_image_height = model.sample_size
@@ -157,7 +142,7 @@ def main():
                                         model.x_lr: sample_x_lr,
                                     })
 
-                    samples = np.reshape(samples, model.hr_image_shape[1:])
+                    samples = np.reshape(samples, model.hr_image_shape)
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
