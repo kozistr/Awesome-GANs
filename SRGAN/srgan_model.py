@@ -202,6 +202,8 @@ class SRGAN:
             return x
 
     def vgg19(self, x, weights, reuse=None):
+        import numpy as np
+
         """
         Download pre-trained model for tensorflow
 
@@ -419,8 +421,6 @@ class SRGAN:
             pool5 = tf.nn.max_pool(conv5_4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
 
             """ fc layers """
-            import numpy as np
-
             with tf.name_scope("fc6") as scope:
                 pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
 
@@ -428,7 +428,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params.append([kernel, bias])
+                self.vgg_params.append([weight, bias])
 
                 x = tf.reshape(pool5, (-1, pool5_size))
 
@@ -442,7 +442,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params.append([kernel, bias])
+                self.vgg_params.append([weight, bias])
 
                 x = tf.reshape(fc6, (-1, fc6_size))
 
@@ -456,7 +456,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[1000], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params.append([kernel, bias])
+                self.vgg_params.append([weight, bias])
 
                 x = tf.reshape(fc7, (-1, fc7_size))
 
@@ -471,7 +471,9 @@ class SRGAN:
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
             for i, k in enumerate(vgg19_model.keys()):
-                print("[+] Loading VGG19 - %-2d layer : %-8s" % (i, k))
+                print("[+] Loading VGG19 - %2d layer : %8s " % (i, k),
+                      self.vgg_params[i][0].get_shape(),
+                      self.vgg_params[i][1].get_shape())
 
                 try:
                     self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
