@@ -48,6 +48,8 @@ DataSets = {
     'div2k-hr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5',
     'div2k-lr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_LR_bicubic/X4/',
     'div2k-lr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr.h5',
+    'div2k-hr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_HR_bicubic/X4/',
+    'div2k-hr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr-val.h5',
     'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/X4/',
     'div2k-lr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr-val.h5',
     # Windows
