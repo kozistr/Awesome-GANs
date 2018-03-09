@@ -20,3 +20,4 @@
 
 ## To-Do
 * Add Loss Function & Explains
+* trying to change z-embeddings' size to 256 & applying uniform dist instead of gaussian dist
