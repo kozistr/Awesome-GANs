@@ -26,10 +26,10 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 ## Prerequisites
 * python 3.5+
 * tensorflow 1.6.0
-* ~~scipy~~ (some features are **deprecated**, they'll be replaced)
+* scipy (some features are **deprecated**, they'll be replaced)
 * ~~imageio~~
-* ~~scikit-image~~
-* opencv
+* ~~scikit_image~~
+* ~~opencv~~
 * pillow
 * h5py
 * tqdm
@@ -48,8 +48,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * CiFar-100
 * Celeb-A
 * pix2pix DataSets
+* DIV2K DataSets
 * ~~ImageNet DataSets~~
-* ~~DIV2K DataSets~~
 * (more DataSets will be added soon!)
 
 ## Repo Tree
@@ -104,7 +104,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
 **SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN)
 **SGAN++**       | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1710.10916) | 
-**SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN)
+**SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN)
 **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/StarGAN)
 **WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN)
 **ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN)
