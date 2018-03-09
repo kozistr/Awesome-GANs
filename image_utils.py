@@ -49,7 +49,7 @@ def merge(images, size):
 
 def img_save(images, size, path):
     image = np.squeeze(merge(images, size))
-    return scipy.misc.toimage(path, image)
+    return scipy.misc.imsave(path, image)
 
 
 def save_images(images, size, image_path, inv_type='225'):
