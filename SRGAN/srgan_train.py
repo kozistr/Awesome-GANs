@@ -5,6 +5,7 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
+import os
 import sys
 import time
 
@@ -14,6 +15,8 @@ sys.path.append('../')
 import image_utils as iu
 from datasets import Div2KDataSet as DataSet
 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 results = {
     'output': './gen_img/',
