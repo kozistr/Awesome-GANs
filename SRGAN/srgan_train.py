@@ -67,8 +67,8 @@ def main():
 
         # Generated image save
         with tf.device("/cpu:0"):
-            iu.save_images(sample_x_hr, (valid_image_height, valid_image_width), sample_hr_dir)
-            iu.save_images(sample_x_lr, (valid_image_height, valid_image_width), sample_lr_dir)
+            iu.save_images(sample_x_hr, (valid_image_height, valid_image_width), sample_hr_dir, inv_type='127')
+            iu.save_images(sample_x_lr, (valid_image_height, valid_image_width), sample_lr_dir, inv_type='127')
 
         global_step = 0
         for epoch in range(train_step['train_epochs']):
@@ -155,7 +155,7 @@ def main():
 
                     # Generated image save
                     with tf.device("/cpu:0"):
-                        iu.save_images(samples, (sample_image_height, sample_image_width), sample_dir)
+                        iu.save_images(samples, (sample_image_height, sample_image_width), sample_dir, inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
