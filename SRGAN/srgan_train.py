@@ -68,7 +68,7 @@ def main():
             global_step = 0
             print('[-] No checkpoint file found')
 
-        start_epoch = global_step // train_step['batch_size']
+        start_epoch = global_step // (ds.num_images // train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
