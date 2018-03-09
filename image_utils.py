@@ -2,7 +2,7 @@ from PIL import Image
 
 import tensorflow as tf
 import numpy as np
-import imageio
+import scipy.misc
 
 
 def down_sampling(img):
@@ -25,13 +25,13 @@ def up_sampling(img):
 
 def inverse_transform(images, inv_type='225'):
     if inv_type == '225':
-        images *= 255.
-        images[images > 255.] = 255.
-        images[images < 0.] = 0.
+        images *= 255
+        images[images > 255] = 255
+        images[images < 0] = 0
     elif inv_type == '127':
-        images = (images + 1.) * 127.
-        images[images > 255.] = 255.
-        images[images < 0.] = 0.
+        images = (images + 1) * 127
+        images[images > 255] = 255
+        images[images < 0] = 0
     return images
 
 
@@ -49,7 +49,7 @@ def merge(images, size):
 
 def img_save(images, size, path):
     image = np.squeeze(merge(images, size))
-    return imageio.imwrite(path, image)
+    return scipy.misc.toimage(path, image)
 
 
 def save_images(images, size, image_path, inv_type='225'):

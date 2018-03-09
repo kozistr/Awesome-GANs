@@ -154,7 +154,7 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    with tf.device("/cpu:0"):
+                    with tf.device("/cpu:1"):
                         iu.save_images(samples, (sample_image_height, sample_image_width), sample_dir, inv_type='127')
 
                     # Model save
