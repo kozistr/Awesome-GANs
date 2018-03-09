@@ -422,7 +422,7 @@ class SRGAN:
             import numpy as np
             pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
 
-            pool5 = tf.layers.flatten(pool5)
+            pool5 = tf.reshape(pool5, (-1, pool5_size))
 
             with tf.name_scope("fc6") as scope:
                 weight = tf.Variable(tf.truncated_normal(shape=[pool5_size, 4096], stddev=std, dtype=tf.float32),
