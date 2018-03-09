@@ -217,7 +217,7 @@ class SRGAN:
             rgb_scaled = tf.cast(x * 255., dtype=tf.float32)  # inverse_transform
 
             # rgb to bgr
-            r, g, b = tf.split(3, 3, rgb_scaled)
+            r, g, b = tf.split(rgb_scaled, 3, 3)
             bgr = tf.concat([b - self.vgg_mean[0],
                              g - self.vgg_mean[1],
                              r - self.vgg_mean[2]], axis=3)
@@ -414,8 +414,8 @@ class SRGAN:
         x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
         x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1.) / 2., weights=self.vgg_weights)
-        _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1.) / 2., reuse=True, weights=self.vgg_weights)
+        vgg_net_real, vgg_bottle_real = self.vgg19((x_vgg_real + 1) / 2, weights=self.vgg_weights)
+        _, vgg_bottle_fake = self.vgg19((x_vgg_fake + 1) / 2, reuse=True, weights=self.vgg_weights)
 
         # Losses
         d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
