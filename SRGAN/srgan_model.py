@@ -231,7 +231,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[64], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(bgr, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -242,7 +242,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[64], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(conv1_1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -256,7 +256,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[128], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(pool1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -267,7 +267,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[128], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(conv2_1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -281,7 +281,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[256], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(pool2, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -292,13 +292,24 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[256], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(conv3_1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
                 conv3_2 = tf.nn.relu(out, name=scope)
 
-            pool3 = tf.nn.max_pool(conv3_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool3')
+            with tf.name_scope("conv3_3") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 256, 256], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[256], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv3_2, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv3_3 = tf.nn.relu(out, name=scope)
+
+            pool3 = tf.nn.max_pool(conv3_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool3')
 
             """ Conv4 """
             with tf.name_scope("conv4_1") as scope:
@@ -306,7 +317,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(pool3, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -317,13 +328,24 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(conv4_1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
                 conv4_2 = tf.nn.relu(out, name=scope)
 
-            pool4 = tf.nn.max_pool(conv4_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool4')
+            with tf.name_scope("conv4_3") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 512, 512], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv4_2, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv4_3 = tf.nn.relu(out, name=scope)
+
+            pool4 = tf.nn.max_pool(conv4_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool4')
 
             bottle_neck = pool4
 
@@ -333,7 +355,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(pool4, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
@@ -344,13 +366,24 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [kernel, bias]
+                self.vgg_params.append([kernel, bias])
 
                 conv = tf.nn.conv2d(conv5_1, kernel, [1, 1, 1, 1], padding='SAME')
                 out = tf.nn.bias_add(conv, bias)
                 conv5_2 = tf.nn.relu(out, name=scope)
 
-            pool5 = tf.nn.max_pool(conv5_2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
+            with tf.name_scope("conv5_3") as scope:
+                kernel = tf.Variable(tf.truncated_normal(shape=[3, 3, 512, 512], stddev=std, dtype=tf.float32),
+                                     name='weights')
+                bias = tf.Variable(tf.constant(0., shape=[512], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.vgg_params.append([kernel, bias])
+
+                conv = tf.nn.conv2d(conv5_2, kernel, [1, 1, 1, 1], padding='SAME')
+                out = tf.nn.bias_add(conv, bias)
+                conv5_3 = tf.nn.relu(out, name=scope)
+
+            pool5 = tf.nn.max_pool(conv5_3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
 
             """ fc layers """
             import numpy as np
@@ -363,7 +396,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [weight, bias]
+                self.vgg_params.append([kernel, bias])
 
                 out = tf.nn.bias_add(tf.matmul(pool5, weight), bias)
                 fc1 = tf.nn.relu(out, name=scope)
@@ -373,7 +406,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[4096], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [weight, bias]
+                self.vgg_params.append([kernel, bias])
 
                 out = tf.nn.bias_add(tf.matmul(fc1, weight), bias)
                 fc2 = tf.nn.relu(out, name=scope)
@@ -383,7 +416,7 @@ class SRGAN:
                                      name='weights')
                 bias = tf.Variable(tf.constant(1., shape=[1000], dtype=tf.float32),
                                    trainable=True, name='biases')
-                self.vgg_params += [weight, bias]
+                self.vgg_params.append([kernel, bias])
 
                 fc3 = tf.nn.bias_add(tf.matmul(fc2, weight), bias)
                 prob = tf.nn.softmax(fc3)
@@ -396,7 +429,10 @@ class SRGAN:
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
             for i, k in enumerate(vgg19_model.keys()):
-                self.s.run(self.vgg_params[i].assign(tf.convert_to_tensor(vgg19_model[k], dtype=tf.float32)))
+                print("[+] Loading %d %s" % (i, k))
+
+                self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
+                self.s.run(self.vgg_params[i][1].assign(tf.convert_to_tensor(vgg19_model[k][1], dtype=tf.float32)))
 
         return tf.identity(fc3), bottle_neck
 
