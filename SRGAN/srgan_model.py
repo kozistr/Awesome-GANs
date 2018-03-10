@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+import vgg19
+
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -120,6 +122,8 @@ class SRGAN:
         self.g_mse_loss = 0.
         self.g_loss = 0.
 
+        self.vgg19 = None
+
         self.g = None
         self.g_test = None
         self.adv_scaling = 1e-3
@@ -212,7 +216,9 @@ class SRGAN:
         """
         Download pre-trained model for tensorflow
         Credited by https://github.com/tensorlayer
+        
         Link : https://mega.nz/#!xZ8glS6J!MAnE91ND_WyfZ_8mvkuSa2YcA7q-1ehfSm-Q1fxOvvs
+        
         :param x: 224x224x3 HR images
         :param weights: vgg19 pre-trained weight
         :param reuse: re-usability
@@ -503,6 +509,23 @@ class SRGAN:
 
         return bottle_neck
 
+    def build_vgg19(self, x, reuse=None):
+        with tf.variable_scope("vgg19", reuse=reuse):
+            # image re-scaling
+            x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
+            x = tf.cast(x * 255., dtype=tf.float32)     # [0, 1]  to [0, 255]
+
+            r, g, b = tf.split(x, 3, 3)
+            bgr = tf.concat([b - self.vgg_mean[0],
+                             g - self.vgg_mean[1],
+                             r - self.vgg_mean[2]], axis=3)
+
+            self.vgg19 = vgg19.VGG19(bgr)
+
+            net = self.vgg19.vgg19_net['conv5_4']
+
+            return net  # last layer
+
     def build_srgan(self):
         def mse_loss(pred, data):
             return tf.reduce_mean(tf.reduce_sum(tf.square(pred - data), axis=[3]))
@@ -519,11 +542,13 @@ class SRGAN:
         d_fake, d_fake_prob = self.discriminator(self.g, reuse=True)
 
         # VGG19
-        # x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
-        # x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
+        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])
+        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
         # vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
         # vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
+        vgg_bottle_real = self.build_vgg19(x_vgg_real)
+        vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
 
         # Losses
         d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
@@ -533,7 +558,7 @@ class SRGAN:
         self.g_adv_loss = self.adv_scaling * sigmoid_loss(d_fake, tf.ones_like(d_fake))
         self.g_mse_loss = mse_loss(self.g, self.x_hr)
         # tf.losses.mean_squared_error(self.g, self.x_hr, reduction=tf.losses.Reduction.MEAN)
-        # self.g_cnt_loss = self.vgg_scaling * mse_loss(vgg_bottle_real, vgg_bottle_fake)
+        self.g_cnt_loss = self.vgg_scaling * mse_loss(vgg_bottle_real, vgg_bottle_fake)
         # tf.losses.mean_squared_error(vgg_bottle_fake, vgg_bottle_real, reduction=tf.losses.Reduction.MEAN)
         self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
 
@@ -541,7 +566,7 @@ class SRGAN:
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
-        # tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
+        tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
         tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
