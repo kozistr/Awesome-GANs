@@ -759,7 +759,10 @@ class Div2KDataSet:
                     faces = faces[offset * size:(offset + 1) * size]
 
                 # [0, 255] to [0, 1]
-                faces = np.array(faces, dtype=np.float16) / 255.
+                faces = np.array(faces, dtype=np.uint8) / 255.
+
+                if ds_name == self.hr_ds_name:  # For HR images, norm to [-1, 1]
+                    faces = (faces + 1) / 2
 
                 print("[+] Image size : ", faces.shape)
 
