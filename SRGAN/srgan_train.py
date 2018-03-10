@@ -40,9 +40,10 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
-    ds = DataSet(mode='r')
-    hr_lr_images = ds.images
-    hr, lr = hr_lr_images[0],  hr_lr_images[1]
+    with tf.device('/cpu:0'):
+        ds = DataSet(mode='r')
+        hr_lr_images = ds.images
+        hr, lr = hr_lr_images[0],  hr_lr_images[1]
 
     print("[+] Loaded HR image ", hr.shape)
     print("[+] Loaded LR image ", lr.shape)
@@ -52,7 +53,7 @@ def main():
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
-        with tf.device("/gpu:1"):
+        with tf.device("/gpu:0"):
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
@@ -178,7 +179,7 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    with tf.device("/cpu:1"):
+                    with tf.device("/cpu:0"):
                         iu.img_save(samples, sample_dir)
 
                     # Model save
