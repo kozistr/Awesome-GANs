@@ -109,7 +109,7 @@ class SRGAN:
 
         self.vgg_params = []
         self.vgg_weights = '/home/zero/hdd/vgg19.npy'  # TF Slim VGG19 pre-trained model
-        self.vgg_mean = tf.convert_to_tensor([103.939, 116.779, 123.68], dtype=tf.float32)
+        self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
         self.d_real = 0.
@@ -226,10 +226,10 @@ class SRGAN:
             r, g, b = tf.split(x, 3, 3)
             bgr = tf.concat([b - self.vgg_mean[0],
                              g - self.vgg_mean[1],
-                             r - self.vgg_mean[0]], axis=3)
+                             r - self.vgg_mean[2]], axis=3)
 
             # size re-checking...
-            assert bgr.get_shape().as_list()[1:] == (224, 224, 3)
+            assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
 
             std = 1e-1
 
