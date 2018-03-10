@@ -108,7 +108,7 @@ class SRGAN:
 
         self.vgg_params = []
         self.vgg_weights = '/home/zero/hdd/vgg_19.ckpt'  # TF Slim VGG19 pre-trained model
-        self.vgg_mean = [103.939, 116.779, 123.68]
+        self.vgg_mean = tf.convert_to_tensor([103.939, 116.779, 123.68], dtype=tf.float32)
 
         # pre-defined
         self.d_real = 0.
@@ -206,20 +206,19 @@ class SRGAN:
     def vgg_model(self, x, is_train=False, reuse=None):
         import vgg19 as vgg_19_model
 
-        with tf.variable_scope("vgg19", reuse=reuse):
-            # de_normalize
-            x = tf.cast((x + 1) / 2 , dtype=tf.float32)  # [-1, 1] to [0, 1]
-            x = tf.cast(x * 255, dtype=tf.uint8)         # [0, 1]  to [0, 255]
+        # de_normalize
+        x = tf.cast((x + 1) / 2 , dtype=tf.float32)  # [-1, 1] to [0, 1]
+        x = tf.cast(x * 255, dtype=tf.float32)       # [0, 1]  to [0, 255]
 
-            r, g, b = tf.split(x, 3, 3)
-            x = tf.concat([b - self.vgg_mean[0],
-                           g - self.vgg_mean[1],
-                           r - self.vgg_mean[0]], axis=3)
+        r, g, b = tf.split(x, 3, 3)
+        x = tf.concat([b - self.vgg_mean[0],
+                       g - self.vgg_mean[1],
+                       r - self.vgg_mean[0]], axis=3)
 
-            _, net = vgg_19_model.vgg_19(x, is_train=is_train, reuse=reuse)
-            net = net['vgg_19/conv5/conv5_4']  # Last Layer
+        _, net = vgg_19_model.vgg_19(x, is_training=is_train, reuse=reuse)
+        net = net['vgg_19/conv5/conv5_4']  # Last Layer
 
-            return net
+        return net
 
     def build_srgan(self):
         def mse_loss(pred, data):

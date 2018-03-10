@@ -41,7 +41,7 @@ def main():
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
     with tf.device('/cpu:0'):
-        ds = DataSet(mode='w')
+        ds = DataSet(mode='r')
         hr_lr_images = ds.images  # RGB normalize images
         # HR : [0, 1] to [-1, 1]
         # LR : [0, 1]
