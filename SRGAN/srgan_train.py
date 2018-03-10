@@ -72,9 +72,9 @@ def main():
             print('[-] No checkpoint file found')
 
         # Load VGG19 pre-trained model
-        vgg_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vgg_19')
-        vgg_restore = tf.train.Saver(vgg_var_list)
-        vgg_restore.restore(s, model.vgg_weights)
+        # vgg_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vgg_19')
+        # vgg_restore = tf.train.Saver(vgg_var_list)
+        # vgg_restore.restore(s, model.vgg_weights)
 
         start_epoch = global_step // (ds.num_images // train_step['batch_size'])
 
