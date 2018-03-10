@@ -519,11 +519,11 @@ class SRGAN:
         d_fake, d_fake_prob = self.discriminator(self.g, reuse=True)
 
         # VGG19
-        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
-        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
+        # x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
+        # x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
-        vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
+        # vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
+        # vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
 
         # Losses
         d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
@@ -533,7 +533,7 @@ class SRGAN:
         self.g_adv_loss = self.adv_scaling * sigmoid_loss(d_fake, tf.ones_like(d_fake))
         self.g_mse_loss = mse_loss(self.g, self.x_hr)
         # tf.losses.mean_squared_error(self.g, self.x_hr, reduction=tf.losses.Reduction.MEAN)
-        self.g_cnt_loss = self.vgg_scaling * mse_loss(vgg_bottle_real, vgg_bottle_fake)
+        # self.g_cnt_loss = self.vgg_scaling * mse_loss(vgg_bottle_real, vgg_bottle_fake)
         # tf.losses.mean_squared_error(vgg_bottle_fake, vgg_bottle_real, reduction=tf.losses.Reduction.MEAN)
         self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
 
@@ -541,7 +541,7 @@ class SRGAN:
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
-        tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
+        # tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
         tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)

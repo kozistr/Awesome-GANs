@@ -137,12 +137,12 @@ def main():
                                           model.x_hr: batch_x_hr,
                                           model.x_lr: batch_x_lr,
                                       })
-                    _, g_loss, _, _, _ = s.run([model.g_op,
-                                                model.g_loss, model.g_adv_loss, model.g_mse_loss, model.g_cnt_loss],
-                                               feed_dict={
-                                                   model.x_hr: batch_x_hr,
-                                                   model.x_lr: batch_x_lr,
-                                               })
+                    _, g_loss, _, _, = s.run([model.g_op,
+                                              model.g_loss, model.g_adv_loss, model.g_mse_loss],
+                                             feed_dict={
+                                                 model.x_hr: batch_x_hr,
+                                                 model.x_lr: batch_x_lr,
+                                            })
 
                 if i % train_step['logging_interval'] == 0:
                     summary = s.run(model.merged,
