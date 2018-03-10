@@ -13,16 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
 from collections import OrderedDict
-
-tf.set_random_seed(777)  # reproducibility
 
 
 def get_tensor_aliases(tensor):
