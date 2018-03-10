@@ -675,24 +675,21 @@ class Div2KDataSet:
         self.div2k(mode=self.mode)  # load DIV2K DataSet
 
     def div2k(self, mode):
-        import cv2
+        # import cv2
+        import scipy.misc
 
         def _get_image(path):
-            return cv2.imread(path)
-            # return scipy.misc.imread(path, mode='RGB')
+            return scipy.misc.imread(path, mode='RGB')
+            # return cv2.imread(path)
 
         def hr_pre_process(img):
-            # img = scipy.misc.imresize(img, size=(self.input_hr_height, self.input_hr_width))
-            img = cv2.resize(img, (self.input_hr_height, self.input_hr_width))
-            # img = (img / 127.5) - 1.
-            # img /= 255.
+            img = scipy.misc.imresize(img, size=(self.input_hr_height, self.input_hr_width))
+            # img = cv2.resize(img, (self.input_hr_height, self.input_hr_width), interpolation=cv2.INTER_AREA)
             return img
 
         def lr_pre_process(img):
-            # img = scipy.misc.imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
-            img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
-            # img = (img / 127.5) - 1.
-            # img /= 255.
+            img = scipy.misc.imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
+            # img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
             return img
 
         if mode == 'w':
@@ -758,8 +755,9 @@ class Div2KDataSet:
                 else:
                     faces = faces[offset * size:(offset + 1) * size]
 
-                # [0, 255] to [0, 1]
-                faces = np.array(faces, dtype=np.float32) / 255.
+                # [0, 255] to [-1, 1]
+                faces = np.array(faces, dtype=np.float32)
+                faces = (faces / (255 / 2.)) - 1.
 
                 print("[+] Image size : ", faces.shape)
 

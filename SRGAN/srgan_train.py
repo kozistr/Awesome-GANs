@@ -41,11 +41,9 @@ def main():
 
     # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
     with tf.device('/cpu:0'):
-        ds = DataSet(mode='r')
+        ds = DataSet(mode='w')
         hr_lr_images = ds.images  # RGB normalize images
-        # HR : [0, 1] to [-1, 1]
-        # LR : [0, 1]
-        hr, lr = (hr_lr_images[0] * 2) - 1, hr_lr_images[1]
+        hr, lr = hr_lr_images[0], hr_lr_images[1]
 
     print("[+] Loaded HR image ", hr.shape)
     print("[+] Loaded LR image ", lr.shape)
@@ -71,11 +69,6 @@ def main():
             global_step = 0
             print('[-] No checkpoint file found')
 
-        # Load VGG19 pre-trained model
-        # vgg_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vgg_19')
-        # vgg_restore = tf.train.Saver(vgg_var_list)
-        # vgg_restore.restore(s, model.vgg_weights)
-
         start_epoch = global_step // (ds.num_images // train_step['batch_size'])
 
         # Initializing
@@ -94,8 +87,8 @@ def main():
 
         # Generated image save
         with tf.device("/cpu:0"):
-            iu.img_save(sample_x_hr, sample_hr_dir)
-            iu.img_save(sample_x_lr, sample_lr_dir)
+            iu.img_save(sample_x_hr, sample_hr_dir, inv_type='127')
+            iu.img_save(sample_x_lr, sample_lr_dir, inv_type='127')
 
         for epoch in range(start_epoch, train_step['train_epochs']):
 
@@ -177,11 +170,6 @@ def main():
 
                     samples = np.reshape(samples, model.hr_image_shape[1:])
 
-                    samples = (samples + 1.) / 2.
-                    samples = np.array(samples * 255, dtype=np.uint8)
-
-                    print(samples.shape, samples.size, type(samples), samples)
-
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
 
@@ -192,7 +180,7 @@ def main():
 
                     # Generated image save
                     with tf.device("/cpu:0"):
-                        iu.img_save(samples, sample_dir)
+                        iu.img_save(samples, sample_dir, inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)

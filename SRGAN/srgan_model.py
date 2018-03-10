@@ -219,17 +219,17 @@ class SRGAN:
         :return: prob
         """
         with tf.variable_scope("vgg19", reuse=reuse):
-            # de_normalize
+            # image re-scaling
             x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
-            x = tf.cast(x * 255, dtype=tf.float32)       # [0, 1]  to [0, 255]
+            x = tf.cast(x * 255., dtype=tf.float32)     # [0, 1]  to [0, 255]
 
             r, g, b = tf.split(x, 3, 3)
             bgr = tf.concat([b - self.vgg_mean[0],
                              g - self.vgg_mean[1],
                              r - self.vgg_mean[0]], axis=3)
 
-            # _, net = vgg_19_model.vgg_19(x, is_training=is_train, reuse=reuse)
-            # net = net['vgg19/vgg_19/conv5/conv5_4']  # Last Layer
+            # size re-checking...
+            assert bgr.get_shape().as_list()[1:] == (224, 224, 3)
 
             std = 1e-1
 
@@ -428,6 +428,7 @@ class SRGAN:
             pool5 = tf.nn.max_pool(conv5_4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool5')
 
             """ fc layers """
+            """
             with tf.name_scope("fc6") as scope:
                 pool5_size = int(np.prod(pool5.get_shape()[1:]))  # (-1, x)
 
@@ -469,6 +470,7 @@ class SRGAN:
 
                 fc8 = tf.nn.bias_add(tf.matmul(x, weight), bias, name=scope)
                 prob = tf.nn.softmax(fc8)
+            """
 
         # Loading vgg19-pre_trained.npz weights
         if reuse is None:
@@ -477,11 +479,14 @@ class SRGAN:
             vgg19_model = np.load(weights, encoding='latin1').item()
             vgg19_model = OrderedDict(sorted(vgg19_model.items()))
 
-            for i, k in enumerate(vgg19_model.keys()):
+            removed_layers = ["fc6", "fc7", "fc8"]
+            for rl in removed_layers:
+                vgg19_model.pop(rl, None)
+
+            for i, k in enumerate(vgg19_model.keys()):  # skip fc layers
                 print("[+] Loading VGG19 - %2d layer : %8s " % (i, k),
                       self.vgg_params[i][0].get_shape(), self.vgg_params[i][1].get_shape())
 
-                # with tf.device('/cpu:0'):
                 try:
                     self.s.run(self.vgg_params[i][0].assign(tf.convert_to_tensor(vgg19_model[k][0], dtype=tf.float32)))
                 except ValueError:
@@ -496,7 +501,7 @@ class SRGAN:
                     print("[-] file  bias's shape :", vgg19_model[k][1].shape)
                     raise ValueError
 
-        return tf.identity(fc8), bottle_neck
+        return bottle_neck
 
     def build_srgan(self):
         def mse_loss(pred, data):
@@ -517,8 +522,8 @@ class SRGAN:
         x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
         x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        _, vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
-        _, vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
+        vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
+        vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
 
         # Losses
         d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))

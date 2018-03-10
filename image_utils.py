@@ -1,5 +1,3 @@
-from PIL import Image
-
 import tensorflow as tf
 import numpy as np
 import scipy.misc
@@ -24,15 +22,16 @@ def up_sampling(img):
 
 
 def inverse_transform(images, inv_type='255'):
-    if inv_type == '255':
+    if inv_type == '255':    # [ 0  1]
         images *= 255
-        images[images > 255] = 255
-        images[images < 0] = 0
-    elif inv_type == '127':
-        images = (images + 1) * 127
-        images[images > 255] = 255
-        images[images < 0] = 0
-    return images
+    elif inv_type == '127':  # [-1, 1]
+        images = (images + 1) * (255 / 2.)
+
+    # clipped by [0, 255]
+    images[images > 255] = 255
+    images[images < 0] = 0
+
+    return images.astype(np.uint8)
 
 
 def merge(images, size):
@@ -56,6 +55,5 @@ def save_images(images, size, image_path, inv_type='255'):
 
 
 def img_save(img, path, inv_type='255'):
-    img = inverse_transform(img, inv_type).astype(np.uint8)
-    img = Image.fromarray(img)
-    return img.save(path, "PNG")
+    return scipy.misc.imsave(path, img, inv_type)
+    # return cv2.imwrite(path, inverse_transform(img, inv_type))
