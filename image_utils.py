@@ -55,5 +55,5 @@ def save_images(images, size, image_path, inv_type='255'):
 
 
 def img_save(img, path, inv_type='255'):
-    return scipy.misc.imsave(path, img, inv_type)
+    return scipy.misc.imsave(path, img)
     # return cv2.imwrite(path, inverse_transform(img, inv_type))
