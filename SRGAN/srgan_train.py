@@ -55,7 +55,7 @@ def main():
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
-        with tf.device("/gpu:0"):
+        with tf.device("/gpu:1"):
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
@@ -170,12 +170,15 @@ def main():
                     # Training G model with sample image and noise
                     sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
 
-                    samples = s.run(model.g,
+                    samples = s.run(model.g_test,
                                     feed_dict={
                                         model.x_lr: sample_x_lr,
                                     })
 
                     samples = np.reshape(samples, model.hr_image_shape[1:])
+
+                    samples = (samples + 1.) / 2.
+                    samples = np.array(samples * 255, dtype=np.uint8)
 
                     print(samples.shape, samples.size, type(samples), samples)
 

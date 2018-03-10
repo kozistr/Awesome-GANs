@@ -41,11 +41,12 @@ def conv2d(x, f=64, k=3, s=1, act=None, pad='SAME', name='conv2d'):
                             name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-5):
+def batch_norm(x, momentum=0.9, eps=1e-5, is_train=True):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
-                                         scale=True)
+                                         scale=True,
+                                         trainable=is_train)
 
 
 class SRGAN:
@@ -120,6 +121,7 @@ class SRGAN:
         self.g_loss = 0.
 
         self.g = None
+        self.g_test = None
         self.adv_scaling = 1e-3
         self.vgg_scaling = 2e-6
 
@@ -162,18 +164,19 @@ class SRGAN:
 
             return logits, prob
 
-    def generator(self, x, reuse=None):
+    def generator(self, x, reuse=None, is_train=True):
         """
         :param x: LR (Low Resolution) images, (-1, 96, 96, 3)
         :param reuse: scope re-usability
+        :param is_train: is trainable, default True
         :return: SR (Super Resolution) images, (-1, 384, 384, 3)
         """
 
         with tf.variable_scope("generator", reuse=reuse):
-            def residual_block(x, name):
+            def residual_block(x, name="", _is_train=True):
                 with tf.variable_scope(name):
                     x = conv2d(x, self.gf_dim, name="n64s1-2")
-                    x = batch_norm(x)
+                    x = batch_norm(x, is_train=_is_train)
                     x = tf.nn.relu(x)
 
                     return x
@@ -183,13 +186,13 @@ class SRGAN:
 
             # B residual blocks
             for i in range(1, 17):  # (1, 9)
-                xx = residual_block(x, name='b-residual_block_%d' % (i * 2 - 1))
-                xx = residual_block(xx, name='b-residual_block_%d' % (i * 2))
+                xx = residual_block(x, name='b-residual_block_%d' % (i * 2 - 1), _is_train=is_train)
+                xx = residual_block(xx, name='b-residual_block_%d' % (i * 2), _is_train=is_train)
                 xx = tf.add(x, xx)
                 x = xx
 
             x = conv2d(x, self.gf_dim, name='n64s1-3')
-            x = batch_norm(x)
+            x = batch_norm(x, is_train=is_train)
 
             x = tf.add(x_, x)
 
@@ -199,7 +202,7 @@ class SRGAN:
                 x = sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, k=1, name='n3s1')  # (-1, 384, 384, 3)
+            x = conv2d(x, self.input_channel, act=tf.nn.tanh, k=1, name='n3s1')  # (-1, 384, 384, 3)
 
             return x
 
@@ -504,6 +507,7 @@ class SRGAN:
 
         # Generator
         self.g = self.generator(self.x_lr)
+        self.g_test = self.generator(self.x_lr, reuse=True, is_train=False)
 
         # Discriminator
         d_real, d_real_prob = self.discriminator(self.x_hr)
