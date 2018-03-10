@@ -43,7 +43,9 @@ def main():
     with tf.device('/cpu:0'):
         ds = DataSet(mode='w')
         hr_lr_images = ds.images  # RGB normalize images
-        hr, lr = hr_lr_images[0],  hr_lr_images[1]
+        # HR : [0, 1] to [-1, 1]
+        # LR : [0, 1]
+        hr, lr = (hr_lr_images[0] * 2) - 1, hr_lr_images[1]
 
     print("[+] Loaded HR image ", hr.shape)
     print("[+] Loaded LR image ", lr.shape)
@@ -174,6 +176,8 @@ def main():
                                     })
 
                     samples = np.reshape(samples, model.hr_image_shape[1:])
+
+                    print(samples.shape, samples.size, type(samples), samples)
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)

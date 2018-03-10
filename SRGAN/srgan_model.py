@@ -207,10 +207,14 @@ class SRGAN:
         import vgg19 as vgg_19_model
 
         with tf.variable_scope("vgg19", reuse=reuse):
-            # [0, 255] RGB images to RGB_mean normed BGR images
-            for i in range(3):
-                x[:, :, i] -= self.vgg_mean[i]
-            x = tf.expand_dims(tf.transpose(x, (2, 0, 1)), axis=0)
+            # de_normalize
+            x = tf.cast((x + 1) / 2 , dtype=tf.float32)  # [-1, 1] to [0, 1]
+            x = tf.cast(x * 255, dtype=tf.uint8)         # [0, 1]  to [0, 255]
+
+            r, g, b = tf.split(x, 3, 3)
+            x = tf.concat([b - self.vgg_mean[0],
+                           g - self.vgg_mean[1],
+                           r - self.vgg_mean[0]], axis=3)
 
             _, net = vgg_19_model.vgg_19(x, is_train=is_train, reuse=reuse)
             net = net['vgg_19/conv5/conv5_4']  # Last Layer

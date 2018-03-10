@@ -683,14 +683,14 @@ class Div2KDataSet:
 
         def hr_pre_process(img):
             # img = scipy.misc.imresize(img, size=(self.input_hr_height, self.input_hr_width))
-            img = cv2.resize(img, size=(self.input_hr_height, self.input_hr_width))
+            img = cv2.resize(img, (self.input_hr_height, self.input_hr_width))
             # img = (img / 127.5) - 1.
             # img /= 255.
             return img
 
         def lr_pre_process(img):
             # img = scipy.misc.imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
-            img = cv2.resize(img, size=(self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_BICUBIC)
+            img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
             # img = (img / 127.5) - 1.
             # img /= 255.
             return img
@@ -759,7 +759,7 @@ class Div2KDataSet:
                     faces = faces[offset * size:(offset + 1) * size]
 
                 # [0, 255] to [0, 1]
-                faces = np.array(faces, dtype=np.uint8) / 255.
+                faces = np.array(faces, dtype=np.float32) / 255.
 
                 print("[+] Image size : ", faces.shape)
 
