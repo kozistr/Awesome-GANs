@@ -2,9 +2,20 @@
 
 ## Loss Function
 
+* I just use 3 losses for ```G loss```
+
+1. VGG19 Bottle Neck feature loss (content loss)
+2. Adversarial loss (sigmoid loss)
+3. MSE loss (with generated HR img, real HR img)
+
+* And for ```D loss```
+
+1. Adversarial loss (sigmoid loss)
+(2. maybe, change adv loss to MSE loss could be good as well i think...)
 
 ## Architecture Networks
 
+* Same as in the SRGAN paper
 
 ## Tensorboard
 
@@ -18,4 +29,3 @@
 
 ## To-Do
 * Add Loss Function & Explains
-* Maybe, another time, adding VGG19 feature.
