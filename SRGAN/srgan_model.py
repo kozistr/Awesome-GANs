@@ -207,6 +207,11 @@ class SRGAN:
         import vgg19 as vgg_19_model
 
         with tf.variable_scope("vgg19", reuse=reuse):
+            # [0, 255] RGB images to RGB_mean normed BGR images
+            for i in range(3):
+                x[:, :, i] -= self.vgg_mean[i]
+            x = tf.expand_dims(tf.transpose(x, (2, 0, 1)), axis=0)
+
             _, net = vgg_19_model.vgg_19(x, is_train=is_train, reuse=reuse)
             net = net['vgg_19/conv5/conv5_4']  # Last Layer
 
@@ -230,7 +235,6 @@ class SRGAN:
         x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])  # default BILINEAR method
         x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        # [-1, 1] to [0, 1]
         _, vgg_bottle_real = self.vgg_model(x_vgg_real)
         _, vgg_bottle_fake = self.vgg_model(x_vgg_fake, reuse=True)
 
