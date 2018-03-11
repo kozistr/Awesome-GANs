@@ -17,4 +17,4 @@
 **LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_80_25000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_160_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_224_70000.png)
 
 ## To-Do
-* Add Loss Function & Explains 
+* Add Loss Function & Explains
