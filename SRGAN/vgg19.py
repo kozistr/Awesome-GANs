@@ -30,19 +30,17 @@ def vgg19_download(file_name, expected_bytes=534904783):
 
 def conv2d_layer(input_, weights, bias):
     """ convolution 2d layer with bias """
-
     x = tf.nn.conv2d(input_, filter=weights, strides=(1, 1, 1, 1), padding='SAME')
     x = tf.nn.bias_add(x, bias)
-
     return x
 
 
 def pool2d_layer(input_, pool='avg'):
+    """ pooling 2c layer with max or avg """
     if pool == 'avg':
         x = tf.nn.avg_pool(input_, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='SAME')
     else:
         x = tf.nn.max_pool(input_, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding='SAME')
-
     return x
 
 
@@ -78,7 +76,6 @@ class VGG19(object):
         with tf.variable_scope(layer_name):
             weight = tf.constant(weight, name='weights')
             bias = tf.constant(bias, name='bias')
-
         return weight, bias
 
     def build(self, img):
@@ -90,7 +87,6 @@ class VGG19(object):
 
             if layer_name == 'conv':
                 weight, bias = self._get_weight(idx, name)
-
                 net = conv2d_layer(net, weight, bias)
             elif layer_name == 'relu':
                 net = tf.nn.relu(net)
