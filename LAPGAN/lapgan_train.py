@@ -53,7 +53,7 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, batch_labels in dataset_iter.iterate():
-                batch_images = batch_images.astype(np.float32) / 225.
+                batch_images = batch_images.astype(np.float32) / 255.
 
                 z = []
                 for i in range(3):
