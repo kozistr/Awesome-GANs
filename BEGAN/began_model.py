@@ -151,8 +151,8 @@ class BEGAN:
                     Speed Order : conv-pool > avg-pool > max-pool. i guess :)
                     """
                     # x = tf.layers.max_pooling2d(x, 2, 2)
-                    # x = conv2d(x, f=f, d=2, act=tf.nn.elu, name='enc-conv-pool-%d' % i)  # conv pooling
-                    x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
+                    x = conv2d(x, f=f, d=2, act=tf.nn.elu, name='enc-conv-pool-%d' % i)  # conv pooling
+                    # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
             x = tf.layers.flatten(x)
 
