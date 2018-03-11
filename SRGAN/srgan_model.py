@@ -244,8 +244,6 @@ class SRGAN:
         x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])
         x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
 
-        # vgg_bottle_real = self.vgg_model(x_vgg_real, weights=self.vgg_weights)
-        # vgg_bottle_fake = self.vgg_model(x_vgg_fake, weights=self.vgg_weights, reuse=True)
         vgg_bottle_real = self.build_vgg19(x_vgg_real)
         vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
 
