@@ -8,7 +8,13 @@
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_tb.png)
+### Disc
+
+![result](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_d_tb.png)
+
+### Gen
+
+![result](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_g_tb.png)
 
 ## Result
 
