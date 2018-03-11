@@ -109,6 +109,8 @@ class SRGAN:
         self.lr_decay_rate = 1e-1
         self.lr_decay_epoch = 100
 
+        self.vgg_mean = [103.939, 116.779, 123.68]
+
         # pre-defined
         self.d_real = 0.
         self.d_fake = 0.
