@@ -35,7 +35,7 @@ class LAPGAN:
 
     def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 z_dim=100, gf_dim=64, df_dim=64, fc_unit=512):
+                 z_dim=128, gf_dim=64, df_dim=64, fc_unit=512):
 
         """
         # General Settings
@@ -52,7 +52,7 @@ class LAPGAN:
         :param sample_num: the number of sample images, default 64
 
         # Model Settings
-        :param z_dim: z noise dimension, default 100
+        :param z_dim: z noise dimension, default 128
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
         :param fc_unit: the number of fully connected filters, default 512
