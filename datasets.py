@@ -21,6 +21,8 @@ DataSets = {
     # CiFar-10, 100
     # 'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
     # 'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
+    'cifar-10': '/home/zero/Desktop/DataSet/cifar-10-batches-py/',
+    'cifar-100': '/home/zero/Desktop/DataSet/cifar-100-python/',
     # Celeb-A DataSet
     'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
     'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
@@ -56,8 +58,8 @@ DataSets = {
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
     # CiFar-10, 100
-    'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
-    'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
+    # 'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
+    # 'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
     # Celeb-A DataSet
     # 'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
     # 'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
