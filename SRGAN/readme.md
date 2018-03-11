@@ -28,4 +28,4 @@
 **SRGAN**  | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/valid_hr.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_00001000.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_100000.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_00040000.png)
 
 ## To-Do
-* Add Loss Function & Explains
+* Results are not good as i expected... So, maybe it needs to be fixed some way soon...
