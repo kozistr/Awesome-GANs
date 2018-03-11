@@ -25,7 +25,7 @@
 
 *Name* | *Valid HR image* | *Global Step 1k* | *Global Step 40k*
 :---: | :---: | :---: | :---:
-**SRGAN**  | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/valid_hr.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_00001000.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_100000.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/train_00040000.png)
+**SRGAN**  | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/gen_img/valid_hr.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/gen_img/train_00001000.png) | ![generated_image](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN/gen_img/train_00040000.png)
 
 ## To-Do
 * Results are not good as i expected... So, maybe it needs to be fixed some way soon...
