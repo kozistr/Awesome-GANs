@@ -441,7 +441,7 @@ class CelebADataSet:
 
         print("[+] Image size : ", faces.shape)
 
-        return faces / 255.
+        return (faces / (255 / 2.)) - 1.
 
     def load_attr(self):
         with open(DataSets['celeb-a-attr'], 'r') as f:

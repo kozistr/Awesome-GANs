@@ -47,7 +47,7 @@ def main():
         ds = DataSet(input_height=64,
                      input_width=64,
                      input_channel=3,
-                     mode='r').images
+                     mode='w').images
         dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                     label_off=True)
 
@@ -61,7 +61,8 @@ def main():
         sample_dir = results['output'] + 'valid.png'
 
         # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir,
+                       inv_type='127')
 
         global_step = 0
         for epoch in range(train_step['epoch']):
@@ -122,7 +123,8 @@ def main():
                     # Generated image save
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)
