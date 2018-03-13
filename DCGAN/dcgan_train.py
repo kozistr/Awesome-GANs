@@ -40,6 +40,8 @@ def main():
         model = dcgan.DCGAN(s, batch_size=train_step['batch_size'])
 
         # Load model & Graph & Weights
+        global_step = 0
+
         ckpt = tf.train.get_checkpoint_state('./model/')
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
@@ -48,7 +50,6 @@ def main():
             global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
             print("[+] global step : %s" % global_step, " successfully loaded")
         else:
-            global_step = 0
             print('[-] No checkpoint file found')
 
         # Initializing variables
@@ -61,7 +62,8 @@ def main():
                           name='cifar-100')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
-        sample_x = dataset.valid_images[:model.sample_num].astype(np.float32) / 225.
+        sample_x = dataset.valid_images[:model.sample_num].astype(np.float32)
+        sample_x = (sample_x / 127.5) - 1.
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
         d_overpowered = False  # G loss > D loss * 2
@@ -70,7 +72,8 @@ def main():
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_images, _ in dataset_iter.iterate():
-                batch_x = batch_images.astype(np.float32) / 225.
+                batch_x = batch_images.astype(np.float32)
+                batch_x = (batch_x / 127.5) - 1.
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -98,8 +101,6 @@ def main():
                                                         model.z: batch_z,
                                                     })
 
-                    d_overpowered = d_loss < g_loss / 2.
-
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
                           " D loss : {:.8f}".format(d_loss),
@@ -121,7 +122,8 @@ def main():
                     sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, step)
 
                     # Generated image save
-                    iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
+                    iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=step)
