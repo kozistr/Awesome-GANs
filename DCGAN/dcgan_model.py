@@ -101,6 +101,8 @@ class DCGAN:
         self.d_loss = 0.
         self.g_loss = 0.
 
+        self.g = None
+
         self.d_op = None
         self.g_op = None
 
@@ -126,16 +128,16 @@ class DCGAN:
             x = tf.nn.leaky_relu(x)
 
             x = conv2d(x, self.df_dim * 2, name='d-conv-1')
-            # x = batch_norm(x)
+            x = batch_norm(x)
             x = tf.nn.leaky_relu(x)
 
             x = conv2d(x, self.df_dim * 4, name='d-conv-2')
-            # x = batch_norm(x)
+            x = batch_norm(x)
             x = tf.nn.leaky_relu(x)
 
-            # x = conv2d(x, self.df_dim * 8, name='d-conv-3')
-            # x = batch_norm(x)
-            # x = tf.nn.leaky_relu(x)
+            x = conv2d(x, self.df_dim * 8, name='d-conv-3')
+            x = batch_norm(x)
+            x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
@@ -192,10 +194,9 @@ class DCGAN:
         self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
-        tf.summary.histogram("z", self.z)
-        # tf.summary.image("g", self.g)  # generated image from G model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
+        # tf.summary.histogram("z", self.z)
+        # tf.summary.histogram("d_real", d_real)
+        # tf.summary.histogram("d_fake", d_fake)
 
         tf.summary.scalar("d_real_loss", d_real_loss)
         tf.summary.scalar("d_fake_loss", d_fake_loss)
