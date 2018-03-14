@@ -200,7 +200,7 @@ class CycleGAN:
         """
         :param x: embeddings
         :param reuse: re-usable
-        :return: logits
+        :return: prob
         """
 
         with tf.variable_scope('decoder', reuse=reuse):
@@ -210,11 +210,11 @@ class CycleGAN:
                 x = tf.nn.leaky_relu(x)
 
             x = conv2d(x, f=self.input_channel, k=7, s=1, name='decoder-conv2d-1')
-            # x = tf.nn.tanh(x)
+            x = tf.nn.tanh(x)
 
             return x
 
-    def enc_dec(self, x, reuse=None, name=""):
+    def discriminator(self, x, reuse=None, name=""):
         """
         :param x: embeddings
         :param reuse: re-usable
@@ -222,8 +222,7 @@ class CycleGAN:
 
         :return: logits
         """
-
-        with tf.variable_scope('encoder-decoder-%s' % name, reuse=reuse):
+        with tf.variable_scope('discriminator-%s' % name, reuse=reuse):
             x = self.encoder(x, reuse=reuse)
             x = self.decoder(x, reuse=reuse)
 
@@ -234,7 +233,6 @@ class CycleGAN:
             f = self.gf_dim * 2
             for i, f_ in enumerate([f, f * 2, f * 4, f * 4, f * 4]):
                 x = conv2d(x, f=f_, k=4, s=2, name='classifier-conv2d-%d' % (i + 1))
-                # x = instance_norm(x, name='classifier-instance_norm-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
@@ -248,14 +246,14 @@ class CycleGAN:
     def build_cyclegan(self):
         # Generator
         with tf.variable_scope("generator-a2b"):
-            self.g_a2b = self.enc_dec(self.a, name="a2b")  # a to b
+            self.g_a2b = self.discriminator(self.a, name="a2b")  # a to b
         with tf.variable_scope("generator-b2a"):
-            self.g_b2a = self.enc_dec(self.b, name="b2a")  # b to a
+            self.g_b2a = self.discriminator(self.b, name="b2a")  # b to a
 
         with tf.variable_scope("generator-b2a", reuse=True):
-            self.g_a2b2a = self.enc_dec(self.g_a2b, reuse=True, name="b2a")  # a to b to a
+            self.g_a2b2a = self.discriminator(self.g_a2b, reuse=True, name="b2a")  # a to b to a
         with tf.variable_scope("generator-a2b", reuse=True):
-            self.g_b2a2b = self.enc_dec(self.g_b2a, reuse=True, name="a2b")  # b to a to b
+            self.g_b2a2b = self.discriminator(self.g_b2a, reuse=True, name="a2b")  # b to a to b
 
         # Classifier
         with tf.variable_scope("classifier-a"):
@@ -279,22 +277,22 @@ class CycleGAN:
         self.w = self.w_a + self.w_b
 
         self.gp_a = tf.reduce_mean(
-            (tf.sqrt(tf.reduce_sum(tf.gradients(c_a_hat, a_hat)[0]**2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+            (tf.sqrt(tf.reduce_sum(tf.gradients(c_a_hat, a_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.) ** 2
         )
         self.gp_b = tf.reduce_mean(
-            (tf.sqrt(tf.reduce_sum(tf.gradients(c_b_hat, b_hat)[0]**2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+            (tf.sqrt(tf.reduce_sum(tf.gradients(c_b_hat, b_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.) ** 2
         )
         self.gp = self.gp_a + self.gp_b
 
-        # loss
         self.c_loss = self.lambda_ * self.gp - self.w
 
-        cycle_a_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(self.a - self.g_a2b2a), reduction_indices=[1, 2, 3]))
-        cycle_b_loss = tf.reduce_mean(tf.reduce_mean(tf.abs(self.b - self.g_b2a2b), reduction_indices=[1, 2, 3]))
+        cycle_a_loss = tf.reduce_mean(tf.squared_difference(self.a, self.g_a2b2a))
+        cycle_b_loss = tf.reduce_mean(tf.squared_difference(self.b, self.g_b2a2b))
         self.cycle_loss = cycle_a_loss + cycle_b_loss
 
-        self.g_a_loss = -1. * tf.reduce_mean(c_b2a)
-        self.g_b_loss = -1. * tf.reduce_mean(c_a2b)
+        # using MSE loss
+        self.g_a_loss = tf.reduce_mean(c_b2a)
+        self.g_b_loss = tf.reduce_mean(c_a2b)
         self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * self.cycle_loss
 
         # Summary

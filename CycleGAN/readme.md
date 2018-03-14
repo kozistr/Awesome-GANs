@@ -2,9 +2,11 @@
 
 ## Loss Function
 
+* Using ```MSE loss``` for *cycle loss* and ```adv loss``` for *gen* and ```l1 loss``` for *disc*.
 
 ## Architecture Networks
 
+* Maybe, same as in the **CycleGAN paper**.
 
 ## Tensorboard
 
@@ -17,6 +19,4 @@
 **CycleGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CycleGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CycleGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CycleGAN/gen_img/train_00200000.png)
 
 ## To-Do
-* It takes a lot of times & resources, so i can't train/test it on my machine.
-* Skip the results
-* Add Loss Function & Explains
+* 
