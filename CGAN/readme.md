@@ -2,9 +2,11 @@
 
 ## Loss Function
 
+* ```Vanilla GAN adv loss```.
 
 ## Architecture Networks
 
+* Different as in the **CGAN paper**. Using ```maxout``` for activation.
 
 ## Tensorboard
 
@@ -17,4 +19,4 @@
 **CGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CGAN/gen_img/train_00147500.png)
 
 ## To-Do
-* Add Loss Function & Explains 
+*
