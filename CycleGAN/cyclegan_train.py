@@ -53,14 +53,29 @@ def main():
                      input_channel=3,
                      crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='w',
+                     mode='r',
                      name=data_set_name)
 
         img_a = ds.images_a
         img_b = ds.images_b
 
-        print("image A shape : ", img_a.shape)
-        print("image B shape : ", img_b.shape)
+        print("[*] image A shape : ", img_a.shape)
+        print("[*] image B shape : ", img_b.shape)
+
+        n_sample = model.sample_num
+
+        sample_image_height = model.sample_size
+        sample_image_width = model.sample_size
+        sample_dir_a = results['output'] + 'valid_a.png'
+        sample_dir_b = results['output'] + 'valid_b.png'
+
+        sample_a, sample_b = img_a[:n_sample], img_b[:n_sample]
+        sample_a = np.reshape(sample_a, [-1] + model.image_shape[1:])
+        sample_b = np.reshape(sample_b, [-1] + model.image_shape[1:])
+
+        # Generated image save
+        iu.save_images(sample_a, [sample_image_height, sample_image_width], sample_dir_a)
+        iu.save_images(sample_b, [sample_image_height, sample_image_width], sample_dir_b)
 
         print("[+] pre-processing elapsed time : {:.8f}s".format(time.time() - start_time))
 
@@ -136,14 +151,14 @@ def main():
                     # Training G model with sample image and noise
                     samples_a2b = s.run(model.g_a2b,
                                         feed_dict={
-                                            model.a: batch_a,
-                                            model.b: batch_b,
+                                            model.a: sample_a,
+                                            model.b: sample_b,
                                             model.lr_decay: lr_decay,
                                         })
                     samples_b2a = s.run(model.g_b2a,
                                         feed_dict={
-                                            model.a: batch_a,
-                                            model.b: batch_b,
+                                            model.a: sample_a,
+                                            model.b: sample_b,
                                             model.lr_decay: lr_decay,
                                         })
 

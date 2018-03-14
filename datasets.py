@@ -619,7 +619,7 @@ class Pix2PixDataSet:
 
         print("[+] Image size : ", pix2pix.shape)
 
-        return pix2pix / 255.
+        return pix2pix / 255.  # (pix2pix / 127.5) - 1.
 
 
 class ImageNetDataSet:

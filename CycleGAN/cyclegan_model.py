@@ -71,9 +71,9 @@ def batch_normalize(x, eps=1e-5):
 class CycleGAN:
 
     def __init__(self, s, batch_size=64, input_height=64, input_width=64, input_channel=3,
-                 sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
-                 df_dim=32, gf_dim=32, fc_unit=256,
-                 g_lr=1e-4, c_lr=1e-4, epsilon=1e-12):
+                 sample_num=1 * 1, sample_size=1, output_height=64, output_width=64,
+                 df_dim=32, gf_dim=32, fc_unit=512,
+                 g_lr=2e-4, c_lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -82,23 +82,23 @@ class CycleGAN:
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 32x32x3(HWC).
+        - in case of Celeb-A, image size is 64x64x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 256
-        :param sample_size: sample image size, default 16
+        :param sample_num: the number of output images, default 4
+        :param sample_size: sample image size, default 2
         :param output_height: output images height, default 64
         :param output_width: output images width, default 64
 
         # For CNN model
         :param df_dim: discriminator filter, default 32
         :param gf_dim: generator filter, default 32
-        :param fc_unit: fully connected units, default 256
+        :param fc_unit: fully connected units, default 512
 
         # Training Option
-        :param g_lr: generator learning rate, default 1e-4
-        :param c_lr: classifier learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-12
+        :param g_lr: generator learning rate, default 2e-4
+        :param c_lr: classifier learning rate, default 2e-4
+        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -298,13 +298,13 @@ class CycleGAN:
         self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * self.cycle_loss
 
         # Summary
-        tf.summary.scalar("c_loss", self.c_loss)
-        tf.summary.scalar("cycle_loss", self.cycle_loss)
-        tf.summary.scalar("cycle_a_loss", cycle_a_loss)
-        tf.summary.scalar("cycle_b_loss", cycle_b_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
-        tf.summary.scalar("g_a_loss", self.g_a_loss)
-        tf.summary.scalar("g_b_loss", self.g_b_loss)
+        tf.summary.scalar("loss/c_loss", self.c_loss)
+        tf.summary.scalar("loss/cycle_loss", self.cycle_loss)
+        tf.summary.scalar("loss/cycle_a_loss", cycle_a_loss)
+        tf.summary.scalar("loss/cycle_b_loss", cycle_b_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("loss/g_a_loss", self.g_a_loss)
+        tf.summary.scalar("loss/g_b_loss", self.g_b_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
