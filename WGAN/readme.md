@@ -2,9 +2,11 @@
 
 ## Loss Function
 
+* Using ```sigmoid loss``` instead of ```adv loss```.
 
 ## Architecture Networks
 
+* slightly different as in the **WGAN paper**.
 
 ## Tensorboard
 
