@@ -49,8 +49,8 @@ def deconv2d(x, f=64, k=3, s=2, pad='SAME'):
 class WGAN:
 
     def __init__(self, s, batch_size=32, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 z_dim=100, gf_dim=32, df_dim=32, epsilon=1e-12,
+                 sample_num=8 * 8, sample_size=8,
+                 z_dim=128, gf_dim=32, df_dim=32, epsilon=1e-9,
                  enable_bn=False, enable_adam=False, enable_gp=False):
 
         """
@@ -61,21 +61,21 @@ class WGAN:
         :param input_width: input image width, default 28
         :param input_channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
-        :param n_classes: input dataset's classes
+        :param n_classes: input DatSset's classes
         - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
-        :param sample_num: the number of output images, default 100
-        :param sample_size: sample image size, default 10
+        :param sample_num: the number of output images, default 64
+        :param sample_size: sample image size, default 8
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 100
+        :param z_dim: z dimension (kinda noise), default 128
         :param gf_dim: the number of generator filters, default 32
         :param df_dim: the number of discriminator filters, default 32
-        :param epsilon: epsilon, default 1e-12
+        :param epsilon: epsilon, default 1e-9
         :param enable_bn: enabling batch normalization, default False
         :param enable_adam: enabling adam optimizer, default False
-        :param enable_gp: enabling gradient penaly, default False
+        :param enable_gp: enabling gradient penalty, default False
         """
 
         self.s = s
@@ -103,12 +103,12 @@ class WGAN:
 
         # Training Options - based on the WGAN paper
         self.beta1 = 0.5
-        self.learning_rate = 1e-4  # very slow
+        self.learning_rate = 2e-4  # very slow
         self.critic = 5
         self.clip = .01
         self.d_clip = []  # (-0.01 ~ 0.01)
         self.d_lambda = .25
-        self.decay = .90
+        self.decay = .9
 
         self.EnableBN = enable_bn
         self.EnableAdam = enable_adam
@@ -117,6 +117,10 @@ class WGAN:
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
+
+        self.gradient_penalty = 0.
+
+        self.g = None
 
         self.d_op = None
         self.g_op = None
@@ -196,6 +200,7 @@ class WGAN:
         # d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
         # self.d_loss = d_real_loss + d_fake_loss
         # self.g_loss = -tf.reduce_mean(log(d_fake))
+
         d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real,
                                                                              labels=tf.ones_like(d_real)))
         d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
@@ -213,23 +218,25 @@ class WGAN:
             d_interp = self.discriminator(interpolates, reuse=True)
             gradients = tf.gradients(d_interp, [interpolates])[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-            gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
+            self.gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
 
             # Update D loss
-            self.d_loss += self.d_lambda * gradient_penalty
+            self.d_loss += self.d_lambda * self.gradient_penalty
 
         # Summary
-        tf.summary.histogram("z", self.z)
+        # tf.summary.histogram("z", self.z)
 
         # g = tf.reshape(self.g, shape=[-1] + self.image_shape)
         # tf.summary.image("g", g)  # generated image from G model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
+        # tf.summary.histogram("d_real", d_real)
+        # tf.summary.histogram("d_fake", d_fake)
 
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
+        if self.EnableGP:
+            tf.summary.scalar("misc/gp", self.gradient_penalty)
 
         # Collect trainer values
         t_vars = tf.trainable_variables()
