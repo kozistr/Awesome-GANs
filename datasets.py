@@ -17,7 +17,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 DataSets = {
     # Linux
     # MNIST
-    # 'mnist': '/home/zero/hdd/DataSet/MNIST/',
+    'mnist': '/home/zero/hdd/DataSet/MNIST/',
     # CiFar-10, 100
     # 'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
     # 'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
