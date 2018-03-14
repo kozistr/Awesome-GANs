@@ -560,8 +560,8 @@ class Pix2PixDataSet:
         if mode == 'w':
             data_set_name = self.ds_name.split('-')[0]
 
-            self.files_a = glob(os.path.join(DataSets[data_set_name] + 'trainA\\', "*.jpg"))
-            self.files_b = glob(os.path.join(DataSets[data_set_name] + 'trainB\\', "*.jpg"))
+            self.files_a = glob(os.path.join(DataSets[data_set_name] + 'trainA/', "*.jpg"))
+            self.files_b = glob(os.path.join(DataSets[data_set_name] + 'trainB/', "*.jpg"))
             self.files_a = np.sort(self.files_a)
             self.files_b = np.sort(self.files_b)
 
