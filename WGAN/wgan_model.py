@@ -136,20 +136,17 @@ class WGAN:
             x = conv2d(x, self.df_dim)
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = conv2d(x, self.df_dim * 2)
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = conv2d(x, self.df_dim * 4, s=1)
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = tf.layers.flatten(x)
 
@@ -164,20 +161,17 @@ class WGAN:
 
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = deconv2d(x, self.gf_dim * 2)
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = deconv2d(x, self.gf_dim * 1)
             if self.EnableBN:
                 x = batch_normalize(x)
-            else:
-                x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = deconv2d(x, 1, s=1)
             x = tf.nn.sigmoid(x)  # tf.nn.tanh(x)
