@@ -42,9 +42,9 @@ DataSets = {
     # 'monet2photo': '/home/zero/hdd/DataSet/pix2pix/monet2photo/',
     # 'summer2winter_yosemite': '/home/zero/hdd/DataSet/pix2pix/summer2winter_yosemite/',
     # 'ukiyoe2photo': '/home/zero/hdd/DataSet/pix2pix/vukiyoe2photo/',
-    # 'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
-    # 'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
-    # 'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
+    'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
+    'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
+    'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # DIV2K DataSet
     'div2k-hr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_HR/',
     'div2k-hr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5',
@@ -79,9 +79,9 @@ DataSets = {
     'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
     'summer2winter_yosemite': 'D:\\DataSet\\pix2pix\\summer2winter_yosemite\\',
     'ukiyoe2photo': 'D:\\DataSet\\pix2pix\\vukiyoe2photo\\',
-    'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
-    'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
-    'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
+    # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
+    # 'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
+    # 'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
 }
 
 

@@ -24,7 +24,7 @@ results = {
 
 train_step = {
     'epochs': 100,
-    'batch_size': 8,
+    'batch_size': 16,
     'logging_step': 1000,
 }
 
@@ -53,7 +53,7 @@ def main():
                      input_channel=3,
                      crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='r',
+                     mode='w',
                      name=data_set_name)
 
         img_a = ds.images_a
