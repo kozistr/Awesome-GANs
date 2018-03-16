@@ -44,27 +44,33 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, sample_y = mnist.test.next_batch(model.sample_num)
+        sample_x, _ = mnist.test.next_batch(model.sample_num)
+        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
+        for i in range(10):
+            sample_y[10 * i:10 * (i + 1), i] = 1
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_x = batch_x.reshape(-1, model.n_input)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             if not d_overpowered:
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
-                                      model.x: batch_x,
+                                      model.x_1: batch_x,
+                                      model.x_2: batch_x,
+                                      model.y: batch_y,
                                       model.z: batch_z,
                                   })
 
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
                               feed_dict={
-                                  model.x: batch_x,
+                                  model.x_1: batch_x,
+                                  model.x_2: batch_x,
+                                  model.y: batch_y,
                                   model.z: batch_z,
                               })
 
@@ -76,7 +82,9 @@ def main():
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
-                                                    model.x: batch_x,
+                                                    model.x_1: batch_x,
+                                                    model.x_2: batch_x,
+                                                    model.y: batch_y,
                                                     model.z: batch_z,
                                                 })
 
@@ -86,12 +94,13 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
-                samples = s.run(model.g,
+                samples = s.run(model.g_sample,
                                 feed_dict={
+                                    model.y: sample_y,
                                     model.z: sample_z,
                                 })
 
-                samples = np.reshape(samples, [-1] + model.image_shape[1:])
+                # samples = np.reshape(samples, [-1] + model.image_shape[1:])
 
                 # Summary saver
                 model.writer.add_summary(summary, global_step=step)

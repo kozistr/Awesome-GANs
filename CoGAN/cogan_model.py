@@ -4,13 +4,14 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=4, s=2, reuse=False, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=4, s=2, reuse=False, act=None, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
     :param s: strides, default 2
     :param reuse: param re-usability, default False
+    :param act: activation function, default None
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: covn2d net
@@ -21,6 +22,7 @@ def conv2d(x, f=64, k=4, s=2, reuse=False, pad='SAME', name='conv2d'):
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
                             padding=pad,
+                            activation=act,
                             reuse=reuse,
                             name=name)
 
@@ -46,13 +48,14 @@ def deconv2d(x, f=64, k=4, s=2, reuse=False, pad='SAME', name='deconv2d'):
                                       name=name)
 
 
-def batch_norm(x, momentum=0.9, eps=1e-5, reuse=False, training=True):
+def batch_norm(x, momentum=0.9, eps=1e-5, reuse=False, training=True, name=""):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
                                          scale=True,
                                          reuse=reuse,
-                                         training=training)
+                                         training=training,
+                                         name=name)
 
 
 def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
@@ -71,9 +74,9 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
 class CoGAN:
 
     def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
+                 sample_num=8 * 8, sample_size=8, output_height=28, output_width=28,
                  n_input=784, fc_unit=1024, df_dim=64, gf_dim=64,
-                 z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+                 z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12):
 
         """
         # General Settings
@@ -83,12 +86,12 @@ class CoGAN:
         :param input_width: input image width, default 28
         :param input_channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
-        :param n_classes: input dataset's classes
+        :param n_classes: input DataSet's classes
         - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
-        :param sample_num: the number of output images, default 100
-        :param sample_size: sample image size, default 10
+        :param sample_num: the number of output images, default 64
+        :param sample_size: sample image size, default 8
         :param output_height: output images height, default 28
         :param output_width: output images width, default 28
 
@@ -102,7 +105,7 @@ class CoGAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 2e-4
         :param d_lr: discriminator learning rate, default 2e-4
-        :param epsilon: epsilon, default 1e-9
+        :param epsilon: epsilon, default 1e-12
         """
 
         self.s = s
@@ -132,10 +135,15 @@ class CoGAN:
 
         # pre-defined
         self.d_loss = 0.
+        self.d_1_loss = 0.
+        self.d_2_loss = 0.
         self.g_loss = 0.
+        self.g_1_loss = 0.
+        self.g_2_loss = 0.
 
         self.g_1 = None
         self.g_2 = None
+        self.g_sample = None
 
         self.d_op = None
         self.g_op = None
@@ -145,21 +153,32 @@ class CoGAN:
         self.saver = None
 
         # Placeholder
-        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")    # (-1, 784)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')      # (-1, 128)
+        self.x_1 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input],
+                                                     # self.input_height, self.input_width, self.input_channel],
+                                  name="x-image1")  # (-1, 784)
+        self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input],
+                                                     # self.input_height, self.input_width, self.input_channel],
+                                  name="x-image2")  # (-1, 784)
+        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
+                                name='z-noise')     # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
-    def discriminator(self, x, share_params=False, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
+    def discriminator(self, x, y=None, share_params=False, reuse=None, name=""):
+        with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
+            x = tf.concat([x, y], axis=1)
+
+            x = tf.layers.dense(x, self.n_input, reuse=False, name='disc-dense-reshape')
+            x = tf.reshape(x, [-1] + self.image_shape[1:])
+
             x = conv2d(x, f=self.df_dim, k=5, s=1, reuse=False, name='disc-conv2d-0')
             x = prelu(x, reuse=False, name='disc-prelu-0')
-            x = tf.nn.max_pool(x, ksize=2, strides=2, name='disc-max_pool2d-0')
+            x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc-max_pool2d-0')
 
             x = conv2d(x, f=self.df_dim * 2, k=5, s=1, reuse=share_params, name='disc-conv2d-1')
             x = prelu(x, reuse=share_params, name='disc-prelu-1')
-            x = tf.nn.max_pool(x, ksize=2, strides=2, name='disc-max_pool2d-1')
+            x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc-max_pool2d-1')
 
             x = tf.layers.flatten(x)
 
@@ -170,34 +189,70 @@ class CoGAN:
 
             return x
 
-    def generator(self, x, y, share_params=False, reuse=None):
-        with tf.variable_scope("generator", reuse=reuse):
-            x = tf.concat([x, y], axis=0)
+    def generator(self, z, y=None, share_params=False, reuse=None, training=True, name=""):
+        with tf.variable_scope("generator-%s" % name, reuse=reuse):
+            x = tf.concat([z, y], axis=1)
+
+            x = tf.layers.dense(x, 7 * 7, reuse=False, name='gen-dense-reshape')
+            x = tf.reshape(x, (self.batch_size, 7, 7, 1))
+
+            x = conv2d(x, f=self.gf_dim * 16, k=4, s=1, reuse=share_params, name='gen-conv2d-0')
+            x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-0")
+            x = prelu(x, reuse=share_params, name='gen-prelu-0')
+
+            x = conv2d(x, f=self.gf_dim * 8, k=3, s=2, reuse=share_params, name='gen-conv2d-1')
+            x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-1")
+            x = prelu(x, reuse=share_params, name='gen-prelu-1')
+
+            x = conv2d(x, f=self.gf_dim * 4, k=3, s=2, reuse=share_params, name='gen-conv2d-2')
+            x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-2")
+            x = prelu(x, reuse=share_params, name='gen-prelu-2')
+
+            x = conv2d(x, f=self.gf_dim * 2, k=3, s=2, reuse=share_params, name='gen-conv2d-3')
+            x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-3")
+            x = prelu(x, reuse=share_params, name='gen-prelu-3')
+
+            x = conv2d(x, f=1, k=6, s=1, act=tf.nn.sigmoid, reuse=False, name='gen-conv2d-4')
 
             return x
 
     def build_cogan(self):
-        def log(x):
-            return tf.log(x + self.eps)
+        def sce_loss(x, y, alpha):
+            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y * alpha))
 
         # Generator
-        self.g_1 = self.generator(self.z, self.y)
-        self.g_2 = self.generator(self.z, self.y, reuse=True)
+        self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
+        self.g_2 = self.generator(self.z, self.y, share_params=True, reuse=False, name='g2')
+
+        self.g_sample = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g_sample')
 
         # Discriminator
-        d_real, _ = self.discriminator(self.x)
-        d_fake, _ = self.discriminator(self.g, reuse=True)
+        d_1_real = self.discriminator(self.x_1, self.y, share_params=False, reuse=False, name='d1')
+        d_2_real = self.discriminator(self.x_2, self.y, share_params=True, reuse=False, name='d2')
+        d_1_fake = self.discriminator(self.g_1, self.y, share_params=True, reuse=True, name='d1')
+        d_2_fake = self.discriminator(self.g_2, self.y, share_params=True, reuse=True, name='d2')
 
         # Losses
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = tf.reduce_mean(tf.square(log(d_fake) + log(1. - d_fake))) / 2.
+        d_1_real_loss = sce_loss(d_1_real, tf.ones_like(d_1_real), .9)
+        d_1_fake_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake), .1)
+        d_2_real_loss = sce_loss(d_2_real, tf.ones_like(d_2_real), .9)
+        d_2_fake_loss = sce_loss(d_2_fake, tf.ones_like(d_2_fake), .1)
+        self.d_1_loss = d_1_real_loss + d_1_fake_loss
+        self.d_2_loss = d_2_real_loss + d_2_fake_loss
+        self.d_loss = self.d_1_loss + self.d_2_loss
+
+        g_1_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake), .9)
+        g_2_loss = sce_loss(d_2_fake, tf.ones_like(d_1_fake), .9)
+        self.g_loss = g_1_loss + g_2_loss
 
         # Summary
-        tf.summary.scalar("loss/d_real_loss", d_real_loss)
-        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_1_real_loss", d_1_real_loss)
+        tf.summary.scalar("loss/d_1_fake_loss", d_1_fake_loss)
+        tf.summary.scalar("loss/d_2_real_loss", d_2_real_loss)
+        tf.summary.scalar("loss/d_2_fake_loss", d_2_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_1_loss", g_1_loss)
+        tf.summary.scalar("loss/g_2_loss", g_2_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
