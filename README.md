@@ -10,15 +10,16 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 * Library : TF 1.x with CUDA 9.0~ + cuDNN 7.0~
 * Python 3.x
 
-Because of the image and model size, (especially **BEGAN**, **SGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
+Because of the image and model size, (especially **BEGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
 if you want to train them comfortably, you need a GPU which has more than 8GB.
 
 But, of course, the most of the implementations use MNIST or CiFar-10, 100 DataSets.
 Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
-* python 3.5+
-* tensorflow 1.6.0
+* python 3.x
+* tensorflow 1.x
+* numpy
 * scipy (some features are **deprecated**, they'll be replaced)
 * ~~imageio~~
 * ~~scikit_image~~
@@ -31,8 +32,11 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * Internet :)
 
 ## Usage
-    (before running train.py, make sure run after downloading dataset & changing dataset directory in train.py)
-    just download it and run train.py
+### Dependency Install
+    $ sudo python3 -m pip install -r requirements.txt
+### Training GAN
+    (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in datasets.py)
+    just after it, RUN train.py
     $ python3 xxx_train.py
 
 ## DataSets
