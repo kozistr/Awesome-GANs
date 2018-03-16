@@ -2,7 +2,7 @@
 
 ## Loss Function
 
-* Using ```MSE loss``` for *cycle loss* and ```adv loss``` for *gen* and ```l1 loss``` for *disc*.
+* Using ```l1 loss``` for *cycle loss* and ```adv loss``` for *gen* and ```wgan-gp loss``` for *disc*.
 
 ## Architecture Networks
 

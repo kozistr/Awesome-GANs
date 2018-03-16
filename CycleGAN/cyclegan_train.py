@@ -23,8 +23,8 @@ results = {
 }
 
 train_step = {
-    'epochs': 1000,
-    'batch_size': 16,
+    'epochs': 200,
+    'batch_size': 8,
     'logging_step': 100,
 }
 
@@ -37,7 +37,7 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        image_size = crop_size = 64
+        image_size = crop_size = 128
 
         # CycleGAN Model
         model = cyclegan.CycleGAN(s,
@@ -53,7 +53,7 @@ def main():
                      input_channel=3,
                      crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='r',
+                     mode='w',
                      name=data_set_name)
 
         img_a = ds.images_a
@@ -86,7 +86,7 @@ def main():
         for epoch in range(train_step['epochs']):
             # learning rate decay
             lr_decay = 1.
-            if epoch >= train_step['epochs']:
+            if epoch >= 100 and epoch % 10 == 0:
                 lr_decay = (train_step['epochs'] - epoch) / (train_step['epochs'] / 2.)
 
             # re-implement DataIterator for multi-input
