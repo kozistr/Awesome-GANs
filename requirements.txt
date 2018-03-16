@@ -1,0 +1,9 @@
+tensorflow-gpu >= 1.0.0
+numpy
+scipy
+imageio
+scikit-learn
+opencv-python
+pillow
+h5py
+tqdm
