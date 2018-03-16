@@ -53,7 +53,6 @@ def main():
                      input_channel=3,
                      crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='r',
                      name=data_set_name)
 
         img_a = ds.images_a

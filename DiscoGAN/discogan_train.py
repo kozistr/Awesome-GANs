@@ -11,7 +11,7 @@ import discogan
 import sys
 sys.path.insert(0, '../')
 
-from datasets import DataSet
+from datasets import Pix2PixDataSet as DataSets
 import image_utils as iu
 
 
@@ -31,8 +31,11 @@ def main():
     start_time = time.time()  # clocking start
 
     # Dataset
-    dataset = DataSet(batch_size=paras['batch_size'], epoch=paras['epoch'],
-                      dataset_name="pix2pix_vangogh")
+    dataset = DataSets(input_height=64,
+                       input_width=64,
+                       input_channel=3,
+                       batch_size=paras['batch_size'],
+                       name="vangogh2photo")
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True

@@ -52,8 +52,7 @@ def main():
         ds = DataSet(input_height=64,
                      input_width=64,
                      input_channel=3,
-                     attr_labels=attr_labels,
-                     mode='r')
+                     attr_labels=attr_labels)
 
         # x_A # Celeb-A
         img_a = np.reshape(ds.images, [-1, 64, 64, 3])

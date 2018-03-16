@@ -67,8 +67,7 @@ def main():
         # Celeb-A DataSet images
         ds = DataSet(input_height=64,  # in the paper, 108
                      input_width=64,   # in the paper, 108
-                     input_channel=3,
-                     mode='r').images
+                     input_channel=3).images
         # To-Do
         # Getting anomaly data
 
