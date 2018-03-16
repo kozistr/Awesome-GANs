@@ -174,7 +174,7 @@ class CycleGAN:
         with tf.variable_scope('discriminator-%s' % name, reuse=reuse):
             def residual_block(x, f, name=''):
                 x = conv2d(x, f=f, k=4, s=2, name='disc-conv2d-%s' % name)
-                x = instance_normalize(x)
+                x = instance_normalize(x, name='disc-ins_norm-%s' % name)
                 x = tf.nn.leaky_relu(x, alpha=0.2)
                 return x
 
@@ -203,21 +203,21 @@ class CycleGAN:
         """
         with tf.variable_scope('generator-%s' % name, reuse=reuse):
             def d(x, f, name=''):
-                x = conv2d(x, f=f, k=3, s=2, name='gen-d-%s' % name)
-                x = instance_normalize(x)
+                x = conv2d(x, f=f, k=3, s=2, name='gen-d-conv2d-%s' % name)
+                x = instance_normalize(x, name='gen-d-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
             def R(x, f, name=''):
-                x = conv2d(x, f=f, k=3, s=1, name='gen-R-%s-0' % name)
-                x = conv2d(x, f=f, k=3, s=1, name='gen-R-%s-1' % name)
-                x = instance_normalize(x)
+                x = conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-0' % name)
+                x = conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-1' % name)
+                x = instance_normalize(x, name='gen-R-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
             def u(x, f, name=''):
-                x = deconv2d(x, f=f, k=3, s=2, name='gen-u-%s' % name)
-                x = instance_normalize(x)
+                x = deconv2d(x, f=f, k=3, s=2, name='gen-u-deconv2d-%s' % name)
+                x = instance_normalize(x, name='gen-u-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
