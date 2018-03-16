@@ -309,7 +309,7 @@ class CelebADataSet:
 
     def __init__(self, batch_size=128, input_height=64, input_width=64, input_channel=3, attr_labels=(),
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, mode='w'):
+                 split_rate=0.2, random_state=42, num_threads=8):
 
         """
         # General Settings
@@ -330,9 +330,6 @@ class CelebADataSet:
         :param split_rate: image split rate (into train & test), default 0.2
         :param random_state: random seed for shuffling, default 42
         :param num_threads: the number of threads for multi-threading, default 8
-
-        # DataSet Option
-        :param mode: h5 file mode(RW), default w
         """
 
         self.batch_size = batch_size
@@ -359,7 +356,7 @@ class CelebADataSet:
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.mode = mode
+        self.mode = 'w'
 
         self.path = ""  # DataSet path
         self.files = ""  # files' name
@@ -372,9 +369,9 @@ class CelebADataSet:
         self.labels = {}
         self.ds_name = ""  # DataSet Name (by image size)
 
-        self.celeb_a(mode=self.mode)  # load Celeb-A
+        self.celeb_a()  # load Celeb-A
 
-    def celeb_a(self, mode):
+    def celeb_a(self):
         def get_image(path, w, h):
             img = imread(path).astype(np.float)
 
@@ -393,7 +390,10 @@ class CelebADataSet:
 
         self.labels = self.load_attr()    # selected attributes info (list)
 
-        if mode == 'w':
+        if os.path.exists(DataSets[self.ds_name]):
+            self.mode = 'r'
+
+        if self.mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
             self.files = np.sort(self.files)
 
@@ -476,7 +476,7 @@ class Pix2PixDataSet:
 
     def __init__(self, batch_size=64, input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, mode='w', name=''):
+                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, name=''):
 
         """
         # General Settings
@@ -497,7 +497,6 @@ class Pix2PixDataSet:
         :param num_threads: the number of threads for multi-threading, default 8
 
         # DataSet Option
-        :param mode: h5 file mode(RW), default w
         :param name: train/test DataSet, default train
         """
 
@@ -516,7 +515,7 @@ class Pix2PixDataSet:
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.mode = mode
+        self.mode = 'w'
 
         self.files_a = []
         self.files_b = []
@@ -533,7 +532,7 @@ class Pix2PixDataSet:
                 self.ds_name == "summer2winter_yosemite" or self.ds_name == "vangogh2photo" or \
                 self.ds_name == "ae_photos" or self.ds_name == "cezanne2photo" or self.ds_name == "ukiyoe2photo" or \
                 self.ds_name == "iphone2dslr_flower":
-            self.single_img_process(self.mode)
+            self.single_img_process()
 
         # train, val, (test, sample) # double grid
         elif self.ds_name == "cityscapes" or self.ds_name == "edges2handbags" or self.ds_name == "edges2shoes" or \
@@ -557,7 +556,10 @@ class Pix2PixDataSet:
         elif self.input_height == 64:
             self.ds_name = 'vangogh2photo-64x64-h5'
 
-        if mode == 'w':
+        if os.path.exists(DataSets[self.ds_name]):
+            self.mode = 'r'
+
+        if self.mode == 'w':
             data_set_name = self.ds_name.split('-')[0]
 
             self.files_a = glob(os.path.join(DataSets[data_set_name] + 'trainA/', "*.jpg"))
@@ -632,7 +634,7 @@ class Div2KDataSet:
 
     def __init__(self, batch_size=128, input_hr_height=384, input_hr_width=384,
                  input_lr_height=96, input_lr_width=96, input_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=16, mode='w'):
+                 split_rate=0.2, random_state=42, num_threads=16):
 
         """
         # General Settings
@@ -648,9 +650,6 @@ class Div2KDataSet:
         :param split_rate: image split rate (into train & test), default 0.2
         :param random_state: random seed for shuffling, default 42
         :param num_threads: the number of threads for multi-threading, default 8
-
-        # DataSet Option
-        :param mode: h5 file mode(RW), default w
         """
 
         self.batch_size = batch_size
@@ -663,7 +662,7 @@ class Div2KDataSet:
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.mode = mode
+        self.mode = 'w'
 
         self.path = ""   # DataSet path
         self.files_hr, self.files_lr = [], []  # HR/LR files' name
@@ -674,9 +673,9 @@ class Div2KDataSet:
         self.hr_ds_name = "div2k-hr-h5"  # DataSet Name
         self.lr_ds_name = "div2k-lr-h5"  # DataSet Name
 
-        self.div2k(mode=self.mode)  # load DIV2K DataSet
+        self.div2k()  # load DIV2K DataSet
 
-    def div2k(self, mode):
+    def div2k(self):
         import cv2
         import scipy.misc
 
@@ -695,7 +694,10 @@ class Div2KDataSet:
             # img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
             return img
 
-        if mode == 'w':
+        if os.path.exists(DataSets[self.hr_ds_name]) and os.path.exists(DataSets[self.lr_ds_name]):
+            self.mode = 'r'
+
+        if self.mode == 'w':
             self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
 
