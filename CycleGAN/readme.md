@@ -6,7 +6,7 @@
 
 ## Architecture Networks
 
-* Maybe, same as in the **CycleGAN paper**.
+* Same Architectures as in the **CycleGAN paper**.
 
 ## Tensorboard
 
