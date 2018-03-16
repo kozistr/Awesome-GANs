@@ -53,7 +53,7 @@ def main():
                      input_channel=3,
                      crop_size=crop_size,
                      batch_size=train_step['batch_size'],
-                     mode='w',
+                     mode='r',
                      name=data_set_name)
 
         img_a = ds.images_a
@@ -114,7 +114,7 @@ def main():
                 batch_b = np.reshape(img_a[start:end], model.image_shape)
 
                 for _ in range(model.n_train_critic):
-                    s.run(model.c_op,
+                    s.run(model.d_op,
                           feed_dict={
                               model.a: batch_a,
                               model.b: batch_b,
@@ -130,13 +130,12 @@ def main():
 
                 if global_step % train_step['logging_step'] == 0:
                     # Summary
-                    w, gp, g_loss, cycle_loss, _, summary = s.run(
-                        [model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op, model.merged],
-                        feed_dict={
-                            model.a: batch_a,
-                            model.b: batch_b,
-                            model.lr_decay: lr_decay,
-                        })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.a: batch_a,
+                                        model.b: batch_b,
+                                        model.lr_decay: lr_decay,
+                                    })
 
                     # Print loss
                     print("[+] Global Step %08d =>" % global_step,
