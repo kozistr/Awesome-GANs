@@ -23,7 +23,7 @@ results = {
 }
 
 train_step = {
-    'epochs': 200,
+    'epochs': 201,
     'batch_size': 8,
     'logging_step': 100,
 }
