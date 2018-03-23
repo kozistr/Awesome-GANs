@@ -109,91 +109,35 @@ class AnoGAN:
         self.z_dim = z_dim
         self.beta1 = .5
         self.beta2 = .9
-        self.d_lr = tf.Variable(d_lr, name='d_lr')
-        self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = .5
-        self.lr_low_boundary = 1e-5
+        self.d_lr = d_lr
+        self.g_lr = g_lr
         self.eps = epsilon
 
         self.detect = detect
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
         self.d_loss = 0.
         self.g_loss = 0.
         self.anomaly_loss = 0.
 
         self.g = None
-        self.g_ano = None
-
-        self.fm_fake = None
-        self.fm_real = None
+        self.g_test = None
 
         self.d_op = None
-        self.g_op = None
+        self.ano_op = None
 
         self.merged = None
         self.writer = None
         self.saver = None
 
-        # learning rate update
-        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
-        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
-
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
                                 name="x-image")                                        # (-1, 108, 108, 3)
-        # self.y = tf.placeholder(tf.float32, shape=[None, 41], name='y-label')  # (-1, 41)
+        # self.y = tf.placeholder(tf.float32, shape=[None, 41], name='y-label')        # (-1, 41)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
-        self.x_ano = None  # used at anomaly_detector
-        self.z_ano = None  # used at anomaly_detector
-
-        if self.detect:
-            self.anomaly_detector()  # build anomalies detector
-
-        self.build_anogan()      # build AnoGAN model
-
-    def sampler(self, z, reuse=None):
-        """
-        :param z: embeddings
-        :param reuse: re-usable
-        :return: prob
-        """
-        with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, units=self.z_dim * 4 * 4, name='s-fc-0')
-            x = tf.nn.leaky_relu(x)
-
-            x = tf.reshape(x, [-1, 4, 4, self.z_dim])
-
-            for i in range(1, 4):
-                x = deconv2d(x, f=self.gf_dim * (2 ** i), name="s-deconv2d-%d" % i)
-                x = batch_norm(x, train=False)
-                x = tf.nn.leaky_relu(x)
-
-            x = deconv2d(x, f=3, k=3, s=1, name="s-deconv2d-4")
-            x = tf.nn.tanh(x)
-
-            return x
-
-    def feature_match(self, x, reuse=None):
-        """
-        :param x: images
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope("feature_match", reuse=reuse):
-            x = conv2d(x, f=self.gf_dim * 1, name="fm-conv2d-0")
-            x = tf.nn.leaky_relu(x)
-
-            for i in range(1, 4):
-                x = conv2d(x, f=self.gf_dim * (2 ** i), name="fm-conv2d-%d" % i)
-                x = batch_norm(x)
-                x = tf.nn.leaky_relu(x)
-
-            return x
+        self.build_anogan()  # build AnoGAN model
 
     def discriminator(self, x, reuse=None, is_bn_train=True):
         """
@@ -211,11 +155,13 @@ class AnoGAN:
                 x = batch_norm(x, train=is_bn_train)
                 x = tf.nn.leaky_relu(x)
 
+            feature_match = x   # (-1, 8, 8, 512)
+
             x = tf.layers.flatten(x)
 
             x = tf.layers.dense(x, 1, name='disc-fc-0')
 
-            return x
+            return feature_match, x
 
     def generator(self, z, reuse=None, is_bn_train=True):
         """
@@ -225,84 +171,57 @@ class AnoGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, units=self.z_dim * 4 * 4, name='gen-fc-0')
+            x = tf.layers.dense(z, units=self.fc_unit, name='gen-fc-0')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [-1, 4, 4, self.z_dim])
+            x = tf.reshape(x, [-1, 8, 8, self.fc_unit // (8 * 8)])
 
             for i in range(1, 4):
                 x = deconv2d(x, f=self.gf_dim * (2 ** i), name="gen-conv2d-%d" % i)
                 x = batch_norm(x, train=is_bn_train)
                 x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, f=3, k=3, s=1, name="gen-conv2d-4")
+            x = deconv2d(x, f=3, s=1, name="gen-conv2d-4")  # (-1, 64, 64, 3)
             x = tf.nn.tanh(x)
 
             return x
 
-    def anomaly_detector(self):
-        def l1_loss(x, y):
-            return tf.reduce_sum(tf.abs(x - y))
-
-        self.x_ano = tf.placeholder(tf.float32,
-                                    shape=[self.test_batch_size,
-                                           self.input_height, self.input_width, self.input_channel],
-                                    name="x-test-image")
-        self.z_ano = tf.placeholder(tf.float32,
-                                    shape=[self.test_batch_size, self.z_dim],
-                                    name="z-test-noise")
-
-        # Sampler (kinda generator)
-        self.g_ano = self.sampler(self.z)
-
-        # Feature matcher (kinda discriminator)
-        self.fm_real = self.feature_match(self.x_ano)
-        self.fm_fake = self.feature_match(self.g_ano, reuse=True)
-
-        # Loss
-        g_ano_loss = tf.reduce_mean(l1_loss(self.x_ano, self.g_ano))
-        fm_ano_loss = tf.reduce_mean(l1_loss(self.fm_real, self.fm_fake))
-
-        self.anomaly_loss = (1. - self.lambda_) * g_ano_loss + self.lambda_ * fm_ano_loss
-
     def build_anogan(self):
         def l1_loss(x, y):
-            return tf.reduce_mean(tf.abs(x - y))
+            return tf.reduce_mean(tf.reduce_sum(tf.abs(x - y)))
 
         def sce_loss(logits_, labels_):
             return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_, labels=labels_))
 
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_bn_train=False)
 
         # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        d_real_fm, d_real = self.discriminator(self.x, reuse=True)
+        d_fake_fm, d_fake = self.discriminator(self.g_test, reuse=True)
 
         # Loss
-        d_real_loss = tf.reduce_mean(l1_loss(self.x, d_real))
-        d_fake_loss = tf.reduce_mean(l1_loss(self.g, d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = d_fake_loss
+        self.d_loss = l1_loss(d_fake_fm, d_real_fm)
+        self.g_loss = l1_loss(self.x, self.g_test)
+        self.anomaly_loss = (1. - self.lambda_) * self.g + self.lambda_ * self.d_loss
 
         # Summary
-        # tf.summary.histogram("z-noise", self.z)
-
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
-        tf.summary.scalar("anomaly_loss", self.anomaly_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("loss/ano_loss", self.anomaly_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
-        d_params = [v for v in t_vars if v.name.startswith('d')]
-        g_params = [v for v in t_vars if v.name.startswith('g')]
+        d_params = [v for v in t_vars if v.name.startswith('disc')]
+        g_params = [v for v in t_vars if v.name.startswith('gen')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+                                           beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
+                                                                                        var_list=d_params)
+        self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                             beta1=self.beta1, beta2=self.beta2).minimize(loss=self.anomaly_loss,
+                                                                                          var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
