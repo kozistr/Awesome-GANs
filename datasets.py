@@ -28,6 +28,7 @@ DataSets = {
     'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
     'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
     'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
+    'celeb-a-108x108-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-108x108.h5',
     # pix2pix DataSets
     # 'ae_photos': '/home/zero/hdd/DataSet/pix2pix/ae_photos/',
     # 'apple2orange': '/home/zero/hdd/DataSet/pix2pix/apple2orange/',
@@ -65,6 +66,7 @@ DataSets = {
     # 'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
     # 'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
     # 'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
+    # 'celeb-a-108x108-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-108x108.h5',
     # pix2pix DataSets
     'ae_photos': 'D:\\DataSet\\pix2pix\\ae_photos\\',
     'apple2orange': 'D:\\DataSet\\pix2pix\\apple2orange\\',
@@ -383,10 +385,8 @@ class CelebADataSet:
 
             return img[margin:margin + h]
 
-        if self.input_height == 32:
-            self.ds_name = 'celeb-a-32x32-h5'
-        elif self.input_height == 64:
-            self.ds_name = 'celeb-a-64x64-h5'
+        size = self.input_height
+        self.ds_name = 'celeb-a-' + str(size) + 'x' + str(size) + '-h5'
 
         self.labels = self.load_attr()    # selected attributes info (list)
 
@@ -539,7 +539,7 @@ class Pix2PixDataSet:
                 self.ds_name == "facades" or self.ds_name == "maps":
             self.double_img_process()
 
-    def single_img_process(self, mode):
+    def single_img_process(self):
         def get_image(path, w, h):
             img = imread(path).astype(np.float)
 
@@ -551,10 +551,8 @@ class Pix2PixDataSet:
 
             return img[margin:margin + h]
 
-        if self.input_height == 32:
-            self.ds_name = 'vangogh2photo-32x32-h5'
-        elif self.input_height == 64:
-            self.ds_name = 'vangogh2photo-64x64-h5'
+        size = self.input_height
+        self.ds_name += '-' + str(size) + 'x' + str(size) + '-h5'
 
         if os.path.exists(DataSets[self.ds_name]):
             self.mode = 'r'
