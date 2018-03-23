@@ -2,9 +2,11 @@
 
 ## Loss Function
 
+*
 
 ## Architecture Networks
 
+*
 
 ## Tensorboard
 
@@ -14,7 +16,7 @@
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**AnoGAN**     | | |
+**AnoGAN** |  |  | 
 
 ## To-Do
 * Add Loss Function & Explains
