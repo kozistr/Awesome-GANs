@@ -65,8 +65,8 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=64,  # in the paper, 108
-                     input_width=64,   # in the paper, 108
+        ds = DataSet(input_height=108,  # in the paper, 108
+                     input_width=108,   # in the paper, 108
                      input_channel=3).images
         # To-Do
         # Getting anomaly data

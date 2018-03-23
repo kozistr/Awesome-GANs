@@ -198,7 +198,7 @@ class AnoGAN:
         self.g_test = self.generator(self.z, reuse=True, is_bn_train=False)
 
         # Discriminator
-        d_real_fm, d_real = self.discriminator(self.x, reuse=True)
+        d_real_fm, d_real = self.discriminator(self.x)
         d_fake_fm, d_fake = self.discriminator(self.g_test, reuse=True)
 
         # Loss
