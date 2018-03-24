@@ -24,9 +24,13 @@ results = {
 
 train_step = {
     'epoch': 300,
-    'batch_size': 16,
+    'batch_size': 64,
     'logging_interval': 2500,
 }
+
+
+def get_perturbed_images(imgs):
+    return imgs + .5 * imgs.std() * np.random.random(imgs.shape)
 
 
 def main():
@@ -71,18 +75,22 @@ def main():
             for batch_images, _ in dataset_iter.iterate():
                 batch_x = batch_images.astype(np.float32)
                 batch_x = (batch_x / 127.5) - 1.
+                batch_x_ = get_perturbed_images(batch_x)
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
-                 _, d_loss = s.run([model.d_op, model.d_loss],
-                                   feed_dict={
-                                       model.x: batch_x,
-                                       model.z: batch_z,
-                                   })
+                _, d_loss = s.run([model.d_op, model.d_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.x_: batch_x_,
+                                      model.z: batch_z,
+                                  })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
+                                      model.x: batch_x,
+                                      model.x_: batch_x_,
                                       model.z: batch_z,
                                   })
 
@@ -92,6 +100,7 @@ def main():
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                     feed_dict={
                                                         model.x: batch_x,
+                                                        model.x_: batch_x_,
                                                         model.z: batch_z,
                                                     })
 

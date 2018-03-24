@@ -53,7 +53,7 @@ def batch_norm(x, momentum=0.9, eps=1e-5, train=True):
 class DRAGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=10 * 10, sample_size=10,
+                 sample_num=8 * 8, sample_size=8,
                  z_dim=128, gf_dim=64, df_dim=64, fc_unit=1024,
                  eps=1e-12):
 
@@ -67,8 +67,8 @@ class DRAGAN:
         - in case of CIFAR, image size is 32x32x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of sample images, default 100
-        :param sample_size: sample image size, default 10
+        :param sample_num: the number of sample images, default 64
+        :param sample_size: sample image size, default 8
 
         # Model Settings
         :param z_dim: z noise dimension, default 128
@@ -170,11 +170,7 @@ class DRAGAN:
             x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, self.gf_dim * 1, name='gen-deconv2d-2')
-            x = batch_norm(x, train=is_bn_train)
-            x = tf.nn.leaky_relu(x)
-
-            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-3')
+            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-2')
             prob = tf.nn.tanh(logits)
 
             return prob
@@ -207,7 +203,8 @@ class DRAGAN:
         self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # DRAGAN loss with GP (gradient penalty)
-        alpha = tf.random_uniform(shape=self.x.get_shape(), minval=0., maxval=1., name='alpha')
+        alpha = tf.random_uniform(shape=[self.batch_size] + self.x.get_shape().as_list()[1:],
+                                  minval=0., maxval=1., name='alpha')
         diff = self.x_ - self.x
         interpolates = self.x + alpha * diff
         _, d_inter = self.discriminator(interpolates, reuse=True)
