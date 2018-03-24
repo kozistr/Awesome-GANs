@@ -6,7 +6,7 @@
 
 ## Architecture Networks
 
-* Same as in the *CoGAN paper*.
+* Similar as in the *CoGAN paper*.
 
 ## Tensorboard
 
@@ -19,4 +19,4 @@
 **CoGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00200000.png)
 
 ## To-Do
-* 
+*
