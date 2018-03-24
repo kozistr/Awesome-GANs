@@ -52,8 +52,8 @@ def batch_norm(x, momentum=0.9, eps=1e-5, train=True):
 
 class DRAGAN:
 
-    def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
-                 sample_num=8 * 8, sample_size=8,
+    def __init__(self, s, batch_size=16, input_height=28, input_width=28, input_channel=1, n_classes=10,
+                 sample_num=10 * 10, sample_size=10,
                  z_dim=128, gf_dim=64, df_dim=64, fc_unit=1024,
                  eps=1e-12):
 
@@ -61,14 +61,15 @@ class DRAGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 32
-        :param input_width: input image width, default 32
-        :param input_channel: input image channel, default 3 (RGB)
-        - in case of CIFAR, image size is 32x32x3(HWC).
+        :param input_height: input image height, default 28
+        :param input_width: input image width, default 28
+        :param input_channel: input image channel, default 1 (Gray-Scale)
+        - in case of MNIST, image size is 28x28x1(HWC).
+        :param n_classes: the number of classes, default 10
 
         # Output Settings
-        :param sample_num: the number of sample images, default 64
-        :param sample_size: sample image size, default 8
+        :param sample_num: the number of sample images, default 100
+        :param sample_size: sample image size, default 10
 
         # Model Settings
         :param z_dim: z noise dimension, default 128
@@ -85,6 +86,7 @@ class DRAGAN:
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
+        self.n_classes = n_classes
 
         self.sample_size = sample_size
         self.sample_num = sample_num
@@ -135,10 +137,10 @@ class DRAGAN:
 
     def discriminator(self, x, reuse=None, is_bn_train=True):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = conv2d(x, self.df_dim, name='disc-conv2d-0')
+            x = conv2d(x, self.df_dim, s=1, name='disc-conv2d-0')
             x = tf.nn.leaky_relu(x)
 
-            for i in range(1, 4):
+            for i in range(1, 3):
                 x = conv2d(x, self.df_dim * (2 ** i), name='disc-conv2d-%d' % i)
                 x = batch_norm(x, train=is_bn_train)
                 x = tf.nn.leaky_relu(x)
@@ -156,21 +158,17 @@ class DRAGAN:
             x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.dense(x, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
+            x = tf.layers.dense(x, self.gf_dim * 4 * 7 * 7, name='gen-fc-1')
             x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
+            x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 4])
 
-            x = deconv2d(x, self.gf_dim * 4, name='gen-deconv2d-0')
+            x = deconv2d(x, self.gf_dim * 2, name='gen-deconv2d-0')
             x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, self.gf_dim * 2, name='gen-deconv2d-1')
-            x = batch_norm(x, train=is_bn_train)
-            x = tf.nn.leaky_relu(x)
-
-            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-2')
+            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-1')
             prob = tf.nn.tanh(logits)
 
             return prob

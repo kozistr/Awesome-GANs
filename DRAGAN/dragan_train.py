@@ -13,8 +13,7 @@ import dragan_model as dragan
 sys.path.append('../')
 import image_utils as iu
 from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
-
+from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
@@ -23,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'epoch': 300,
+    'global_step': 250000,
     'batch_size': 64,
     'logging_interval': 2500,
 }
@@ -45,7 +44,6 @@ def main():
 
         # Load model & Graph & Weights
         global_step = 0
-
         ckpt = tf.train.get_checkpoint_state('./model/')
         if ckpt and ckpt.model_checkpoint_path:
             model.saver.restore(s, ckpt.model_checkpoint_path)
@@ -59,13 +57,13 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=32,
-                     input_width=32,
-                     input_channel=3).images
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
+        mnist = DataSet().data
 
-        sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape)
+        sample_x, _ = mnist.test.next_batch(model.sample_num)
+        sample_x = np.reshape(sample_x, [model.sample_num] + model.image_shape)
+        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
+        for i in range(10):
+            sample_y[10 * i:10 * (i + 1), i] = 1
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # Export real image
@@ -74,78 +72,83 @@ def main():
         sample_dir = results['output'] + 'valid.png'
 
         # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+        iu.save_images(sample_x,
+                       size=[valid_image_height, valid_image_width],
+                       image_path=sample_dir)
 
-        step = int(global_step)
-        cont = int(step / 750)
-        for epoch in range(cont, cont + train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, [-1] + model.image_shape)
-                batch_x_ = get_perturbed_images(batch_x)
+        for step in range(train_step['global_step']):
+            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
+            batch_x_ = get_perturbed_images(batch_x)
+
+            batch_x = np.reshape(batch_x, [-1] + model.image_shape)
+            batch_x_ = np.reshape(batch_x_, [-1] + model.image_shape)
+            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+
+            # Update D network
+            _, d_loss = s.run([model.d_op, model.d_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.x_: batch_x_,
+                                  model.z: batch_z,
+                              })
+
+            # Update G network
+            _, g_loss = s.run([model.g_op, model.g_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.x_: batch_x_,
+                                  model.z: batch_z,
+                              })
+
+            if step % train_step['logging_interval'] == 0:
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.x_: batch_x_,
-                                      model.z: batch_z,
-                                  })
+                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                feed_dict={
+                                                    model.x: batch_x,
+                                                    model.x_: batch_x_,
+                                                    model.z: batch_z,
+                                                })
 
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.x_: batch_x_,
-                                      model.z: batch_z,
-                                  })
+                # Print loss
+                print("[+] Global Step %05d => " % global_step,
+                      " D loss : {:.8f}".format(d_loss),
+                      " G loss : {:.8f}".format(g_loss))
 
-                if step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                # Training G model with sample image and noise
+                samples = s.run(model.g_test,
+                                feed_dict={
+                                    model.z: sample_z,
+                                })
 
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.x_: batch_x_,
-                                                        model.z: batch_z,
-                                                    })
+                samples = np.reshape(samples, [-1] + model.image_shape)
+                print(samples.shape)
 
-                    # Print loss
-                    print("[+] Epoch %03d Step %05d => " % (epoch, step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss))
+                # Summary saver
+                model.writer.add_summary(summary, global_step)
 
-                    # Training G model with sample image and noise
-                    samples = s.run(model.g_test,
-                                    feed_dict={
-                                        model.z: sample_z,
-                                    })
+                # Export image generated by model G
+                sample_image_height = model.sample_size
+                sample_image_width = model.sample_size
+                sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
 
-                    # Summary saver
-                    model.writer.add_summary(summary, step)
+                # Generated image save
+                iu.save_images(samples,
+                               size=[sample_image_height, sample_image_width],
+                               image_path=sample_dir)
 
-                    # Export image generated by model G
-                    sample_image_height = model.sample_size
-                    sample_image_width = model.sample_size
-                    sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, global_step)
+                # Model save
+                model.saver.save(s, results['model'], global_step=global_step)
 
-                    # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                global_step += 1
 
-                    # Model save
-                    model.saver.save(s, results['model'], global_step=step)
+    end_time = time.time() - start_time  # Clocking end
 
-                step += 1
+    # Elapsed time
+    print("[+] Elapsed time {:.8f}s".format(end_time))
 
-        end_time = time.time() - start_time  # Clocking end
-
-        # Elapsed time
-        print("[+] Elapsed time {:.8f}s".format(end_time))
-
-        # Close tf.Session
-        s.close()
+    # Close tf.Session
+    s.close()
 
 
 if __name__ == '__main__':
