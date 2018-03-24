@@ -122,7 +122,6 @@ def main():
                                 })
 
                 samples = np.reshape(samples, [-1] + model.image_shape)
-                print(samples.shape)
 
                 # Summary saver
                 model.writer.add_summary(summary, global_step)
