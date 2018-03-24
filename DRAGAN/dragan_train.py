@@ -65,7 +65,7 @@ def main():
         dataset_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
 
         sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
+        sample_x = np.reshape(sample_x, [-1] + model.image_shape)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # Export real image
@@ -79,8 +79,8 @@ def main():
         step = int(global_step)
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
-            for batch_images, _ in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
+            for batch_images in dataset_iter.iterate():
+                batch_x = np.reshape(batch_images, [-1] + model.image_shape)
                 batch_x_ = get_perturbed_images(batch_x)
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
