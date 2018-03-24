@@ -2,11 +2,11 @@
 
 ## Loss Function
 
-* using ```sigmoid loss``` instead of ```adv loss```.
+* using ```sce loss``` instead of ```adv loss``` on ```D/G net``` with ```gradient panelty```.
 
 ## Architecture Networks
 
-* Same as in the **DCGAN paper**.
+* Similar as in the **DCGAN paper**.
 
 ## Tensorboard
 

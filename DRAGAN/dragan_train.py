@@ -19,12 +19,12 @@ from datasets import CiFarDataSet as DataSet
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
-    'model': './model/DCGAN-model.ckpt'
+    'model': './model/DRAGAN-model.ckpt'
 }
 
 train_step = {
     'epoch': 300,
-    'batch_size': 64,
+    'batch_size': 16,
     'logging_interval': 2500,
 }
 
@@ -37,7 +37,7 @@ def main():
 
     with tf.Session(config=config) as s:
         # DRAGAN model
-        model = dragan.DCGAN(s, batch_size=train_step['batch_size'])
+        model = dragan.DRAGAN(s, batch_size=train_step['batch_size'])
 
         # Load model & Graph & Weights
         global_step = 0
@@ -65,8 +65,6 @@ def main():
         sample_x = (sample_x / 127.5) - 1.
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
 
-        d_overpowered = False  # G loss > D loss * 2
-
         step = int(global_step)
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
@@ -76,20 +74,17 @@ def main():
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
 
                 # Update D network
-                if not d_overpowered:
-                    _, d_loss = s.run([model.d_op, model.d_loss],
-                                      feed_dict={
-                                          model.x: batch_x,
-                                          model.z: batch_z
-                                      })
+                 _, d_loss = s.run([model.d_op, model.d_loss],
+                                   feed_dict={
+                                       model.x: batch_x,
+                                       model.z: batch_z,
+                                   })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
-                                      model.z: batch_z
+                                      model.z: batch_z,
                                   })
-
-                d_overpowered = d_loss < g_loss / 2.
 
                 if step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
@@ -106,9 +101,8 @@ def main():
                           " G loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
-                    samples = s.run(model.g,
+                    samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.x: sample_x,
                                         model.z: sample_z,
                                     })
 

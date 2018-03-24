@@ -23,7 +23,7 @@ def conv2d(x, f=64, k=3, s=2, pad='SAME', name='conv2d'):
                             name=name)
 
 
-def deconv2d(x, f=64, k=3, s=2, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=4, s=2, pad='SAME', name='deconv2d'):
     """
     :param x: input
     :param f: filters, default 64
@@ -54,7 +54,7 @@ class DRAGAN:
 
     def __init__(self, s, batch_size=64, input_height=32, input_width=32, input_channel=3,
                  sample_num=10 * 10, sample_size=10,
-                 z_dim=128, gf_dim=64, df_dim=64,
+                 z_dim=128, gf_dim=64, df_dim=64, fc_unit=1024,
                  eps=1e-12):
 
         """
@@ -74,6 +74,7 @@ class DRAGAN:
         :param z_dim: z noise dimension, default 128
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
+        :param fc_unit: the number of fc units, default 1024
 
         # Training Settings
         :param eps: epsilon, default 1e-12
@@ -96,12 +97,15 @@ class DRAGAN:
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
+        self.fc_unit = fc_unit
 
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
+        self.gp = 0.
 
         self.g = None
+        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -114,64 +118,69 @@ class DRAGAN:
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
                                 name='x-images')
+        self.x_ = tf.placeholder(tf.float32,
+                                 shape=[None, self.input_height, self.input_width, self.input_channel],
+                                 name='x-perturbed-images')
         self.z = tf.placeholder(tf.float32,
                                 shape=[None, self.z_dim],
                                 name='z-noise')
 
         # Training Options
+        self.lambda_ = .25  # Higher lambda value, More stable. But slower...
         self.beta1 = .5
         self.beta2 = .9
         self.lr = 2e-4
 
         self.bulid_dragan()  # build DRAGAN model
 
-    def discriminator(self, x, reuse=None):
+    def discriminator(self, x, reuse=None, is_bn_train=True):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = conv2d(x, self.df_dim, name='d-conv-0')
+            x = conv2d(x, self.df_dim, name='disc-conv2d-0')
             x = tf.nn.leaky_relu(x)
 
-            x = conv2d(x, self.df_dim * 2, name='d-conv-1')
-            x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
-
-            x = conv2d(x, self.df_dim * 4, name='d-conv-2')
-            x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
-
-            x = conv2d(x, self.df_dim * 8, name='d-conv-3')
-            x = batch_norm(x)
-            x = tf.nn.leaky_relu(x)
+            for i in range(1, 4):
+                x = conv2d(x, self.df_dim * (2 ** i), name='disc-conv2d-%d' % i)
+                x = batch_norm(x, train=is_bn_train)
+                x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
-            logits = tf.layers.dense(x, 1, name='d-fc-1')
+            logits = tf.layers.dense(x, 1, name='disc-fc-0')
             prob = tf.nn.sigmoid(logits)
 
             return prob, logits
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, reuse=None, is_bn_train=True):
         with tf.variable_scope('generator', reuse=reuse):
-            x = tf.layers.dense(z, self.gf_dim * 8 * 4 * 4)
+            x = tf.layers.dense(z, self.fc_unit, name='gen-fc-0')
+            x = batch_norm(x, train=is_bn_train)
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.layers.dense(x, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
+            x = batch_norm(x, train=is_bn_train)
+            x = tf.nn.leaky_relu(x)
 
             x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
-            # x = batch_norm(x)
+
+            x = deconv2d(x, self.gf_dim * 4, name='gen-deconv2d-0')
+            x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x, self.gf_dim * 4, name='g-deconv-1')
-            # x = batch_norm(x)
+            x = deconv2d(x, self.gf_dim * 2, name='gen-deconv2d-1')
+            x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            x = deconv2d(x,  self.gf_dim * 2, name='g-deconv-2')
-            # x = batch_norm(x)
+            x = deconv2d(x, self.gf_dim * 1, name='gen-deconv2d-2')
+            x = batch_norm(x, train=is_bn_train)
             x = tf.nn.leaky_relu(x)
 
-            logits = deconv2d(x, self.input_channel, name='g-deconv-3')
+            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-3')
             prob = tf.nn.tanh(logits)
 
             return prob
 
     def bulid_dragan(self):
-        def log(x, eps=self.eps):
+        def safe_log(x, eps=self.eps):
             return tf.log(x + eps)
 
         def sce_loss(logits, labels):
@@ -179,32 +188,43 @@ class DRAGAN:
 
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_bn_train=False)  # for test
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
         _, d_fake = self.discriminator(self.g, reuse=True)
 
-        # Losses
-        """
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        """ Adv losses
+        d_real_loss = -tf.reduce_mean(safe_log(d_real))
+        d_fake_loss = -tf.reduce_mean(safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(log(d_fake))
+        self.g_loss = -tf.reduce_mean(safe_log(d_fake))
         """
+        # sce losses
         d_real_loss = sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
-        # Summary
-        # tf.summary.histogram("z", self.z)
-        # tf.summary.histogram("d_real", d_real)
-        # tf.summary.histogram("d_fake", d_fake)
+        # DRAGAN loss with GP (gradient penalty)
+        alpha = tf.random_uniform(shape=self.x.get_shape(), minval=0., maxval=1., name='alpha')
+        diff = self.x_ - self.x
+        interpolates = self.x + alpha * diff
+        _, d_inter = self.discriminator(interpolates, reuse=True)
+        grads = tf.gradients(d_inter, [interpolates])[0]
+        slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1]))
+        self.gp = tf.reduce_mean(tf.square(slopes - 1.))
 
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        # update d_loss with gp
+        self.gp *= self.lambda_
+        self.d_loss += self.gp
+
+        # Summary
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("misc/gp", self.gp)
 
         # Collect trainer values
         t_vars = tf.trainable_variables()
