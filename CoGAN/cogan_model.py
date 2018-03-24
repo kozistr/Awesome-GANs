@@ -160,15 +160,16 @@ class CoGAN:
         self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size,
                                                      self.input_height, self.input_width, self.input_channel],
                                   name="x-image2")  # (-1, 28, 28, 1)
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
+        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes],
+                                name="y-label")   # (-1, 10)
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
-                                name='z-noise')     # (-1, 128)
+                                name='z-noise')   # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
     def discriminator(self, x, y=None, share_params=False, reuse=False, name=""):
         with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
-            if y:
+            if y is None:
                 x = tf.layers.flatten(x)
                 x = tf.concat([x, y], axis=1)
 
@@ -198,7 +199,7 @@ class CoGAN:
         return x
 
     def generator(self, z, y=None, share_params=False, reuse=False, training=True, name=""):
-        if y:
+        if y is None:
             x = tf.concat([z, y], axis=1)
         else:
             x = z
@@ -232,7 +233,7 @@ class CoGAN:
 
         # Generator
         self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
-        self.g_2 = self.generator(self.z, share_params=True, reuse=False, name='g2')
+        self.g_2 = self.generator(self.z, self.y, share_params=True, reuse=False, name='g2')
 
         self.g_sample_1 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g1')
         self.g_sample_2 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g2')
