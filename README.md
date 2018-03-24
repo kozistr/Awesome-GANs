@@ -86,7 +86,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/CycleGAN)
 **DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN)
 **DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | 
-**DRAGAN**       | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN)
+**DRAGAN**       | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN)
 **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) |
 **eCommerceGAN** | *A Generative Adversarial Network for E-commerce* | [[arXiv]](https://arxiv.org/abs/1801.03244) | 
 **EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/EBGAN)
