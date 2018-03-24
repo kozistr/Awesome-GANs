@@ -139,7 +139,7 @@ def main():
                 # Model save
                 model.saver.save(s, results['model'], global_step=global_step)
 
-                global_step += 1
+            global_step += 1
 
     end_time = time.time() - start_time  # Clocking end
 
