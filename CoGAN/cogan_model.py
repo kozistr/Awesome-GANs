@@ -160,7 +160,7 @@ class CoGAN:
         self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size,
                                                      self.input_height, self.input_width, self.input_channel],
                                   name="x-image2")  # (-1, 28, 28, 1)
-        # self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
+        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
                                 name='z-noise')     # (-1, 128)
 
@@ -169,7 +169,12 @@ class CoGAN:
     def discriminator(self, x, y=None, share_params=False, reuse=False, name=""):
         with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
             if y:
+                x = tf.layers.flatten(x)
                 x = tf.concat([x, y], axis=1)
+
+                x = tf.layers.dense(x, self.input_height * self.input_width * self.input_channel,
+                                    name='disc-' + name + '-dense-0-y')
+                x = tf.reshape(x, self.image_shape)
             else:
                 pass
 
@@ -226,17 +231,17 @@ class CoGAN:
             return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y * alpha))
 
         # Generator
-        self.g_1 = self.generator(self.z, share_params=False, reuse=False, name='g1')
+        self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
         self.g_2 = self.generator(self.z, share_params=True, reuse=False, name='g2')
 
-        self.g_sample_1 = self.generator(self.z, share_params=True, reuse=True, training=False, name='g1')
-        self.g_sample_2 = self.generator(self.z, share_params=True, reuse=True, training=False, name='g2')
+        self.g_sample_1 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g1')
+        self.g_sample_2 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g2')
 
         # Discriminator
-        d_1_real = self.discriminator(self.x_1, share_params=False, reuse=False, name='d1')
-        d_2_real = self.discriminator(self.x_2, share_params=True, reuse=False, name='d2')
-        d_1_fake = self.discriminator(self.g_1, share_params=True, reuse=True, name='d1')
-        d_2_fake = self.discriminator(self.g_2, share_params=True, reuse=True, name='d2')
+        d_1_real = self.discriminator(self.x_1, self.y, share_params=False, reuse=False, name='d1')
+        d_2_real = self.discriminator(self.x_2, self.y, share_params=True, reuse=False, name='d2')
+        d_1_fake = self.discriminator(self.g_1, self.y, share_params=True, reuse=True, name='d1')
+        d_2_fake = self.discriminator(self.g_2, self.y, share_params=True, reuse=True, name='d2')
 
         # Losses
         d_1_real_loss = sce_loss(d_1_real, tf.ones_like(d_1_real), .9)

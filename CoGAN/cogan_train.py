@@ -44,7 +44,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
+        sample_x, sample_y = mnist.test.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
@@ -61,7 +61,7 @@ def main():
                               feed_dict={
                                   model.x_1: batch_x,
                                   model.x_2: batch_x,
-                                  # model.y: batch_y,
+                                  model.y: batch_y,
                                   model.z: batch_z,
                               })
 
@@ -70,7 +70,7 @@ def main():
                               feed_dict={
                                   model.x_1: batch_x,
                                   model.x_2: batch_x,
-                                  # model.y: batch_y,
+                                  model.y: batch_y,
                                   model.z: batch_z,
                               })
 
@@ -83,7 +83,7 @@ def main():
                                                 feed_dict={
                                                     model.x_1: batch_x,
                                                     model.x_2: batch_x,
-                                                    # model.y: batch_y,
+                                                    model.y: batch_y,
                                                     model.z: batch_z,
                                                 })
 
@@ -95,13 +95,13 @@ def main():
                 # Training G model with sample image and noise
                 samples_1 = s.run(model.g_sample_1,
                                   feed_dict={
-                                      # model.y: sample_y,
+                                      model.y: sample_y,
                                       model.z: sample_z,
                                   })
 
                 samples_2 = s.run(model.g_sample_2,
                                   feed_dict={
-                                      # model.y: sample_y,
+                                      model.y: sample_y,
                                       model.z: sample_z,
                                   })
 
