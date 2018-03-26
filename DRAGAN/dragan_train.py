@@ -48,7 +48,7 @@ def main():
         if ckpt and ckpt.model_checkpoint_path:
             model.saver.restore(s, ckpt.model_checkpoint_path)
 
-            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
             print("[+] global step : %s" % global_step, " successfully loaded")
         else:
             print('[-] No checkpoint file found')
