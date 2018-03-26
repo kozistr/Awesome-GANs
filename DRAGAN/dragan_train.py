@@ -28,8 +28,8 @@ train_step = {
 }
 
 
-def get_perturbed_images(imgs):
-    return imgs + .5 * imgs.std() * np.random.random(imgs.shape)
+def get_perturbed_images(images):
+    return images + .5 * images.std() * np.random.random(images.shape)
 
 
 def main():
@@ -61,10 +61,10 @@ def main():
 
         sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_x = np.reshape(sample_x, [model.sample_num] + model.image_shape)
-        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
-        for i in range(10):
-            sample_y[10 * i:10 * (i + 1), i] = 1
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        # sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
+        # for i in range(10):
+        #     sample_y[10 * i:10 * (i + 1), i] = 1
+        # sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # Export real image
         valid_image_height = model.sample_size
@@ -95,8 +95,6 @@ def main():
             # Update G network
             _, g_loss = s.run([model.g_op, model.g_loss],
                               feed_dict={
-                                  model.x: batch_x,
-                                  model.x_: batch_x_,
                                   model.z: batch_z,
                               })
 
@@ -118,7 +116,7 @@ def main():
                 # Training G model with sample image and noise
                 samples = s.run(model.g_test,
                                 feed_dict={
-                                    model.z: sample_z,
+                                    model.z: batch_z,
                                 })
 
                 samples = np.reshape(samples, [-1] + model.image_shape)

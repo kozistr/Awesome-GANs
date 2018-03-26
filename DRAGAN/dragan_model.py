@@ -169,7 +169,7 @@ class DRAGAN:
             x = tf.nn.leaky_relu(x)
 
             logits = deconv2d(x, self.input_channel, name='gen-deconv2d-1')
-            prob = tf.nn.tanh(logits)
+            prob = tf.nn.sigmoid(logits)
 
             return prob
 
@@ -188,12 +188,6 @@ class DRAGAN:
         _, d_real = self.discriminator(self.x)
         _, d_fake = self.discriminator(self.g, reuse=True)
 
-        """ Adv losses
-        d_real_loss = -tf.reduce_mean(safe_log(d_real))
-        d_fake_loss = -tf.reduce_mean(safe_log(1. - d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(safe_log(d_fake))
-        """
         # sce losses
         d_real_loss = sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = sce_loss(d_fake, tf.zeros_like(d_fake))
@@ -201,14 +195,14 @@ class DRAGAN:
         self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # DRAGAN loss with GP (gradient penalty)
-        alpha = tf.random_uniform(shape=[self.batch_size] + self.x.get_shape().as_list()[1:],
+        alpha = tf.random_uniform(shape=[self.batch_size] + self.image_shape,
                                   minval=0., maxval=1., name='alpha')
         diff = self.x_ - self.x
         interpolates = self.x + alpha * diff
         _, d_inter = self.discriminator(interpolates, reuse=True)
         grads = tf.gradients(d_inter, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1]))
-        self.gp = tf.reduce_mean(tf.square(slopes - 1.))
+        self.gp = tf.reduce_mean((slopes - 1.) ** 2)
 
         # update d_loss with gp
         self.gp *= self.lambda_
