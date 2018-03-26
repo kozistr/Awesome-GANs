@@ -113,10 +113,13 @@ def main():
                       " D loss : {:.8f}".format(d_loss),
                       " G loss : {:.8f}".format(g_loss))
 
+                # z for sample
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+
                 # Training G model with sample image and noise
                 samples = s.run(model.g_test,
                                 feed_dict={
-                                    model.z: batch_z,
+                                    model.z: sample_z,
                                 })
 
                 samples = np.reshape(samples, [-1] + model.image_shape)
