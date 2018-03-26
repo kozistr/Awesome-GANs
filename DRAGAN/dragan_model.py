@@ -23,13 +23,14 @@ def conv2d(x, f=64, k=3, s=2, pad='SAME', name='conv2d'):
                             name=name)
 
 
-def deconv2d(x, f=64, k=4, s=2, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=4, s=2, pad='SAME', is_train=True, name='deconv2d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
     :param s: strides, default 2
     :param pad: padding (valid or same), default same
+    :param is_train: whether it is on training, default True
     :param name: scope name, default deconv2d
     :return: deconv2d net
     """
@@ -39,6 +40,7 @@ def deconv2d(x, f=64, k=4, s=2, pad='SAME', name='deconv2d'):
                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                                       bias_initializer=tf.zeros_initializer(),
                                       padding=pad,
+                                      trainable=is_train,
                                       name=name)
 
 
@@ -152,23 +154,23 @@ class DRAGAN:
 
             return prob, logits
 
-    def generator(self, z, reuse=None, is_bn_train=True):
+    def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
-            x = tf.layers.dense(z, self.fc_unit, name='gen-fc-0')
-            x = batch_norm(x, train=is_bn_train)
+            x = tf.layers.dense(z, self.fc_unit, trainable=is_train, name='gen-fc-0')
+            x = batch_norm(x, train=is_train)
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.dense(x, self.gf_dim * 4 * 7 * 7, name='gen-fc-1')
-            x = batch_norm(x, train=is_bn_train)
+            x = tf.layers.dense(x, self.gf_dim * 4 * 7 * 7, trainable=is_train, name='gen-fc-1')
+            x = batch_norm(x, train=is_train)
             x = tf.nn.leaky_relu(x)
 
             x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 4])
 
-            x = deconv2d(x, self.gf_dim * 2, name='gen-deconv2d-0')
-            x = batch_norm(x, train=is_bn_train)
+            x = deconv2d(x, self.gf_dim * 2, is_train=is_train, name='gen-deconv2d-0')
+            x = batch_norm(x, train=is_train)
             x = tf.nn.leaky_relu(x)
 
-            logits = deconv2d(x, self.input_channel, name='gen-deconv2d-1')
+            logits = deconv2d(x, self.input_channel, is_train=is_train, name='gen-deconv2d-1')
             prob = tf.nn.sigmoid(logits)
 
             return prob
@@ -182,7 +184,7 @@ class DRAGAN:
 
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_bn_train=False)  # for test
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)  # for test
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
