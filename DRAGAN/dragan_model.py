@@ -130,9 +130,9 @@ class DRAGAN:
                                 name='z-noise')
 
         # Training Options
-        self.lambda_ = .25  # Higher lambda value, More stable. But slower...
+        self.lambda_ = 10.  # Higher lambda value, More stable. But slower...
         self.beta1 = .5
-        self.beta2 = .9
+        self.beta2 = .999
         self.lr = 2e-4
 
         self.bulid_dragan()  # build DRAGAN model
@@ -204,11 +204,10 @@ class DRAGAN:
         _, d_inter = self.discriminator(interpolates, reuse=True)
         grads = tf.gradients(d_inter, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1]))
-        self.gp = tf.reduce_mean((slopes - 1.) ** 2)
+        self.gp = tf.reduce_mean(tf.square((slopes - 1.)))
 
         # update d_loss with gp
-        self.gp *= self.lambda_
-        self.d_loss += self.gp
+        self.d_loss += self.lambda_ * self.gp
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
