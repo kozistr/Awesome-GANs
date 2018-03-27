@@ -4,14 +4,34 @@ import tensorflow as tf
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=4, s=2, reuse=False, act=None, pad='SAME', name='conv2d'):
+def conv1d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='conv1d'):
     """
     :param x: input
     :param f: filters, default 64
     :param k: kernel size, default 3
     :param s: strides, default 2
     :param reuse: param re-usability, default False
-    :param act: activation function, default None
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default conv2d
+    :return: covn2d net
+    """
+    return tf.layers.conv1d(x,
+                            filters=f, kernel_size=k, strides=s,
+                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+                            bias_initializer=tf.zeros_initializer(),
+                            padding=pad,
+                            reuse=reuse,
+                            name=name)
+
+
+def conv2d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='conv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 3
+    :param s: strides, default 2
+    :param reuse: param re-usability, default False
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: covn2d net
@@ -22,12 +42,11 @@ def conv2d(x, f=64, k=4, s=2, reuse=False, act=None, pad='SAME', name='conv2d'):
                             kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
                             bias_initializer=tf.zeros_initializer(),
                             padding=pad,
-                            activation=act,
                             reuse=reuse,
                             name=name)
 
 
-def deconv2d(x, f=64, k=4, s=2, reuse=False, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='deconv2d'):
     """
     :param x: input
     :param f: filters, default 64
@@ -138,21 +157,21 @@ class SEGAN:
         self.saver = None
 
         # Placeholder
-        self.x_1 = tf.placeholder(tf.float32, shape=[self.batch_size,
-                                                     self.input_height, self.input_width, self.input_channel],
-                                  name="x-image1")  # (-1, 28, 28, 1)
-        self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size,
-                                                     self.input_height, self.input_width, self.input_channel],
-                                  name="x-image2")  # (-1, 28, 28, 1)
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes],
-                                name="y-label")   # (-1, 10)
+        self.x = tf.placeholder(tf.float32, shape=[self.batch_size,
+                                                   self.input_height, self.input_width, self.input_channel],
+                                name="x-sound")
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
-                                name='z-noise')   # (-1, 128)
+                                name='z-noise')
 
         self.build_segan()  # build SEGAN model
 
     def discriminator(self, x, reuse=False):
         with tf.variable_scope("discriminator", reuse=reuse):
+            def residual_block(x):
+                x = conv2d(x)
+                x = batch_norm(x)
+                x = tf.nn.leaky_relu(x)
+                return x
 
             return x
 
@@ -166,35 +185,27 @@ class SEGAN:
             return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y))
 
         # Generator
-        self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
+        self.g_1 = self.generator(self.z)
 
-        self.g_sample_1 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g1')
+        self.g_sample_1 = self.generator(self.z, reuse=True, training=False)
 
         # Discriminator
-        d_1_real = self.discriminator(self.x_1, self.y, share_params=False, reuse=False, name='d1')
-        d_1_fake = self.discriminator(self.g_1, self.y, share_params=True, reuse=True, name='d1')
+        d_real = self.discriminator(self.x, reuse=False)
+        d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_1_real_loss = sce_loss(d_1_real, tf.ones_like(d_1_real))
-        d_1_fake_loss = sce_loss(d_1_fake, tf.zeros_like(d_1_fake))
-        d_2_real_loss = sce_loss(d_2_real, tf.ones_like(d_2_real))
-        d_2_fake_loss = sce_loss(d_2_fake, tf.zeros_like(d_2_fake))
-        self.d_1_loss = d_1_real_loss + d_1_fake_loss
-        self.d_2_loss = d_2_real_loss + d_2_fake_loss
+        d_real_loss = sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = sce_loss(d_fake, tf.zeros_like(d_fake))
+        self.d_1_loss = d_real_loss + d_fake_loss
+        self.d_2_loss = d_real_loss + d_fake_loss
         self.d_loss = self.d_1_loss + self.d_2_loss
 
-        g_1_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake))
-        g_2_loss = sce_loss(d_2_fake, tf.ones_like(d_2_fake))
-        self.g_loss = g_1_loss + g_2_loss
+        self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
-        tf.summary.scalar("loss/d_1_real_loss", d_1_real_loss)
-        tf.summary.scalar("loss/d_1_fake_loss", d_1_fake_loss)
-        tf.summary.scalar("loss/d_2_real_loss", d_2_real_loss)
-        tf.summary.scalar("loss/d_2_fake_loss", d_2_fake_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
-        tf.summary.scalar("loss/g_1_loss", g_1_loss)
-        tf.summary.scalar("loss/g_2_loss", g_2_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
