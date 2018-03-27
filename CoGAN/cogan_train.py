@@ -22,8 +22,8 @@ results = {
 }
 
 train_step = {
-    'global_step': 250001,
-    'logging_interval': 2500,
+    'global_step': 300001,
+    'logging_interval': 1500,
 }
 
 
@@ -44,13 +44,11 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, sample_y = mnist.test.next_batch(model.sample_num)
+        sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
-        d_overpowered = False
         for step in range(train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_x = np.reshape(batch_x, model.image_shape)
@@ -61,7 +59,7 @@ def main():
                               feed_dict={
                                   model.x_1: batch_x,
                                   model.x_2: batch_x,
-                                  model.y: batch_y,
+                                  # model.y: batch_y,
                                   model.z: batch_z,
                               })
 
@@ -70,7 +68,7 @@ def main():
                               feed_dict={
                                   model.x_1: batch_x,
                                   model.x_2: batch_x,
-                                  model.y: batch_y,
+                                  # model.y: batch_y,
                                   model.z: batch_z,
                               })
 
@@ -83,7 +81,7 @@ def main():
                                                 feed_dict={
                                                     model.x_1: batch_x,
                                                     model.x_2: batch_x,
-                                                    model.y: batch_y,
+                                                    # model.y: batch_y,
                                                     model.z: batch_z,
                                                 })
 
@@ -92,16 +90,18 @@ def main():
                       " D loss : {:.8f}".format(d_loss),
                       " G loss : {:.8f}".format(g_loss))
 
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+
                 # Training G model with sample image and noise
                 samples_1 = s.run(model.g_sample_1,
                                   feed_dict={
-                                      model.y: sample_y,
+                                      # model.y: sample_y,
                                       model.z: sample_z,
                                   })
 
                 samples_2 = s.run(model.g_sample_2,
                                   feed_dict={
-                                      model.y: sample_y,
+                                      # model.y: sample_y,
                                       model.z: sample_z,
                                   })
 
@@ -122,7 +122,7 @@ def main():
                 iu.save_images(samples_1,
                                size=[sample_image_height, sample_image_width],
                                image_path=sample_dir_1)
-                iu.save_images(samples_1,
+                iu.save_images(samples_2,
                                size=[sample_image_height, sample_image_width],
                                image_path=sample_dir_2)
 

@@ -186,12 +186,14 @@ class CoGAN:
             # x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc' + name + '-max_pool2d-0')
 
             x = conv2d(x, f=self.df_dim * 2, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-1')
+            x = batch_norm(x, reuse=False, name='disc-bn-0')
             x = prelu(x, reuse=False, name='disc-' + name + '-prelu-1')
             # x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc' + name + '-max_pool2d-1')
 
             x = tf.layers.flatten(x)
 
         x = tf.layers.dense(x, self.fc_unit, reuse=share_params, name='disc-dense-0')
+        x = batch_norm(x, reuse=share_params, name='disc-bn-1')
         x = prelu(x, reuse=share_params, name='disc-prelu-2')
 
         x = tf.layers.dense(x, 1, reuse=share_params, name='disc-dense-1')
@@ -225,11 +227,11 @@ class CoGAN:
             x = deconv2d(x, f=self.input_channel, k=6, s=1, reuse=False, name='gen-' + name + '-deconv2d-3')
             x = tf.nn.sigmoid(x, name='gen' + name + '-sigmoid-0')
 
-            return x
+        return x
 
     def build_cogan(self):
-        def sce_loss(x, y, alpha):
-            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y * alpha))
+        def sce_loss(x, y):
+            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y))
 
         # Generator
         self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
@@ -245,16 +247,16 @@ class CoGAN:
         d_2_fake = self.discriminator(self.g_2, self.y, share_params=True, reuse=True, name='d2')
 
         # Losses
-        d_1_real_loss = sce_loss(d_1_real, tf.ones_like(d_1_real), .9)
-        d_1_fake_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake), .1)
-        d_2_real_loss = sce_loss(d_2_real, tf.ones_like(d_2_real), .9)
-        d_2_fake_loss = sce_loss(d_2_fake, tf.ones_like(d_2_fake), .1)
+        d_1_real_loss = sce_loss(d_1_real, tf.ones_like(d_1_real))
+        d_1_fake_loss = sce_loss(d_1_fake, tf.zeros_like(d_1_fake))
+        d_2_real_loss = sce_loss(d_2_real, tf.ones_like(d_2_real))
+        d_2_fake_loss = sce_loss(d_2_fake, tf.zeros_like(d_2_fake))
         self.d_1_loss = d_1_real_loss + d_1_fake_loss
         self.d_2_loss = d_2_real_loss + d_2_fake_loss
         self.d_loss = self.d_1_loss + self.d_2_loss
 
-        g_1_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake), .9)
-        g_2_loss = sce_loss(d_2_fake, tf.ones_like(d_1_fake), .9)
+        g_1_loss = sce_loss(d_1_fake, tf.ones_like(d_1_fake))
+        g_2_loss = sce_loss(d_2_fake, tf.ones_like(d_2_fake))
         self.g_loss = g_1_loss + g_2_loss
 
         # Summary
