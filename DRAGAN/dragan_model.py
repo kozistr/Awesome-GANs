@@ -197,8 +197,8 @@ class DRAGAN:
         self.g_loss = sce_loss(d_fake, tf.ones_like(d_fake))
 
         # DRAGAN loss with GP (gradient penalty)
-        alpha = tf.random_uniform(shape=[self.batch_size] + self.image_shape,
-                                  minval=0., maxval=1., name='alpha')
+        alpha = tf.random_uniform(shape=[self.batch_size] + [1, 1, 1], minval=0., maxval=1., name='alpha')
+
         diff = self.x_ - self.x
         interpolates = self.x + alpha * diff
         _, d_inter = self.discriminator(interpolates, reuse=True)
