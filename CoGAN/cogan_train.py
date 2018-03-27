@@ -18,11 +18,11 @@ from datasets import MNISTDataSet as DataSet
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
-    'model': './model/BGAN-model.ckpt'
+    'model': './model/CoGAN-model.ckpt'
 }
 
 train_step = {
-    'global_step': 300001,
+    'global_step': 150001,
     'logging_interval': 1500,
 }
 

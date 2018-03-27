@@ -180,6 +180,7 @@ class CoGAN:
                 pass
 
             # Using conv2d pooling instead of max_pool2d because of the speed.
+            # In the CoGAN paper, max_pool2d is used.
 
             x = conv2d(x, f=self.df_dim, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-0')
             x = prelu(x, reuse=False, name='disc-' + name + '-prelu-0')

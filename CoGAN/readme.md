@@ -14,9 +14,10 @@
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
+*Name* | *Global Step 49.5k* | *Global Step 99k* | *Global Step 150k*
 :---: | :---: | :---: | :---:
-**CoGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_00200000.png)
+**Gen 1**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00049500.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00099000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00150000.png)
+**Gen 2**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00049500.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00099000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00150000.png)
 
 ## To-Do
 *
