@@ -206,20 +206,26 @@ class CoGAN:
         else:
             x = z
 
-        x = tf.layers.dense(x, 7 * 7, reuse=share_params, name='gen-dense-reshape')
+        x = tf.layers.flatten(x)
+
+        x = tf.layers.dense(x, self.fc_unit, reuse=share_params, name='gen-dense-0')
         x = prelu(x, reuse=share_params, name='gen-prelu-0')
 
-        x = tf.reshape(x, (self.batch_size, 7, 7, 1))
-
-        x = deconv2d(x, f=self.gf_dim * 16, k=4, s=1, reuse=share_params, name='gen-deconv2d-0')
-        x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-0")
+        x = tf.layers.dense(x, self.gf_dim * 8 * 7 * 7, reuse=share_params, name='gen-dense-1')
+        x = batch_norm(x, reuse=share_params, training=training, name='gen-bn-0')
         x = prelu(x, reuse=share_params, name='gen-prelu-1')
 
-        x = deconv2d(x, f=self.gf_dim * 8, k=3, s=2, reuse=share_params, name='gen-deconv2d-1')
+        x = tf.reshape(x, (self.batch_size, 7, 7, self.gf_dim * 8))
+
+        # x = deconv2d(x, f=self.gf_dim * 16, k=4, s=1, reuse=share_params, name='gen-deconv2d-0')
+        # x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-0")
+        # x = prelu(x, reuse=share_params, name='gen-prelu-1')
+
+        x = deconv2d(x, f=self.gf_dim * 4, k=3, s=2, reuse=share_params, name='gen-deconv2d-1')
         x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-1")
         x = prelu(x, reuse=share_params, name='gen-prelu-2')
 
-        x = deconv2d(x, f=self.gf_dim * 4, k=3, s=2, reuse=share_params, name='gen-deconv2d-2')
+        x = deconv2d(x, f=self.gf_dim * 2, k=3, s=2, reuse=share_params, name='gen-deconv2d-2')
         x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-2")
         x = prelu(x, reuse=share_params, name='gen-prelu-3')
 
