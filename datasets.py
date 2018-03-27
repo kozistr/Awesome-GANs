@@ -55,6 +55,8 @@ DataSets = {
     'div2k-hr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr-val.h5',
     'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/X4/',
     'div2k-lr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr-val.h5',
+    # UrbanSound8K DataSet
+    'urban_sound': '/home/zero/hdd/DataSet/UrbanSound/audio/',
     # Windows
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
@@ -84,6 +86,8 @@ DataSets = {
     # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
     # 'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
     # 'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
+    # UrbanSound8K DataSet
+    # 'urban_sound': 'D:\\DataSet\\UrbanSound\\audio\\',
 }
 
 
@@ -767,6 +771,12 @@ class Div2KDataSet:
                 hr_lr_images.append(faces)
 
         return hr_lr_images
+
+
+class UrbanSoundDataSet:
+
+    def __init__(self):
+        pass
 
 
 class DataIterator:
