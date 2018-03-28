@@ -1,80 +1,8 @@
 import tensorflow as tf
+import ops
 
 
 tf.set_random_seed(777)  # reproducibility
-
-
-def conv1d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='conv1d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 2
-    :param reuse: param re-usability, default False
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: covn2d net
-    """
-    return tf.layers.conv1d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
-
-
-def conv2d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 2
-    :param reuse: param re-usability, default False
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: covn2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
-
-
-def deconv2d(x, f=64, k=5, s=2, reuse=False, pad='SAME', name='deconv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 2
-    :param reuse: param re-usability, default False
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default deconv2d
-    :return: decovn2d net
-    """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                      bias_initializer=tf.zeros_initializer(),
-                                      padding=pad,
-                                      reuse=reuse,
-                                      name=name)
-
-
-def batch_norm(x, momentum=0.9, eps=1e-5, reuse=False, training=True, name=""):
-    return tf.layers.batch_normalization(inputs=x,
-                                         momentum=momentum,
-                                         epsilon=eps,
-                                         scale=True,
-                                         reuse=reuse,
-                                         training=training,
-                                         name=name)
 
 
 class SEGAN:
@@ -144,10 +72,8 @@ class SEGAN:
         self.g_1_loss = 0.
         self.g_2_loss = 0.
 
-        self.g_1 = None
-        self.g_2 = None
-        self.g_sample_1 = None
-        self.g_sample_2 = None
+        self.g = None
+        self.g_sample = None
 
         self.d_op = None
         self.g_op = None
@@ -163,15 +89,29 @@ class SEGAN:
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
                                 name='z-noise')
 
+        # ops
+        self.ops = ops.VBN()
+
+        self.num_blocks = [16, 32, 32, 64, 64, 128, 128, 256, 256, 512, 1024
+
         self.build_segan()  # build SEGAN model
 
     def discriminator(self, x, reuse=False):
         with tf.variable_scope("discriminator", reuse=reuse):
-            def residual_block(x):
-                x = conv2d(x)
-                x = batch_norm(x)
+            def residual_block(x, name='residual_block'):
+                x = ops.conv2d(x)
+                x = self.ops(x)
                 x = tf.nn.leaky_relu(x)
                 return x
+
+            if len(x) == 2:
+                x = tf.expand_dims(x, axis=-1)
+            else:
+                raise ValueError("[-] disc: waveform must be 2, 3-D")
+
+            for idx, f in enumerate(self.num_blocks):
+                x = residual_block(x)
+
 
             return x
 
@@ -185,9 +125,8 @@ class SEGAN:
             return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y))
 
         # Generator
-        self.g_1 = self.generator(self.z)
-
-        self.g_sample_1 = self.generator(self.z, reuse=True, training=False)
+        self.g = self.generator(self.z)
+        self.g_sample = self.generator(self.z, reuse=True, training=False)
 
         # Discriminator
         d_real = self.discriminator(self.x, reuse=False)

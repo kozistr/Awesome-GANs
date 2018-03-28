@@ -8,7 +8,7 @@ import numpy as np
 import sys
 import time
 
-import cogan_model as cogan
+import segan_model as segan
 
 sys.path.append('../')
 import image_utils as iu
