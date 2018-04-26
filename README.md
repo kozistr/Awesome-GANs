@@ -118,4 +118,4 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## Author
-HyeongChan Kim / ([@kozistr](https://kozistr.github.io), [@zer0day](http://zer0day.tistory.com))
+HyeongChan Kim / ([@kozistr](https://kozistr.tech), [@zer0day](http://zer0day.tistory.com))
