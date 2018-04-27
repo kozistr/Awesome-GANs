@@ -117,5 +117,9 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
+## ETC
+
+Any suggestions or pull requests or issues are welcome :)
+
 ## Author
 HyeongChan Kim / ([@kozistr](https://kozistr.tech), [@zer0day](http://zer0day.tistory.com))
