@@ -122,4 +122,4 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 Any suggestions or pull requests or issues are welcome :)
 
 ## Author
-HyeongChan Kim / ([@kozistr](https://kozistr.tech), [@zer0day](http://zer0day.tistory.com))
+HyeongChan Kim / [@kozistr](https://kozistr.tech)
