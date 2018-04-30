@@ -21,14 +21,12 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * tensorflow 1.x
 * numpy
 * scipy (some features are **deprecated**, they'll be replaced)
-* ~~imageio~~
 * ~~scikit_image~~
 * opencv
 * pillow
 * h5py
 * tqdm
 * sklearn
-* ~~librosa~~
 * Internet :)
 
 ## Usage
