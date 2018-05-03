@@ -180,6 +180,8 @@ class PGGAN:
         self.merged = None
         self.writer = None
         self.saver = None
+        self.r_saver = None
+        self.out_saver = None
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
@@ -273,9 +275,6 @@ class PGGAN:
             return x
 
     def build_pggan(self):
-        def l1_loss(x, y):
-            return tf.reduce_mean(tf.abs(x - y))
-
         # Generator
         self.g = self.generator(self.z, self.pg, self.pg_t)
 
@@ -284,10 +283,10 @@ class PGGAN:
         d_fake = self.discriminator(self.g, self.pg, self.pg_t, reuse=True)
 
         # Loss
-        d_real_loss = l1_loss(self.x, d_real)
-        d_fake_loss = l1_loss(self.g, d_fake)
+        d_real_loss = tf.reduce_mean(d_real)
+        d_fake_loss = tf.reduce_mean(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
-        self.g_loss = d_fake_loss
+        self.g_loss = -d_fake_loss
 
         # Gradient Penalty
         diff = self.g - self.x
@@ -295,11 +294,10 @@ class PGGAN:
         interp = self.x + (alpha * diff)
         d_interp = self.discriminator(interp, self.pg, self.pg_t, reuse=True)
         grads = tf.gradients(d_interp, [interp])[0]
-
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1, 2, 3]))
         self.gp = tf.reduce_mean((slopes - 1.) ** 2)
 
-        self.d_loss = self.lambda_ * self.gp + self.k
+        self.d_loss += self.lambda_ * self.gp + self.k * tf.reduce_mean(tf.square(d_real - 0.))
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
@@ -308,11 +306,25 @@ class PGGAN:
         tf.summary.scalar("loss/g_loss", self.g_loss)
         tf.summary.scalar("misc/gp", self.gp)
 
-        # Optimizer
+        # Training Parameters
         t_vars = tf.trainable_variables()
-        d_params = [v for v in t_vars if v.name.startswith('d')]
-        g_params = [v for v in t_vars if v.name.startswith('g')]
 
+        d_params = [v for v in t_vars if v.name.startswith('disc')]
+        g_params = [v for v in t_vars if v.name.startswith('gen')]
+
+        d_n_params = [v for v in d_params if v.name.startswith('disc_n')]
+        g_n_params = [v for v in g_params if v.name.startswith('gen_n')]
+
+        d_n_out_params = [v for v in d_params if v.name.startswith('disc_out')]
+        g_n_out_params = [v for v in g_params if v.name.startswith('gen_out')]
+
+        d_n_nwm_params = [v for v in d_n_params if not v.name.endswith('%d' % self.output_size)]  # nwm : not new model
+        g_n_nwm_params = [v for v in g_n_params if not v.name.endswith('%d' % self.output_size)]  # nwm : not new model
+
+        d_n_out_nwm_params = [v for v in d_n_out_params if not v.name.endswith('%d' % self.output_size)]
+        g_n_out_nwm_params = [v for v in g_n_out_params if not v.name.endswith('%d' % self.output_size)]
+
+        # Optimizer
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
@@ -322,5 +334,9 @@ class PGGAN:
         self.merged = tf.summary.merge_all()
 
         # Model saver
-        self.saver = tf.train.Saver(max_to_keep=1)
+        self.saver = tf.train.Saver(d_params + g_params, max_to_keep=1)
+        self.r_saver = tf.train.Saver(d_n_nwm_params + g_n_nwm_params, max_to_keep=1)
+        if len(d_n_out_nwm_params + g_n_out_nwm_params):
+            self.out_saver = tf.train.Saver(d_n_out_nwm_params + g_n_out_nwm_params, max_to_keep=1)
+
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
