@@ -94,17 +94,18 @@ def main():
                                       })
 
                     if global_step % train_step['logging_step'] == 0:
-                        _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                         model.d_loss, model.g_loss, model.merged],
-                                                                        feed_dict={
-                                                                            model.x: batch_x,
-                                                                            model.z: batch_z,
-                                                                        })
+                        gp, d_loss, g_loss, summary = s.run([model.gp,
+                                                             model.d_loss, model.g_loss, model.merged],
+                                                            feed_dict={
+                                                                model.x: batch_x,
+                                                                model.z: batch_z,
+                                                            })
 
                         # Print loss
                         print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
                               " D loss : {:.6f}".format(d_loss),
-                              " G loss : {:.6f}".format(g_loss)
+                              " G loss : {:.6f}".format(g_loss),
+                              " GP     : {:.6f}".format(gp),
                               )
 
                         # Summary saver
