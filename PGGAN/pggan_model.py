@@ -158,7 +158,7 @@ class PGGAN:
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
-        self.beta1 = 0.
+        self.beta1 = 0.  # 0 ??
         self.beta2 = .99
         self.lr = lr
         self.eps = epsilon
@@ -169,8 +169,9 @@ class PGGAN:
         self.g_loss = 0.
         self.d_loss = 0.
         self.gp = 0.
-        self.lambda_ = 10.
-        self.k = 1e-3
+        self.gp_target = 1.
+        self.gp_lambda = 10.  # slower convergence but good
+        self.gp_w = 1e-3
 
         self.g = None
 
@@ -282,7 +283,7 @@ class PGGAN:
         d_real = self.discriminator(self.x, self.pg, self.pg_t)
         d_fake = self.discriminator(self.g, self.pg, self.pg_t, reuse=True)
 
-        # Loss
+        # Loss (skipping label-penalty for G/D nets)
         d_real_loss = tf.reduce_mean(d_real)
         d_fake_loss = tf.reduce_mean(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
@@ -295,9 +296,10 @@ class PGGAN:
         d_interp = self.discriminator(interp, self.pg, self.pg_t, reuse=True)
         grads = tf.gradients(d_interp, [interp])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1, 2, 3]))
-        self.gp = tf.reduce_mean((slopes - 1.) ** 2)
+        self.gp = tf.reduce_mean(tf.square(slopes - self.gp_target))
 
-        self.d_loss += self.lambda_ * self.gp + self.k * tf.reduce_mean(tf.square(d_real - 0.))
+        self.d_loss += (self.gp_lambda / (self.gp_target ** 2)) * self.gp + \
+            self.gp_w * tf.reduce_mean(tf.square(d_real - 0.))
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
