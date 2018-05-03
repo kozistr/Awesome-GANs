@@ -29,6 +29,7 @@ DataSets = {
     'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
     'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
     'celeb-a-108x108-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-108x108.h5',
+    'celeb-a-128x128-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-128x128.h5',
     # Celeb-A-HQ DataSet
     'celeb-a-hq': '/home/zero/hdd/DataSet/Celeb-A-HQ/train/',
     'celeb-a-hq-1024x1024-h5': '/home/zero/hdd/DataSet/Celeb-A-HQ/celeb-a-hq-1024x1024.h5',
