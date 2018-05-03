@@ -43,6 +43,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * CiFar-10
 * CiFar-100
 * Celeb-A
+* ~~Celeb-A-HQ~~
 * pix2pix DataSets
 * DIV2K DataSets
 * ~~ImageNet DataSets~~
