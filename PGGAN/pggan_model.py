@@ -91,6 +91,19 @@ def resize_nn(x, size):
     return tf.image.resize_nearest_neighbor(x, size=(int(size), int(size)))
 
 
+def bacth_concat(x, eps=1e-8, averaging='all'):
+    """
+    ref : https://github.com/zhangqianhui/progressive_growing_of_gans_tensorflow/blob/master/ops.py#L145
+    """
+    adj_std = lambda x_, **kwargs: tf.sqrt(tf.reduce_mean((x_ - tf.reduce_mean(x_, **kwargs)) ** 2, **kwargs) + eps)
+
+    val_ = adj_std(x, axis=0, keep_dims=True)
+    if averaging == 'all':
+        val_ = tf.reduce_mean(val_, keep_dims=True)
+    val_ = tf.tile(val_, multiples=[tf.shape(x)[0], 4, 4, 1])
+    return tf.concat([x, val_], axis=3)
+
+
 class PGGAN:
 
     def __init__(self, s, batch_size=16, input_height=128, input_width=128, input_channel=3,
@@ -180,8 +193,41 @@ class PGGAN:
         self.build_pggan()  # build PGGAN model
 
     def discriminator(self, x, pg=1, pg_t=False, reuse=None):
+        def nf(n):
+            return tf.cast(min(1024 / (2 ** n), self.z_dim), dtype=tf.int32)
 
         with tf.variable_scope("disc", reuse=reuse):
+            if pg_t:
+                x_out = tf.layers.average_pooling2d(x, pool_size=2, strides=2)
+                x_out = conv2d(x_out, nf(pg - 2), k=1, s=1, name='disc_out_conv2d-%d' % x_out.get_shape()[1])
+                x_out = tf.nn.leaky_relu(x_out)
+
+            x = conv2d(x, nf(pg - 1), k=1, s=1, name='disc_out_conv2d-%d' % x.get_shape()[1])
+            x = tf.nn.leaky_relu(x)
+
+            for i in range(pg - 1):
+                x = conv2d(x, nf(pg - 1 - i), k=1, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
+                x = tf.nn.leaky_relu(x)
+
+                x = conv2d(x, nf(pg - 2 - i), k=1, s=1, name='disc_n_2_conv2d-%d' % x.get_shape()[1])
+                x = tf.nn.leaky_relu(x)
+
+                x = tf.layers.average_pooling2d(x, pool_size=2, strides=2)
+
+                if i == 0 and pg_t:
+                    x = (1. - self.alpha_trans) * x_out + self.alpha_trans * x
+
+            x = bacth_concat(x)
+
+            x = conv2d(x, nf(1), k=3, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
+            x = tf.nn.leaky_relu(x)
+
+            x = conv2d(x, nf(1), k=4, s=1, pad='VALID', name='disc_n_2_conv2d-%d' % x.get_shape()[1])
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.layers.flatten(x)
+
+            x = tf.layers.dense(x, 1, name='disc_n_fc')
 
             return x
 
