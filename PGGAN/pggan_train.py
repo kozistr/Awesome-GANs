@@ -4,6 +4,7 @@ from __future__ import division
 
 import tensorflow as tf
 import numpy as np
+import scipy.ndimage
 
 import sys
 import time
@@ -19,7 +20,7 @@ from datasets import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
+    'checkpoint': './model/checkpoint-',
     'model': './model/PGGAN-model-'
 }
 
@@ -68,17 +69,33 @@ def main():
     for idx, n_pg in enumerate(pg):
 
         with tf.Session(config=config) as s:
+            pg_t = False if idx % 2 == 0 else True
+
             # PGGAN Model
-            model = pggan.PGGAN(s)  # PGGAN
+            model = pggan.PGGAN(s, pg=n_pg, pg_t=pg_t)  # PGGAN
 
             # Initializing
             s.run(tf.global_variables_initializer())
 
+            if not n_pg == 1 and not n_pg == 7:
+                if pg_t:
+                    model.r_saver.restore(s, results['model'] + '%d-%d.ckpt' % (idx, r_pg[idx]))
+                    model.out_saver.restore(s, results['model'] + '%d-%d.ckpt' % (idx, r_pg[idx]))
+                else:
+                    model.saver.restore(s, results['model'] + '%d-%d.ckpt' % (idx, r_pg[idx]))
+
             global_step = 0
             for epoch in range(train_step['epoch']):
+                # Later, adding n_critic for optimizing D net
                 for batch_images in dataset_iter.iterate():
                     batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+
+                    if pg_t and not pg == 0:
+                        alpha = global_step / 32000.
+                        low_batch_x = scipy.ndimage.zoom(batch_x, zoom=[1., .5, .5, 1.])
+                        low_batch_x = scipy.ndimage.zoom(low_batch_x, zoom=[1., 2., 2., 1.])
+                        batch_x = alpha * batch_x + (1. - alpha) * low_batch_x
 
                     # Update D network
                     _, d_loss = s.run([model.d_op, model.d_loss],
@@ -93,6 +110,9 @@ def main():
                                           model.z: batch_z,
                                       })
 
+                    # Update alpha_trans
+                    s.run(model.alpha_trans_update, feed_dict={model.step_pl: global_step})
+
                     if global_step % train_step['logging_step'] == 0:
                         gp, d_loss, g_loss, summary = s.run([model.gp,
                                                              model.d_loss, model.g_loss, model.merged],
@@ -102,7 +122,7 @@ def main():
                                                             })
 
                         # Print loss
-                        print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
+                        print("[+] PG %d Epoch %03d Step %07d =>" % (n_pg, epoch, global_step),
                               " D loss : {:.6f}".format(d_loss),
                               " G loss : {:.6f}".format(g_loss),
                               " GP     : {:.6f}".format(gp),
