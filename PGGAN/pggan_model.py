@@ -191,7 +191,9 @@ class PGGAN:
         self.z = tf.placeholder(tf.float32,
                                 shape=[None, self.z_dim],
                                 name='z-noise')
+        self.step_pl = tf.placeholder(tf.float32, shape=None)
         self.alpha_trans = tf.Variable(initial_value=0., trainable=False, name='alpha_trans')
+        self.alpha_trans_update = None
 
         self.build_pggan()  # build PGGAN model
 
@@ -276,6 +278,8 @@ class PGGAN:
             return x
 
     def build_pggan(self):
+        self.alpha_trans_update = self.alpha_trans.assign(self.step_pl / 32000)
+
         # Generator
         self.g = self.generator(self.z, self.pg, self.pg_t)
 
