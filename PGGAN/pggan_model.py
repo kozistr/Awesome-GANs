@@ -33,37 +33,34 @@ def resize_nn(x, size):
 
 class PGGAN:
 
-    def __init__(self, s, batch_size=16, input_height=64, input_width=64, input_channel=3,
-                 sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
+    def __init__(self, s, batch_size=16, input_height=128, input_width=128, input_channel=3,
+                 sample_num=1 * 1, sample_size=1, output_height=128, output_width=128,
                  df_dim=64, gf_dim=64,
-                 gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+                 gamma=.5, lambda_k=1e-3, z_dim=256, lr=1e-4, epsilon=1e-9):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 16
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
+        :param input_height: input image height, default 128
+        :param input_width: input image width, default 128
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 32x32x3/64x64x3(HWC).
+        - in case of Celeb-A, image size is 128x128x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of output images, default 64
-        :param sample_size: sample image size, default 64
-        :param output_height: output images height, default 64
-        :param output_width: output images width, default 64
+        :param sample_num: the number of output images, default 1
+        :param sample_size: sample image size, default 1
+        :param output_height: output images height, default 128
+        :param output_width: output images width, default 128
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
 
         # Training Option
-        :param gamma: gamma value, default 0.4
-        :param lambda_k: lr adjustment value lambda k, default 1e-3
         :param z_dim: z dimension (kinda noise), default 256
-        :param g_lr: generator learning rate, default 1e-4
-        :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-12
+        :param lr: learning rate, default 1e-4
+        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -87,10 +84,7 @@ class PGGAN:
         self.z_dim = z_dim
         self.beta1 = .5
         self.beta2 = .9
-        self.d_lr = tf.Variable(d_lr, name='d_lr')
-        self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = .5
-        self.lr_low_boundary = 1e-5
+        self.lr = lr
         self.eps = epsilon
 
         # pre-defined
@@ -98,12 +92,9 @@ class PGGAN:
         self.d_fake = 0.
         self.g_loss = 0.
         self.d_loss = 0.
-        self.m_global = 0.
-        self.balance = 0.
 
         self.g = None
 
-        self.k_update = None
         self.d_op = None
         self.g_op = None
 
@@ -111,112 +102,27 @@ class PGGAN:
         self.writer = None
         self.saver = None
 
-        # LR/k update
-        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
-
-        self.lr_update_step = 100000
-        self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
-        self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
-
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.input_height, self.input_width, self.input_channel],
-                                name="x-image")  # (-1, 32 or 64, 32 or 64, 3)
+                                name="x-image")
         self.z = tf.placeholder(tf.float32,
                                 shape=[None, self.z_dim],
-                                name='z-noise')  # (-1, 128)
+                                name='z-noise')
 
         self.build_pggan()  # build PGGAN model
 
-    def encoder(self, x, reuse=None):
-        """
-        :param x: Input images (32x32x3 or 64x64x3)
-        :param reuse: re-usable
-        :return: embeddings
-        """
-        with tf.variable_scope('encoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
-
-            x = conv2d(x, f=self.df_dim, act=tf.nn.elu, name="enc-conv-0")
-
-            for i in range(1, repeat + 1):
-                f = self.df_dim * i
-
-                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2))
-
-                if i < repeat:
-                    """
-                    You can choose one of them. max-pool or avg-pool or conv-pool.
-                    Speed Order : conv-pool > avg-pool > max-pool. i guess :)
-                    """
-                    # x = tf.layers.max_pooling2d(x, 2, 2)
-                    x = conv2d(x, f=f, d=2, act=tf.nn.elu, name='enc-conv-pool-%d' % i)  # conv pooling
-                    # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
-
-            x = tf.layers.flatten(x)
-
-            z = tf.layers.dense(x, units=self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
-
-            return z
-
-    def decoder(self, z, reuse=None):
-        """
-        :param z: embeddings
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope('decoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
-
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, name='dec-fc-1')
-            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
-
-            for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2))
-
-                if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
-
-            x = conv2d(x, f=self.input_channel)
-
-            return x
-
     def discriminator(self, x, reuse=None):
-        """
-        :param x: images
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope("discriminator", reuse=reuse):
-            z = self.encoder(x, reuse=reuse)
-            x = self.decoder(z, reuse=reuse)
+
+        with tf.variable_scope("disc", reuse=reuse):
 
             return x
 
     def generator(self, z, reuse=None):
-        """
-        :param z: embeddings
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope("generator", reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
 
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='g-fc-1')
-            x = tf.reshape(x, [-1, 8, 8, self.z_dim])
+        with tf.variable_scope("gen", reuse=reuse):
 
-            for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2))
-
-                if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
-
-            x = conv2d(x, f=self.input_channel)
-
-            return x
+            return z
 
     def build_pggan(self):
         def l1_loss(x, y):
@@ -232,35 +138,23 @@ class PGGAN:
         # Loss
         d_real_loss = l1_loss(self.x, d_real)
         d_fake_loss = l1_loss(self.g, d_fake)
-        self.d_loss = d_real_loss - self.k * d_fake_loss
+        self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = d_fake_loss
-
-        # Convergence Metric
-        self.balance = self.gamma * d_real_loss - self.g_loss  # (=d_fake_loss)
-        self.m_global = d_real_loss + tf.abs(self.balance)
-
-        # k_t update
-        self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("misc/balance", self.balance)
-        tf.summary.scalar("misc/m_global", self.m_global)
-        tf.summary.scalar("misc/k_t", self.k)
-        tf.summary.scalar("misc/d_lr", self.d_lr)
-        tf.summary.scalar("misc/g_lr", self.g_lr)
 
         # Optimizer
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
