@@ -10,26 +10,81 @@ he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_
 l2_reg = tf.contrib.layers.l2_regularizer
 
 
-def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=4, s=1, reg=5e-4, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param d: strides, default 2
+    :param k: kernel size, default 4
+    :param s: strides, default 1
     :param reg: weight regularizer, default 5e-4
-    :param act: activation function, default None
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: conv2d net
     """
+
+    if pad == 'other':
+        pad = 'VALID'
+        x = tf.pad(x, [[0, 0], [3, 3], [0, 3], [3, 3]], "CONSTANT")
+
     return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
+                            filters=f, kernel_size=k, strides=s,
                             kernel_initializer=he_normal,
                             kernel_regularizer=l2_reg(reg),
                             bias_initializer=tf.zeros_initializer(),
-                            activation=act,
                             padding=pad,
                             name=name)
+
+
+def deconv2d(x, f=64, k=4, s=1, reg=5e-4, pad='SAME', name='deconv2d'):
+    """
+    :param x: input
+    :param f: filters, default 64
+    :param k: kernel size, default 4
+    :param s: strides, default 1
+    :param reg: weight regularizer, default 5e-4
+    :param pad: padding (valid or same), default same
+    :param name: scope name, default deconv2d
+    :return: deconv2d net
+    """
+
+    if pad == 'other':
+        pad = 'VALID'
+        x = tf.pad(x, [[0, 0], [3, 3], [0, 3], [3, 3]], "CONSTANT")
+
+    return tf.layers.conv2d_transpose(x,
+                                      filters=f, kernel_size=k, strides=s,
+                                      kernel_initializer=he_normal,
+                                      kernel_regularizer=l2_reg(reg),
+                                      bias_initializer=tf.zeros_initializer(),
+                                      padding=pad,
+                                      name=name)
+
+
+def batch_norm(x, eps=1e-5, reuse=False, name='batch_norm'):
+    return tf.layers.batch_normalization(x, epsilon=eps, momentum=0.9, scale=True, reuse=reuse, name=name)
+
+
+def inst_norm(x, eps=1e-5, affine=True, name="instance_norm"):
+    with tf.variable_scope(name):
+        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
+
+        normalized = tf.div(x - mean, tf.sqrt(variance + eps))
+
+        if not affine:
+            return normalized
+        else:
+            depth = x.get_shape()[3]  # input channel
+
+            scale = tf.get_variable('scale', [depth],
+                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
+            offset = tf.get_variable('offset', [depth],
+                                     initializer=tf.zeros_initializer())
+
+        return scale * normalized + offset
+
+
+def pixel_norm(x, eps=1e-8):
+    return x / tf.sqrt(tf.reduce_mean(x ** 2, axis=3, keep_dims=True) + eps)
 
 
 def resize_nn(x, size):
@@ -124,17 +179,52 @@ class PGGAN:
 
         self.build_pggan()  # build PGGAN model
 
-    def discriminator(self, x, pg, pg_t, reuse=None):
+    def discriminator(self, x, pg=1, pg_t=False, reuse=None):
 
         with tf.variable_scope("disc", reuse=reuse):
 
             return x
 
-    def generator(self, z, pg, pg_t, reuse=None):
+    def generator(self, z, pg=1, pg_t=False, reuse=None):
+        def nf(n):
+            return tf.cast(min(1024 / (2 ** n), self.z_dim), dtype=tf.int32)
 
         with tf.variable_scope("gen", reuse=reuse):
+            x = tf.reshape(z, [None, 1, 1, nf(1)])
+            x = conv2d(x, 512, k=4, s=1, name='gen_n_1_conv2d')
+            x = tf.nn.leaky_relu(x)
+            x = pixel_norm(x)
 
-            return z
+            x = tf.reshape(z, [None, 4, 4, nf(1)])
+            x = conv2d(x, 512, k=3, s=1, name='gen_n_2_conv2d')
+            x = tf.nn.leaky_relu(x)
+            x = pixel_norm(x)
+
+            x_out = None
+            for i in range(pg - 1):
+                if i == pg - 2 and pg_t:
+                    x_out = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
+                    x_out = resize_nn(x_out, x_out.get_shape().as_list()[1] * 2)                 # up-sampling
+
+                x = resize_nn(x, x.get_shape().as_list()[1] * 2)
+                x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_1_conv2d-%d' % x.get_shape()[1])
+                x = tf.nn.leaky_relu(x)
+                x = pixel_norm(x)
+
+                x = resize_nn(x, x.get_shape().as_list()[1] * 2)
+                x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_2_conv2d-%d' % x.get_shape()[1])
+                x = tf.nn.leaky_relu(x)
+                x = pixel_norm(x)
+
+            x = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
+
+            if pg == 1:
+                return x
+
+            if pg_t:
+                x = (1. - self.alpha_trans) * x_out + self.alpha_trans * x
+
+            return x
 
     def build_pggan(self):
         def l1_loss(x, y):
