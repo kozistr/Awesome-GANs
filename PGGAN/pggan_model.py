@@ -6,6 +6,10 @@ tf.set_random_seed(777)  # reproducibility
 np.random.seed(777)      # reproducibility
 
 
+he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
+l2_reg = tf.contrib.layers.l2_regularizer
+
+
 def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
     """
     :param x: input
@@ -13,18 +17,19 @@ def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
     :param k: kernel size, default 3
     :param d: strides, default 2
     :param reg: weight regularizer, default 5e-4
-    :param act: activation function, default elu
+    :param act: activation function, default None
     :param pad: padding (valid or same), default same
     :param name: scope name, default conv2d
     :return: conv2d net
     """
     return tf.layers.conv2d(x,
                             filters=f, kernel_size=k, strides=d,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(reg),
+                            kernel_initializer=he_normal,
+                            kernel_regularizer=l2_reg(reg),
                             bias_initializer=tf.zeros_initializer(),
                             activation=act,
-                            padding=pad, name=name)
+                            padding=pad,
+                            name=name)
 
 
 def resize_nn(x, size):
@@ -34,9 +39,8 @@ def resize_nn(x, size):
 class PGGAN:
 
     def __init__(self, s, batch_size=16, input_height=128, input_width=128, input_channel=3,
-                 sample_num=1 * 1, sample_size=1, output_height=128, output_width=128,
-                 df_dim=64, gf_dim=64,
-                 gamma=.5, lambda_k=1e-3, z_dim=256, lr=1e-4, epsilon=1e-9):
+                 pg=1, pg_t=False, sample_num=1 * 1, sample_size=1, output_height=128, output_width=128,
+                 df_dim=64, gf_dim=64, z_dim=512, lr=1e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -48,6 +52,8 @@ class PGGAN:
         - in case of Celeb-A, image size is 128x128x3(HWC).
 
         # Output Settings
+        :param pg: size of the image for model?, default 1
+        :param pg_t: pg status, default False
         :param sample_num: the number of output images, default 1
         :param sample_size: sample image size, default 1
         :param output_height: output images height, default 128
@@ -58,7 +64,7 @@ class PGGAN:
         :param gf_dim: generator filter, default 64
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 256
+        :param z_dim: z dimension (kinda noise), default 512
         :param lr: learning rate, default 1e-4
         :param epsilon: epsilon, default 1e-9
         """
@@ -76,14 +82,16 @@ class PGGAN:
         self.output_height = output_height
         self.output_width = output_width
 
+        self.pg = pg
+        self.pg_t = pg_t
+        self.output_size = 4 * pow(2, self.pg - 1)
+
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
-        self.gamma = gamma  # 0.3 ~ 0.7
-        self.lambda_k = lambda_k
         self.z_dim = z_dim
-        self.beta1 = .5
-        self.beta2 = .9
+        self.beta1 = 0.
+        self.beta2 = .99
         self.lr = lr
         self.eps = epsilon
 
@@ -92,6 +100,9 @@ class PGGAN:
         self.d_fake = 0.
         self.g_loss = 0.
         self.d_loss = 0.
+        self.gp = 0.
+        self.lambda_ = 10.
+        self.k = 1e-3
 
         self.g = None
 
@@ -104,21 +115,22 @@ class PGGAN:
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                shape=[None, self.output_size, self.output_size, self.input_channel],
                                 name="x-image")
         self.z = tf.placeholder(tf.float32,
                                 shape=[None, self.z_dim],
                                 name='z-noise')
+        self.alpha_trans = tf.Variable(initial_value=0., trainable=False, name='alpha_trans')
 
         self.build_pggan()  # build PGGAN model
 
-    def discriminator(self, x, reuse=None):
+    def discriminator(self, x, pg, pg_t, reuse=None):
 
         with tf.variable_scope("disc", reuse=reuse):
 
             return x
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, pg, pg_t, reuse=None):
 
         with tf.variable_scope("gen", reuse=reuse):
 
@@ -129,23 +141,36 @@ class PGGAN:
             return tf.reduce_mean(tf.abs(x - y))
 
         # Generator
-        self.g = self.generator(self.z)
+        self.g = self.generator(self.z, self.pg, self.pg_t)
 
         # Discriminator
-        d_real = self.discriminator(self.x)
-        d_fake = self.discriminator(self.g, reuse=True)
+        d_real = self.discriminator(self.x, self.pg, self.pg_t)
+        d_fake = self.discriminator(self.g, self.pg, self.pg_t, reuse=True)
 
         # Loss
         d_real_loss = l1_loss(self.x, d_real)
         d_fake_loss = l1_loss(self.g, d_fake)
-        self.d_loss = d_real_loss + d_fake_loss
+        self.d_loss = d_real_loss - d_fake_loss
         self.g_loss = d_fake_loss
+
+        # Gradient Penalty
+        diff = self.g - self.x
+        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
+        interp = self.x + (alpha * diff)
+        d_interp = self.discriminator(interp, self.pg, self.pg_t, reuse=True)
+        grads = tf.gradients(d_interp, [interp])[0]
+
+        slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1, 2, 3]))
+        self.gp = tf.reduce_mean((slopes - 1.) ** 2)
+
+        self.d_loss = self.lambda_ * self.gp + self.k
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("misc/gp", self.gp)
 
         # Optimizer
         t_vars = tf.trainable_variables()

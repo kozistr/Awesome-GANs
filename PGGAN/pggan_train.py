@@ -28,9 +28,34 @@ train_step = {
     'logging_step': 2000,
 }
 
+pg = [1, 2, 2, 3, 3, 4, 5, 5, 6, 6]
+assert len(pg) == 11
+
+r_pg = [1, 1, 2, 2, 3, 3, 4, 5, 5, 6]
+assert len(r_pg) == 11
+
 
 def main():
     start_time = time.time()  # Clocking start
+
+    # Celeb-A DataSet images
+    ds = DataSet(input_height=128,
+                 input_width=128,
+                 input_channel=3).images
+    dataset_iter = DataIterator(ds, None, train_step['batch_size'],
+                                label_off=True)
+
+    sample_x = ds[:model.sample_num]
+    sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
+
+    # Export real image
+    valid_image_height = model.sample_size
+    valid_image_width = model.sample_size
+    sample_dir = results['output'] + 'valid.png'
+
+    # Generated image save
+    iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir,
+                   inv_type='127')
 
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
@@ -42,25 +67,6 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        # Celeb-A DataSet images
-        ds = DataSet(input_height=128,
-                     input_width=128,
-                     input_channel=3).images
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                    label_off=True)
-
-        sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
-
-        # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir,
-                       inv_type='127')
 
         global_step = 0
         for epoch in range(train_step['epoch']):
@@ -92,9 +98,8 @@ def main():
                     # Print loss
                     print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
                           " D loss : {:.6f}".format(d_loss),
-                          " G loss : {:.6f}".format(g_loss),
-                          " k : {:.6f}".format(k),
-                          " M : {:.6f}".format(m_global))
+                          " G loss : {:.6f}".format(g_loss)
+                          )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
