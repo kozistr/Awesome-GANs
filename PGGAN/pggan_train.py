@@ -7,6 +7,7 @@ import numpy as np
 
 import sys
 import time
+import random
 
 import pggan_model as pggan
 
@@ -19,7 +20,7 @@ from datasets import CelebADataSet as DataSet
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',
-    'model': './model/PGGAN-model.ckpt'
+    'model': './model/PGGAN-model-'
 }
 
 train_step = {
@@ -41,16 +42,19 @@ def main():
     # Celeb-A DataSet images
     ds = DataSet(input_height=128,
                  input_width=128,
-                 input_channel=3).images
+                 input_channel=3)
+    n_ds = ds.num_images
+    ds = ds.images
     dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                 label_off=True)
 
-    sample_x = ds[:model.sample_num]
-    sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
+    rnd = random.randint(0, n_ds)
+    sample_x = ds[rnd]
+    sample_x = np.reshape(sample_x, [-1] + [128, 128, 3])
 
     # Export real image
-    valid_image_height = model.sample_size
-    valid_image_width = model.sample_size
+    valid_image_height = 1
+    valid_image_width = 1
     sample_dir = results['output'] + 'valid.png'
 
     # Generated image save
@@ -61,84 +65,79 @@ def main():
     gpu_config = tf.GPUOptions(allow_growth=True)
     config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_config)
 
-    with tf.Session(config=config) as s:
-        # PGGAN Model
-        model = pggan.PGGAN(s)  # PGGAN
+    for idx, n_pg in enumerate(pg):
 
-        # Initializing
-        s.run(tf.global_variables_initializer())
+        with tf.Session(config=config) as s:
+            # PGGAN Model
+            model = pggan.PGGAN(s)  # PGGAN
 
-        global_step = 0
-        for epoch in range(train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
-                batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            # Initializing
+            s.run(tf.global_variables_initializer())
 
-                # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+            global_step = 0
+            for epoch in range(train_step['epoch']):
+                for batch_images in dataset_iter.iterate():
+                    batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
+                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.z: batch_z,
-                                  })
+                    # Update D network
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x: batch_x,
+                                          model.z: batch_z,
+                                      })
 
-                if global_step % train_step['logging_step'] == 0:
-                    _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                     model.d_loss, model.g_loss, model.merged],
-                                                                    feed_dict={
-                                                                        model.x: batch_x,
-                                                                        model.z: batch_z,
-                                                                    })
+                    # Update G network
+                    _, g_loss = s.run([model.g_op, model.g_loss],
+                                      feed_dict={
+                                          model.z: batch_z,
+                                      })
 
-                    # Print loss
-                    print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
-                          " D loss : {:.6f}".format(d_loss),
-                          " G loss : {:.6f}".format(g_loss)
-                          )
+                    if global_step % train_step['logging_step'] == 0:
+                        _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
+                                                                         model.d_loss, model.g_loss, model.merged],
+                                                                        feed_dict={
+                                                                            model.x: batch_x,
+                                                                            model.z: batch_z,
+                                                                        })
 
-                    # Summary saver
-                    model.writer.add_summary(summary, global_step)
+                        # Print loss
+                        print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
+                              " D loss : {:.6f}".format(d_loss),
+                              " G loss : {:.6f}".format(g_loss)
+                              )
 
-                    # Training G model with sample image and noise
-                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                        # Summary saver
+                        model.writer.add_summary(summary, global_step)
 
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.z: sample_z,
-                                    })
+                        # Training G model with sample image and noise
+                        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
-                    # Export image generated by model G
-                    sample_image_height = model.sample_size
-                    sample_image_width = model.sample_size
-                    sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
+                        samples = s.run(model.g,
+                                        feed_dict={
+                                            model.z: sample_z,
+                                        })
 
-                    # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir,
-                                   inv_type='127')
+                        # Export image generated by model G
+                        sample_image_height = 1
+                        sample_image_width = 1
+                        sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
 
-                    # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
+                        # Generated image save
+                        iu.save_images(samples,
+                                       size=[sample_image_height, sample_image_width],
+                                       image_path=sample_dir,
+                                       inv_type='127')
 
-                # Learning Rate update
-                if global_step and global_step % model.lr_update_step == 0:
-                    s.run([model.g_lr_update, model.d_lr_update])
+                        # Model save
+                        model.saver.save(s, results['model'] + '%d-%d.ckpt' % (idx, n_pg), global_step=global_step)
 
-                global_step += 1
+                    global_step += 1
 
     end_time = time.time() - start_time  # Clocking end
 
     # Elapsed time
     print("[+] Elapsed time {:.8f}s".format(end_time))
-
-    # Close tf.Session
-    s.close()
 
 
 if __name__ == '__main__':
