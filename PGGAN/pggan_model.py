@@ -97,9 +97,9 @@ def bacth_concat(x, eps=1e-8, averaging='all'):
     """
     adj_std = lambda x_, **kwargs: tf.sqrt(tf.reduce_mean((x_ - tf.reduce_mean(x_, **kwargs)) ** 2, **kwargs) + eps)
 
-    val_ = adj_std(x, axis=0, keep_dims=True)
+    val_ = adj_std(x, axis=0, keepdims=True)
     if averaging == 'all':
-        val_ = tf.reduce_mean(val_, keep_dims=True)
+        val_ = tf.reduce_mean(val_, keepdims=True)
     val_ = tf.tile(val_, multiples=[tf.shape(x)[0], 4, 4, 1])
     return tf.concat([x, val_], axis=3)
 

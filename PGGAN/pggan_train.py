@@ -38,6 +38,13 @@ r_pg = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6]
 assert len(r_pg) == 11
 
 
+def image_resize(x, s=128):
+    imgs = []
+    for i in range(x.shape[0]):
+        imgs.append(resize(x[i, :, :, :], output_shape=(s, s), preserve_range=True))
+    return np.asarray(imgs)
+
+
 def main():
     start_time = time.time()  # Clocking start
 
@@ -93,13 +100,10 @@ def main():
                 for batch_images in dataset_iter.iterate():
                     batch_x = np.reshape(batch_images, (-1, 128, 128, 3))
                     batch_x = (batch_x + 1.) * 127.5  # re-scaling to (0, 255)
-                    print(batch_x.shape, type(batch_x))
-                    batch_x = resize(batch_x,
-                                     output_shape=(model.output_size, model.output_size),
-                                     preserve_range=True)
-                    print(batch_x.shape, type(batch_x))
+                    print(batch_x, type(batch_x))
+                    batch_x = image_resize(batch_x, s=model.output_size)
+                    print(batch_x, type(batch_x))
                     batch_x = (batch_x / 127.5) - 1.  # re-scaling to (-1, 1)
-
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     if pg_t and not pg == 0:
