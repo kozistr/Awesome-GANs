@@ -22,4 +22,6 @@
 > Later, i'll re-model original PGGAN repo and use pre-trained so that working properly on my style :)
 
 ## To-Do
+* Add label-penalty for G/D nets
+* Add Equalized Learning Rate
 * Add Loss Function & Explains
