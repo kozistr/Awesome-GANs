@@ -111,7 +111,10 @@ def main():
                                       })
 
                     # Update alpha_trans
-                    s.run(model.alpha_trans_update, feed_dict={model.step_pl: global_step})
+                    s.run(model.alpha_trans_update,
+                          feed_dict={
+                              model.step_pl: global_step
+                          })
 
                     if global_step % train_step['logging_step'] == 0:
                         gp, d_loss, g_loss, summary = s.run([model.gp,
