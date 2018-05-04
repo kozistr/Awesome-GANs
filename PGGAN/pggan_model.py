@@ -60,31 +60,8 @@ def deconv2d(x, f=64, k=4, s=1, reg=5e-4, pad='SAME', name='deconv2d'):
                                       name=name)
 
 
-def batch_norm(x, eps=1e-5, reuse=False, name='batch_norm'):
-    return tf.layers.batch_normalization(x, epsilon=eps, momentum=0.9, scale=True, reuse=reuse, name=name)
-
-
-def inst_norm(x, eps=1e-5, affine=True, name="instance_norm"):
-    with tf.variable_scope(name):
-        mean, variance = tf.nn.moments(x, [1, 2], keepdims=True)
-
-        normalized = tf.div(x - mean, tf.sqrt(variance + eps))
-
-        if not affine:
-            return normalized
-        else:
-            depth = x.get_shape()[3]  # input channel
-
-            scale = tf.get_variable('scale', [depth],
-                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
-            offset = tf.get_variable('offset', [depth],
-                                     initializer=tf.zeros_initializer())
-
-        return scale * normalized + offset
-
-
 def pixel_norm(x, eps=1e-8):
-    return x / tf.sqrt(tf.reduce_mean(x ** 2, axis=3, keepdims=True) + eps)
+    return x * tf.rsqrt(tf.reduce_mean(tf.square(x), axis=1, keepdims=True) + eps)
 
 
 def resize_nn(x, size):
@@ -242,12 +219,12 @@ class PGGAN:
 
         with tf.variable_scope("gen", reuse=reuse):
             x = tf.reshape(z, [-1, 1, 1, nf(1)])
-            x = conv2d(x, 512, k=4, s=1, name='gen_n_1_conv2d')
+            x = conv2d(x, nf(1), k=4, s=1, name='gen_n_1_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
             x = tf.reshape(x, [-1, 4, 4, nf(1)])
-            x = conv2d(x, 512, k=3, s=1, name='gen_n_2_conv2d')
+            x = conv2d(x, nf(1), k=3, s=1, name='gen_n_2_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
@@ -291,7 +268,7 @@ class PGGAN:
         d_real_loss = tf.reduce_mean(d_real)
         d_fake_loss = tf.reduce_mean(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
-        self.g_loss = -d_fake_loss
+        self.g_loss = d_fake_loss
 
         # Gradient Penalty
         diff = self.g - self.x
