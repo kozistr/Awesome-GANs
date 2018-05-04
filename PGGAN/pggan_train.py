@@ -43,15 +43,14 @@ def main():
     # Celeb-A DataSet images
     ds = DataSet(input_height=128,
                  input_width=128,
-                 input_channel=3)
-    n_ds = ds.num_images
-    ds = ds.images
+                 input_channel=3).images
+    n_ds = 202599
     dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                 label_off=True)
 
     rnd = random.randint(0, n_ds)
     sample_x = ds[rnd]
-    sample_x = np.reshape(sample_x, [-1] + [128, 128, 3])
+    sample_x = np.reshape(sample_x, [-1, 128, 128, 3])
 
     # Export real image
     valid_image_height = 1
@@ -61,6 +60,7 @@ def main():
     # Generated image save
     iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir,
                    inv_type='127')
+    print("[+] sample image saved!")
 
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
