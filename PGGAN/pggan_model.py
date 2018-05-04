@@ -199,7 +199,7 @@ class PGGAN:
 
     def discriminator(self, x, pg=1, pg_t=False, reuse=None):
         def nf(n):
-            return tf.cast(min(1024 / (2 ** n), self.z_dim), dtype=tf.int32)
+            return min(1024 // (2 ** n), self.z_dim)
 
         with tf.variable_scope("disc", reuse=reuse):
             if pg_t:
@@ -238,15 +238,15 @@ class PGGAN:
 
     def generator(self, z, pg=1, pg_t=False, reuse=None):
         def nf(n):
-            return tf.cast(min(1024 / (2 ** n), self.z_dim), dtype=tf.int32)
+            return min(1024 // (2 ** n), self.z_dim)
 
         with tf.variable_scope("gen", reuse=reuse):
-            x = tf.reshape(z, [None, 1, 1, nf(1)])
+            x = tf.reshape(z, [-1, 1, 1, nf(1)])
             x = conv2d(x, 512, k=4, s=1, name='gen_n_1_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
-            x = tf.reshape(z, [None, 4, 4, nf(1)])
+            x = tf.reshape(z, [-1, 4, 4, nf(1)])
             x = conv2d(x, 512, k=3, s=1, name='gen_n_2_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
