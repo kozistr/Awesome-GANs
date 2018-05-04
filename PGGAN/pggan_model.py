@@ -246,7 +246,7 @@ class PGGAN:
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
-            x = tf.reshape(z, [-1, 4, 4, nf(1)])
+            x = tf.reshape(x, [-1, 4, 4, nf(1)])
             x = conv2d(x, 512, k=3, s=1, name='gen_n_2_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
