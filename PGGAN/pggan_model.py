@@ -66,7 +66,7 @@ def batch_norm(x, eps=1e-5, reuse=False, name='batch_norm'):
 
 def inst_norm(x, eps=1e-5, affine=True, name="instance_norm"):
     with tf.variable_scope(name):
-        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
+        mean, variance = tf.nn.moments(x, [1, 2], keepdims=True)
 
         normalized = tf.div(x - mean, tf.sqrt(variance + eps))
 
