@@ -20,13 +20,12 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * python 3.x
 * tensorflow 1.x
 * numpy
-* scipy (some features are **deprecated**, they'll be replaced)
-* ~~scikit_image~~
-* opencv
+* scipy (some features are about to **deprecated**, they'll be replaced)
+* scikit-image
+* opencv-python
 * pillow
 * h5py
 * tqdm
-* sklearn
 * Internet :)
 
 ## Usage
@@ -118,7 +117,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## ETC
 
-Any suggestions or pull requests or issues are welcome :)
+Any suggestions and pull requests and issues are welcome :)
 
 ## Author
 HyeongChan Kim / [@kozistr](http://kozistr.tech)
