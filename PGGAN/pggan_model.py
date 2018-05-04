@@ -255,14 +255,14 @@ class PGGAN:
             for i in range(pg - 1):
                 if i == pg - 2 and pg_t:
                     x_out = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
-                    x_out = resize_nn(x_out, x_out.get_shape().as_list()[1] * 2)                 # up-sampling
+                    x_out = resize_nn(x_out, x_out.get_shape()[1] * 2)                           # up-sampling
 
-                x = resize_nn(x, x.get_shape().as_list()[1] * 2)
+                x = resize_nn(x, x.get_shape()[1] * 2)
                 x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_1_conv2d-%d' % x.get_shape()[1])
                 x = tf.nn.leaky_relu(x)
                 x = pixel_norm(x)
 
-                x = resize_nn(x, x.get_shape().as_list()[1] * 2)
+                x = resize_nn(x, x.get_shape()[1] * 2)
                 x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_2_conv2d-%d' % x.get_shape()[1])
                 x = tf.nn.leaky_relu(x)
                 x = pixel_norm(x)
@@ -287,7 +287,7 @@ class PGGAN:
         d_real = self.discriminator(self.x, self.pg, self.pg_t)
         d_fake = self.discriminator(self.g, self.pg, self.pg_t, reuse=True)
 
-        # Loss (skipping label-penalty for G/D nets)
+        # Loss ()
         d_real_loss = tf.reduce_mean(d_real)
         d_fake_loss = tf.reduce_mean(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
@@ -318,11 +318,11 @@ class PGGAN:
         d_params = [v for v in t_vars if v.name.startswith('disc')]
         g_params = [v for v in t_vars if v.name.startswith('gen')]
 
-        d_n_params = [v for v in d_params if v.name.startswith('disc_n')]
-        g_n_params = [v for v in g_params if v.name.startswith('gen_n')]
+        d_n_params = [v for v in d_params if 'disc_n' in v.name]
+        g_n_params = [v for v in g_params if 'gen_n' in v.name]
 
-        d_n_out_params = [v for v in d_params if v.name.startswith('disc_out')]
-        g_n_out_params = [v for v in g_params if v.name.startswith('gen_out')]
+        d_n_out_params = [v for v in d_params if 'disc_out' in v.name]
+        g_n_out_params = [v for v in g_params if 'gen_out' in v.name]
 
         d_n_nwm_params = [v for v in d_n_params if '%d' % self.output_size not in v.name]  # nwm : not new model
         g_n_nwm_params = [v for v in g_n_params if '%d' % self.output_size not in v.name]  # nwm : not new model
