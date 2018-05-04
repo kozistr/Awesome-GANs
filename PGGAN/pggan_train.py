@@ -4,7 +4,8 @@ from __future__ import division
 
 import tensorflow as tf
 import numpy as np
-import scipy.ndimage
+from scipy.ndimage import zoom
+from skimage.transform import resize
 
 import sys
 import time
@@ -90,13 +91,21 @@ def main():
             for epoch in range(train_step['epoch']):
                 # Later, adding n_critic for optimizing D net
                 for batch_images in dataset_iter.iterate():
-                    batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
+                    batch_x = np.reshape(batch_images, (-1, 128, 128, 3))
+                    batch_x = (batch_x + 1.) * 127.5  # re-scaling to (0, 255)
+                    print(batch_x.shape, type(batch_x))
+                    batch_x = resize(batch_x,
+                                     output_shape=(model.output_size, model.output_size),
+                                     preserve_range=True)
+                    print(batch_x.shape, type(batch_x))
+                    batch_x = (batch_x / 127.5) - 1.  # re-scaling to (-1, 1)
+
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     if pg_t and not pg == 0:
                         alpha = global_step / 32000.
-                        low_batch_x = scipy.ndimage.zoom(batch_x, zoom=[1., .5, .5, 1.])
-                        low_batch_x = scipy.ndimage.zoom(low_batch_x, zoom=[1., 2., 2., 1.])
+                        low_batch_x = zoom(batch_x, zoom=[1., .5, .5, 1.])
+                        low_batch_x = zoom(low_batch_x, zoom=[1., 2., 2., 1.])
                         batch_x = alpha * batch_x + (1. - alpha) * low_batch_x
 
                     # Update D network
