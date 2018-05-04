@@ -84,7 +84,7 @@ def inst_norm(x, eps=1e-5, affine=True, name="instance_norm"):
 
 
 def pixel_norm(x, eps=1e-8):
-    return x / tf.sqrt(tf.reduce_mean(x ** 2, axis=3, keep_dims=True) + eps)
+    return x / tf.sqrt(tf.reduce_mean(x ** 2, axis=3, keepdims=True) + eps)
 
 
 def resize_nn(x, size):
