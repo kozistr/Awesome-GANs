@@ -62,6 +62,8 @@ def main():
                    inv_type='127')
     print("[+] sample image saved!")
 
+    print("[+] pre-processing took {:.8f}s".format(time.time() - start_time))
+
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
     config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_config)
