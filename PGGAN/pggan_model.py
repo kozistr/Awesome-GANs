@@ -135,7 +135,7 @@ class PGGAN:
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
-        self.beta1 = 0.  # 0 ??
+        self.beta1 = 0.
         self.beta2 = .99
         self.lr = lr
         self.eps = epsilon
@@ -217,6 +217,13 @@ class PGGAN:
         def nf(n):
             return min(1024 // (2 ** n), self.z_dim)
 
+        def block(x, fs, name="0"):
+            x = resize_nn(x, x.get_shape()[1] * 2)
+            x = conv2d(x, fs, k=3, s=1, name='gen_n_%s_conv2d-%d' % (name, x.get_shape()[1]))
+            x = tf.nn.leaky_relu(x)
+            x = pixel_norm(x)
+            return x
+
         with tf.variable_scope("gen", reuse=reuse):
             x = tf.reshape(z, [-1, 1, 1, nf(1)])
             x = conv2d(x, nf(1), k=4, s=1, name='gen_n_1_conv2d')
@@ -234,15 +241,8 @@ class PGGAN:
                     x_out = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
                     x_out = resize_nn(x_out, x_out.get_shape()[1] * 2)                           # up-sampling
 
-                x = resize_nn(x, x.get_shape()[1] * 2)
-                x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_1_conv2d-%d' % x.get_shape()[1])
-                x = tf.nn.leaky_relu(x)
-                x = pixel_norm(x)
-
-                x = resize_nn(x, x.get_shape()[1] * 2)
-                x = conv2d(x, nf(i + 1), k=3, s=1, name='gen_n_2_conv2d-%d' % x.get_shape()[1])
-                x = tf.nn.leaky_relu(x)
-                x = pixel_norm(x)
+                x = block(x, nf(i + 1), name="1")
+                x = block(x, nf(i + 1), name="2")
 
             x = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
 
