@@ -102,3 +102,6 @@ ENV/
 
 # pycharm
 .idea/
+
+# github pr forms
+.github/
