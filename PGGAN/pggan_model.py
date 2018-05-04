@@ -324,11 +324,11 @@ class PGGAN:
         d_n_out_params = [v for v in d_params if v.name.startswith('disc_out')]
         g_n_out_params = [v for v in g_params if v.name.startswith('gen_out')]
 
-        d_n_nwm_params = [v for v in d_n_params if not v.name.endswith('%d' % self.output_size)]  # nwm : not new model
-        g_n_nwm_params = [v for v in g_n_params if not v.name.endswith('%d' % self.output_size)]  # nwm : not new model
+        d_n_nwm_params = [v for v in d_n_params if '%d' % self.output_size not in v.name]  # nwm : not new model
+        g_n_nwm_params = [v for v in g_n_params if '%d' % self.output_size not in v.name]  # nwm : not new model
 
-        d_n_out_nwm_params = [v for v in d_n_out_params if not v.name.endswith('%d' % self.output_size)]
-        g_n_out_nwm_params = [v for v in g_n_out_params if not v.name.endswith('%d' % self.output_size)]
+        d_n_out_nwm_params = [v for v in d_n_out_params if '%d' % self.output_size not in v.name]
+        g_n_out_nwm_params = [v for v in g_n_out_params if '%d' % self.output_size not in v.name]
 
         # Optimizer
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
@@ -340,9 +340,13 @@ class PGGAN:
         self.merged = tf.summary.merge_all()
 
         # Model saver
-        self.saver = tf.train.Saver(d_params + g_params, max_to_keep=1)
-        self.r_saver = tf.train.Saver(d_n_nwm_params + g_n_nwm_params, max_to_keep=1)
+        mtk = 2
+        self.saver = tf.train.Saver(var_list=d_params + g_params,
+                                    max_to_keep=mtk, name='saver')
+        self.r_saver = tf.train.Saver(var_list=d_n_nwm_params + g_n_nwm_params,
+                                      max_to_keep=mtk, name='r_saver')
         if len(d_n_out_nwm_params + g_n_out_nwm_params):
-            self.out_saver = tf.train.Saver(d_n_out_nwm_params + g_n_out_nwm_params, max_to_keep=1)
+            self.out_saver = tf.train.Saver(var_list=d_n_out_nwm_params + g_n_out_nwm_params,
+                                            max_to_keep=mtk, name='out_saver')
 
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
