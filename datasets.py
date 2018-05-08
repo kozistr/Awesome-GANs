@@ -167,8 +167,6 @@ class CiFarDataSet:
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of CIFAR, image size is 32x32x3(HWC).
-        :param n_classes: input datasets' classes
-        - in case of CIFAR, 10, 100
 
         # Output Settings
         :param output_height: output images height, default 28
@@ -196,17 +194,19 @@ class CiFarDataSet:
         self.is_split = is_split
         self.random_state = random_state
         self.ds_name = ds_name
+        self.ds_path = ds_path  # DataSet path
+        self.n_classes = 10     # DataSet the number of classes, default 10
 
-        self.ds_path = ""  # DataSet path
-        self.n_classes = 10  # DataSet the number of classes, default 10
+        self.train_images = None
+        self.valid_images = None
+        self.test_images = None
 
-        self.train_images = ''
-        self.valid_images = ''
-        self.test_images = ''
+        self.train_labels = None
+        self.valid_labels = None
+        self.test_labels = None
 
-        self.train_labels = ''
-        self.valid_labels = ''
-        self.test_labels = ''
+        if self.ds_path == "":
+            raise ValueError("[-] CelebA DataSet Path is required!")
 
         if self.ds_name == "cifar-10":
             self.cifar_10()   # loading Cifar-10
@@ -216,7 +216,6 @@ class CiFarDataSet:
             raise NotImplementedError
 
     def cifar_10(self):
-        self.ds_path = DataSets['cifar-10']
         self.n_classes = 10  # labels
 
         train_batch_1 = unpickle("{0}/data_batch_1".format(self.ds_path))
@@ -231,7 +230,7 @@ class CiFarDataSet:
             train_batch_2[b'data'],
             train_batch_3[b'data'],
             train_batch_4[b'data'],
-            train_batch_5[b'data']
+            train_batch_5[b'data'],
         ], axis=0)
 
         train_labels = np.concatenate([
@@ -239,7 +238,7 @@ class CiFarDataSet:
             train_batch_2[b'labels'],
             train_batch_3[b'labels'],
             train_batch_4[b'labels'],
-            train_batch_5[b'labels']
+            train_batch_5[b'labels'],
         ], axis=0)
 
         # Image size : 32x32x3
@@ -260,26 +259,23 @@ class CiFarDataSet:
                                                      self.input_width,
                                                      self.input_channel], order='F'), 1, 2)
 
-        # split training data set into train, valid
+        # split training data set into train / val
         if self.is_split:
             train_images, valid_images, train_labels, valid_labels = \
                 train_test_split(train_images, train_labels,
                                  test_size=self.split_rate,
                                  random_state=self.random_state)
-        else:
-            valid_images = None
-            valid_labels = None
+
+            self.valid_images = valid_images
+            self.valid_labels = one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
-        self.valid_images = valid_images
         self.test_images = test_images
 
         self.train_labels = one_hot(train_labels, self.n_classes)
-        self.valid_labels = one_hot(valid_labels, self.n_classes)
         self.test_labels = one_hot(test_labels, self.n_classes)
 
     def cifar_100(self):
-        self.ds_path = DataSets['cifar-100']
         self.n_classes = 100  # labels
 
         # training data & label
@@ -302,18 +298,20 @@ class CiFarDataSet:
                                                      self.input_width,
                                                      self.input_channel], order='F'), 1, 2)
 
-        # Split training data set into train, valid
-        train_images, valid_images, train_labels, valid_labels = \
-            train_test_split(train_images, train_labels,
-                             test_size=self.split_rate,
-                             random_state=self.random_state)
+        # split training data set into train / val
+        if self.is_split:
+            train_images, valid_images, train_labels, valid_labels = \
+                train_test_split(train_images, train_labels,
+                                 test_size=self.split_rate,
+                                 random_state=self.random_state)
+
+            self.valid_images = valid_images
+            self.valid_labels = one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
-        self.valid_images = valid_images
         self.test_images = test_images
 
         self.train_labels = one_hot(train_labels, self.n_classes)
-        self.valid_labels = one_hot(valid_labels, self.n_classes)
         self.test_labels = one_hot(test_labels, self.n_classes)
 
 
