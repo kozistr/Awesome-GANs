@@ -318,13 +318,13 @@ class CiFarDataSet:
 
 class CelebADataSet:
 
-    def __init__(self, batch_size=128, input_height=64, input_width=64, input_channel=3, attr_labels=(),
+    def __init__(self,
+                 input_height=64, input_width=64, input_channel=3, attr_labels=(),
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42):
+                 split_rate=0.2, is_split=False, ds_path=""):
 
         """
         # General Settings
-        :param batch_size: training batch size, default 128
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
@@ -339,10 +339,12 @@ class CelebADataSet:
 
         # Pre-Processing Option
         :param split_rate: image split rate (into train & test), default 0.2
-        :param random_state: random seed for shuffling, default 42
+        :param is_split: splitting train DataSet into train/val, default False
+
+        # DataSet Path
+        :param ds_path: DataSet Path, default ""
         """
 
-        self.batch_size = batch_size
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
@@ -357,51 +359,46 @@ class CelebADataSet:
         ]
         '''
         self.attr_labels = attr_labels
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [-1,  self.input_height, self.input_width, self.input_channel]
 
         self.output_height = output_height
         self.output_width = output_width
         self.output_channel = output_channel
 
         self.split_rate = split_rate
-        self.random_state = random_state
+        self.is_split = is_split
         self.mode = 'w'
 
-        self.path = ""  # DataSet path
-        self.files = ""  # files' name
+        self.path = ""      # DataSet's path
+        self.files = ""     # files' name
         self.n_classes = 0  # DataSet the number of classes, default 10
 
-        self.data = []  # loaded images
+        self.data = []     # loaded images
         self.attr = []
-        self.num_images = 202599
         self.images = []
         self.labels = {}
+        self.num_images = 202599
+
         self.ds_name = ""  # DataSet Name (by image size)
+        self.ds_path = ds_path
+
+        if self.ds_path == "":
+            raise ValueError("[-] CelebA DataSet Path is required!")
 
         self.celeb_a()  # load Celeb-A
 
     def celeb_a(self):
-        def get_image(path, w, h):
-            img = imread(path).astype(np.float)
-
-            orig_h, orig_w = img.shape[:2]
-            new_h = int(orig_h * w / orig_w)
-
-            img = imresize(img, (new_h, w))
-            margin = int(round((new_h - h) / 2))
-
-            return img[margin:margin + h]
-
-        size = self.input_height
-        self.ds_name = 'celeb-a-' + str(size) + 'x' + str(size) + '-h5'
+        size = self.input_height  # self.input_width
+        self.ds_name = self.ds_path + '/CelebA-' + str(size) + '.h5'
 
         self.labels = self.load_attr()    # selected attributes info (list)
 
-        if os.path.exists(DataSets[self.ds_name]):
+        if os.path.exists(self.ds_name):
             self.mode = 'r'
 
         if self.mode == 'w':
-            self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            # self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
+            self.files = glob(os.path.join(self.ds_path, 'Img/img_align_celeba/*.jpg'))
             self.files = np.sort(self.files)
 
             self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
@@ -412,11 +409,12 @@ class CelebADataSet:
             assert (len(self.files) == self.num_images)
 
             for n, f_name in tqdm(enumerate(self.files)):
-                image = get_image(f_name, self.input_width, self.input_height)
+                image = get_image(f_name, self.input_width, self.input_height)  # resize to (iw, ih)
                 self.data[n] = image.flatten()
 
-            # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
+            # saving as .h5 file for reusing later...
+            # with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
+            with h5py.File(self.ds_name, 'w') as f:
                 f.create_dataset("images", data=self.data)
 
         self.images = self.load_data(size=self.num_images)
@@ -426,7 +424,7 @@ class CelebADataSet:
             From great jupyter notebook by Tim Sainburg:
             http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
         """
-        with h5py.File(DataSets[self.ds_name], 'r') as hf:
+        with h5py.File(self.ds_name, 'r') as hf:
             faces = hf['images']
 
             full_size = len(faces)
@@ -436,7 +434,7 @@ class CelebADataSet:
             n_chunks = int(np.ceil(full_size / size))
             if offset >= n_chunks:
                 print("[*] Looping from back to start.")
-                offset = offset % n_chunks
+                offset %= n_chunks
 
             if offset == n_chunks - 1:
                 print("[-] Not enough data available, clipping to end.")
@@ -448,7 +446,7 @@ class CelebADataSet:
 
         print("[+] Image size : ", faces.shape)
 
-        return (faces / (255 / 2.)) - 1.
+        return (faces / (255 / 2.)) - 1.  # (-1, 1)
 
     def load_attr(self):
         with open(DataSets['celeb-a-attr'], 'r') as f:
