@@ -51,7 +51,8 @@ def main():
     # Celeb-A DataSet images
     ds = DataSet(input_height=128,
                  input_width=128,
-                 input_channel=3).images
+                 input_channel=3,
+                 ds_path="/home/zero/hdd/DataSet/CelebA-HQ").images
     n_ds = 202599
     dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                 label_off=True)

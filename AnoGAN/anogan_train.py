@@ -67,7 +67,8 @@ def main():
         # Celeb-A DataSet images
         ds = DataSet(input_height=108,  # in the paper, 108
                      input_width=108,   # in the paper, 108
-                     input_channel=3).images
+                     input_channel=3,
+                     ds_path="/home/zero/hdd/DataSet/CelebA").images
         # To-Do
         # Getting anomaly data
 
