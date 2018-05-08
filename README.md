@@ -41,8 +41,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * MNIST 
 * CiFar-10
 * CiFar-100
-* Celeb-A
-* ~~Celeb-A-HQ~~
+* CelebA
+* ~~CelebA-HQ~~
 * pix2pix DataSets
 * DIV2K DataSets
 * ~~ImageNet DataSets~~
@@ -117,7 +117,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## ETC
 
-Any suggestions and pull requests and issues are welcome :)
+**Any suggestions and PRs and issues are welcome** :)
 
 ## Author
 HyeongChan Kim / [@kozistr](http://kozistr.tech)
