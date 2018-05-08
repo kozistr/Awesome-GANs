@@ -18,11 +18,6 @@ DataSets = {
     # Linux
     # MNIST
     'mnist': '/home/zero/hdd/DataSet/MNIST/',
-    # CiFar-10, 100
-    # 'cifar-10': '/home/zero/hdd/DataSet/Cifar/cifar-10-batches-py/',
-    # 'cifar-100': '/home/zero/hdd/DataSet/Cifar/cifar-100-python/',
-    'cifar-10': '/home/zero/hdd/DataSet/cifar/cifar-10-batches-py/',
-    'cifar-100': '/home/zero/hdd/DataSet/cifar/cifar-100-python/',
     # Celeb-A DataSet
     'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
     'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
@@ -64,9 +59,6 @@ DataSets = {
     # Windows
     # MNIST
     # 'mnist': 'D:\\DataSet\\MNIST\\',
-    # CiFar-10, 100
-    # 'cifar-10': 'D:\\DataSet\\Cifar\\cifar-10-batches-py\\',
-    # 'cifar-100': 'D:\\DataSet\\Cifar\\cifar-100-python\\',
     # Celeb-A DataSet
     # 'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
     # 'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
@@ -124,13 +116,17 @@ def one_hot(labels_dense, num_classes=10):
 
 class MNISTDataSet:
 
-    def __init__(self, split_rate=0.2, random_state=42, num_threads=8, is_split=False):
+    def __init__(self, split_rate=0.2, random_state=42, num_threads=8, is_split=False, ds_path=""):
         self.split_rate = split_rate
         self.random_state = random_state
         self.num_threads = num_threads
         self.is_split = is_split
+        self.ds_path = ds_path
 
-        self.data = input_data.read_data_sets(DataSets['mnist'], one_hot=True)  # download MNIST
+        if self.ds_path == "":
+            raise ValueError("[-] CelebA DataSet Path is required!")
+
+        self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
         # training data
         self.train_data = self.data.train
