@@ -31,7 +31,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = DataSet().data
+    mnist = DataSet(ds_path="./").data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -45,9 +45,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         sample_x, sample_y = mnist.test.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, [model.sample_num, model.n_input])
-        sample_z_0 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-        sample_z_1 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        # sample_x = np.reshape(sample_x, [model.sample_num, model.n_input])
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -101,6 +99,8 @@ def main():
                       " G loss : {:.8f}".format(g_0_loss))
 
                 # Training G model with sample image and noise
+                sample_z_0 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                sample_z_1 = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 _, samples = s.run([model.g_1, model.g_0],
                                    feed_dict={
                                        model.y: sample_y,
