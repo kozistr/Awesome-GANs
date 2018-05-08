@@ -156,14 +156,13 @@ class MNISTDataSet:
 
 class CiFarDataSet:
 
-    def __init__(self, batch_size=128, epoch=250, input_height=64, input_width=64, input_channel=3,
+    def __init__(self,
+                 input_height=64, input_width=64, input_channel=3,
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, name="cifar-10"):
+                 split_rate=0.2, is_split=True, random_state=42, ds_name="cifar-10", ds_path=""):
 
         """
         # General Settings
-        :param batch_size: training batch size, default 128
-        :param epoch: training epoch, default 250
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
@@ -178,15 +177,13 @@ class CiFarDataSet:
 
         # Pre-Processing Option
         :param split_rate: image split rate (into train & test), default 0.2
+        :param is_split: training DataSet splitting, default True
         :param random_state: random seed for shuffling, default 42
-        :param num_threads: the number of threads for multi-threading, default 8
 
         # DataSet Option
-        :param name: DataSet name, default cifar-10
+        :param ds_name: DataSet name, default cifar-10
         """
 
-        self.batch_size = batch_size
-        self.epoch = epoch
         self.input_height = input_height
         self.input_width = input_width
         self.input_channel = input_channel
@@ -196,11 +193,11 @@ class CiFarDataSet:
         self.output_channel = output_channel
 
         self.split_rate = split_rate
+        self.is_split = is_split
         self.random_state = random_state
-        self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.name = name
+        self.ds_name = ds_name
 
-        self.path = ""  # DataSet path
+        self.ds_path = ""  # DataSet path
         self.n_classes = 10  # DataSet the number of classes, default 10
 
         self.train_images = ''
@@ -211,22 +208,22 @@ class CiFarDataSet:
         self.valid_labels = ''
         self.test_labels = ''
 
-        if self.name == "cifar-10":
-            self.cifar_10()   # load cifar-10
-        elif self.name == "cifar-100":
-            self.cifar_100()  # load cifar-100
+        if self.ds_name == "cifar-10":
+            self.cifar_10()   # loading Cifar-10
+        elif self.ds_name == "cifar-100":
+            self.cifar_100()  # loading Cifar-100
         else:
             raise NotImplementedError
 
     def cifar_10(self):
-        self.path = DataSets['cifar-10']
+        self.ds_path = DataSets['cifar-10']
         self.n_classes = 10  # labels
 
-        train_batch_1 = unpickle("{0}/data_batch_1".format(self.path))
-        train_batch_2 = unpickle("{0}/data_batch_2".format(self.path))
-        train_batch_3 = unpickle("{0}/data_batch_3".format(self.path))
-        train_batch_4 = unpickle("{0}/data_batch_4".format(self.path))
-        train_batch_5 = unpickle("{0}/data_batch_5".format(self.path))
+        train_batch_1 = unpickle("{0}/data_batch_1".format(self.ds_path))
+        train_batch_2 = unpickle("{0}/data_batch_2".format(self.ds_path))
+        train_batch_3 = unpickle("{0}/data_batch_3".format(self.ds_path))
+        train_batch_4 = unpickle("{0}/data_batch_4".format(self.ds_path))
+        train_batch_5 = unpickle("{0}/data_batch_5".format(self.ds_path))
 
         # training data & label
         train_data = np.concatenate([
@@ -252,7 +249,7 @@ class CiFarDataSet:
                                                        self.input_channel], order='F'), 1, 2)
 
         # test data & label
-        test_batch = unpickle("{0}/test_batch".format(self.path))
+        test_batch = unpickle("{0}/test_batch".format(self.ds_path))
 
         test_data = test_batch[b'data']
         test_labels = np.array(test_batch[b'labels'])
@@ -264,10 +261,14 @@ class CiFarDataSet:
                                                      self.input_channel], order='F'), 1, 2)
 
         # split training data set into train, valid
-        train_images, valid_images, train_labels, valid_labels = \
-            train_test_split(train_images, train_labels,
-                             test_size=self.split_rate,
-                             random_state=self.random_state)
+        if self.is_split:
+            train_images, valid_images, train_labels, valid_labels = \
+                train_test_split(train_images, train_labels,
+                                 test_size=self.split_rate,
+                                 random_state=self.random_state)
+        else:
+            valid_images = None
+            valid_labels = None
 
         self.train_images = train_images
         self.valid_images = valid_images
@@ -278,11 +279,11 @@ class CiFarDataSet:
         self.test_labels = one_hot(test_labels, self.n_classes)
 
     def cifar_100(self):
-        self.path = DataSets['cifar-100']
+        self.ds_path = DataSets['cifar-100']
         self.n_classes = 100  # labels
 
         # training data & label
-        train_batch = unpickle("{0}/train".format(self.path))
+        train_batch = unpickle("{0}/train".format(self.ds_path))
 
         train_data = np.concatenate([train_batch[b'data']], axis=0)
         train_labels = np.concatenate([train_batch[b'fine_labels']], axis=0)
@@ -292,7 +293,7 @@ class CiFarDataSet:
                                                        self.input_channel], order='F'), 1, 2)
 
         # test data & label
-        test_batch = unpickle("{0}/test".format(self.path))
+        test_batch = unpickle("{0}/test".format(self.ds_path))
 
         test_data = np.concatenate([test_batch[b'data']], axis=0)
         test_labels = np.concatenate([test_batch[b'fine_labels']], axis=0)
@@ -318,6 +319,13 @@ class CiFarDataSet:
 
 class CelebADataSet:
 
+    """
+    This Class for CelebA & CelebA-HQ DataSets.
+        - saving images as .h5 file for more faster loading.
+        - Actually, CelebA-HQ DataSet is kinda encrypted. So if u wanna use it, decrypt first!
+            There're a few codes that download & decrypt CelebA-HQ DataSet.
+    """
+
     def __init__(self,
                  input_height=64, input_width=64, input_channel=3, attr_labels=(),
                  output_height=64, output_width=64, output_channel=3,
@@ -328,9 +336,9 @@ class CelebADataSet:
         :param input_height: input image height, default 64
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
-        - in case of Celeb-A, image size is 64x64x3(HWC).
+        - in case of CelebA, image size is 64x64x3(HWC).
         :param attr_labels: attributes of Celeb-A image, default empty tuple
-        - in case of Celeb-A, the number of attributes is 40
+        - in case of CelebA, the number of attributes is 40
 
         # Output Settings
         :param output_height: output images height, default 64
