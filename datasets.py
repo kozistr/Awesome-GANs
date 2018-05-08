@@ -116,10 +116,9 @@ def one_hot(labels_dense, num_classes=10):
 
 class MNISTDataSet:
 
-    def __init__(self, split_rate=0.2, random_state=42, num_threads=8, is_split=False, ds_path=""):
+    def __init__(self, split_rate=0.2, random_state=42, is_split=False, ds_path=""):
         self.split_rate = split_rate
         self.random_state = random_state
-        self.num_threads = num_threads
         self.is_split = is_split
         self.ds_path = ds_path
 
