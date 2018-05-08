@@ -108,6 +108,7 @@ def get_image(path, w, h):
 
 
 def unpickle(file):
+    # WARN: Only for python3, NOT FOR python2
     with open(file, 'rb') as f:
         return p.load(f, encoding='bytes')
 
@@ -215,7 +216,7 @@ class CiFarDataSet:
         elif self.name == "cifar-100":
             self.cifar_100()  # load cifar-100
         else:
-            pass
+            raise NotImplementedError
 
     def cifar_10(self):
         self.path = DataSets['cifar-10']
@@ -319,7 +320,7 @@ class CelebADataSet:
 
     def __init__(self, batch_size=128, input_height=64, input_width=64, input_channel=3, attr_labels=(),
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8):
+                 split_rate=0.2, random_state=42):
 
         """
         # General Settings
@@ -339,7 +340,6 @@ class CelebADataSet:
         # Pre-Processing Option
         :param split_rate: image split rate (into train & test), default 0.2
         :param random_state: random seed for shuffling, default 42
-        :param num_threads: the number of threads for multi-threading, default 8
         """
 
         self.batch_size = batch_size
@@ -365,7 +365,6 @@ class CelebADataSet:
 
         self.split_rate = split_rate
         self.random_state = random_state
-        self.num_threads = num_threads  # change this value to the fitted value for ur system
         self.mode = 'w'
 
         self.path = ""  # DataSet path
