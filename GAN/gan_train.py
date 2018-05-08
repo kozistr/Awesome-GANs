@@ -33,7 +33,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = DataSet().data
+    mnist = DataSet(ds_path="").data
 
     # GPU configure
     config = tf.ConfigProto()

@@ -32,7 +32,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset Load
-    mnist = DataSet().data
+    mnist = DataSet(ds_path="./").data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -49,7 +49,6 @@ def main():
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -95,6 +94,7 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples = s.run(model.g,
                                 feed_dict={
                                     model.c: sample_y,

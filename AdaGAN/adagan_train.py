@@ -14,6 +14,8 @@ import adagan_model as adagan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -31,7 +33,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet(ds_path="./").data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -44,7 +46,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
+        # sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
@@ -84,9 +86,12 @@ def main():
 
                 # Print loss
                 print("[+] Step %08d => " % step,
-                      "D loss : {:.8f}".format(d_loss), " G loss : {:.8f}".format(g_loss))
+                      "D loss : {:.8f}".format(d_loss),
+                      " G loss : {:.8f}".format(g_loss),
+                      )
 
                 # Training G model with sample image and noise
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples = s.run(model.g,
                                 feed_dict={
                                     model.z: sample_z,

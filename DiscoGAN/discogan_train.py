@@ -11,8 +11,8 @@ import discogan
 import sys
 sys.path.insert(0, '../')
 
-from datasets import Pix2PixDataSet as DataSets
 import image_utils as iu
+from datasets import Pix2PixDataSet as DataSets
 
 
 dirs = {

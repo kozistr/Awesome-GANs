@@ -15,6 +15,7 @@ from dataset import CelebADataSet as DataSet
 sys.path.append('../')
 import image_utils as iu
 
+
 results = {
     'output': './gen_img/',
     'checkpoint': './model/checkpoint',

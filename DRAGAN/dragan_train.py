@@ -57,7 +57,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        mnist = DataSet().data
+        mnist = DataSet(ds_path="./").data
 
         sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_x = np.reshape(sample_x, [model.sample_num] + model.image_shape)
