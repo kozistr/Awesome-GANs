@@ -46,7 +46,9 @@ def main():
         dataset = DataSet(input_height=32,
                           input_width=32,
                           input_channel=3,
-                          name='cifar-10')
+                          is_split=False,
+                          ds_name='cifar-10',
+                          ds_path='/home/zero/hdd/DataSet/cifar/cifar-10-batches-py/')
         dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
         step = 0
@@ -117,7 +119,8 @@ def main():
                     # Print loss
                     print("[+] Epoch %03d Step %05d => " % (epoch, step),
                           " D loss : {:.8f}".format(d_loss_1.mean()),
-                          " G loss : {:.8f}".format(g_loss_1.mean()))
+                          " G loss : {:.8f}".format(g_loss_1.mean()),
+                          )
 
                     # Training G model with sample image and noise
                     samples = img_fake + img_coarse
