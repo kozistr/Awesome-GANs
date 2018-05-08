@@ -14,6 +14,8 @@ import gan_model as gan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
@@ -31,7 +33,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = input_data.read_data_sets('./MNIST_data', one_hot=True)
+    mnist = DataSet().data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -44,8 +46,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        # sample_x, _ = mnist.train.next_batch(model.sample_num)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -85,12 +86,13 @@ def main():
                 # Print loss
                 print("[+] Step %08d => " % step,
                       " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                      " G loss : {:.8f}".format(g_loss),
+                      )
 
                 # Training G model with sample image and noise
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples = s.run(model.g,
                                 feed_dict={
-                                    model.x: sample_x,
                                     model.z: sample_z,
                                 })
 
