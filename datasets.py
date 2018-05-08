@@ -16,8 +16,6 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 DataSets = {
     # Linux
-    # MNIST
-    'mnist': '/home/zero/hdd/DataSet/MNIST/',
     # Celeb-A DataSet
     'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
     'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
@@ -57,8 +55,6 @@ DataSets = {
     # UrbanSound8K DataSet
     'urban_sound': '/home/zero/hdd/DataSet/UrbanSound/audio/',
     # Windows
-    # MNIST
-    # 'mnist': 'D:\\DataSet\\MNIST\\',
     # Celeb-A DataSet
     # 'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
     # 'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
