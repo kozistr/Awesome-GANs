@@ -381,7 +381,7 @@ class CelebADataSet:
         self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name, ex) CelebA-128.h5
 
         if self.ds_path == "":
-            raise ValueError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
+            raise FileNotFoundError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
 
         if self.ds_type == "CelebA":
             self.num_images = 202599  # the number of CelebA DataSet images
