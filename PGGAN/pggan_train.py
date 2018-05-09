@@ -26,9 +26,9 @@ results = {
 }
 
 train_step = {
-    'epoch': 30,
+    'epoch': 10000,
     'batch_size': 16,
-    'logging_step': 2000,
+    'logging_step': 1000,
 }
 
 pg = [1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]
