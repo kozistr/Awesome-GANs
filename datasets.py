@@ -7,8 +7,10 @@ import h5py
 import pickle as p
 import numpy as np
 
+from PIL import Image
 from glob import glob
 from tqdm import tqdm
+from multiprocessing import Pool
 from scipy.misc import imread, imresize
 from sklearn.model_selection import train_test_split
 from tensorflow.examples.tutorials.mnist import input_data
@@ -81,6 +83,17 @@ DataSets = {
     # UrbanSound8K DataSet
     # 'urban_sound': 'D:\\DataSet\\UrbanSound\\audio\\',
 }
+
+
+def npy2png(i):
+    try:
+        data = np.load('imgHQ%05d.npy' % i)
+    except:
+        print("[-] imgHQ%05d.npy" % i)
+        return False
+    im = Image.fromarray(np.rollaxis(np.squeeze(data, axis=0), 0, 3))
+    im.save('imgHQ%05d.png' % i)
+    return True
 
 
 def get_image(path, w, h):
@@ -318,7 +331,7 @@ class CelebADataSet:
     def __init__(self,
                  input_height=64, input_width=64, input_channel=3, attr_labels=(),
                  output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, is_split=False, ds_path=""):
+                 num_threads=30, split_rate=0.2, is_split=False, ds_path="", ds_type="CelebA"):
 
         """
         # General Settings
@@ -326,6 +339,7 @@ class CelebADataSet:
         :param input_width: input image width, default 64
         :param input_channel: input image channel, default 3 (RGB)
         - in case of CelebA, image size is 64x64x3(HWC).
+        - in case of CelebA-HQ, image size is 1024x1024x3(HWC)
         :param attr_labels: attributes of Celeb-A image, default empty tuple
         - in case of CelebA, the number of attributes is 40
 
@@ -335,11 +349,13 @@ class CelebADataSet:
         :param output_channel: output images channel, default 3
 
         # Pre-Processing Option
+        :param num_threads: the number of threads, default 30
         :param split_rate: image split rate (into train & test), default 0.2
         :param is_split: splitting train DataSet into train/val, default False
 
-        # DataSet Path
+        # DataSet Settings
         :param ds_path: DataSet Path, default ""
+        :param ds_type: which DataSet, default CelebA
         """
 
         self.input_height = input_height
@@ -362,6 +378,7 @@ class CelebADataSet:
         self.output_width = output_width
         self.output_channel = output_channel
 
+        self.num_threads = num_threads
         self.split_rate = split_rate
         self.is_split = is_split
         self.mode = 'w'
@@ -374,19 +391,39 @@ class CelebADataSet:
         self.attr = []
         self.images = []
         self.labels = {}
-        self.num_images = 202599
 
-        self.ds_name = ""  # DataSet Name (by image size)
         self.ds_path = ds_path
+        self.ds_type = ds_type
+        self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name (by image size)
 
         if self.ds_path == "":
-            raise ValueError("[-] CelebA DataSet Path is required!")
+            raise ValueError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
 
-        self.celeb_a()  # load Celeb-A
+        if self.ds_type == "CelebA":
+            self.num_images = 202599  # the number of CelebA DataSet images
+        elif self.ds_type == "CelebA-HQ":
+            self.num_images = 30000   # the number of CelebA-HQ DataSet images
+
+            tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
+            if os.path.exists(tmp_path + ".dat"):
+                raise FileNotFoundError("[-] You need to decrypt .dat file first!")
+            elif os.path.exists(tmp_path + ".npy"):
+                print("[*] You should convert .npy image file to .png image file for comfort :)")
+                print("[*] But, It'll do it 4 u automatically. It'll take some times~")
+
+                # Converting...
+                ii = [i for i in range(self.num_images)]
+
+                pool = Pool(self.num_threads)
+                print(pool.map(npy2png, ii))
+        else:
+            raise ValueError("[-] It muse be CelebA or CelebA-HQ")
+
+        self.celeb_a()  # load CelebA / CelebA-HQ
 
     def celeb_a(self):
         size = self.input_height  # self.input_width
-        self.ds_name = self.ds_path + '/CelebA-' + str(size) + '.h5'
+        self.ds_name += str(size) + '.h5'
 
         self.labels = self.load_attr()    # selected attributes info (list)
 
@@ -394,8 +431,10 @@ class CelebADataSet:
             self.mode = 'r'
 
         if self.mode == 'w':
-            # self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
-            self.files = glob(os.path.join(self.ds_path, 'Img/img_align_celeba/*.jpg'))
+            if self.ds_type == "CelebA":
+                self.files = glob(os.path.join(self.ds_path, 'Img/img_align_celeba/*.jpg'))
+            else:  # self.ds_type == "CelebA-HQ":
+                self.files = glob(os.path.join(self.ds_path, '/*.png'))
             self.files = np.sort(self.files)
 
             self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
@@ -403,10 +442,22 @@ class CelebADataSet:
 
             print("[*] Image size : ", self.data.shape)
 
-            assert (len(self.files) == self.num_images)
+            try:
+                assert (len(self.files) == self.num_images)
+            except AssertionError:
+                print("[-] %d file(s) is/are missing :(" % (self.num_images - len(self.files)))
+                if self.ds_type == "CelebA-HQ":
+                    self.num_images = len(self.files)
+                    pass  # imgHQ00000.dat is valid??
+                else:
+                    raise AssertionError
 
             for n, f_name in tqdm(enumerate(self.files)):
-                image = get_image(f_name, self.input_width, self.input_height)  # resize to (iw, ih)
+                if self.ds_type == "CelebA":
+                    image = get_image(f_name, self.input_width, self.input_height)  # resize to (iw, ih)
+                else:  # CelebA-HQ
+                    image = imread(f_name).astype(np.float16)  # already aligned with 1024x1024x3
+
                 self.data[n] = image.flatten()
 
             # saving as .h5 file for reusing later...
