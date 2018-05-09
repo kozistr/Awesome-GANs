@@ -18,16 +18,6 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 DataSets = {
     # Linux
-    # Celeb-A DataSet
-    'celeb-a': '/home/zero/hdd/DataSet/Celeb-A/img_align_celeba/',
-    'celeb-a-attr': '/home/zero/hdd/DataSet/Celeb-A/list_attr_celeba.txt',
-    'celeb-a-32x32-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-32x32.h5',
-    'celeb-a-64x64-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-64x64.h5',
-    'celeb-a-108x108-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-108x108.h5',
-    'celeb-a-128x128-h5': '/home/zero/hdd/DataSet/Celeb-A/celeb-a-128x128.h5',
-    # Celeb-A-HQ DataSet
-    'celeb-a-hq': '/home/zero/hdd/DataSet/Celeb-A-HQ/train/',
-    'celeb-a-hq-1024x1024-h5': '/home/zero/hdd/DataSet/Celeb-A-HQ/celeb-a-hq-1024x1024.h5',
     # pix2pix DataSets
     # 'ae_photos': '/home/zero/hdd/DataSet/pix2pix/ae_photos/',
     # 'apple2orange': '/home/zero/hdd/DataSet/pix2pix/apple2orange/',
@@ -57,12 +47,6 @@ DataSets = {
     # UrbanSound8K DataSet
     'urban_sound': '/home/zero/hdd/DataSet/UrbanSound/audio/',
     # Windows
-    # Celeb-A DataSet
-    # 'celeb-a': 'D:\\DataSet\\Celeb-A\\img_align_celeba\\',
-    # 'celeb-a-attr': 'D:\\DataSet\\Celeb-A\\list_attr_celeba.txt',
-    # 'celeb-a-32x32-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-32x32.h5',
-    # 'celeb-a-64x64-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-64x64.h5',
-    # 'celeb-a-108x108-h5': 'D:\\DataSet\\Celeb-A\\celeb-a-108x108.h5',
     # pix2pix DataSets
     'ae_photos': 'D:\\DataSet\\pix2pix\\ae_photos\\',
     'apple2orange': 'D:\\DataSet\\pix2pix\\apple2orange\\',
@@ -387,14 +371,14 @@ class CelebADataSet:
         self.files = ""     # files' name
         self.n_classes = 0  # DataSet the number of classes, default 10
 
-        self.data = []     # loaded images
-        self.attr = []
+        self.data = []      # loaded images
+        self.attr = []      # loaded labels
         self.images = []
         self.labels = {}
 
         self.ds_path = ds_path
         self.ds_type = ds_type
-        self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name (by image size)
+        self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name, ex) CelebA-128.h5
 
         if self.ds_path == "":
             raise ValueError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
@@ -406,7 +390,8 @@ class CelebADataSet:
 
             tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
             if os.path.exists(tmp_path + ".dat"):
-                raise FileNotFoundError("[-] You need to decrypt .dat file first!")
+                raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
+                                        "[-] plz, use this repo https://github.com/nperraud/download-celebA-HQ")
             elif os.path.exists(tmp_path + ".npy"):
                 print("[*] You should convert .npy image file to .png image file for comfort :)")
                 print("[*] But, It'll do it 4 u automatically. It'll take some times~")
