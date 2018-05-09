@@ -60,7 +60,7 @@ def main():
 
     rnd = random.randint(0, n_ds)
     sample_x = ds[rnd]
-    sample_x = np.reshape(sample_x, [-1, 128, 128, 3])
+    sample_x = np.reshape(sample_x, [-1, 1024, 1024, 3])
 
     # Export real image
     valid_image_height = 1
