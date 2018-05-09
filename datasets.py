@@ -394,7 +394,7 @@ class CelebADataSet:
                                         "[-] plz, use this repo https://github.com/nperraud/download-celebA-HQ")
             elif os.path.exists(tmp_path + ".npy"):
                 print("[*] You should convert .npy image file to .png image file for comfort :)")
-                print("[*] But, It'll do it 4 u automatically. It'll take some times~")
+                print("[*] But, I'll do it for you automatically :) It'll take some times~")
 
                 # Converting...
                 ii = [i for i in range(self.num_images)]
