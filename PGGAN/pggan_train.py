@@ -49,11 +49,12 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Celeb-A DataSet images
-    ds = DataSet(input_height=128,
-                 input_width=128,
+    ds = DataSet(input_height=1024,
+                 input_width=1024,
                  input_channel=3,
+                 ds_type="CelebA-HQ",
                  ds_path="/home/zero/hdd/DataSet/CelebA-HQ").images
-    n_ds = 202599
+    n_ds = 30000
     dataset_iter = DataIterator(ds, None, train_step['batch_size'],
                                 label_off=True)
 
