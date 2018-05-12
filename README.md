@@ -109,6 +109,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/SRGAN)
 **StableGAN**    | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | 
 **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/StarGAN)
+**TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | 
 **TripleGAN**    | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) |
 **TwinGAN**      | *Cross-Domain Translation of Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) |
 **UGAN**         | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) |
