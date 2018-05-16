@@ -69,17 +69,6 @@ DataSets = {
 }
 
 
-def npy2png(i):
-    try:
-        data = np.load('imgHQ%05d.npy' % i)
-    except:
-        print("[-] imgHQ%05d.npy" % i)
-        return False
-    im = Image.fromarray(np.rollaxis(np.squeeze(data, axis=0), 0, 3))
-    im.save('imgHQ%05d.png' % i)
-    return True
-
-
 def get_image(path, w, h):
     img = imread(path).astype(np.float)
 
@@ -391,8 +380,19 @@ class CelebADataSet:
             tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
             if os.path.exists(tmp_path + ".dat"):
                 raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
-                                        "[-] plz, use this repo https://github.com/nperraud/download-celebA-HQ")
+                                        "[-] plz, use original PGGAN repo or"
+                                        " this repo https://github.com/nperraud/download-celebA-HQ")
             elif os.path.exists(tmp_path + ".npy"):
+                def npy2png(i):
+                    try:
+                        data = np.load('imgHQ%05d.npy' % i)
+                    except:
+                        print("[-] imgHQ%05d.npy" % i)
+                        return False
+                    im = Image.fromarray(np.rollaxis(np.squeeze(data, axis=0), 0, 3))
+                    im.save('imgHQ%05d.png' % i)
+                    return True
+
                 print("[*] You should convert .npy image file to .png image file for comfort :)")
                 print("[*] But, I'll do it for you automatically :) It'll take some times~")
 
