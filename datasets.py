@@ -105,7 +105,7 @@ class MNISTDataSet:
         self.ds_path = ds_path
 
         if self.ds_path == "":
-            raise ValueError("[-] CelebA DataSet Path is required!")
+            raise ValueError("[-] MNIST DataSet Path is required!")
 
         self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
@@ -183,7 +183,7 @@ class CiFarDataSet:
         self.test_labels = None
 
         if self.ds_path == "":
-            raise ValueError("[-] CelebA DataSet Path is required!")
+            raise ValueError("[-] CIFAR10/100 DataSets' Path is required!")
 
         if self.ds_name == "cifar-10":
             self.cifar_10()   # loading Cifar-10
