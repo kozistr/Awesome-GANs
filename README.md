@@ -122,9 +122,16 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
+## To-Do
+* 1. TempoGAN
+* 2. Support both .h5 and .tfrecord for DataSets
+* 3. Upload PGGAN 64x64, 128x128 Results
+* 4. Fix PGGAN
+* 5. Fix SGAN, SGAN++
+
 ## ETC
 
-**Any suggestions and PRs and issues are welcome** :)
+**Any suggestions and PRs and issues are WELCONE :)**
 
 ## Author
 HyeongChan Kim / [@kozistr](http://kozistr.tech)
