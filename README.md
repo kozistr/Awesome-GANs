@@ -112,6 +112,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **StableGAN**    | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | 
 **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/StarGAN)
 **TAC-GAN**      | *Text Conditioned Auxiliary Classifier Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.06412.pdf) |
+**TempoGAN**     | *A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow* | [[arXiv]](https://arxiv.org/abs/1801.09710) | 
 **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | 
 **TripleGAN**    | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) |
 **TwinGAN**      | *Cross-Domain Translation of Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) |
