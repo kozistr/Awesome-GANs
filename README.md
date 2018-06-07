@@ -103,6 +103,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **MAGAN**        | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/MAGAN)
 **MRGAN**        | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) |
 **PGGAN**        | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) |
+**SAGAN**        | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) |
 **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
 **SEGAN**        | *Speech Enhancement Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.09452) |
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
