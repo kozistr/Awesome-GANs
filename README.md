@@ -116,7 +116,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **TempoGAN**     | *A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow* | [[arXiv]](https://arxiv.org/abs/1801.09710) | 
 **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | 
 **TripleGAN**    | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) |
-**TwinGAN**      | *Cross-Domain Translation of Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) |
+**TwinGAN**      | *Cross-Domain Translation fo Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) |
 **UGAN**         | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) |
 **WaveGAN**      | *Synthesizing Audio with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.04208) | 
 **WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](https://github.com/kozistr/Awesome-GANs/blob/master/WGAN)
@@ -124,11 +124,11 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
-* 1. TempoGAN
-* 2. Support both .h5 and .tfrecord for DataSets
-* 3. Upload PGGAN 64x64, 128x128 Results
-* 4. Fix PGGAN
-* 5. Fix SGAN, SGAN++
+1. Implement TempoGAN
+2. Support both .h5 and .tfrecord for DataSets (Modulize)
+3. Upload PGGAN 64x64, 128x128 Results
+4. Fix PGGAN, SGAN, SGAN++
+5. Implement SAGAN
 
 ## ETC
 
