@@ -32,7 +32,7 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 ### Dependency Install
     $ sudo python3 -m pip install -r requirements.txt
 ### Training GAN
-    (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in datasets.py)
+    (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in xxx_train.py)
     just after it, RUN train.py
     $ python3 xxx_train.py
 
