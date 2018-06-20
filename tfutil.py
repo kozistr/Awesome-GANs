@@ -6,6 +6,10 @@ import tensorflow as tf
 import numpy as np
 
 
+seed = 1337
+np.random.seed(seed)
+tf.set_random_seed(seed)
+
 # ---------------------------------------------------------------------------------------------
 # For convenience :)
 
@@ -74,3 +78,95 @@ class Network:
 
     def __init__(self):
         pass
+
+
+# ---------------------------------------------------------------------------------------------
+# Functions
+
+w_init = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
+b_init = tf.zeros_initializer()
+
+reg = 5e-4
+w_reg = tf.contrib.layers.l2_regularizer(reg)
+
+eps = 1e-5
+
+
+# Layers
+
+def conv2d(x, f=64, k=3, d=1, pad='SAME', name='conv2d'):
+    """
+    :param x: input
+    :param f: filters
+    :param k: kernel size
+    :param d: strides
+    :param pad: padding
+    :param name: scope name
+    :return: net
+    """
+    return tf.layers.conv2d(inputs=x,
+                            filters=f, kernel_size=k, strides=d,
+                            kernel_initializer=w_init,
+                            kernel_regularizer=w_reg,
+                            bias_initializer=b_init,
+                            padding=pad,
+                            name=name)
+
+
+def deconv2d(x, f=64, k=3, d=1, pad='SAME', name='deconv2d'):
+    """
+    :param x: input
+    :param f: filters
+    :param k: kernel size
+    :param d: strides
+    :param pad: padding
+    :param name: scope name
+    :return: net
+    """
+    return tf.layers.conv2d_transpose(inputs=x,
+                                      filters=f, kernel_size=k, strides=d,
+                                      kernel_initializer=w_init,
+                                      kernel_regularizer=w_reg,
+                                      bias_initializer=b_init,
+                                      padding=pad,
+                                      name=name)
+
+
+def dense(x, f=1024, name='fc'):
+    """
+    :param x: input
+    :param f: fully connected units
+    :param name: scope name
+    :return: net
+    """
+    return tf.layers.dense(inputs=x,
+                           units=f,
+                           kernel_initializer=w_init,
+                           kernel_regularizer=w_reg,
+                           bias_initializer=b_init,
+                           name=name)
+
+
+# Normalize
+
+def batch_norm(x, momentum=0.9, scaling=True, is_train=True):
+    return tf.layers.batch_normalization(inputs=x,
+                                         momentum=momentum,
+                                         epsilon=eps,
+                                         scale=scaling,
+                                         training=is_train)
+
+
+# Activations
+
+def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
+    with tf.variable_scope(name):
+        if reuse:
+            tf.get_variable_scope().reuse_variables()
+
+        _alpha = tf.get_variable('_alpha',
+                                 shape=x.get_shape(),
+                                 initializer=tf.constant_initializer(stddev),
+                                 dtype=x.dtype)
+
+        return tf.maximum(_alpha * x, x)
