@@ -154,16 +154,25 @@ class DataSetLoader:
             raise ValueError("[-] Not Supported Type :(")
 
     def load_img(self):
-        for idx, fn in tqdm(enumerate(self.file_names)):
-            data = self.get_img(fn, (self.input_height, self.input_width))
+        self.raw_data = np.zeros((len(self.file_list), self.input_height, self.input_width, self.input_channel),
+                                 dtype=np.uint8)
+
+        for i, fn in tqdm(enumerate(self.file_names)):
+            self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width))
 
     def load_tfr(self):
         pass
 
     def load_h5(self):
+        init = True
+
         for fl in self.file_list:
             with h5py.File(fl, 'r') as hf:
-                np.append(self.raw_data, hf['images'])
+                if init:
+                    self.raw_data = hf['images']
+                    init = False
+                else:
+                    self.raw_data = np.concatenate((self.raw_data, hf['images']))
 
     def convert_to_img(self):
         pass
