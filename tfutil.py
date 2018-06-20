@@ -10,6 +10,7 @@ seed = 1337
 np.random.seed(seed)
 tf.set_random_seed(seed)
 
+
 # ---------------------------------------------------------------------------------------------
 # For convenience :)
 
@@ -39,6 +40,11 @@ def lerp(a, b, t):
 def lerp_clip(a, b, t):
     with tf.name_scope("lerp_clip"):
         return a + (b - a) * tf.clip_by_value(t, 0., 1.)
+
+
+def gaussian_noise(x, std=5e-2):
+    noise = tf.random_normal(x.get_shape(), mean=0., stddev=std, dtype=tf.float32)
+    return x + noise
 
 
 # ---------------------------------------------------------------------------------------------
