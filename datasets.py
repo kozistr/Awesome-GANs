@@ -13,7 +13,6 @@ from tqdm import tqdm
 from multiprocessing import Pool
 from scipy.misc import imread, imresize
 from sklearn.model_selection import train_test_split
-from tensorflow.examples.tutorials.mnist import input_data
 
 
 DataSets = {
@@ -96,6 +95,47 @@ def one_hot(labels_dense, num_classes=10):
     return labels_one_hot
 
 
+class DataSetLoader:
+
+    def __init__(self, path, name='to_tfr'):
+        self.op = name.split('_')
+
+        try:
+            assert len(self.op) == 1
+        except AssertionError:
+            raise AssertionError("[-] Invalid Target Types :(")
+
+        self.types = ('img', 'tfr', 'h5')  # Supporting Data Types
+        self.op_src = ""
+        self.op_dst = self.op[0]
+
+        try:
+            assert (self.op_src in self.types and self.op_dst in self.types)
+        except AssertionError:
+            raise AssertionError("[-] Invalid Operation Types :(")
+
+        self.data = data
+        self.raw_data = None
+
+    def load_img(self):
+        pass
+
+    def load_tfr(self):
+        pass
+
+    def load_h5(self):
+        pass
+
+    def convert_to_img(self):
+        pass
+
+    def convert_to_tfr(self):
+        pass
+
+    def convert_to_h5(self):
+        pass
+
+
 class MNISTDataSet:
 
     def __init__(self, split_rate=0.2, random_state=42, is_split=False, ds_path=""):
@@ -107,6 +147,7 @@ class MNISTDataSet:
         if self.ds_path == "":
             raise ValueError("[-] MNIST DataSet Path is required!")
 
+        from tensorflow.examples.tutorials.mnist import input_data
         self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
         # training data
