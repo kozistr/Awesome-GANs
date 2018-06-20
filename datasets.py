@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 
 import os
+import cv2
 import h5py
 import pickle as p
 import numpy as np
@@ -97,7 +98,23 @@ def one_hot(labels_dense, num_classes=10):
 
 class DataSetLoader:
 
-    def __init__(self, path, name='to_tfr'):
+    @staticmethod
+    def get_extension(ext):
+        if ext in ['jpg', 'png']:
+            return 'img'
+        elif ext == 'tfr':
+            return 'tfr'
+        elif ext == 'h5':
+            return 'h5'
+        else:
+            raise ValueError("[-] There'is no supporting file... :(")
+
+    @staticmethod
+    def get_img(path):
+        img =
+        pass
+
+    def __init__(self, path, size=None, name='to_tfr'):
         self.op = name.split('_')
 
         try:
@@ -105,8 +122,33 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Invalid Target Types :(")
 
+        self.size = size
+
+        try:
+            assert self.size
+        except AssertionError:
+            raise AssertionError("[-] Invalid Target Sizes :(")
+
+        # To-DO
+        # Supporting 4D Image
+        self.input_height = size[0]
+        self.input_width = size[1]
+        self.input_channel = size[2]
+
+        self.path = path
+
+        try:
+            assert os.path.exists(self.path)
+        except AssertionError:
+            raise AssertionError("[-] Path does not exist :(")
+
+        self.file_list = sorted(os.listdir(self.path))
+        self.file_ext = self.file_list[0].split('.')[-1]
+        self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
+        self.raw_data = None  # (N, H, W, C)
+
         self.types = ('img', 'tfr', 'h5')  # Supporting Data Types
-        self.op_src = ""
+        self.op_src = self.get_extension(self.file_ext)
         self.op_dst = self.op[0]
 
         try:
@@ -114,17 +156,26 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Invalid Operation Types :(")
 
-        self.data = data
-        self.raw_data = None
+        if self.op_src == self.types[0]:
+            self.load_img()
+        elif self.op_src == self.types[1]:
+            self.load_tfr()
+        elif self.op_src == self.types[2]:
+            self.load_h5()
+        else:
+            raise ValueError("[-] Not Supported Type :(")
 
     def load_img(self):
-        pass
+        for idx, fn in tqdm(enumerate(self.file_names)):
+            data = get_image(fn, self.input_height, self.input_width)
 
     def load_tfr(self):
         pass
 
     def load_h5(self):
-        pass
+        for fl in self.file_list:
+            with h5py.File(fl, 'r') as hf:
+                np.append(self.raw_data, hf['images'])
 
     def convert_to_img(self):
         pass
