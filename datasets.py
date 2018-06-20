@@ -7,6 +7,7 @@ import cv2
 import h5py
 import pickle as p
 import numpy as np
+import tensorflow as tf
 
 from PIL import Image
 from glob import glob
@@ -102,7 +103,7 @@ class DataSetLoader:
         else:
             return cv2.imresize(img, size, cv2.INTER_CUBIC)
 
-    def __init__(self, path, size=None, name='to_tfr'):
+    def __init__(self, path, size=None, name='to_tfr', save_file_name=''):
         self.op = name.split('_')
 
         try:
@@ -130,10 +131,11 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Path does not exist :(")
 
+        self.save_file_name = save_file_name
         self.file_list = sorted(os.listdir(self.path))
         self.file_ext = self.file_list[0].split('.')[-1]
         self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
-        self.raw_data = None  # (N, H, W, C)
+        self.raw_data = np.ndarray([])  # (N, H, W, C)
 
         self.types = ('img', 'tfr', 'h5')  # Supporting Data Types
         self.op_src = self.get_extension(self.file_ext)
@@ -147,9 +149,25 @@ class DataSetLoader:
         if self.op_src == self.types[0]:
             self.load_img()
         elif self.op_src == self.types[1]:
+            self.tfr_reader = None
+
             self.load_tfr()
         elif self.op_src == self.types[2]:
             self.load_h5()
+        else:
+            raise ValueError("[-] Not Supported Type :(")
+
+        self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
+
+        if self.op_dst == self.types[0]:
+            self.convert_to_img()
+        elif self.op_dst == self.types[1]:
+            self.tfr_opt = tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.NONE)
+            self.tfr_writer = tf.python_io.TFRecordWriter(self.save_file_name + ".tfrecords", self.tfr_opt)
+
+            self.convert_to_tfr()
+        elif self.op_dst == self.types[2]:
+            self.convert_to_h5()
         else:
             raise ValueError("[-] Not Supported Type :(")
 
@@ -161,7 +179,8 @@ class DataSetLoader:
             self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width))
 
     def load_tfr(self):
-        pass
+        with tf.TFRecordReader(self.path) as tfr:
+            pass
 
     def load_h5(self):
         init = True
@@ -178,7 +197,12 @@ class DataSetLoader:
         pass
 
     def convert_to_tfr(self):
-        pass
+        for data in self.raw_data:
+            ex = tf.train.Example(features=tf.train.Features(feature={
+                'shape': tf.train.Feature(int64_list=tf.train.Int64List(value=data.shape)),
+                'data': tf.train.Feature(bytes_list=tf.train.BytesList(value=[data.tostring()]))})
+            )
+            self.tfr_writer.write(ex.SerializeToString())
 
     def convert_to_h5(self):
         pass
