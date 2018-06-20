@@ -100,7 +100,7 @@ class DataSetLoader:
         if img.shape[0] == size[0]:
             return img
         else:
-            return cv2.imresize(i, size, cv2.INTER_CUBIC)
+            return cv2.imresize(img, size, cv2.INTER_CUBIC)
 
     def __init__(self, path, size=None, name='to_tfr'):
         self.op = name.split('_')
@@ -155,7 +155,7 @@ class DataSetLoader:
 
     def load_img(self):
         for idx, fn in tqdm(enumerate(self.file_names)):
-            data = get_image(fn, self.input_height, self.input_width)
+            data = self.get_img(fn, (self.input_height, self.input_width))
 
     def load_tfr(self):
         pass
