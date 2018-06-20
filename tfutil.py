@@ -119,6 +119,22 @@ def conv2d(x, f=64, k=3, d=1, pad='SAME', name='conv2d'):
                             name=name)
 
 
+def sub_pixel_conv2d(x, f, s=2):
+    """
+    # ref : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py
+    """
+    if f is None:
+        f = int(int(x.get_shape()[-1]) / (s ** 2))
+
+    bsize, a, b, c = x.get_shape().as_list()
+    bsize = tf.shape(x)[0]
+
+    x_s = tf.split(x, s, 3)
+    x_r = tf.concat(x_s, 2)
+
+    return tf.reshape(x_r, (bsize, s * a, s * b, f))
+
+
 def deconv2d(x, f=64, k=3, d=1, pad='SAME', name='deconv2d'):
     """
     :param x: input
