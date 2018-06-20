@@ -179,6 +179,25 @@ def batch_norm(x, momentum=0.9, scaling=True, is_train=True):
                                          training=is_train)
 
 
+def instance_norm(x, affine=True, name=""):
+    with tf.variable_scope('instance_normalize-%s' % name):
+        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
+
+        normalized = tf.div(x - mean, tf.sqrt(variance + eps))
+
+        if not affine:
+            return normalized
+        else:
+            depth = x.get_shape()[3]  # input channel
+
+            scale = tf.get_variable('scale', [depth],
+                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
+            offset = tf.get_variable('offset', [depth],
+                                     initializer=tf.zeros_initializer())
+
+        return scale * normalized + offset
+
+
 # Activations
 
 def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
