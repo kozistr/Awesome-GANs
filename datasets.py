@@ -81,21 +81,6 @@ def get_image(path, w, h):
     return img[margin:margin + h]
 
 
-def unpickle(file):
-    # WARN: Only for python3, NOT FOR python2
-    with open(file, 'rb') as f:
-        return p.load(f, encoding='bytes')
-
-
-def one_hot(labels_dense, num_classes=10):
-    num_labels = labels_dense.shape[0]
-    index_offset = np.arange(num_labels) * num_classes
-    labels_one_hot = np.zeros((num_labels, num_classes))
-    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-
-    return labels_one_hot
-
-
 class DataSetLoader:
 
     @staticmethod
@@ -110,9 +95,12 @@ class DataSetLoader:
             raise ValueError("[-] There'is no supporting file... :(")
 
     @staticmethod
-    def get_img(path):
-        img =
-        pass
+    def get_img(path, size=(64, 64)):
+        img = cv2.imread(path, cv2.IMREAD_COLOR)[..., ::-1]  # BGR to RGB
+        if img.shape[0] == size[0]:
+            return img
+        else:
+            return cv2.imresize(i, size, cv2.INTER_CUBIC)
 
     def __init__(self, path, size=None, name='to_tfr'):
         self.op = name.split('_')
@@ -224,6 +212,21 @@ class MNISTDataSet:
 
 
 class CiFarDataSet:
+
+    @staticmethod
+    def unpickle(file):
+        # WARN: Only for python3, NOT FOR python2
+        with open(file, 'rb') as f:
+            return p.load(f, encoding='bytes')
+
+    @staticmethod
+    def one_hot(labels_dense, num_classes=10):
+        num_labels = labels_dense.shape[0]
+        index_offset = np.arange(num_labels) * num_classes
+        labels_one_hot = np.zeros((num_labels, num_classes))
+        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+
+        return labels_one_hot
 
     def __init__(self,
                  input_height=64, input_width=64, input_channel=3,
