@@ -572,13 +572,6 @@ class CelebADataSet:
         self.use_split = use_split
         self.split_rate = split_rate
 
-        self.mode = 'w'
-
-        self.path = ""      # DataSet's path
-        self.files = ""     # files' name
-        self.n_classes = 0  # DataSet the number of classes, default 10
-
-        self.data = []      # loaded images
         self.attr = []      # loaded labels
         self.images = []
         self.labels = {}
@@ -659,7 +652,7 @@ class CelebADataSet:
             self.images = self.concat_data(self.images, self.labels)
 
     def load_attr(self):
-        with open(DataSets['celeb-a-attr'], 'r') as f:
+        with open(self.ds_label_path, 'r') as f:
             img_attr = []
 
             self.num_images = int(f.readline().strip())
