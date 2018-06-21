@@ -523,26 +523,27 @@ class CelebADataSet:
 
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
-                 n_threads=30, use_split=False, split_rate=0.2, ds_path=None, ds_type="CelebA"):
+                 n_threads=30, use_split=False, split_rate=0.2,
+                 ds_path=None, ds_type="CelebA"):
 
         """
         # General Settings
-        :param height: image height, default 64
-        :param width: image width, default 64
-        :param channel: image channel, default 3 (RGB)
-        - in case of CelebA, image size is 64x64x3(HWC).
-        - in case of CelebA-HQ, image size is 1024x1024x3(HWC)
-        :param attr_labels: attributes of Celeb-A image, default empty tuple
-        - in case of CelebA, the number of attributes is 40
+        :param height: image height
+        :param width: image width
+        :param channel: image channel
+        - in case of CelebA,    image size is  64  x  64  x 3 (HWC)
+        - in case of CelebA-HQ, image size is 1024 x 1024 x 3 (HWC)
+        :param attr_labels: attributes of CelebA DataSet
+        - in case of CelebA,    the number of attributes is 40
 
         # Pre-Processing Option
-        :param n_threads: the number of threads, default 30
-        :param use_split: splitting train DataSet into train/val, default False
-        :param split_rate: image split rate (into train & test), default 0.2
+        :param n_threads: the number of threads
+        :param use_split: splitting train DataSet into train/val
+        :param split_rate: image split rate (into train & val)
 
         # DataSet Settings
-        :param ds_path: DataSet Path, default ""
-        :param ds_type: which DataSet, default CelebA
+        :param ds_path: DataSet Path
+        :param ds_type: which DataSet is
         """
 
         self.height = height
