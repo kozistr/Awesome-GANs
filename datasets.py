@@ -525,7 +525,7 @@ class CelebADataSet:
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
                  ds_path=None, ds_type="CelebA",
-                 use_save=False, save_type='to_tfr', save_file_name=""):
+                 use_save=False, save_type='to_h5', save_file_name=None):
 
         """
         # General Settings
@@ -626,13 +626,25 @@ class CelebADataSet:
                 pool = Pool(self.n_threads)
                 print(pool.map(npy2png, ii))
         else:
-            raise NotImplemented("[-] It muse be CelebA or CelebA-HQ")
+            raise NotImplemented("[-] 'ds_type' muse be 'CelebA' or 'CelebA-HQ'")
 
-        data_set = DataSetLoader(path=self.ds_path,
-                                 size=self.image_shape,
-                                 use_image_scaling=True,
-                                 image_scale='0,1')
-        self.images = data_set.raw_data
+        self.use_save = use_save
+        self.save_type = save_type
+        self.save_file_name = save_file_name
+
+        try:
+            if self.use_save:
+                assert self.save_file_name
+        except AssertionError:
+            raise AssertionError("[-] save-file/folder-name is required!")
+
+        self.images = DataSetLoader(path=self.ds_path,
+                                    size=self.image_shape,
+                                    use_save=self.use_save,
+                                    name=self.save_type,
+                                    save_file_name=self.save_file_name,
+                                    use_image_scaling=True,
+                                    image_scale='0,1').raw_data
 
         self.celeb_a()  # load CelebA / CelebA-HQ
 
