@@ -354,43 +354,34 @@ class CiFarDataSet:
 
         return labels_one_hot
 
-    def __init__(self,
-                 height=64, width=64, channel=3,
-                 output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, is_split=True, random_state=42, ds_name="cifar-10", ds_path=""):
+    def __init__(self, height=64, width=64, channel=3,
+                 use_split=False, split_rate=0.2, random_state=42, ds_name="cifar-10", ds_path=None):
 
         """
         # General Settings
         :param height: input image height, default 64
         :param width: input image width, default 64
         :param channel: input image channel, default 3 (RGB)
-        - in case of CIFAR, image size is 32x32x3(HWC).
-
-        # Output Settings
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
-        :param output_channel: output images channel, default 3
+        - in case of CIFAR, image size is 32 x 32 x 3 (HWC).
 
         # Pre-Processing Option
+        :param use_split: training DataSet splitting, default True
         :param split_rate: image split rate (into train & test), default 0.2
-        :param is_split: training DataSet splitting, default True
         :param random_state: random seed for shuffling, default 42
 
         # DataSet Option
-        :param ds_name: DataSet name, default cifar-10
+        :param ds_name: DataSet's name, default cifar-10
+        :param ds_path: DataSet's path, default None
         """
 
         self.height = height
         self.width = width
         self.channel = channel
 
-        self.output_height = output_height
-        self.output_width = output_width
-        self.output_channel = output_channel
-
+        self.use_split = use_split
         self.split_rate = split_rate
-        self.is_split = is_split
         self.random_state = random_state
+
         self.ds_name = ds_name
         self.ds_path = ds_path  # DataSet path
         self.n_classes = 10     # DataSet the number of classes, default 10
@@ -403,8 +394,10 @@ class CiFarDataSet:
         self.valid_labels = None
         self.test_labels = None
 
-        if self.ds_path == "":
-            raise ValueError("[-] CIFAR10/100 DataSets' Path is required!")
+        try:
+            assert self.ds_path
+        except AssertionError:
+            raise AssertionError("[-] CIFAR10/100 DataSets' Path is required!")
 
         if self.ds_name == "cifar-10":
             self.cifar_10()   # loading Cifar-10
@@ -458,7 +451,7 @@ class CiFarDataSet:
                                                      self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
-        if self.is_split:
+        if self.use_split:
             train_images, valid_images, train_labels, valid_labels = \
                 train_test_split(train_images, train_labels,
                                  test_size=self.split_rate,
@@ -497,7 +490,7 @@ class CiFarDataSet:
                                                      self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
-        if self.is_split:
+        if self.use_split:
             train_images, valid_images, train_labels, valid_labels = \
                 train_test_split(train_images, train_labels,
                                  test_size=self.split_rate,
