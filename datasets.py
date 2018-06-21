@@ -96,12 +96,12 @@ class DataSetLoader:
             raise ValueError("[-] There'is no supporting file... :(")
 
     @staticmethod
-    def get_img(path, size=(64, 64)):
+    def get_img(path, size=(64, 64), interp=cv2.INTER_CUBIC):
         img = cv2.imread(path, cv2.IMREAD_COLOR)[..., ::-1]  # BGR to RGB
         if img.shape[0] == size[0]:
             return img
         else:
-            return cv2.imresize(img, size, cv2.INTER_CUBIC)
+            return cv2.imresize(img, size, interp)
 
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name=''):
         self.op = name.split('_')
