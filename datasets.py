@@ -36,7 +36,7 @@ class DataSetLoader:
         if img.shape[0] == size[0]:
             return img
         else:
-            return cv2.imresize(img, size, interp)
+            return cv2.resize(img, size, interp)
 
     @staticmethod
     def parse_tfr_tf(record):
