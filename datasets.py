@@ -65,8 +65,6 @@ DataSets = {
     # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
     # 'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
     # 'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
-    # UrbanSound8K DataSet
-    # 'urban_sound': 'D:\\DataSet\\UrbanSound\\audio\\',
 }
 
 
@@ -151,9 +149,9 @@ class DataSetLoader:
 
         # To-DO
         # Supporting 4D Image
-        self.input_height = size[0]
-        self.input_width = size[1]
-        self.input_channel = size[2]
+        self.height = size[0]
+        self.width = size[1]
+        self.channel = size[2]
 
         self.path = path
 
@@ -227,11 +225,11 @@ class DataSetLoader:
             self.raw_data = self.img_scaling(self.raw_data, self.image_scale)
 
     def load_img(self):
-        self.raw_data = np.zeros((len(self.file_list), self.input_height * self.input_width * self.input_channel),
+        self.raw_data = np.zeros((len(self.file_list), self.height * self.width * self.channel),
                                  dtype=np.uint8)
 
         for i, fn in tqdm(enumerate(self.file_names)):
-            self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width)).flatten()
+            self.raw_data[i] = self.get_img(fn, (self.height, self.width)).flatten()
 
     def load_tfr(self):
         self.raw_data = tf.data.TFRecordDataset(self.file_names, compression_type='', buffer_size=self.buffer_size)
@@ -302,17 +300,20 @@ class DataSetLoader:
 
 class MNISTDataSet:
 
-    def __init__(self, split_rate=0.2, random_state=42, is_split=False, ds_path=""):
+    def __init__(self, use_split=False, split_rate=0.15, random_state=42, ds_path=None):
+        self.use_split = use_split
         self.split_rate = split_rate
         self.random_state = random_state
-        self.is_split = is_split
+
         self.ds_path = ds_path
 
-        if self.ds_path == "":
-            raise ValueError("[-] MNIST DataSet Path is required!")
+        try:
+            assert self.ds_path
+        except AssertionError:
+            raise AssertionError("[-] MNIST DataSet Path is required!")
 
-        from tensorflow.examples.tutorials.mnist import input_data
-        self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
+        from tensorflow.examples.tutorials.mnist import data
+        self.data = data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
         # training data
         self.train_data = self.data.train
@@ -329,7 +330,7 @@ class MNISTDataSet:
         self.test_labels = self.test_data.labels
 
         # split training data set into train, valid
-        if self.is_split:
+        if self.use_split:
             self.train_images, self.valid_images, self.train_labels, self.valid_labels = \
                 train_test_split(self.train_images, self.train_labels,
                                  test_size=self.split_rate,
@@ -354,15 +355,15 @@ class CiFarDataSet:
         return labels_one_hot
 
     def __init__(self,
-                 input_height=64, input_width=64, input_channel=3,
+                 height=64, width=64, channel=3,
                  output_height=64, output_width=64, output_channel=3,
                  split_rate=0.2, is_split=True, random_state=42, ds_name="cifar-10", ds_path=""):
 
         """
         # General Settings
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 64
+        :param width: input image width, default 64
+        :param channel: input image channel, default 3 (RGB)
         - in case of CIFAR, image size is 32x32x3(HWC).
 
         # Output Settings
@@ -379,9 +380,9 @@ class CiFarDataSet:
         :param ds_name: DataSet name, default cifar-10
         """
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
 
         self.output_height = output_height
         self.output_width = output_width
@@ -440,9 +441,9 @@ class CiFarDataSet:
 
         # Image size : 32x32x3
         train_images = np.swapaxes(train_data.reshape([-1,
-                                                       self.input_height,
-                                                       self.input_width,
-                                                       self.input_channel], order='F'), 1, 2)
+                                                       self.height,
+                                                       self.width,
+                                                       self.channel], order='F'), 1, 2)
 
         # test data & label
         test_batch = self.unpickle("{0}/test_batch".format(self.ds_path))
@@ -452,9 +453,9 @@ class CiFarDataSet:
 
         # image size : 32x32x3
         test_images = np.swapaxes(test_data.reshape([-1,
-                                                     self.input_height,
-                                                     self.input_width,
-                                                     self.input_channel], order='F'), 1, 2)
+                                                     self.height,
+                                                     self.width,
+                                                     self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
         if self.is_split:
@@ -481,9 +482,9 @@ class CiFarDataSet:
         train_data = np.concatenate([train_batch[b'data']], axis=0)
         train_labels = np.concatenate([train_batch[b'fine_labels']], axis=0)
         train_images = np.swapaxes(train_data.reshape([-1,
-                                                       self.input_height,
-                                                       self.input_width,
-                                                       self.input_channel], order='F'), 1, 2)
+                                                       self.height,
+                                                       self.width,
+                                                       self.channel], order='F'), 1, 2)
 
         # test data & label
         test_batch = self.unpickle("{0}/test".format(self.ds_path))
@@ -491,9 +492,9 @@ class CiFarDataSet:
         test_data = np.concatenate([test_batch[b'data']], axis=0)
         test_labels = np.concatenate([test_batch[b'fine_labels']], axis=0)
         test_images = np.swapaxes(test_data.reshape([-1,
-                                                     self.input_height,
-                                                     self.input_width,
-                                                     self.input_channel], order='F'), 1, 2)
+                                                     self.height,
+                                                     self.width,
+                                                     self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
         if self.is_split:
@@ -680,16 +681,16 @@ class CelebADataSet:
 
 class Pix2PixDataSet:
 
-    def __init__(self, batch_size=64, input_height=64, input_width=64, input_channel=3,
+    def __init__(self, batch_size=64, height=64, width=64, channel=3,
                  output_height=64, output_width=64, output_channel=3,
                  crop_size=128, split_rate=0.2, random_state=42, num_threads=8, name=''):
 
         """
         # General Settings
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 64
+        :param width: input image width, default 64
+        :param channel: input image channel, default 3 (RGB)
 
         # Output Settings
         :param output_height: output images height, default 64
@@ -707,11 +708,11 @@ class Pix2PixDataSet:
         """
 
         self.batch_size = batch_size
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
 
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
 
         self.output_height = output_height
         self.output_width = output_width
@@ -757,7 +758,7 @@ class Pix2PixDataSet:
 
             return img[margin:margin + h]
 
-        size = self.input_height
+        size = self.height
         self.ds_name += '-' + str(size) + 'x' + str(size) + '-h5'
 
         if os.path.exists(DataSets[self.ds_name]):
@@ -771,9 +772,9 @@ class Pix2PixDataSet:
             self.files_a = np.sort(self.files_a)
             self.files_b = np.sort(self.files_b)
 
-            self.data_a = np.zeros((len(self.files_a), self.input_height * self.input_width * self.input_channel),
+            self.data_a = np.zeros((len(self.files_a), self.height * self.width * self.channel),
                                    dtype=np.uint8)
-            self.data_b = np.zeros((len(self.files_b), self.input_height * self.input_width * self.input_channel),
+            self.data_b = np.zeros((len(self.files_b), self.height * self.width * self.channel),
                                    dtype=np.uint8)
 
             print("[*] Image A size : ", self.data_a.shape)
@@ -782,11 +783,11 @@ class Pix2PixDataSet:
             assert (len(self.files_a) == self.num_images_a) and (len(self.files_b) == self.num_images_b)
 
             for n, f_name in tqdm(enumerate(self.files_a)):
-                image = get_image(f_name, self.input_width, self.input_height)
+                image = get_image(f_name, self.width, self.height)
                 self.data_a[n] = image.flatten()
 
             for n, f_name in tqdm(enumerate(self.files_b)):
-                image = get_image(f_name, self.input_width, self.input_height)
+                image = get_image(f_name, self.width, self.height)
                 self.data_b[n] = image.flatten()
 
             # write .h5 file for reusing later...
@@ -836,19 +837,19 @@ class ImageNetDataSet:
 
 class Div2KDataSet:
 
-    def __init__(self, batch_size=128, input_hr_height=384, input_hr_width=384,
-                 input_lr_height=96, input_lr_width=96, input_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=16):
+    def __init__(self, batch_size=128,
+                 hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
+                 use_split=False, split_rate=0.2, random_state=42, n_threads=8):
 
         """
         # General Settings
-        :param batch_size: training batch size, default 128
-        :param input_hr_height: input HR image height, default 384
-        :param input_hr_width: input HR image width, default 384
-        :param input_lr_height: input LR image height, default 96
-        :param input_lr_width: input LR image width, default 96
-        :param input_channel: input image channel, default 3 (RGB)
-        - in case of Div2K - ds x4, image size is 384x384x3(HWC).
+        :param batch_size: training batch size
+        :param hr_height: input HR image height, default 384
+        :param hr_width: input HR image width, default 384
+        :param lr_height: input LR image height, default 96
+        :param lr_width: input LR image width, default 96
+        :param channel: input image channel, default 3 (RGB)
+        - in case of Div2K - ds x4, image size is 384 x 384 x 3 (HWC).
 
         # Pre-Processing Option
         :param split_rate: image split rate (into train & test), default 0.2
@@ -857,11 +858,11 @@ class Div2KDataSet:
         """
 
         self.batch_size = batch_size
-        self.input_hr_height = input_hr_height
-        self.input_hr_width = input_hr_width
-        self.input_lr_height = input_lr_height
-        self.input_lr_width = input_lr_width
-        self.input_channel = input_channel
+        self.hr_height = hr_height
+        self.hr_width = hr_width
+        self.lr_height = lr_height
+        self.lr_width = lr_width
+        self.channel = channel
 
         self.split_rate = split_rate
         self.random_state = random_state
@@ -887,13 +888,13 @@ class Div2KDataSet:
             return img
 
         def hr_pre_process(img):
-            img = imresize(img, size=(self.input_hr_height, self.input_hr_width), interp='bilinear')
-            # img = cv2.resize(img, (self.input_hr_height, self.input_hr_width), interpolation=cv2.INTER_AREA)
+            img = imresize(img, size=(self.hr_height, self.hr_width), interp='bilinear')
+            # img = cv2.resize(img, (self.hr_height, self.hr_width), interpolation=cv2.INTER_AREA)
             return img
 
         def lr_pre_process(img):
-            img = imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
-            # img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
+            img = imresize(img, size=(self.lr_height, self.lr_width), interp='bicubic')
+            # img = cv2.resize(img, (self.lr_height, self.lr_width), interpolation=cv2.INTER_CUBIC)
             return img
 
         if os.path.exists(DataSets[self.hr_ds_name]) and os.path.exists(DataSets[self.lr_ds_name]):
@@ -904,10 +905,10 @@ class Div2KDataSet:
             self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
 
             self.data_hr = np.zeros((len(self.files_hr),
-                                     self.input_hr_height * self.input_hr_width * self.input_channel),
+                                     self.hr_height * self.hr_width * self.channel),
                                     dtype=np.uint8)
             self.data_lr = np.zeros((len(self.files_lr),
-                                     self.input_lr_height * self.input_lr_width * self.input_channel),
+                                     self.lr_height * self.lr_width * self.channel),
                                     dtype=np.uint8)
 
             print("[*] HR Image size : ", self.data_hr.shape)
