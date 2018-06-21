@@ -19,23 +19,6 @@ from sklearn.model_selection import train_test_split
 
 DataSets = {
     # Linux
-    # pix2pix DataSets
-    # 'ae_photos': '/home/zero/hdd/DataSet/pix2pix/ae_photos/',
-    # 'apple2orange': '/home/zero/hdd/DataSet/pix2pix/apple2orange/',
-    # 'cezanne2photo': '/home/zero/hdd/DataSet/pix2pix/cezanne2photo/',
-    # 'cityscapes': '/home/zero/hdd/DataSet/pix2pix/cityscapes/',
-    # 'edges2handbags': '/home/zero/hdd/DataSet/pix2pix/edges2handbags/',
-    # 'edges2shoes': '/home/zero/hdd/DataSet/pix2pix/edges2shoes/',
-    # 'facades': '/home/zero/hdd/DataSet/pix2pix/facades/',
-    # 'horse2zebra': '/home/zero/hdd/DataSet/pix2pix/horse2zebra/',
-    # 'iphone2dslr_flower': 'D/home/zero/hdd/DataSet/pix2pix/iphone2dslr_flower/',
-    # 'maps': '/home/zero/hdd/DataSet/pix2pix/maps/',
-    # 'monet2photo': '/home/zero/hdd/DataSet/pix2pix/monet2photo/',
-    # 'summer2winter_yosemite': '/home/zero/hdd/DataSet/pix2pix/summer2winter_yosemite/',
-    # 'ukiyoe2photo': '/home/zero/hdd/DataSet/pix2pix/vukiyoe2photo/',
-    'vangogh2photo': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/',
-    'vangogh2photo-32x32-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-32x32.h5',
-    'vangogh2photo-64x64-h5': '/home/zero/hdd/DataSet/pix2pix/vangogh2photo/v2p-64x64.h5',
     # DIV2K DataSet
     'div2k-hr': '/home/zero/hdd/DataSet/DIV2K/DIV2K_train_HR/',
     'div2k-hr-h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5',
@@ -45,39 +28,7 @@ DataSets = {
     'div2k-hr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-hr-val.h5',
     'div2k-lr-val': '/home/zero/hdd/DataSet/DIV2K/DIV2K_valid_LR_bicubic/X4/',
     'div2k-lr-val.h5': '/home/zero/hdd/DataSet/DIV2K/div2k-lr-val.h5',
-    # UrbanSound8K DataSet
-    'urban_sound': '/home/zero/hdd/DataSet/UrbanSound/audio/',
-    # Windows
-    # pix2pix DataSets
-    'ae_photos': 'D:\\DataSet\\pix2pix\\ae_photos\\',
-    'apple2orange': 'D:\\DataSet\\pix2pix\\apple2orange\\',
-    'cezanne2photo': 'D:\\DataSet\\pix2pix\\cezanne2photo\\',
-    'cityscapes': 'D:\\DataSet\\pix2pix\\cityscapes\\',
-    'edges2handbags': 'D:\\DataSet\\pix2pix\\edges2handbags\\',
-    'edges2shoes': 'D:\\DataSet\\pix2pix\\edges2shoes\\',
-    'facades': 'D:\\DataSet\\pix2pix\\facades\\',
-    'horse2zebra': 'D:\\DataSet\\pix2pix\\horse2zebra\\',
-    'iphone2dslr_flower': 'D:\\DataSet\\pix2pix\\iphone2dslr_flower\\',
-    'maps': 'D:\\DataSet\\pix2pix\\maps\\',
-    'monet2photo': 'D:\\DataSet\\pix2pix\\monet2photo\\',
-    'summer2winter_yosemite': 'D:\\DataSet\\pix2pix\\summer2winter_yosemite\\',
-    'ukiyoe2photo': 'D:\\DataSet\\pix2pix\\vukiyoe2photo\\',
-    # 'vangogh2photo': 'D:\\DataSet\\pix2pix\\vangogh2photo\\',
-    # 'vangogh2photo-32x32-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-32x32-',
-    # 'vangogh2photo-64x64-h5': 'D:\\DataSet\\pix2pix\\vangogh2photo\\v2p-64x64-',
 }
-
-
-def get_image(path, w, h):
-    img = imread(path).astype(np.float)
-
-    orig_h, orig_w = img.shape[:2]
-    new_h = int(orig_h * w / orig_w)
-
-    img = imresize(img, (new_h, w))
-    margin = int(round((new_h - h) / 2))
-
-    return img[margin:margin + h]
 
 
 class DataSetLoader:
@@ -674,152 +625,91 @@ class CelebADataSet:
 
 class Pix2PixDataSet:
 
-    def __init__(self, batch_size=64, height=64, width=64, channel=3,
-                 output_height=64, output_width=64, output_channel=3,
-                 crop_size=128, split_rate=0.2, random_state=42, num_threads=8, name=''):
+    def __init__(self, height=64, width=64, channel=3,
+                 use_split=False, split_rate=0.15, random_state=42, n_threads=8,
+                 ds_path=None, ds_name=None, use_save=False, save_type='to_h5', save_file_name=None):
 
         """
         # General Settings
-        :param batch_size: training batch size, default 64
-        :param height: input image height, default 64
-        :param width: input image width, default 64
-        :param channel: input image channel, default 3 (RGB)
-
-        # Output Settings
-        :param output_height: output images height, default 64
-        :param output_width: output images width, default 64
-        :param output_channel: output images channel, default 3
+        :param height: image height, default 64
+        :param width: image width, default 64
+        :param channel: image channel, default 3 (RGB)
 
         # Pre-Processing Option
-        :param crop_size: image crop size, default 128
+        :param use_split: using DataSet split, default False
         :param split_rate: image split rate (into train & test), default 0.2
         :param random_state: random seed for shuffling, default 42
-        :param num_threads: the number of threads for multi-threading, default 8
+        :param n_threads: the number of threads for multi-threading, default 8
 
         # DataSet Option
-        :param name: train/test DataSet, default train
+        :param ds_path: DataSet's Path, default None
+        :param ds_name: DataSet's Name, default None
+        :param use_save: saving into another file format
+        :param save_type: file format to save
+        :param save_file_name: file name to save
         """
 
-        self.batch_size = batch_size
         self.height = height
         self.width = width
         self.channel = channel
+        self.image_shape = (self.height, self.width, self.channel)
 
-        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
-
-        self.output_height = output_height
-        self.output_width = output_width
-        self.output_channel = output_channel
-
-        self.crop_size = crop_size
+        self.use_split = use_split
         self.split_rate = split_rate
         self.random_state = random_state
-        self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.mode = 'w'
+        self.n_threads = n_threads  # change this value to the fitted value for ur system
 
-        self.files_a = []
-        self.files_b = []
-        self.data_a = []
-        self.data_b = []
-        self.images_a = []
-        self.images_b = []
-        self.num_images_a = 400
-        self.num_images_b = 6287
-        self.ds_name = name
+        """
+        Expected ds_path : pix2pix/...
+        Expected ds_name : apple2orange
+        """
+        self.ds_path = ds_path
+        self.ds_name = ds_name
+        # single grid : testA, testB, (trainA, trainB)
+        # double grid : train, val, (test, sample)
+        self.ds_single_grid = ['apple2orange', 'horse2zebra', 'monet2photo', 'summer2winter_yosemite', 'vangogh2photo',
+                               'ae_photos', 'cezanne2photo', 'ukivoe2photo', 'iphone2dslr_flower']
+        self.ds_double_grid = ['cityscapes', 'edges2handbags', 'edges2shoes', 'facades', 'maps']
 
-        # testA, testB, (trainA, trainB)
-        if self.ds_name == "apple2orange" or self.ds_name == "horse2zebra" or self.ds_name == "monet2photo" or \
-                self.ds_name == "summer2winter_yosemite" or self.ds_name == "vangogh2photo" or \
-                self.ds_name == "ae_photos" or self.ds_name == "cezanne2photo" or self.ds_name == "ukiyoe2photo" or \
-                self.ds_name == "iphone2dslr_flower":
-            self.single_img_process()
+        # Single Grid DatSet - the number of images
+        self.n_sg_images_a = 400
+        self.n_sg_images_b = 6287
+        # Double Grid DatSet - the number of images
+        self.n_dg_images_a = 0
+        self.n_dg_images_b = 0
 
-        # train, val, (test, sample) # double grid
-        elif self.ds_name == "cityscapes" or self.ds_name == "edges2handbags" or self.ds_name == "edges2shoes" or \
-                self.ds_name == "facades" or self.ds_name == "maps":
-            self.double_img_process()
+        self.use_save = use_save
+        self.save_type = save_type
+        self.save_file_name = save_file_name
 
-    def single_img_process(self):
-        def get_image(path, w, h):
-            img = imread(path).astype(np.float)
+        try:
+            if self.use_save:
+                assert self.save_file_name
+        except AssertionError:
+            raise AssertionError("[-] save-file/folder-name is required!")
 
-            orig_h, orig_w = img.shape[:2]
-            new_h = int(orig_h * w / orig_w)
+        if self.ds_name in self.ds_single_grid:
+            self.images_a = DataSetLoader(path=self.ds_path + "/" + self.ds_name + "/trainA/",
+                                          size=self.image_shape,
+                                          use_save=self.use_save,
+                                          name=self.save_type,
+                                          save_file_name=self.save_file_name,
+                                          use_image_scaling=True,
+                                          image_scale='0,1').raw_data  # numpy arrays
 
-            img = imresize(img, (new_h, w))
-            margin = int(round((new_h - h) / 2))
-
-            return img[margin:margin + h]
-
-        size = self.height
-        self.ds_name += '-' + str(size) + 'x' + str(size) + '-h5'
-
-        if os.path.exists(DataSets[self.ds_name]):
-            self.mode = 'r'
-
-        if self.mode == 'w':
-            data_set_name = self.ds_name.split('-')[0]
-
-            self.files_a = glob(os.path.join(DataSets[data_set_name] + 'trainA/', "*.jpg"))
-            self.files_b = glob(os.path.join(DataSets[data_set_name] + 'trainB/', "*.jpg"))
-            self.files_a = np.sort(self.files_a)
-            self.files_b = np.sort(self.files_b)
-
-            self.data_a = np.zeros((len(self.files_a), self.height * self.width * self.channel),
-                                   dtype=np.uint8)
-            self.data_b = np.zeros((len(self.files_b), self.height * self.width * self.channel),
-                                   dtype=np.uint8)
-
-            print("[*] Image A size : ", self.data_a.shape)
-            print("[*] Image B size : ", self.data_b.shape)
-
-            assert (len(self.files_a) == self.num_images_a) and (len(self.files_b) == self.num_images_b)
-
-            for n, f_name in tqdm(enumerate(self.files_a)):
-                image = get_image(f_name, self.width, self.height)
-                self.data_a[n] = image.flatten()
-
-            for n, f_name in tqdm(enumerate(self.files_b)):
-                image = get_image(f_name, self.width, self.height)
-                self.data_b[n] = image.flatten()
-
-            # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets[self.ds_name] + 'a.h5']), 'w') as f:
-                f.create_dataset("images", data=self.data_a)
-
-            with h5py.File(''.join([DataSets[self.ds_name] + 'b.h5']), 'w') as f:
-                f.create_dataset("images", data=self.data_b)
-
-        self.images_a = self.load_data(size=self.num_images_a, name='a.h5')
-        self.images_b = self.load_data(size=self.num_images_b, name='b.h5')
-
-    def double_img_process(self):
-        pass
-
-    def load_data(self, size, offset=0, name=""):
-        with h5py.File(DataSets[self.ds_name] + name, 'r') as hf:
-            pix2pix = hf['images']
-
-            full_size = len(pix2pix)
-            if size is None:
-                size = full_size
-
-            n_chunks = int(np.ceil(full_size / size))
-            if offset >= n_chunks:
-                print("[*] Looping from back to start.")
-                offset = offset % n_chunks
-
-            if offset == n_chunks - 1:
-                print("[-] Not enough data available, clipping to end.")
-                pix2pix = pix2pix[offset * size:]
-            else:
-                pix2pix = pix2pix[offset * size:(offset + 1) * size]
-
-                pix2pix = np.array(pix2pix, dtype=np.float16)
-
-        print("[+] Image size : ", pix2pix.shape)
-
-        return pix2pix / 255.  # (pix2pix / 127.5) - 1.
+            self.images_b = DataSetLoader(path=self.ds_path + "/" + self.ds_name + "/trainB/",
+                                          size=self.image_shape,
+                                          use_save=self.use_save,
+                                          name=self.save_type,
+                                          save_file_name=self.save_file_name,
+                                          use_image_scaling=True,
+                                          image_scale='0,1').raw_data  # numpy arrays
+        elif self.ds_name in self.ds_double_grid:
+            # To-Do
+            # Implement this!
+            pass
+        else:
+            raise NotImplementedError("[-] Not Implemented yet")
 
 
 class ImageNetDataSet:
