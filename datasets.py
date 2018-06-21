@@ -92,6 +92,8 @@ class DataSetLoader:
             return 'tfr'
         elif ext == 'h5':
             return 'h5'
+        elif ext == 'npy':
+            return 'npy'
         else:
             raise ValueError("[-] There'is no supporting file... :(")
 
@@ -168,7 +170,7 @@ class DataSetLoader:
         self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
         self.raw_data = np.ndarray([])  # (N, H * W * C)
 
-        self.types = ('img', 'tfr', 'h5')  # Supporting Data Types
+        self.types = ('img', 'tfr', 'h5', 'npy')  # Supporting Data Types
         self.op_src = self.get_extension(self.file_ext)
         self.op_dst = self.op[0]
 
@@ -183,6 +185,8 @@ class DataSetLoader:
             self.load_tfr()
         elif self.op_src == self.types[2]:
             self.load_h5()
+        elif self.op_src == self.types[3]:
+            self.load_npy()
         else:
             raise NotImplementedError("[-] Not Supported Type :(")
 
@@ -211,6 +215,8 @@ class DataSetLoader:
                 self.convert_to_tfr()
             elif self.op_dst == self.types[2]:
                 self.convert_to_h5()
+            elif self.op_dst == self.types[3]:
+                self.convert_to_npy()
             else:
                 raise NotImplementedError("[-] Not Supported Type :(")
 
@@ -242,6 +248,9 @@ class DataSetLoader:
                 else:
                     self.raw_data = np.concatenate((self.raw_data, hf['images']))
 
+    def load_npy(self):
+        self.raw_data = np.squeeze(np.load(self.file_names), axis=0)
+
     def convert_to_img(self):
         raw_data_shape = self.raw_data.shape  # (N, H * W * C)
 
@@ -266,6 +275,9 @@ class DataSetLoader:
     def convert_to_h5(self):
         with h5py.File(self.save_file_name, 'w') as f:
             f.create_dataset("images", data=self.raw_data)
+
+    def convert_to_npy(self):
+        np.save(self.save_file_name, self.raw_data)
 
 
 class MNISTDataSet:
