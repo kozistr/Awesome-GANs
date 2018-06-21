@@ -68,12 +68,12 @@ def main():
             global_step = 0
             print('[-] No checkpoint file found')
 
-        start_epoch = global_step // (ds.num_images // train_step['batch_size'])
+        start_epoch = global_step // (ds.n_images // train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        rnd = np.random.randint(0, ds.num_images_val)
+        rnd = np.random.randint(0, ds.n_images_val)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
         sample_x_hr, sample_x_lr = \
             np.reshape(sample_x_hr, model.hr_image_shape[1:]),\
@@ -99,13 +99,13 @@ def main():
                 model.g_lr *= lr_decay_rate
 
             pointer = 0
-            for i in range(ds.num_images // train_step['batch_size']):
+            for i in range(ds.n_images // train_step['batch_size']):
                 start = pointer
                 pointer += train_step['batch_size']
 
-                if pointer > ds.num_images:  # if 1 epoch is ended
+                if pointer > ds.n_images:  # if 1 epoch is ended
                     # Shuffle training DataSet
-                    perm = np.arange(ds.num_images)
+                    perm = np.arange(ds.n_images)
                     np.random.shuffle(perm)
 
                     hr, lr = hr[perm], lr[perm]
