@@ -5,7 +5,6 @@ from __future__ import division
 import os
 import cv2
 import h5py
-import pickle as p
 import numpy as np
 import tensorflow as tf
 
@@ -277,6 +276,8 @@ class CiFarDataSet:
 
     @staticmethod
     def unpickle(file):
+        import pickle as p
+
         # WARN: Only for python3, NOT FOR python2
         with open(file, 'rb') as f:
             return p.load(f, encoding='bytes')
