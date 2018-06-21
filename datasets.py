@@ -893,8 +893,6 @@ class Div2KDataSet:
         self.div2k()  # load DIV2K DataSet
 
     def div2k(self):
-        import cv2
-        import scipy.misc
 
         def _get_image(path):
             img = cv2.imread(path)
@@ -902,12 +900,12 @@ class Div2KDataSet:
             return img
 
         def hr_pre_process(img):
-            img = scipy.misc.imresize(img, size=(self.input_hr_height, self.input_hr_width), interp='bilinear')
+            img = imresize(img, size=(self.input_hr_height, self.input_hr_width), interp='bilinear')
             # img = cv2.resize(img, (self.input_hr_height, self.input_hr_width), interpolation=cv2.INTER_AREA)
             return img
 
         def lr_pre_process(img):
-            img = scipy.misc.imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
+            img = imresize(img, size=(self.input_lr_height, self.input_lr_width), interp='bicubic')
             # img = cv2.resize(img, (self.input_lr_height, self.input_lr_width), interpolation=cv2.INTER_CUBIC)
             return img
 
