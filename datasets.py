@@ -376,11 +376,11 @@ class CiFarDataSet:
     def cifar_10(self):
         self.n_classes = 10  # labels
 
-        train_batch_1 = unpickle("{0}/data_batch_1".format(self.ds_path))
-        train_batch_2 = unpickle("{0}/data_batch_2".format(self.ds_path))
-        train_batch_3 = unpickle("{0}/data_batch_3".format(self.ds_path))
-        train_batch_4 = unpickle("{0}/data_batch_4".format(self.ds_path))
-        train_batch_5 = unpickle("{0}/data_batch_5".format(self.ds_path))
+        train_batch_1 = self.unpickle("{0}/data_batch_1".format(self.ds_path))
+        train_batch_2 = self.unpickle("{0}/data_batch_2".format(self.ds_path))
+        train_batch_3 = self.unpickle("{0}/data_batch_3".format(self.ds_path))
+        train_batch_4 = self.unpickle("{0}/data_batch_4".format(self.ds_path))
+        train_batch_5 = self.unpickle("{0}/data_batch_5".format(self.ds_path))
 
         # training data & label
         train_data = np.concatenate([
@@ -406,7 +406,7 @@ class CiFarDataSet:
                                                        self.input_channel], order='F'), 1, 2)
 
         # test data & label
-        test_batch = unpickle("{0}/test_batch".format(self.ds_path))
+        test_batch = self.unpickle("{0}/test_batch".format(self.ds_path))
 
         test_data = test_batch[b'data']
         test_labels = np.array(test_batch[b'labels'])
@@ -425,19 +425,19 @@ class CiFarDataSet:
                                  random_state=self.random_state)
 
             self.valid_images = valid_images
-            self.valid_labels = one_hot(valid_labels, self.n_classes)
+            self.valid_labels = self.one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
         self.test_images = test_images
 
-        self.train_labels = one_hot(train_labels, self.n_classes)
-        self.test_labels = one_hot(test_labels, self.n_classes)
+        self.train_labels = self.one_hot(train_labels, self.n_classes)
+        self.test_labels = self.one_hot(test_labels, self.n_classes)
 
     def cifar_100(self):
         self.n_classes = 100  # labels
 
         # training data & label
-        train_batch = unpickle("{0}/train".format(self.ds_path))
+        train_batch = self.unpickle("{0}/train".format(self.ds_path))
 
         train_data = np.concatenate([train_batch[b'data']], axis=0)
         train_labels = np.concatenate([train_batch[b'fine_labels']], axis=0)
@@ -447,7 +447,7 @@ class CiFarDataSet:
                                                        self.input_channel], order='F'), 1, 2)
 
         # test data & label
-        test_batch = unpickle("{0}/test".format(self.ds_path))
+        test_batch = self.unpickle("{0}/test".format(self.ds_path))
 
         test_data = np.concatenate([test_batch[b'data']], axis=0)
         test_labels = np.concatenate([test_batch[b'fine_labels']], axis=0)
@@ -464,13 +464,13 @@ class CiFarDataSet:
                                  random_state=self.random_state)
 
             self.valid_images = valid_images
-            self.valid_labels = one_hot(valid_labels, self.n_classes)
+            self.valid_labels = self.one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
         self.test_images = test_images
 
-        self.train_labels = one_hot(train_labels, self.n_classes)
-        self.test_labels = one_hot(test_labels, self.n_classes)
+        self.train_labels = self.one_hot(train_labels, self.n_classes)
+        self.test_labels = self.one_hot(test_labels, self.n_classes)
 
 
 class CelebADataSet:
