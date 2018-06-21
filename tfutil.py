@@ -211,3 +211,25 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
                                  dtype=x.dtype)
 
         return tf.maximum(_alpha * x, x)
+
+
+# Losses
+
+def l1_loss(x, y):
+    return tf.reduce_mean(tf.abs(x - y))
+
+
+def mse_loss(x, y):  # l2_loss
+    return tf.reduce_mean(tf.squared_difference(x=x, y=y))
+
+
+def rmse_loss(x, y):
+    return tf.sqrt(mse_loss(x, y))
+
+
+def sce_loss(data, label):
+    return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=data, labels=label))
+
+
+def softce_loss(data, label):
+    return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=data, labels=label))
