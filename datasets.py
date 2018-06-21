@@ -237,16 +237,36 @@ class DataSetLoader:
         self.raw_data = tf.data.TFRecordDataset(self.file_names, compression_type='', buffer_size=self.buffer_size)
         self.raw_data = self.raw_data.map(self.parse_tfr_tf, num_parallel_calls=self.n_threads)
 
-    def load_h5(self):
+    def load_h5(self, size=0, offset=0):
         init = True
 
-        for fl in self.file_list:
+        for fl in self.file_list:  # For multiple .h5 files
             with h5py.File(fl, 'r') as hf:
-                if init:
-                    self.raw_data = hf['images']
-                    init = False
+                data = hf['images']
+                full_size = len(data)
+
+                if size == 0:
+                    size = full_size
+
+                n_chunks = int(np.ceil(full_size / size))
+                if offset >= n_chunks:
+                    print("[*] Looping from back to start.")
+                    offset %= n_chunks
+                if offset == n_chunks - 1:
+                    print("[-] Not enough data available, clipping to end.")
+                    data = data[offset * size:]
                 else:
-                    self.raw_data = np.concatenate((self.raw_data, hf['images']))
+                    data = data[offset * size:(offset + 1) * size]
+
+                data = np.array(data, dtype=np.uint8)
+                print("[+] ", fl, " => Image size : ", data.shape)
+
+                if init:
+                    self.raw_data = data
+                    init = False
+                    continue
+                else:
+                    self.raw_data = np.concatenate((self.raw_data, data))
 
     def load_npy(self):
         self.raw_data = np.rollaxis(np.squeeze(np.load(self.file_names), axis=0), 0, 3)
