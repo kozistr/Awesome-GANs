@@ -154,7 +154,7 @@ class DataSetLoader:
         elif self.op_src == self.types[2]:
             self.load_h5()
         else:
-            raise ValueError("[-] Not Supported Type :(")
+            raise NotImplementedError("[-] Not Supported Type :(")
 
         self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
 
@@ -177,7 +177,7 @@ class DataSetLoader:
             elif self.op_dst == self.types[2]:
                 self.convert_to_h5()
             else:
-                raise ValueError("[-] Not Supported Type :(")
+                raise NotImplementedError("[-] Not Supported Type :(")
 
     def load_img(self):
         self.raw_data = np.zeros((len(self.file_list), self.input_height * self.input_width * self.input_channel),
@@ -208,12 +208,13 @@ class DataSetLoader:
         for data in self.raw_data:
             ex = tf.train.Example(features=tf.train.Features(feature={
                 'shape': tf.train.Feature(int64_list=tf.train.Int64List(value=data.shape)),
-                'data': tf.train.Feature(bytes_list=tf.train.BytesList(value=[data.tostring()]))})
-            )
+                'data': tf.train.Feature(bytes_list=tf.train.BytesList(value=[data.tostring()]))
+            }))
             self.tfr_writer.write(ex.SerializeToString())
 
     def convert_to_h5(self):
-        pass
+        with h5py.File(self.save_file_name, 'w') as f:
+            f.create_dataset("images", data=self.raw_data)
 
 
 class MNISTDataSet:
