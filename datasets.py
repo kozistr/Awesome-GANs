@@ -502,27 +502,21 @@ class CelebADataSet:
     """
 
     def __init__(self,
-                 input_height=64, input_width=64, input_channel=3, attr_labels=(),
-                 output_height=64, output_width=64, output_channel=3,
-                 num_threads=30, split_rate=0.2, is_split=False, ds_path="", ds_type="CelebA"):
+                 height=64, width=64, channel=3, attr_labels=(),
+                 n_threads=30, split_rate=0.2, is_split=False, ds_path="", ds_type="CelebA"):
 
         """
         # General Settings
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: image height, default 64
+        :param width: image width, default 64
+        :param channel: image channel, default 3 (RGB)
         - in case of CelebA, image size is 64x64x3(HWC).
         - in case of CelebA-HQ, image size is 1024x1024x3(HWC)
         :param attr_labels: attributes of Celeb-A image, default empty tuple
         - in case of CelebA, the number of attributes is 40
 
-        # Output Settings
-        :param output_height: output images height, default 64
-        :param output_width: output images width, default 64
-        :param output_channel: output images channel, default 3
-
         # Pre-Processing Option
-        :param num_threads: the number of threads, default 30
+        :param n_threads: the number of threads, default 30
         :param split_rate: image split rate (into train & test), default 0.2
         :param is_split: splitting train DataSet into train/val, default False
 
@@ -531,9 +525,9 @@ class CelebADataSet:
         :param ds_type: which DataSet, default CelebA
         """
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
         '''
         # Available attributes
         [
@@ -545,13 +539,9 @@ class CelebADataSet:
         ]
         '''
         self.attr_labels = attr_labels
-        self.image_shape = [-1,  self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [-1,  self.height, self.width, self.channel]  # (N, H, W, C)
 
-        self.output_height = output_height
-        self.output_width = output_width
-        self.output_channel = output_channel
-
-        self.num_threads = num_threads
+        self.n_threads = n_threads
         self.split_rate = split_rate
         self.is_split = is_split
         self.mode = 'w'
@@ -599,7 +589,7 @@ class CelebADataSet:
                 # Converting...
                 ii = [i for i in range(self.num_images)]
 
-                pool = Pool(self.num_threads)
+                pool = Pool(self.n_threads)
                 print(pool.map(npy2png, ii))
         else:
             raise ValueError("[-] It muse be CelebA or CelebA-HQ")
@@ -607,7 +597,7 @@ class CelebADataSet:
         self.celeb_a()  # load CelebA / CelebA-HQ
 
     def celeb_a(self):
-        size = self.input_height  # self.input_width
+        size = self.height  # self.input_width
         self.ds_name += str(size) + '.h5'
 
         self.labels = self.load_attr()    # selected attributes info (list)
@@ -622,8 +612,7 @@ class CelebADataSet:
                 self.files = glob(os.path.join(self.ds_path, '/*.png'))
             self.files = np.sort(self.files)
 
-            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
-                                 dtype=np.uint8)
+            self.data = np.zeros((len(self.files), self.height * self.width * self.channel), dtype=np.uint8)
 
             print("[*] Image size : ", self.data.shape)
 
@@ -639,7 +628,7 @@ class CelebADataSet:
 
             for n, f_name in tqdm(enumerate(self.files)):
                 if self.ds_type == "CelebA":
-                    image = get_image(f_name, self.input_width, self.input_height)  # resize to (iw, ih)
+                    image = get_image(f_name, self.width, self.height)  # resize to (iw, ih)
                 else:  # CelebA-HQ
                     image = imread(f_name).astype(np.float16)  # already aligned with 1024x1024x3
 
@@ -705,7 +694,7 @@ class CelebADataSet:
 
     def concat_data(self, img, label):
         label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]),
-                        [1, self.input_height, self.input_width, 1])
+                        [1, self.height, self.width, 1])
 
         return np.concatenate([img, label], axis=3)
 
