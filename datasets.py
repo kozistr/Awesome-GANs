@@ -524,7 +524,8 @@ class CelebADataSet:
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
-                 ds_path=None, ds_type="CelebA"):
+                 ds_path=None, ds_type="CelebA",
+                 use_save=False, save_type='to_tfr', save_file_name=""):
 
         """
         # General Settings
@@ -542,8 +543,11 @@ class CelebADataSet:
         :param split_rate: image split rate (into train & val)
 
         # DataSet Settings
-        :param ds_path: DataSet Path
+        :param ds_path: DataSet's Path
         :param ds_type: which DataSet is
+        :param use_save: saving into another file format
+        :param save_type: file format to save
+        :param save_file_name: file name to save
         """
 
         self.height = height
@@ -560,7 +564,7 @@ class CelebADataSet:
         ]
         '''
         self.attr_labels = attr_labels
-        self.image_shape = [-1,  self.height, self.width, self.channel]  # (N, H, W, C)
+        self.image_shape = (self.height, self.width, self.channel)  # (H, W, C)
 
         self.n_threads = n_threads
         self.use_split = use_split
@@ -577,6 +581,12 @@ class CelebADataSet:
         self.images = []
         self.labels = {}
 
+        """
+        Expected DataSet's Path Example
+        CelebA    : CelebA/Img/img_align_celeba/
+        CelebA-HQ : CelebA-HQ/
+        Labels    : xxx/Anno/...txt
+        """
         self.ds_path = ds_path
         self.ds_type = ds_type
         self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name, ex) CelebA-128.h5
@@ -587,9 +597,9 @@ class CelebADataSet:
             raise AssertionError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
 
         if self.ds_type == "CelebA":
-            self.num_images = 202599  # the number of CelebA DataSet images
+            self.num_images = 202599  # the number of CelebA    images
         elif self.ds_type == "CelebA-HQ":
-            self.num_images = 30000   # the number of CelebA-HQ DataSet images
+            self.num_images = 30000   # the number of CelebA-HQ images
 
             tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
             if os.path.exists(tmp_path + ".dat"):
@@ -617,6 +627,12 @@ class CelebADataSet:
                 print(pool.map(npy2png, ii))
         else:
             raise NotImplemented("[-] It muse be CelebA or CelebA-HQ")
+
+        data_set = DataSetLoader(path=self.ds_path,
+                                 size=self.image_shape,
+                                 use_image_scaling=True,
+                                 image_scale='0,1')
+        self.images = data_set.raw_data
 
         self.celeb_a()  # load CelebA / CelebA-HQ
 
