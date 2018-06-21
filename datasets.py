@@ -130,7 +130,8 @@ class DataSetLoader:
         return img
 
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
-                 buffer_size=4096, n_threads=8):
+                 buffer_size=4096, n_threads=8,
+                 use_image_scaling=True, image_scale='0,1'):
 
         self.op = name.split('_')
 
@@ -212,6 +213,12 @@ class DataSetLoader:
                 self.convert_to_h5()
             else:
                 raise NotImplementedError("[-] Not Supported Type :(")
+
+        self.use_image_scaling = use_image_scaling
+        self.image_scale = image_scale
+
+        if self.use_image_scaling:
+            self.raw_data = self.img_scaling(self.raw_data, self.image_scale)
 
     def load_img(self):
         self.raw_data = np.zeros((len(self.file_list), self.input_height * self.input_width * self.input_channel),
