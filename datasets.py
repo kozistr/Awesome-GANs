@@ -202,7 +202,17 @@ class DataSetLoader:
                     self.raw_data = np.concatenate((self.raw_data, hf['images']))
 
     def convert_to_img(self):
-        pass
+        raw_data_shape = self.raw_data.shape  # (N, H * W * C)
+
+        try:
+            assert os.path.exists(self.save_file_name)
+        except AssertionError:
+            print("[-] There's no %s :(" % self.save_file_name)
+            print("[*] Make directory at %s... " % self.save_file_name)
+            os.mkdir(self.save_file_name)
+
+        for idx in range(raw_data_shape[0]):
+            cv2.imwrite("%d.png" % idx, cv2.COLOR_RGB2BGR)
 
     def convert_to_tfr(self):
         for data in self.raw_data:
