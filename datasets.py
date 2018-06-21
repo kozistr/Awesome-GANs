@@ -585,7 +585,7 @@ class CelebADataSet:
         Expected DataSet's Path Example
         CelebA    : CelebA/Img/img_align_celeba/
         CelebA-HQ : CelebA-HQ/
-        Labels    : xxx/Anno/...txt
+        Labels    : CelebA/Anno/...txt
         """
         self.ds_path = ds_path
         self.ds_type = ds_type
@@ -602,11 +602,11 @@ class CelebADataSet:
             self.num_images = 30000   # the number of CelebA-HQ images
 
             tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
-            if os.path.exists(tmp_path + ".dat"):
+            if os.path.exists(tmp_path + "dat"):
                 raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
                                         "[-] plz, use original PGGAN repo or"
                                         " this repo https://github.com/nperraud/download-celebA-HQ")
-            elif os.path.exists(tmp_path + ".npy"):
+            elif os.path.exists(tmp_path + "npy"):
                 def npy2png(i):
                     try:
                         data = np.load('imgHQ%05d.npy' % i)
@@ -617,8 +617,8 @@ class CelebADataSet:
                     im.save('imgHQ%05d.png' % i)
                     return True
 
-                print("[*] You should convert .npy image file to .png image file for comfort :)")
-                print("[*] But, I'll do it for you automatically :) It'll take some times~")
+                print("[*] You should convert .npy files to .png image files for comfort :)")
+                print("[*] But, I'll do it for you :) It'll take some times~")
 
                 # Converting...
                 ii = [i for i in range(self.num_images)]
