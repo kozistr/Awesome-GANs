@@ -124,7 +124,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
-1. Implement TempoGAN
+1. ~~Implement TempoGAN~~ - later when DataSet is ready
 2. Support both .h5 and .tfrecord for DataSets (Modularize)
 3. Upload PGGAN 64x64, 128x128 Results
 4. Fix PGGAN, SGAN, SGAN++
