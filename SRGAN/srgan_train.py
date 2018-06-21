@@ -39,9 +39,9 @@ def save_images(images, size, image_path):
 def main():
     start_time = time.time()  # Clocking start
 
-    # Div2K -  Track 1: Bicubic downscaling - x4 DataSet load
+    # Div2K - Track 1: Bicubic downscaling - x4 DataSet load
     with tf.device('/cpu:0'):
-        ds = DataSet()
+        ds = DataSet(ds_path="D:/DataSet/DIV2K/", ds_name="X4")
         hr, lr = ds.hr_images, ds.lr_images
 
     print("[+] Loaded HR image ", hr.shape)
