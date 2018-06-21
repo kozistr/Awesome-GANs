@@ -119,6 +119,16 @@ class DataSetLoader:
         data = ex.features.feature['data'].bytes_list.value[0]
         return np.fromstring(data, np.uint8).reshape(shape)
 
+    @staticmethod
+    def img_scaling(img, scale='0,1'):
+        if scale == '0,1':
+            img /= 255.
+        elif scale == '-1,1':
+            img = (img / 127.5) - 1.
+        else:
+            raise ValueError("[-] Only '0,1' or '-1,1' please")
+        return img
+
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
                  buffer_size=4096, n_threads=8):
 
