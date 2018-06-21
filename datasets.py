@@ -103,7 +103,25 @@ class DataSetLoader:
         else:
             return cv2.imresize(img, size, interp)
 
-    def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name=''):
+    @staticmethod
+    def parse_tfr_tf(record):
+        features = tf.parse_single_example(record, features={
+            'shape': tf.FixedLenFeature([3], tf.int64),
+            'data': tf.FixedLenFeature([], tf.string)})
+        data = tf.decode_raw(features['data'], tf.uint8)
+        return tf.reshape(data, features['shape'])
+
+    @staticmethod
+    def parse_tfr_np(record):
+        ex = tf.train.Example()
+        ex.ParseFromString(record)
+        shape = ex.features.feature['shape'].int64_list.value
+        data = ex.features.feature['data'].bytes_list.value[0]
+        return np.fromstring(data, np.uint8).reshape(shape)
+
+    def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
+                 buffer_size=4096, n_threads=8):
+
         self.op = name.split('_')
 
         try:
@@ -131,6 +149,9 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Path does not exist :(")
 
+        self.buffer_size = buffer_size
+        self.n_threads = n_threads
+
         self.file_list = sorted(os.listdir(self.path))
         self.file_ext = self.file_list[0].split('.')[-1]
         self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
@@ -148,8 +169,6 @@ class DataSetLoader:
         if self.op_src == self.types[0]:
             self.load_img()
         elif self.op_src == self.types[1]:
-            self.tfr_reader = None
-
             self.load_tfr()
         elif self.op_src == self.types[2]:
             self.load_h5()
@@ -178,7 +197,6 @@ class DataSetLoader:
             elif self.op_dst == self.types[1]:
                 self.tfr_opt = tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.NONE)
                 self.tfr_writer = tf.python_io.TFRecordWriter(self.save_file_name + ".tfrecords", self.tfr_opt)
-
                 self.convert_to_tfr()
             elif self.op_dst == self.types[2]:
                 self.convert_to_h5()
@@ -193,8 +211,8 @@ class DataSetLoader:
             self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width)).flatten()
 
     def load_tfr(self):
-        with tf.TFRecordReader(self.path) as tfr:
-            pass
+        self.raw_data = tf.data.TFRecordDataset(self.file_names, compression_type='', buffer_size=self.buffer_size)
+        self.raw_data = self.raw_data.map(self.parse_tfr_tf, num_parallel_calls=self.n_threads)
 
     def load_h5(self):
         init = True
