@@ -103,7 +103,7 @@ class DataSetLoader:
         else:
             return cv2.imresize(img, size, cv2.INTER_CUBIC)
 
-    def __init__(self, path, size=None, name='to_tfr', save_file_name=''):
+    def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name=''):
         self.op = name.split('_')
 
         try:
@@ -131,11 +131,10 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Path does not exist :(")
 
-        self.save_file_name = save_file_name
         self.file_list = sorted(os.listdir(self.path))
         self.file_ext = self.file_list[0].split('.')[-1]
         self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
-        self.raw_data = np.ndarray([])  # (N, H, W, C)
+        self.raw_data = np.ndarray([])  # (N, H * W * C)
 
         self.types = ('img', 'tfr', 'h5')  # Supporting Data Types
         self.op_src = self.get_extension(self.file_ext)
@@ -159,24 +158,33 @@ class DataSetLoader:
 
         self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
 
-        if self.op_dst == self.types[0]:
-            self.convert_to_img()
-        elif self.op_dst == self.types[1]:
-            self.tfr_opt = tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.NONE)
-            self.tfr_writer = tf.python_io.TFRecordWriter(self.save_file_name + ".tfrecords", self.tfr_opt)
+        self.use_save = use_save
+        self.save_file_name = save_file_name
 
-            self.convert_to_tfr()
-        elif self.op_dst == self.types[2]:
-            self.convert_to_h5()
-        else:
-            raise ValueError("[-] Not Supported Type :(")
+        if self.use_save:
+            try:
+                assert self.save_file_name
+            except AssertionError:
+                raise AssertionError("[-] Empty save-file name :(")
+
+            if self.op_dst == self.types[0]:
+                self.convert_to_img()
+            elif self.op_dst == self.types[1]:
+                self.tfr_opt = tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.NONE)
+                self.tfr_writer = tf.python_io.TFRecordWriter(self.save_file_name + ".tfrecords", self.tfr_opt)
+
+                self.convert_to_tfr()
+            elif self.op_dst == self.types[2]:
+                self.convert_to_h5()
+            else:
+                raise ValueError("[-] Not Supported Type :(")
 
     def load_img(self):
-        self.raw_data = np.zeros((len(self.file_list), self.input_height, self.input_width, self.input_channel),
+        self.raw_data = np.zeros((len(self.file_list), self.input_height * self.input_width * self.input_channel),
                                  dtype=np.uint8)
 
         for i, fn in tqdm(enumerate(self.file_names)):
-            self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width))
+            self.raw_data[i] = self.get_img(fn, (self.input_height, self.input_width)).flatten()
 
     def load_tfr(self):
         with tf.TFRecordReader(self.path) as tfr:
