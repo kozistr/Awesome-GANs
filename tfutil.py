@@ -227,6 +227,10 @@ def rmse_loss(x, y):
     return tf.sqrt(mse_loss(x, y))
 
 
+def psnr_loss(x, y):
+    return 20. * tf.log(tf.reduce_max(x) / mse_loss(x, y))
+
+
 def sce_loss(data, label):
     return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=data, labels=label))
 
