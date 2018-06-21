@@ -44,9 +44,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, sample_y = mnist.train.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+        _, sample_y = mnist.train.next_batch(model.sample_num)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -94,9 +92,9 @@ def main():
                       " C loss : {:.8f}".format(c_loss))
 
                 # Training G model with sample image and noise
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples = s.run(model.g,
                                 feed_dict={
-                                    model.x: sample_x,
                                     model.y: sample_y,
                                     model.z: sample_z,
                                 })

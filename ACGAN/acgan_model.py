@@ -229,20 +229,13 @@ class ACGAN:
         self.c_loss = c_real_loss + c_fake_loss
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
-        # tf.summary.histogram("d_real", d_real)
-        # tf.summary.histogram("d_fake", d_fake)
-        # tf.summary.histogram("c_real", c_real)
-        # tf.summary.histogram("c_fake", c_fake)
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("c_real_loss", c_real_loss)
-        tf.summary.scalar("c_fake_loss", c_fake_loss)
-        tf.summary.scalar("c_loss", self.c_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/c_real_loss", c_real_loss)
+        tf.summary.scalar("loss/c_fake_loss", c_fake_loss)
+        tf.summary.scalar("loss/c_loss", self.c_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
