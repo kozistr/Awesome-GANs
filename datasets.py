@@ -378,7 +378,7 @@ class CiFarDataSet:
         elif self.ds_name == "cifar-100":
             self.cifar_100()  # loading Cifar-100
         else:
-            raise NotImplementedError
+            raise NotImplementedError("[-] Only 'cifar-10' or 'cifar-100'")
 
     def cifar_10(self):
         self.n_classes = 10  # labels
