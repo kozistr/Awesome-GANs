@@ -13,7 +13,6 @@ from PIL import Image
 from glob import glob
 from tqdm import tqdm
 from multiprocessing import Pool
-from scipy.misc import imread, imresize
 from sklearn.model_selection import train_test_split
 
 
@@ -720,13 +719,12 @@ class ImageNetDataSet:
 
 class Div2KDataSet:
 
-    def __init__(self, batch_size=128,
-                 hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
-                 use_split=False, split_rate=0.2, random_state=42, n_threads=8):
+    def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
+                 use_split=False, split_rate=0.1, random_state=42, n_threads=8,
+                 ds_path=None, ds_name=None, use_save=False, save_type='to_h5', save_file_name=None):
 
         """
         # General Settings
-        :param batch_size: training batch size
         :param hr_height: input HR image height, default 384
         :param hr_width: input HR image width, default 384
         :param lr_height: input LR image height, default 96
@@ -735,126 +733,73 @@ class Div2KDataSet:
         - in case of Div2K - ds x4, image size is 384 x 384 x 3 (HWC).
 
         # Pre-Processing Option
-        :param split_rate: image split rate (into train & test), default 0.2
+        :param split_rate: image split rate (into train & test), default 0.1
         :param random_state: random seed for shuffling, default 42
-        :param num_threads: the number of threads for multi-threading, default 8
+        :param n_threads: the number of threads for multi-threading, default 8
+
+        # DataSet Option
+        :param ds_path: DataSet's Path, default None
+        :param ds_name: DataSet's Name, default None
+        :param use_save: saving into another file format
+        :param save_type: file format to save
+        :param save_file_name: file name to save
         """
 
-        self.batch_size = batch_size
         self.hr_height = hr_height
         self.hr_width = hr_width
         self.lr_height = lr_height
         self.lr_width = lr_width
         self.channel = channel
+        self.hr_shape = (self.hr_height, self.hr_width, self.channel)
+        self.lr_shape = (self.lr_height, self.lr_width, self.channel)
 
+        self.use_split = use_split
         self.split_rate = split_rate
         self.random_state = random_state
-        self.num_threads = num_threads  # change this value to the fitted value for ur system
-        self.mode = 'w'
+        self.num_threads = n_threads  # change this value to the fitted value for ur system
 
-        self.path = ""   # DataSet path
-        self.files_hr, self.files_lr = [], []  # HR/LR files' name
-        self.data_hr, self.data_lr = [], []   # loaded images
-        self.images = []
-        self.num_images = 800
-        self.num_images_val = 100
-        self.hr_ds_name = "div2k-hr-h5"  # DataSet Name
-        self.lr_ds_name = "div2k-lr-h5"  # DataSet Name
-
-        self.div2k()  # load DIV2K DataSet
-
-    def div2k(self):
-
-        def _get_image(path):
-            img = cv2.imread(path)
-            # return scipy.misc.imread(path, mode='RGB')
-            return img
-
-        def hr_pre_process(img):
-            img = imresize(img, size=(self.hr_height, self.hr_width), interp='bilinear')
-            # img = cv2.resize(img, (self.hr_height, self.hr_width), interpolation=cv2.INTER_AREA)
-            return img
-
-        def lr_pre_process(img):
-            img = imresize(img, size=(self.lr_height, self.lr_width), interp='bicubic')
-            # img = cv2.resize(img, (self.lr_height, self.lr_width), interpolation=cv2.INTER_CUBIC)
-            return img
-
-        if os.path.exists(DataSets[self.hr_ds_name]) and os.path.exists(DataSets[self.lr_ds_name]):
-            self.mode = 'r'
-
-        if self.mode == 'w':
-            self.files_hr = np.sort(glob(os.path.join(DataSets['div2k-hr'], "*.png")))
-            self.files_lr = np.sort(glob(os.path.join(DataSets['div2k-lr'], "*.png")))
-
-            self.data_hr = np.zeros((len(self.files_hr),
-                                     self.hr_height * self.hr_width * self.channel),
-                                    dtype=np.uint8)
-            self.data_lr = np.zeros((len(self.files_lr),
-                                     self.lr_height * self.lr_width * self.channel),
-                                    dtype=np.uint8)
-
-            print("[*] HR Image size : ", self.data_hr.shape)
-            print("[*] LR Image size : ", self.data_lr.shape)
-
-            try:
-                assert ((len(self.files_hr) == self.num_images) and (len(self.files_lr) == self.num_images))
-            except AssertionError:
-                print("[-] The number of HR images : %d" % len(self.files_hr))
-                print("[-] The number of LR images : %d" % len(self.files_lr))
-                raise AssertionError
-
-            for n, f_name in tqdm(enumerate(self.files_hr)):
-                self.data_hr[n] = hr_pre_process(_get_image(f_name)).flatten()
-
-            for n, f_name in tqdm(enumerate(self.files_lr)):
-                self.data_lr[n] = lr_pre_process(_get_image(f_name)).flatten()
-
-            # write .h5 file for reusing later...
-            with h5py.File(''.join([DataSets[self.hr_ds_name]]), 'w') as f:
-                f.create_dataset("images", data=self.data_hr)
-
-            with h5py.File(''.join([DataSets[self.lr_ds_name]]), 'w') as f:
-                f.create_dataset("images", data=self.data_lr)
-
-        self.images = self.load_data(size=self.num_images)
-
-    def load_data(self, size, offset=0):
         """
-            From great jupyter notebook by Tim Sainburg:
-            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
+        Expected ds_path : div2k/...
+        Expected ds_name : X4
         """
-        ds_names = [self.hr_ds_name, self.lr_ds_name]
-        hr_lr_images = []
+        self.ds_path = ds_path
+        self.ds_name = ds_name
+        self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
+        self.ds_lr_path = self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
-        for ds_name in ds_names:
-            with h5py.File(DataSets[ds_name], 'r') as hf:
-                faces = hf['images']
+        try:
+            assert self.ds_path
+        except AssertionError:
+            raise AssertionError("[-] DIV2K DataSet Path is required!")
 
-                full_size = len(faces)
-                if size is None:
-                    size = full_size
+        self.use_save = use_save
+        self.save_type = save_type
+        self.save_file_name = save_file_name
 
-                n_chunks = int(np.ceil(full_size / size))
-                if offset >= n_chunks:
-                    print("[*] Looping from back to start.")
-                    offset = offset % n_chunks
+        try:
+            if self.use_save:
+                assert self.save_file_name
+        except AssertionError:
+            raise AssertionError("[-] save-file/folder-name is required!")
 
-                if offset == n_chunks - 1:
-                    print("[-] Not enough data available, clipping to end.")
-                    faces = faces[offset * size:]
-                else:
-                    faces = faces[offset * size:(offset + 1) * size]
+        self.n_images = 800
+        self.n_images_val = 100
 
-                # [0, 255] to [-1, 1]
-                faces = np.array(faces, dtype=np.float32)
-                faces = (faces / (255 / 2.)) - 1.
+        self.hr_images = DataSetLoader(path=self.ds_hr_path,
+                                       size=self.hr_shape,
+                                       use_save=self.use_save,
+                                       name=self.save_type,
+                                       save_file_name=self.save_file_name,
+                                       use_image_scaling=True,
+                                       image_scale='-1,1').raw_data  # numpy arrays
 
-                print("[+] Image size : ", faces.shape)
-
-                hr_lr_images.append(faces)
-
-        return hr_lr_images
+        self.lr_images = DataSetLoader(path=self.ds_lr_path,
+                                       size=self.lr_shape,
+                                       use_save=self.use_save,
+                                       name=self.save_type,
+                                       save_file_name=self.save_file_name,
+                                       use_image_scaling=True,
+                                       image_scale='-1,1').raw_data  # numpy arrays
 
 
 class UrbanSoundDataSet:
