@@ -156,6 +156,12 @@ class DataSetLoader:
         else:
             raise NotImplementedError("[-] Not Supported Type :(")
 
+        # Random Shuffle
+        order = np.arange(self.raw_data.shape[0])
+        np.random.RandomState(1337).shuffle(order)
+        self.raw_data = self.raw_data[order]
+
+        # Clip [0, 255]
         self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
 
         self.use_save = use_save
