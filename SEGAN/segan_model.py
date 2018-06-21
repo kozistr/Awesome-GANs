@@ -92,7 +92,7 @@ class SEGAN:
         # ops
         self.ops = ops.VBN()
 
-        self.num_blocks = [16, 32, 32, 64, 64, 128, 128, 256, 256, 512, 1024
+        self.num_blocks = [16, 32, 32, 64, 64, 128, 128, 256, 256, 512, 1024]
 
         self.build_segan()  # build SEGAN model
 
