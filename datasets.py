@@ -249,7 +249,7 @@ class DataSetLoader:
                     self.raw_data = np.concatenate((self.raw_data, hf['images']))
 
     def load_npy(self):
-        self.raw_data = np.squeeze(np.load(self.file_names), axis=0)
+        self.raw_data = np.rollaxis(np.squeeze(np.load(self.file_names), axis=0), 0, 3)
 
     def convert_to_img(self):
         raw_data_shape = self.raw_data.shape  # (N, H * W * C)
