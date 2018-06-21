@@ -503,7 +503,7 @@ class CelebADataSet:
 
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
-                 n_threads=30, split_rate=0.2, is_split=False, ds_path="", ds_type="CelebA"):
+                 n_threads=30, use_split=False, split_rate=0.2, ds_path=None, ds_type="CelebA"):
 
         """
         # General Settings
@@ -517,8 +517,8 @@ class CelebADataSet:
 
         # Pre-Processing Option
         :param n_threads: the number of threads, default 30
+        :param use_split: splitting train DataSet into train/val, default False
         :param split_rate: image split rate (into train & test), default 0.2
-        :param is_split: splitting train DataSet into train/val, default False
 
         # DataSet Settings
         :param ds_path: DataSet Path, default ""
@@ -542,8 +542,9 @@ class CelebADataSet:
         self.image_shape = [-1,  self.height, self.width, self.channel]  # (N, H, W, C)
 
         self.n_threads = n_threads
+        self.use_split = use_split
         self.split_rate = split_rate
-        self.is_split = is_split
+
         self.mode = 'w'
 
         self.path = ""      # DataSet's path
@@ -559,8 +560,10 @@ class CelebADataSet:
         self.ds_type = ds_type
         self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name, ex) CelebA-128.h5
 
-        if self.ds_path == "":
-            raise FileNotFoundError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
+        try:
+            assert self.ds_path
+        except AssertionError:
+            raise AssertionError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
 
         if self.ds_type == "CelebA":
             self.num_images = 202599  # the number of CelebA DataSet images
@@ -592,7 +595,7 @@ class CelebADataSet:
                 pool = Pool(self.n_threads)
                 print(pool.map(npy2png, ii))
         else:
-            raise ValueError("[-] It muse be CelebA or CelebA-HQ")
+            raise NotImplemented("[-] It muse be CelebA or CelebA-HQ")
 
         self.celeb_a()  # load CelebA / CelebA-HQ
 
