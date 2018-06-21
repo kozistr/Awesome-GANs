@@ -525,7 +525,8 @@ class CelebADataSet:
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
                  ds_path=None, ds_type="CelebA",
-                 use_save=False, save_type='to_h5', save_file_name=None):
+                 use_save=False, save_type='to_h5', save_file_name=None,
+                 use_concat_data=False):
 
         """
         # General Settings
@@ -548,6 +549,7 @@ class CelebADataSet:
         :param use_save: saving into another file format
         :param save_type: file format to save
         :param save_file_name: file name to save
+        :param use_concat_data: concatenate images & labels
         """
 
         self.height = height
@@ -583,13 +585,17 @@ class CelebADataSet:
 
         """
         Expected DataSet's Path Example
-        CelebA    : CelebA/Img/img_align_celeba/
-        CelebA-HQ : CelebA-HQ/
+        CelebA    : CelebA/ (sub-folder : Anno/..., Img/... )
+        CelebA-HQ : CelebA-HQ/ (sub-folder : ...npy, ...png )
         Labels    : CelebA/Anno/...txt
+        
+        Expected DatSet's Type
+        'CelebA' or 'CelebA-HQ'
         """
         self.ds_path = ds_path
+        self.ds_image_path = ds_path + "/Img/img_aling_celeba/"
+        self.ds_label_path = ds_path + "/Anno/list_attr_celeba.txt"
         self.ds_type = ds_type
-        self.ds_name = self.ds_path + "/" + self.ds_type + "-"  # DataSet Name, ex) CelebA-128.h5
 
         try:
             assert self.ds_path
@@ -601,7 +607,7 @@ class CelebADataSet:
         elif self.ds_type == "CelebA-HQ":
             self.num_images = 30000   # the number of CelebA-HQ images
 
-            tmp_path = self.ds_path + "/" + self.ds_type + "/imgHQ00000."
+            tmp_path = self.ds_path + "/imgHQ00000."
             if os.path.exists(tmp_path + "dat"):
                 raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
                                         "[-] plz, use original PGGAN repo or"
@@ -632,6 +638,8 @@ class CelebADataSet:
         self.save_type = save_type
         self.save_file_name = save_file_name
 
+        self.use_concat_data = use_concat_data
+
         try:
             if self.use_save:
                 assert self.save_file_name
@@ -644,83 +652,11 @@ class CelebADataSet:
                                     name=self.save_type,
                                     save_file_name=self.save_file_name,
                                     use_image_scaling=True,
-                                    image_scale='0,1').raw_data
+                                    image_scale='0,1').raw_data  # numpy arrays
+        self.labels = self.load_attr()
 
-        self.celeb_a()  # load CelebA / CelebA-HQ
-
-    def celeb_a(self):
-        size = self.height  # self.input_width
-        self.ds_name += str(size) + '.h5'
-
-        self.labels = self.load_attr()    # selected attributes info (list)
-
-        if os.path.exists(self.ds_name):
-            self.mode = 'r'
-
-        if self.mode == 'w':
-            if self.ds_type == "CelebA":
-                self.files = glob(os.path.join(self.ds_path, 'Img/img_align_celeba/*.jpg'))
-            else:  # self.ds_type == "CelebA-HQ":
-                self.files = glob(os.path.join(self.ds_path, '/*.png'))
-            self.files = np.sort(self.files)
-
-            self.data = np.zeros((len(self.files), self.height * self.width * self.channel), dtype=np.uint8)
-
-            print("[*] Image size : ", self.data.shape)
-
-            try:
-                assert (len(self.files) == self.num_images)
-            except AssertionError:
-                print("[-] %d file(s) is/are missing :(" % (self.num_images - len(self.files)))
-                if self.ds_type == "CelebA-HQ":
-                    self.num_images = len(self.files)
-                    pass  # imgHQ00000.dat is valid??
-                else:
-                    raise AssertionError
-
-            for n, f_name in tqdm(enumerate(self.files)):
-                if self.ds_type == "CelebA":
-                    image = get_image(f_name, self.width, self.height)  # resize to (iw, ih)
-                else:  # CelebA-HQ
-                    image = imread(f_name).astype(np.float16)  # already aligned with 1024x1024x3
-
-                self.data[n] = image.flatten()
-
-            # saving as .h5 file for reusing later...
-            # with h5py.File(''.join([DataSets[self.ds_name]]), 'w') as f:
-            with h5py.File(self.ds_name, 'w') as f:
-                f.create_dataset("images", data=self.data)
-
-        self.images = self.load_data(size=self.num_images)
-
-    def load_data(self, size, offset=0):
-        """
-            From great jupyter notebook by Tim Sainburg:
-            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
-        """
-        with h5py.File(self.ds_name, 'r') as hf:
-            faces = hf['images']
-
-            full_size = len(faces)
-            if size is None:
-                size = full_size
-
-            n_chunks = int(np.ceil(full_size / size))
-            if offset >= n_chunks:
-                print("[*] Looping from back to start.")
-                offset %= n_chunks
-
-            if offset == n_chunks - 1:
-                print("[-] Not enough data available, clipping to end.")
-                faces = faces[offset * size:]
-            else:
-                faces = faces[offset * size:(offset + 1) * size]
-
-            faces = np.array(faces, dtype=np.float16)
-
-        print("[+] Image size : ", faces.shape)
-
-        return (faces / (255 / 2.)) - 1.  # (-1, 1)
+        if self.use_concat_data:
+            self.images = self.concat_data(self.images, self.labels)
 
     def load_attr(self):
         with open(DataSets['celeb-a-attr'], 'r') as f:
@@ -745,9 +681,7 @@ class CelebADataSet:
             return np.asarray(img_attr)
 
     def concat_data(self, img, label):
-        label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]),
-                        [1, self.height, self.width, 1])
-
+        label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]), [1, self.height, self.width, 1])
         return np.concatenate([img, label], axis=3)
 
 
