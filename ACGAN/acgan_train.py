@@ -17,13 +17,12 @@ from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/ACGAN-model.ckpt'
 }
 
 train_step = {
-    'global_step': 250001,
-    'logging_interval': 2500,
+    'global_step': 200001,
+    'logging_interval': 2000,
 }
 
 
@@ -69,7 +68,7 @@ def main():
                                              model.z: batch_z,
                                          })
 
-            d_overpowered = d_loss < g_loss / 2
+            d_overpowered = d_loss < g_loss / 2.
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
@@ -93,7 +92,7 @@ def main():
 
                 # Training G model with sample image and noise
                 sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g,
+                samples = s.run(model.g_test,
                                 feed_dict={
                                     model.y: sample_y,
                                     model.z: sample_z,
