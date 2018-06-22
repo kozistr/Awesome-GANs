@@ -14,12 +14,10 @@
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 300k*
+*Name* | *Global Step 4k* | *Global Step 8k* | *Global Step 12k*
 :---: | :---: | :---: | :---:
-**PGGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/train_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/train_100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/train_300000.png)
-
-> I just used Celeb-A instead of Celeb-A-HQ because Celeb-A-HQ DataSet's images are too bigggg to handle... :(
-> Later, i'll re-model original PGGAN repo and use pre-trained so that working properly on my style :)
+**64x64**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes004000-64.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes008000-64.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes012000-64.png)
+**128x128**   | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes004000-128.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes008000-128.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/PGGAN/gen_img/fakes012000-128.png)
 
 ## To-Do
 * Add label-penalty for G/D nets
