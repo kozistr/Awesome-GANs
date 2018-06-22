@@ -174,7 +174,7 @@ class AnoGAN:
             self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)  # disc     loss
             self.r_loss = t.l1_loss(self.x, self.g)        # residual loss
             self.ano_loss = (1. - self.lambda_) * self.r_loss + self.lambda_ * self.d_loss
-            
+
             tf.summary.scalar("loss/d_loss", self.d_loss)
             tf.summary.scalar("loss/r_loss", self.r_loss)
             tf.summary.scalar("loss/ano_loss", self.ano_loss)
@@ -203,4 +203,7 @@ class AnoGAN:
 
         # Model saver
         self.saver = tf.train.Saver(max_to_keep=1)
-        self.writer = tf.summary.FileWriter('./model/', self.s.graph)
+        if not self.detect:
+            self.writer = tf.summary.FileWriter('./orig-model/', self.s.graph)
+        else:
+            self.writer = tf.summary.FileWriter('./ano-model/', self.s.graph)
