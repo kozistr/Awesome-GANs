@@ -125,13 +125,14 @@ eps = 1e-5
 
 # Layers
 
-def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='conv2d'):
     """
     :param x: input
     :param f: filters
     :param k: kernel size
     :param s: strides
     :param pad: padding
+    :param reuse: reusable
     :param name: scope name
     :return: net
     """
@@ -141,6 +142,7 @@ def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
                             kernel_regularizer=w_reg,
                             bias_initializer=b_init,
                             padding=pad,
+                            reuse=reuse,
                             name=name)
 
 
@@ -160,13 +162,14 @@ def sub_pixel_conv2d(x, f, s=2):
     return tf.reshape(x_r, (bsize, s * a, s * b, f))
 
 
-def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
     """
     :param x: input
     :param f: filters
     :param k: kernel size
     :param s: strides
     :param pad: padding
+    :param reuse: reusable
     :param name: scope name
     :return: net
     """
@@ -176,10 +179,11 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
                                       kernel_regularizer=w_reg,
                                       bias_initializer=b_init,
                                       padding=pad,
+                                      reuse=reuse,
                                       name=name)
 
 
-def dense(x, f=1024, reuse=True, name='fc'):
+def dense(x, f=1024, reuse=None, name='fc'):
     """
     :param x: input
     :param f: fully connected units
@@ -207,8 +211,8 @@ def batch_norm(x, momentum=0.9, scaling=True, is_train=True, name="bn"):
                                          name=name)
 
 
-def instance_norm(x, affine=True, name=""):
-    with tf.variable_scope('instance_normalize-%s' % name):
+def instance_norm(x, affine=True, reuse=None, name=""):
+    with tf.variable_scope('instance_normalize-%s' % name, reuse=reuse):
         mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
 
         normalized = tf.div(x - mean, tf.sqrt(variance + eps))
