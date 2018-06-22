@@ -65,29 +65,18 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=108,  # in the paper, 108
-                     input_width=108,   # in the paper, 108
-                     input_channel=3,
-                     ds_path="/home/zero/hdd/DataSet/CelebA").images
+        ds = DataSet(height=64,
+                     width=64,
+                     channel=3,
+                     ds_path="/home/zero/hdd/DataSet/CelebA/",
+                     ds_type="CelebA").images
         # To-Do
         # Getting anomaly data
 
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
-
-        sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
-
-        # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir)
+        ds_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
 
         for epoch in range(train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
+            for batch_images in ds_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
@@ -123,9 +112,9 @@ def main():
                     model.writer.add_summary(summary, epoch)
 
                     # Training G model with sample image and noise
-                    samples = s.run(model.g,
+                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                    samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.x: sample_x,
                                         model.z: sample_z,
                                     })
 
