@@ -100,18 +100,18 @@ eps = 1e-5
 
 # Layers
 
-def conv2d(x, f=64, k=3, d=1, pad='SAME', name='conv2d'):
+def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
     """
     :param x: input
     :param f: filters
     :param k: kernel size
-    :param d: strides
+    :param s: strides
     :param pad: padding
     :param name: scope name
     :return: net
     """
     return tf.layers.conv2d(inputs=x,
-                            filters=f, kernel_size=k, strides=d,
+                            filters=f, kernel_size=k, strides=s,
                             kernel_initializer=w_init,
                             kernel_regularizer=w_reg,
                             bias_initializer=b_init,
@@ -135,18 +135,18 @@ def sub_pixel_conv2d(x, f, s=2):
     return tf.reshape(x_r, (bsize, s * a, s * b, f))
 
 
-def deconv2d(x, f=64, k=3, d=1, pad='SAME', name='deconv2d'):
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
     """
     :param x: input
     :param f: filters
     :param k: kernel size
-    :param d: strides
+    :param s: strides
     :param pad: padding
     :param name: scope name
     :return: net
     """
     return tf.layers.conv2d_transpose(inputs=x,
-                                      filters=f, kernel_size=k, strides=d,
+                                      filters=f, kernel_size=k, strides=s,
                                       kernel_initializer=w_init,
                                       kernel_regularizer=w_reg,
                                       bias_initializer=b_init,
