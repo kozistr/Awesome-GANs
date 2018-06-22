@@ -196,12 +196,13 @@ def dense(x, f=1024, name='fc'):
 
 # Normalize
 
-def batch_norm(x, momentum=0.9, scaling=True, is_train=True):
+def batch_norm(x, momentum=0.9, scaling=True, is_train=True, name="bn"):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
                                          scale=scaling,
-                                         training=is_train)
+                                         training=is_train,
+                                         name=name)
 
 
 def instance_norm(x, affine=True, name=""):
