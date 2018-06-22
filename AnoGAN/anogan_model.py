@@ -8,7 +8,7 @@ tf.set_random_seed(777)  # reproducibility
 class AnoGAN:
 
     def __init__(self, batch_size=16, height=64, width=64, channel=3, n_classes=41, sample_num=1, sample_size=1,
-                 df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12,
+                 df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9,
                  detect=False, use_label=False):
 
         """
@@ -34,7 +34,7 @@ class AnoGAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-12
+        :param epsilon: epsilon, default 1e-9
         :param detect: anomalies detection if True, just training a model, default False
         """
 
@@ -68,8 +68,9 @@ class AnoGAN:
 
         # pre-defined
         self.d_loss = 0.
-        self.g_loss = 0.
-        self.anomaly_loss = 0.
+        self.r_loss = 0.
+        self.r_ano_loss = 0.
+        self.ano_loss = 0.
 
         self.g = None
         self.g_test = None
@@ -124,6 +125,7 @@ class AnoGAN:
     def generator(self, z, y=None, reuse=None, is_train=True):
         """
         :param z: embeddings
+        :param y: labels
         :param reuse: re-usable
         :param is_train: en/disable batch_norm, default True
         :return: prob
@@ -156,15 +158,16 @@ class AnoGAN:
         d_real_fm, d_real = self.discriminator(self.x)
         d_fake_fm, d_fake = self.discriminator(self.g_test, reuse=True)
 
-        # Loss
+        # Losses
+        # L1 Losses
         self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)
-        self.g_loss = t.l1_loss(self.x, self.g_test)
-        self.anomaly_loss = (1. - self.lambda_) * self.g + self.lambda_ * self.d_loss
+        self.r_loss = t.l1_loss(self.x, self.g)
+        self.ano_loss = (1. - self.lambda_) * self.g + self.lambda_ * self.d_loss
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
-        tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("loss/ano_loss", self.anomaly_loss)
+        tf.summary.scalar("loss/r_loss", self.r_loss)
+        tf.summary.scalar("loss/ano_loss", self.ano_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
@@ -175,7 +178,7 @@ class AnoGAN:
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                         var_list=d_params)
         self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                             beta1=self.beta1, beta2=self.beta2).minimize(loss=self.anomaly_loss,
+                                             beta1=self.beta1, beta2=self.beta2).minimize(loss=self.ano_loss,
                                                                                           var_list=g_params)
 
         # Merge summary
