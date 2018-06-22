@@ -205,6 +205,10 @@ class DataSetLoader:
         self.raw_data = np.rollaxis(np.squeeze(np.load(self.file_names), axis=0), 0, 3)
 
     def convert_to_img(self):
+        def to_img(i):
+            cv2.imwrite('imgHQ%05d.png' % i, cv2.COLOR_BGR2RGB)
+            return True
+
         raw_data_shape = self.raw_data.shape  # (N, H * W * C)
 
         try:
@@ -214,8 +218,10 @@ class DataSetLoader:
             print("[*] Make directory at %s... " % self.save_file_name)
             os.mkdir(self.save_file_name)
 
-        for idx in range(raw_data_shape[0]):
-            cv2.imwrite("%d.png" % idx, cv2.COLOR_RGB2BGR)
+        ii = [i for i in range(raw_data_shape[0])]
+
+        pool = Pool(self.n_threads)
+        print(pool.map(to_img, ii))
 
     def convert_to_tfr(self):
         for data in self.raw_data:
@@ -536,25 +542,6 @@ class CelebADataSet:
                 raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
                                         "[-] plz, use original PGGAN repo or"
                                         " this repo https://github.com/nperraud/download-celebA-HQ")
-            elif os.path.exists(tmp_path + "npy"):
-                def npy2png(i):
-                    try:
-                        data = np.load('imgHQ%05d.npy' % i)
-                    except:
-                        print("[-] imgHQ%05d.npy" % i)
-                        return False
-                    im = Image.fromarray(np.rollaxis(np.squeeze(data, axis=0), 0, 3))
-                    im.save('imgHQ%05d.png' % i)
-                    return True
-
-                print("[*] You should convert .npy files to .png image files for comfort :)")
-                print("[*] But, I'll do it for you :) It'll take some times~")
-
-                # Converting...
-                ii = [i for i in range(self.num_images)]
-
-                pool = Pool(self.n_threads)
-                print(pool.map(npy2png, ii))
         else:
             raise NotImplemented("[-] 'ds_type' muse be 'CelebA' or 'CelebA-HQ'")
 
