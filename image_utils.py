@@ -1,24 +1,5 @@
-import tensorflow as tf
 import numpy as np
 import scipy.misc
-
-
-def down_sampling(img):
-    shape = img.get_shape()  # [batch, height, width, channels]
-
-    h2 = int(shape[1] // 2)
-    w2 = int(shape[2] // 2)
-
-    return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
-
-
-def up_sampling(img):
-    shape = img.get_shape()  # [batch, height, width, channels]
-
-    h2 = int(shape[1] * 2)
-    w2 = int(shape[2] * 2)
-
-    return tf.image.resize_images(img, [h2, w2], tf.image.ResizeMethod.BILINEAR)
 
 
 def inverse_transform(images, inv_type='255'):
