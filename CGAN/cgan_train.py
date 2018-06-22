@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -16,15 +14,15 @@ sys.path.append('../')
 import image_utils as iu
 from datasets import MNISTDataSet as DataSet
 
+
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/CGAN-model.ckpt'
 }
 
 train_step = {
     'global_step': 250001,
-    'logging_interval': 2500,
+    'logging_interval': 2000,
 }
 
 
@@ -45,7 +43,6 @@ def main():
         # initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.train.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
@@ -71,7 +68,7 @@ def main():
                                   model.z: batch_z,
                               })
 
-            d_overpowered = d_loss < g_loss / 2
+            d_overpowered = d_loss < g_loss / 2.
 
             # Logging
             if step % train_step['logging_interval'] == 0:
