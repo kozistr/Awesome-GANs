@@ -1,57 +1,14 @@
 import tensorflow as tf
+import tfutil as t
 
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=4, d=2, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param d: strides, default 2
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: covn2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad, name=name)
-
-
-def deconv2d(x, f=64, k=4, d=2, pad='SAME', name='deconv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param d: strides, default 2
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default deconv2d
-    :return: decovn2d net
-    """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=d,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                      bias_initializer=tf.zeros_initializer(),
-                                      padding=pad, name=name)
-
-
-def batch_norm(x, momentum=0.9, eps=1e-9):
-    return tf.layers.batch_normalization(inputs=x,
-                                         momentum=momentum,
-                                         epsilon=eps,
-                                         scale=True,
-                                         training=True)
-
-
 class BGAN:
 
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
+    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+                 sample_num=10 * 10, sample_size=10,
                  n_input=784, fc_unit=256,
                  z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
 
@@ -59,9 +16,9 @@ class BGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
-        :param input_channel: input image channel, default 1 (gray-scale)
+        :param height: input image height, default 28
+        :param width: input image width, default 28
+        :param channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input dataset's classes
         - in case of MNIST, 10 (0 ~ 9)
@@ -69,8 +26,6 @@ class BGAN:
         # Output Settings
         :param sample_num: the number of output images, default 100
         :param sample_size: sample image size, default 10
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
 
         # For DNN model
         :param n_input: input image size, default 784(28x28)
@@ -86,16 +41,14 @@ class BGAN:
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.height = height
+        self.width = width
+        self.channel = channel
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
         self.n_classes = n_classes
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.n_input = n_input
         self.fc_unit = fc_unit
@@ -109,6 +62,9 @@ class BGAN:
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
+
+        self.g = None
+        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -126,52 +82,46 @@ class BGAN:
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
             for i in range(2):
-                x = tf.layers.dense(x, units=self.fc_unit, name='d-fc-%d' % i)
+                x = t.dense(x, self.fc_unit, name='d-fc-%d' % i)
                 x = tf.nn.leaky_relu(x)
 
-            logits = tf.layers.dense(x, units=1, name='d-fc-2')
+            logits = t.dense(x, 1, name='d-fc-2')
             prob = tf.nn.sigmoid(logits)
 
         return prob, logits
 
-    def generator(self, x, reuse=None):
+    def generator(self, x, reuse=None, is_train=True):
         with tf.variable_scope("generator", reuse=reuse):
             for i in range(2):
-                x = tf.layers.dense(x, units=self.fc_unit, name='g-fc-%d' % i)
-                x = batch_norm(x)
+                x = t.dense(x, self.fc_unit, name='g-fc-%d' % i)
+                x = t.batch_norm(x, is_train=is_train)
                 x = tf.nn.leaky_relu(x)
 
-            logits = tf.layers.dense(x, units=self.n_input, name='g-fc-2')
+            logits = t.dense(x, self.n_input, name='g-fc-2')
             prob = tf.nn.sigmoid(logits)
 
         return prob
 
     def build_bgan(self):
-        def log(x):
-            return tf.log(x + self.eps)
-
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, is_train=False)
 
         # Discriminator
         d_real, _ = self.discriminator(self.x)
         d_fake, _ = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
+        d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
+        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = tf.reduce_mean(tf.square(log(d_fake) + log(1. - d_fake))) / 2.
+        self.g_loss = tf.reduce_mean(tf.square(t.safe_log(d_fake) + t.safe_log(1. - d_fake))) / 2.
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # g = tf.reshape(self.g, shape=self.image_shape)
-        # tf.summary.image("generated", g)  # generated images by Generative Model
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()

@@ -17,13 +17,12 @@ from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/BGAN-model.ckpt'
 }
 
 train_step = {
     'global_step': 250001,
-    'logging_interval': 2500,
+    'logging_interval': 2000,
 }
 
 
@@ -43,9 +42,6 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -86,7 +82,8 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
-                samples = s.run(model.g,
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                samples = s.run(model.g_test,
                                 feed_dict={
                                     model.z: sample_z,
                                 })
