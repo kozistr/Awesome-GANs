@@ -18,7 +18,6 @@ from datasets import Pix2PixDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/CycleGAN-model.ckpt'
 }
 
@@ -37,23 +36,19 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        image_size = crop_size = 128
-
         # CycleGAN Model
         model = cyclegan.CycleGAN(s,
-                                  input_height=image_size,
-                                  input_width=image_size,
-                                  input_channel=3,
+                                  height=128,
+                                  width=128,
+                                  channel=3,
                                   batch_size=train_step['batch_size'])
 
         # Celeb-A DataSet images
-        data_set_name = 'vangogh2photo'
-        ds = DataSet(input_height=image_size,
-                     input_width=image_size,
-                     input_channel=3,
-                     crop_size=crop_size,
-                     batch_size=train_step['batch_size'],
-                     name=data_set_name)
+        ds = DataSet(height=128,
+                     width=128,
+                     channel=3,
+                     ds_path="D:/DataSet/pix2pix/",
+                     ds_name='vangogh2photo')
 
         img_a = ds.images_a
         img_b = ds.images_b
@@ -90,14 +85,14 @@ def main():
 
             # re-implement DataIterator for multi-input
             pointer = 0
-            num_images = min(ds.num_images_a, ds.num_images_b)
+            num_images = min(ds.n_images_a, ds.n_images_b)
             for i in range(num_images // train_step['batch_size']):
                 start = pointer
                 pointer += train_step['batch_size']
 
                 if pointer > num_images:  # if ended 1 epoch
                     # Shuffle training DataSet
-                    perm_a, perm_b = np.arange(ds.num_images_a), np.arange(ds.num_images_b)
+                    perm_a, perm_b = np.arange(ds.n_images_a), np.arange(ds.n_images_b)
 
                     np.random.shuffle(perm_a)
                     np.random.shuffle(perm_b)
@@ -138,10 +133,10 @@ def main():
 
                     # Print loss
                     print("[+] Global Step %08d =>" % global_step,
-                          " G loss : {:.8f}".format(g_loss),
+                          " G loss     : {:.8f}".format(g_loss),
                           " Cycle loss : {:.8f}".format(cycle_loss),
-                          " w : {:.8f}".format(w),
-                          " gp : {:.8f}".format(gp))
+                          " w          : {:.8f}".format(w),
+                          " gp         : {:.8f}".format(gp))
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step=global_step)

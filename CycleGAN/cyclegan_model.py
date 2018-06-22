@@ -1,94 +1,28 @@
 import tensorflow as tf
+import tfutil as t
 
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=3, s=1, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 1
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: conv2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad,
-                            name=name)
-
-
-def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 1
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default deconv2d
-    :return: deconv2d net
-    """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      bias_initializer=tf.zeros_initializer(),
-                                      padding=pad,
-                                      name=name)
-
-
-def instance_normalize(x, eps=1e-5, affine=True, name=""):
-    with tf.variable_scope('instance_normalize-affine_%s' % name):
-        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
-
-        normalized = tf.div(x - mean, tf.sqrt(variance + eps))
-
-        if not affine:
-            return normalized
-        else:
-            depth = x.get_shape()[3]  # input channel
-
-            scale = tf.get_variable('scale', [depth],
-                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
-            offset = tf.get_variable('offset', [depth],
-                                     initializer=tf.zeros_initializer())
-
-        return scale * normalized + offset
-
-
-def batch_normalize(x, eps=1e-5):
-    return tf.layers.batch_normalization(x,
-                                         momentum=0.9,
-                                         epsilon=eps,
-                                         scale=False,
-                                         center=False,
-                                         training=True)
-
-
 class CycleGAN:
 
-    def __init__(self, s, batch_size=8, input_height=128, input_width=128, input_channel=3,
-                 sample_num=1 * 1, sample_size=1, output_height=128, output_width=128,
-                 df_dim=64, gf_dim=32, fd_unit=512,
-                 g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+    def __init__(self, s, batch_size=8, height=128, width=128, channel=3,
+                 sample_num=1 * 1, sample_size=1,
+                 df_dim=64, gf_dim=32, fd_unit=512, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 8
-        :param input_height: input image height, default 128
-        :param input_width: input image width, default 128
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 128
+        :param width: input image width, default 128
+        :param channel: input image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 128x128x3(HWC).
 
         # Output Settings
         :param sample_num: the number of output images, default 4
         :param sample_size: sample image size, default 2
-        :param output_height: output images height, default 128
-        :param output_width: output images width, default 128
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
@@ -104,15 +38,13 @@ class CycleGAN:
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.height = height
+        self.width = width
+        self.channel = channel
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
@@ -156,9 +88,9 @@ class CycleGAN:
 
         # placeholders
         self.a = tf.placeholder(tf.float32,
-                                [None, self.input_height, self.input_width, self.input_channel], name='image-a')
+                                [None, self.height, self.width, self.channel], name='image-a')
         self.b = tf.placeholder(tf.float32,
-                                [None, self.input_height, self.input_width, self.input_channel], name='image-b')
+                                [None, self.height, self.width, self.channel], name='image-b')
         self.lr_decay = tf.placeholder(tf.float32, None, name='learning_rate-decay')
 
         self.build_cyclegan()  # build CycleGAN
@@ -173,12 +105,12 @@ class CycleGAN:
         """
         with tf.variable_scope('discriminator-%s' % name, reuse=reuse):
             def residual_block(x, f, name=''):
-                x = conv2d(x, f=f, k=4, s=2, name='disc-conv2d-%s' % name)
-                x = instance_normalize(x, name='disc-ins_norm-%s' % name)
+                x = t.conv2d(x, f=f, k=4, s=2, name='disc-conv2d-%s' % name)
+                x = t.instance_norm(x, name='disc-ins_norm-%s' % name)
                 x = tf.nn.leaky_relu(x, alpha=0.2)
                 return x
 
-            x = conv2d(x, f=self.df_dim, name='disc-conv2d-0')
+            x = t.conv2d(x, f=self.df_dim, name='disc-conv2d-0')
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = residual_block(x, f=self.df_dim * 2, name='1')
@@ -188,7 +120,7 @@ class CycleGAN:
             # x = residual_block(x, f=self.df_dim * 8, name='4')
             # x = residual_block(x, f=self.df_dim * 8, name='5')
 
-            logits = conv2d(x, f=1, name='disc-con2d-last')
+            logits = t.conv2d(x, f=1, name='disc-con2d-last')
             # prob = tf.nn.sigmoid(logits)
 
             return logits
@@ -203,25 +135,25 @@ class CycleGAN:
         """
         with tf.variable_scope('generator-%s' % name, reuse=reuse):
             def d(x, f, name=''):
-                x = conv2d(x, f=f, k=3, s=2, name='gen-d-conv2d-%s' % name)
-                x = instance_normalize(x, name='gen-d-ins_norm-%s' % name)
+                x = t.conv2d(x, f=f, k=3, s=2, name='gen-d-conv2d-%s' % name)
+                x = t.instance_norm(x, name='gen-d-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
             def R(x, f, name=''):
-                x = conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-0' % name)
-                x = conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-1' % name)
-                x = instance_normalize(x, name='gen-R-ins_norm-%s' % name)
+                x = t.conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-0' % name)
+                x = t.conv2d(x, f=f, k=3, s=1, name='gen-R-conv2d-%s-1' % name)
+                x = t.instance_norm(x, name='gen-R-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
             def u(x, f, name=''):
-                x = deconv2d(x, f=f, k=3, s=2, name='gen-u-deconv2d-%s' % name)
-                x = instance_normalize(x, name='gen-u-ins_norm-%s' % name)
+                x = t.deconv2d(x, f=f, k=3, s=2, name='gen-u-deconv2d-%s' % name)
+                x = t.instance_norm(x, name='gen-u-ins_norm-%s' % name)
                 x = tf.nn.relu(x)
                 return x
 
-            x = conv2d(x, f=self.gf_dim, k=7, s=1, name='gen-conv2d-0')
+            x = t.conv2d(x, f=self.gf_dim, k=7, s=1, name='gen-conv2d-0')
 
             x = d(x, self.gf_dim * 2, name='1')
             x = d(x, self.gf_dim * 4, name='2')
@@ -232,7 +164,7 @@ class CycleGAN:
             x = u(x, self.gf_dim * 4, name='1')
             x = u(x, self.gf_dim * 2, name='2')
 
-            logits = conv2d(x, f=3, k=7, s=1, name='gen-conv2d-1')
+            logits = t.conv2d(x, f=3, k=7, s=1, name='gen-conv2d-1')
             prob = tf.nn.tanh(logits)
 
             return prob
