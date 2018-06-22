@@ -124,10 +124,10 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
-1. ~~Implement TempoGAN~~ - later when DataSet is ready
-2. Fix PGGAN, SGAN, SGAN++
-3. Implement SAGAN - later when DataSet is ready
-4. -
+1. Coverage with tfutil
+2. ~~Implement TempoGAN~~ - later when DataSet is ready
+3. Fix PGGAN, SGAN, SGAN++
+4. Implement SAGAN - later when DataSet is ready
 5. -
 
 ## ETC
