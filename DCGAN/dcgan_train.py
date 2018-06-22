@@ -18,7 +18,6 @@ from datasets import CiFarDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/DCGAN-model.ckpt'
 }
 
@@ -56,13 +55,12 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Training, Test data set
-        dataset = DataSet(input_height=32,
-                          input_width=32,
-                          input_channel=3,
-                          is_split=False,
-                          ds_name='cifar-100',
-                          ds_path='/home/zero/hdd/DataSet/cifar/cifar-100-python/')
-        dataset_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
+        dataset = DataSet(height=32,
+                          width=32,
+                          channel=3,
+                          ds_path='/home/zero/hdd/DataSet/cifar/cifar-100-python/',
+                          ds_name='cifar-100',)
+        ds_iter = DataIterator(dataset.train_images, dataset.train_labels, train_step['batch_size'])
 
         # sample_x = dataset.valid_images[:model.sample_num].astype(np.float32)
         # sample_x = (sample_x / 127.5) - 1.
@@ -72,7 +70,7 @@ def main():
         step = int(global_step)
         cont = int(step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
-            for batch_images, _ in dataset_iter.iterate():
+            for batch_images, _ in ds_iter.iterate():
                 batch_x = batch_images.astype(np.float32)
                 batch_x = (batch_x / 127.5) - 1.
                 batch_z = np.random.uniform(-1., 1., [train_step['batch_size'], model.z_dim]).astype(np.float32)
