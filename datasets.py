@@ -677,10 +677,13 @@ class Pix2PixDataSet:
                                           save_file_name=self.save_file_name,
                                           use_image_scaling=True,
                                           image_scale='0,1').raw_data  # numpy arrays
+            self.n_images_a = self.n_sg_images_a
+            self.n_images_b = self.n_sg_images_b
         elif self.ds_name in self.ds_double_grid:
             # To-Do
             # Implement this!
-            pass
+            self.n_images_a = self.n_dg_images_a
+            self.n_images_b = self.n_dg_images_b
         else:
             raise NotImplementedError("[-] Not Implemented yet")
 
