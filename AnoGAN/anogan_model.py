@@ -7,12 +7,13 @@ tf.set_random_seed(777)  # reproducibility
 
 class AnoGAN:
 
-    def __init__(self, batch_size=16, height=64, width=64, channel=3, n_classes=41, sample_num=1, sample_size=1,
+    def __init__(self, s, batch_size=16, height=64, width=64, channel=3, n_classes=41, sample_num=1, sample_size=1,
                  df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9,
                  detect=False, use_label=False):
 
         """
         # General Settings
+        :param s: TF Session
         :param batch_size: training batch size, default 16
         :param height: image height, default 64
         :param width: image width, default 64
@@ -67,15 +68,18 @@ class AnoGAN:
         self.use_label = use_label
 
         # pre-defined
+        self.d_fake_loss = 0.
+        self.d_real_loss = 0.
         self.d_loss = 0.
+        self.g_loss = 0.
         self.r_loss = 0.
-        self.r_ano_loss = 0.
         self.ano_loss = 0.
 
         self.g = None
         self.g_test = None
 
         self.d_op = None
+        self.g_op = None
         self.ano_op = None
 
         self.merged = None
@@ -158,18 +162,6 @@ class AnoGAN:
         d_real_fm, d_real = self.discriminator(self.x)
         d_fake_fm, d_fake = self.discriminator(self.g_test, reuse=True)
 
-        # Losses
-        # L1 Losses
-        self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)
-        self.r_loss = t.l1_loss(self.x, self.g)
-        self.ano_loss = (1. - self.lambda_) * self.g + self.lambda_ * self.d_loss
-
-        # Summary
-        tf.summary.scalar("loss/d_loss", self.d_loss)
-        tf.summary.scalar("loss/r_loss", self.r_loss)
-        tf.summary.scalar("loss/ano_loss", self.ano_loss)
-
-        # Optimizer
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('disc')]
         g_params = [v for v in t_vars if v.name.startswith('gen')]
@@ -177,9 +169,34 @@ class AnoGAN:
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                         var_list=d_params)
-        self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                             beta1=self.beta1, beta2=self.beta2).minimize(loss=self.ano_loss,
-                                                                                          var_list=g_params)
+
+        if self.detect:
+            self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)  # disc     loss
+            self.r_loss = t.l1_loss(self.x, self.g)        # residual loss
+            self.ano_loss = (1. - self.lambda_) * self.r_loss + self.lambda_ * self.d_loss
+            
+            tf.summary.scalar("loss/d_loss", self.d_loss)
+            tf.summary.scalar("loss/r_loss", self.r_loss)
+            tf.summary.scalar("loss/ano_loss", self.ano_loss)
+
+            self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+                                                 beta1=self.beta1, beta2=self.beta2).minimize(loss=self.ano_loss,
+                                                                                              var_list=g_params)
+        else:
+            self.d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+            self.d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+            self.d_loss = self.d_real_loss + self.d_fake_loss
+            self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+
+            # Summary
+            tf.summary.scalar("loss/d_fake_loss", self.d_fake_loss)
+            tf.summary.scalar("loss/d_real_loss", self.d_real_loss)
+            tf.summary.scalar("loss/d_loss", self.d_loss)
+            tf.summary.scalar("loss/g_loss", self.r_loss)
+
+            self.g_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+                                               beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
+                                                                                            var_list=d_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
