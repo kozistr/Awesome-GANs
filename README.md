@@ -125,10 +125,10 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## To-Do
 1. ~~Implement TempoGAN~~ - later when DataSet is ready
-2. Support both .h5 and .tfrecord for DataSets (Modularize) - on-going
-3. Upload PGGAN 64x64, 128x128 Results - soon
-4. Fix PGGAN, SGAN, SGAN++
-5. Implement SAGAN - later when DataSet is ready
+2. Fix PGGAN, SGAN, SGAN++
+3. Implement SAGAN - later when DataSet is ready
+4. -
+5. -
 
 ## ETC
 
