@@ -12,12 +12,11 @@ import dragan_model as dragan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import DataIterator
 from datasets import MNISTDataSet as DataSet
+
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/DRAGAN-model.ckpt'
 }
 
@@ -26,6 +25,9 @@ train_step = {
     'batch_size': 64,
     'logging_interval': 2500,
 }
+
+
+np.random.seed(777)
 
 
 def get_perturbed_images(images):
