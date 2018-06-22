@@ -48,6 +48,27 @@ def gaussian_noise(x, std=5e-2):
 
 
 # ---------------------------------------------------------------------------------------------
+# Image Sampling with TF
+
+def down_sampling(img, interp='tf.image.ResizeMethod.BILINEAR'):
+    shape = img.get_shape()  # [batch, height, width, channels]
+
+    h2 = int(shape[1] // 2)
+    w2 = int(shape[2] // 2)
+
+    return tf.image.resize_images(img, [h2, w2], interp)
+
+
+def up_sampling(img, interp='tf.image.ResizeMethod.BILINEAR'):
+    shape = img.get_shape()  # [batch, height, width, channels]
+
+    h2 = int(shape[1] * 2)
+    w2 = int(shape[2] * 2)
+
+    return tf.image.resize_images(img, [h2, w2], interp)
+
+
+# ---------------------------------------------------------------------------------------------
 # Optimizer
 
 class Optimizer(object):
