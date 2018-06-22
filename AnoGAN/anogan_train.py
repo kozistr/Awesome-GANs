@@ -39,27 +39,20 @@ def main():
 
     with tf.Session(config=config) as s:
         # AnoGAN Model
-        # anomalies detect off (just training model)  -> False
-        # anomalies detect on  (based on trained model-> True
-        if not os.path.exists('./model'):
-            detection = False
-        else:
-            detection = True
-
-        model = anogan.AnoGAN(s, detect=detection)  # AnoGAN
+        model = anogan.AnoGAN(detect=False,
+                              use_label=False)  # AnoGAN
 
         global_step = 0
-        if detection:
-            # Load model & Graph & Weights
-            ckpt = tf.train.get_checkpoint_state('./model/')
-            if ckpt and ckpt.model_checkpoint_path:
-                # Restores from checkpoint
-                model.saver.restore(s, ckpt.model_checkpoint_path)
 
-                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-                print("[+] global step : %s" % global_step, " successfully loaded")
-            else:
-                print('[-] No checkpoint file found')
+        # Load model & Graph & Weights
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            print("[+] global step : %s" % global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
 
         # Initializing
         s.run(tf.global_variables_initializer())
