@@ -9,7 +9,7 @@ class AnoGAN:
 
     def __init__(self, batch_size=16, height=64, width=64, channel=3, n_classes=41, sample_num=1, sample_size=1,
                  df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12,
-                 detect=False):
+                 detect=False, use_label=False):
 
         """
         # General Settings
@@ -64,6 +64,7 @@ class AnoGAN:
         self.eps = epsilon
 
         self.detect = detect
+        self.use_label = use_label
 
         # pre-defined
         self.d_loss = 0.
@@ -83,20 +84,27 @@ class AnoGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                            # (-1, 64, 64, 3)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label')  # (-1, 41)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')      # (-1, 128)
+                                name="x-image")                                                # (-1, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 128)
+        if self.use_label:
+            self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label')  # (-1, 41)
+        else:
+            self.y = None
 
         self.build_anogan()  # build AnoGAN model
 
-    def discriminator(self, x, reuse=None, is_train=True):
+    def discriminator(self, x, y=None, reuse=None, is_train=True):
         """
         :param x: images
+        :param y: labels
         :param reuse: re-usable
         :param is_train: en/disable batch_norm, default True
         :return: logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
+            if y:
+                raise NotImplemented("[-] Not Implemented Yet...")
+
             x = t.conv2d(x, f=self.gf_dim * 1, name="disc-conv2d-0")
             x = tf.nn.leaky_relu(x)
 
@@ -113,7 +121,7 @@ class AnoGAN:
 
             return feature_match, x
 
-    def generator(self, z, reuse=None, is_train=True):
+    def generator(self, z, y=None, reuse=None, is_train=True):
         """
         :param z: embeddings
         :param reuse: re-usable
@@ -121,6 +129,9 @@ class AnoGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
+            if y:
+                raise NotImplemented("[-] Not Implemented Yet...")
+
             x = t.dense(z, f=self.fc_unit, name='gen-fc-0')
             x = tf.nn.leaky_relu(x)
 
@@ -138,8 +149,8 @@ class AnoGAN:
 
     def build_anogan(self):
         # Generator
-        self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
+        self.g = self.generator(self.z, self.y)
+        self.g_test = self.generator(self.z, self.y, reuse=True, is_train=False)
 
         # Discriminator
         d_real_fm, d_real = self.discriminator(self.x)
