@@ -19,8 +19,8 @@ from datasets import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'orig-model': './model/AnoGAN-orig-model.ckpt',
-    'ano-model': './model/AnoGAN-ano-model.ckpt'
+    'orig-model': './orig-model/AnoGAN-model.ckpt',
+    'ano-model': './ano-model/AnoGAN-model.ckpt'
 }
 
 train_step = {
@@ -38,7 +38,7 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        if os.path.exists("./model/"):
+        if os.path.exists("./orig-model/"):
             detect = True  # There has to be pre-trained file
         else:
             detect = False
@@ -50,7 +50,11 @@ def main():
         global_step = 0
 
         # Load model & Graph & Weights
-        ckpt = tf.train.get_checkpoint_state('./model/')
+        if not detect or not os.path.exists("./ano-model/"):
+            ckpt = tf.train.get_checkpoint_state('./orig-model/')
+        else:
+            ckpt = tf.train.get_checkpoint_state('./ano-model/')
+
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
             model.saver.restore(s, ckpt.model_checkpoint_path)
