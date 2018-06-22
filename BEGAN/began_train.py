@@ -18,12 +18,11 @@ from datasets import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/BEGAN-model.ckpt'
 }
 
 train_step = {
-    'epoch': 24,
+    'epoch': 25,
     'batch_size': 16,
     'logging_step': 2000,
 }
@@ -44,29 +43,17 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(input_height=64,
-                     input_width=64,
-                     input_channel=3,
-                     ds_path="/home/zero/hdd/DataSet/CelebA").images
-        dataset_iter = DataIterator(ds, None, train_step['batch_size'],
-                                    label_off=True)
-
-        sample_x = ds[:model.sample_num]
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
-
-        # Generated image save
-        iu.save_images(sample_x, size=[valid_image_height, valid_image_width], image_path=sample_dir,
-                       inv_type='127')
+        ds = DataSet(height=64,
+                     width=64,
+                     channel=3,
+                     ds_path="/home/zero/hdd/DataSet/CelebA/",
+                     ds_type="CelebA").images
+        ds_iter = DataIterator(ds, None, train_step['batch_size'],
+                               label_off=True)
 
         global_step = 0
         for epoch in range(train_step['epoch']):
-            for batch_images in dataset_iter.iterate():
+            for batch_images in ds_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
@@ -109,9 +96,9 @@ def main():
                     model.writer.add_summary(summary, global_step)
 
                     # Training G model with sample image and noise
+                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                     samples = s.run(model.g,
                                     feed_dict={
-                                        model.x: sample_x,
                                         model.z: sample_z,
                                     })
 

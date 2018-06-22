@@ -1,57 +1,29 @@
 import tensorflow as tf
 import numpy as np
+import tfutil as t
 
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(x, f=64, k=3, d=1, reg=5e-4, act=None, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param d: strides, default 2
-    :param reg: weight regularizer, default 5e-4
-    :param act: activation function, default elu
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: conv2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
-                            # kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            # kernel_regularizer=tf.contrib.layers.l2_regularizer(reg),
-                            kernel_initializer=tf.truncated_normal_initializer(0., 0.02),
-                            bias_initializer=tf.zeros_initializer(),
-                            activation=act,
-                            padding=pad, name=name)
-
-
-def resize_nn(x, size):
-    return tf.image.resize_nearest_neighbor(x, size=(int(size), int(size)))
-
-
 class BEGAN:
 
-    def __init__(self, s, batch_size=16, input_height=64, input_width=64, input_channel=3,
-                 sample_num=8 * 8, sample_size=8, output_height=64, output_width=64,
-                 df_dim=64, gf_dim=64,
-                 gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=1e-4, d_lr=1e-4, epsilon=1e-12):
+    def __init__(self, s, batch_size=16, height=64, width=64, channel=3,
+                 sample_num=8 * 8, sample_size=8,
+                 df_dim=64, gf_dim=64, gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 16
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: image height, default 64
+        :param width: image width, default 64
+        :param channel  image channel, default 3 (RGB)
         - in case of Celeb-A, image size is 32x32x3/64x64x3(HWC).
 
         # Output Settings
         :param sample_num: the number of output images, default 64
         :param sample_size: sample image size, default 64
-        :param output_height: output images height, default 64
-        :param output_width: output images width, default 64
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
@@ -63,21 +35,19 @@ class BEGAN:
         :param z_dim: z dimension (kinda noise), default 256
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-12
+        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.input_channel]
+        self.height = height
+        self.width = width
+        self.channel = channel
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
@@ -102,6 +72,7 @@ class BEGAN:
         self.balance = 0.
 
         self.g = None
+        self.g_test = None
 
         self.k_update = None
         self.d_op = None
@@ -120,7 +91,7 @@ class BEGAN:
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.input_height, self.input_width, self.input_channel],
+                                shape=[None, self.height, self.width, self.channel],
                                 name="x-image")  # (-1, 32 or 64, 32 or 64, 3)
         self.z = tf.placeholder(tf.float32,
                                 shape=[None, self.z_dim],
@@ -135,28 +106,32 @@ class BEGAN:
         :return: embeddings
         """
         with tf.variable_scope('encoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+            repeat = int(np.log2(self.height)) - 2
 
-            x = conv2d(x, f=self.df_dim, act=tf.nn.elu, name="enc-conv-0")
+            x = t.conv2d(x, f=self.df_dim, name="enc-conv-0")
+            x = tf.nn.elu(x)
 
             for i in range(1, repeat + 1):
                 f = self.df_dim * i
 
-                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=f, act=tf.nn.elu, name="enc-conv-%d" % (i * 2))
+                x = t.conv2d(x, f=f, name="enc-conv-%d" % (i * 2 - 1))
+                x = tf.nn.elu(x)
+                x = t.conv2d(x, f=f, name="enc-conv-%d" % (i * 2))
+                x = tf.nn.elu(x)
 
                 if i < repeat:
                     """
-                    You can choose one of them. max-pool or avg-pool or conv-pool.
-                    Speed Order : conv-pool > avg-pool > max-pool. i guess :)
+                        You can choose one of them. max-pool or avg-pool or conv-pool.
+                        Speed Order : conv-pool > avg-pool > max-pool. i guess :)
                     """
                     # x = tf.layers.max_pooling2d(x, 2, 2)
-                    x = conv2d(x, f=f, d=2, act=tf.nn.elu, name='enc-conv-pool-%d' % i)  # conv pooling
+                    x = t.conv2d(x, f=f, s=2, name='enc-conv-pool-%d' % i)  # conv pooling
+                    x = tf.nn.elu(x)
                     # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
             x = tf.layers.flatten(x)
 
-            z = tf.layers.dense(x, units=self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
+            z = t.dense(x, self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
 
             return z
 
@@ -167,19 +142,21 @@ class BEGAN:
         :return: logits
         """
         with tf.variable_scope('decoder', reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+            repeat = int(np.log2(self.height)) - 2
 
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, name='dec-fc-1')
+            x = t.dense(z, self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="dec-conv-%d" % (i * 2))
+                x = t.conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
+                x = tf.nn.elu(x)
+                x = t.conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2))
+                x = tf.nn.elu(x)
 
                 if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
+                    x = t.resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
-            x = conv2d(x, f=self.input_channel)
+            x = t.conv2d(x, f=self.channel)
 
             return x
 
@@ -202,26 +179,27 @@ class BEGAN:
         :return: logits
         """
         with tf.variable_scope("generator", reuse=reuse):
-            repeat = int(np.log2(self.input_height)) - 2
+            repeat = int(np.log2(self.height)) - 2
 
-            x = tf.layers.dense(z, units=self.z_dim * 8 * 8, activation=tf.nn.elu, name='g-fc-1')
+            x = t.dense(z, self.z_dim * 8 * 8, name='g-fc-1')
+            x = tf.nn.elu(x)
+
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2 - 1))
-                x = conv2d(x, f=self.gf_dim, act=tf.nn.elu, name="g-conv-%d" % (i * 2))
+                x = t.conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
+                x = tf.nn.elu(x)
+                x = t.conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2))
+                x = tf.nn.elu(x)
 
                 if i < repeat:
-                    x = resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
+                    x = t.resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
 
-            x = conv2d(x, f=self.input_channel)
+            x = t.conv2d(x, f=self.channel)
 
             return x
 
     def build_began(self):
-        def l1_loss(x, y):
-            return tf.reduce_mean(tf.abs(x - y))
-
         # Generator
         self.g = self.generator(self.z)
 
@@ -230,8 +208,8 @@ class BEGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Loss
-        d_real_loss = l1_loss(self.x, d_real)
-        d_fake_loss = l1_loss(self.g, d_fake)
+        d_real_loss = t.l1_loss(self.x, d_real)
+        d_fake_loss = t.l1_loss(self.g, d_fake)
         self.d_loss = d_real_loss - self.k * d_fake_loss
         self.g_loss = d_fake_loss
 
