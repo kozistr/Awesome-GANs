@@ -179,10 +179,11 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', name='deconv2d'):
                                       name=name)
 
 
-def dense(x, f=1024, name='fc'):
+def dense(x, f=1024, reuse=True, name='fc'):
     """
     :param x: input
     :param f: fully connected units
+    :param reuse: reusable
     :param name: scope name
     :return: net
     """
@@ -191,6 +192,7 @@ def dense(x, f=1024, name='fc'):
                            kernel_initializer=w_init,
                            kernel_regularizer=w_reg,
                            bias_initializer=b_init,
+                           reuse=reuse,
                            name=name)
 
 
