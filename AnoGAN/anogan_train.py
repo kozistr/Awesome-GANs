@@ -5,6 +5,7 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
+import os
 import sys
 import time
 
@@ -18,14 +19,14 @@ from datasets import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
-    'model': './model/AnoGAN-model.ckpt'
+    'orig-model': './model/AnoGAN-orig-model.ckpt',
+    'ano-model': './model/AnoGAN-ano-model.ckpt'
 }
 
 train_step = {
-    'epoch': 64,
+    'epoch': 100,
     'batch_size': 64,
-    'logging_step': 2500,
+    'logging_step': 2000,
 }
 
 
@@ -37,8 +38,13 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
+        if os.path.exists("./model/"):
+            detect = True  # There has to be pre-trained file
+        else:
+            detect = False
+
         # AnoGAN Model
-        model = anogan.AnoGAN(detect=False,
+        model = anogan.AnoGAN(detect=detect,
                               use_label=False)  # AnoGAN
 
         global_step = 0
@@ -121,7 +127,10 @@ def main():
                                    image_path=sample_dir)
 
                     # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
+                    if not detect:
+                        model.saver.save(s, results['orig-model'], global_step=global_step)
+                    else:
+                        model.saver.save(s, results['ano-model'], global_step=global_step)
 
                 global_step += 1
 
