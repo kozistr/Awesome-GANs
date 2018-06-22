@@ -108,7 +108,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
-                    samples = s.run(model.g,
+                    samples = s.run(model.g_test,
                                     feed_dict={
                                         model.z: sample_z,
                                     })
