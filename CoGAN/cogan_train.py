@@ -17,13 +17,12 @@ from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/CoGAN-model.ckpt'
 }
 
 train_step = {
-    'global_step': 150001,
-    'logging_interval': 1500,
+    'global_step': 200001,
+    'logging_interval': 2000,
 }
 
 
@@ -44,7 +43,6 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
