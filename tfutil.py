@@ -202,12 +202,13 @@ def dense(x, f=1024, reuse=None, name='fc'):
 
 # Normalize
 
-def batch_norm(x, momentum=0.9, scaling=True, is_train=True, name="bn"):
+def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="bn"):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
                                          scale=scaling,
                                          training=is_train,
+                                         reuse=reuse,
                                          name=name)
 
 
