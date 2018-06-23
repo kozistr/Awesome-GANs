@@ -3,6 +3,8 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 **IMPORTANT: Currently, i'm just re-building the whole codes. So, maybe there're codes which don't work properly. :(**
 
+**Tested GANs: AC-GAN,**
+
 ## Environments
 ### Preferred Environment
 * OS  : Windows 10 / Linux Ubuntu x86-64 ~
