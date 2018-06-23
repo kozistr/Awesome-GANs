@@ -199,7 +199,6 @@ def dense(x, f=1024, reuse=None, name='fc'):
                            reuse=reuse,
                            name=name)
 
-
 # Normalize
 
 def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="bn"):
@@ -231,6 +230,9 @@ def instance_norm(x, affine=True, reuse=None, name=""):
         return scale * normalized + offset
 
 
+def pixel_norm(x):
+    return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
+
 # Activations
 
 def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
@@ -244,7 +246,6 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
                                  dtype=x.dtype)
 
         return tf.maximum(_alpha * x, x)
-
 
 # Losses
 
