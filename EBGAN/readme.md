@@ -7,7 +7,17 @@
 
 ## Architecture Networks
 
-* same as EBGAN paper
+* Same with the EBGAN paper.
+* But, i just used hyper-parameters like activation function, etc...
+
+*DIFFS* | *EBGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **activation function** | ``ReLU`` | ``Leaky_ReLU`` |
+ **weight initializer**  | ``N(0, 2e-3)`` | ``HE initializer`` |
+ **score function**      | ``modified inception score`` | ``just sce``
+
+> Gaussian Normal dist parameters : D(µ = 0, σ = 0.002), G(µ = 0, σ = 0.0002) <br/>
+> HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
