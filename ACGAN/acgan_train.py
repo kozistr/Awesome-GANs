@@ -22,6 +22,7 @@ results = {
 }
 
 train_step = {
+    'epochs': 200,
     'batch_size': 100,
     'global_step': 50001,
     'logging_interval': 500,
@@ -59,7 +60,9 @@ def main():
 
         d_loss = 0.
         d_overpowered = False
-        for global_step in range(train_step['global_step']):
+
+        global_step = 0
+        for epoch in range(train_step['epochs']):
             for batch_x, batch_y in ds_iter.iterate():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
@@ -122,6 +125,8 @@ def main():
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
+
+                global_step += 1
 
     end_time = time.time() - start_time  # Clocking end
 

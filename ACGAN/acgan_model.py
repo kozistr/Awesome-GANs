@@ -105,7 +105,6 @@ class ACGAN:
             x = tf.layers.flatten(x)
 
             x = t.dense(x, self.n_classes + 1, name='disc-fc-1')
-            print(x.get_shape())
 
             logit = x[:, self.n_classes:]
             cat = x[:, :self.n_classes]
