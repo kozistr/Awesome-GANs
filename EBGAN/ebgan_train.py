@@ -45,7 +45,8 @@ def main():
                  save_type="to_h5",
                  use_img_scale=False,
                  img_scale="-1,1")
-    ds_iter = DataIterator(x=iu.transform(ds.images, inv_type='127'),
+
+    ds_iter = DataIterator(x=ds.images,
                            y=None,
                            batch_size=train_step['batch_size'],
                            label_off=False)
@@ -64,6 +65,8 @@ def main():
         global_step = 0
         for epoch in range(train_step['epochs']):
             for batch_x in ds_iter.iterate():
+                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
+                                     (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 _, d_loss = s.run([model.d_op, model.d_loss],
