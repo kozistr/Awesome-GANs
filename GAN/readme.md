@@ -2,20 +2,22 @@
 
 ## Loss Function
 
+* used ``softmax GAN loss`` at D/G nets
+* uncomment ``GAN loss`` if you want to use
 
 ## Architecture Networks
 
+* just simple 2 fc layers
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_tb_1.png)
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gan_tb_2.png)
+![result](./gan_tb.png)
 
 ## Result
 
 *Name* | *Global Step 50k*  | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**GAN**       | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/GAN/gen_img/train_00200000.png)
+**GAN**       | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00200000.png)
 
 ## To-Do
-* Add Loss Function & Explains 
+* 

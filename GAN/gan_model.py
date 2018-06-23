@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -9,7 +13,7 @@ class GAN:
 
     def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, fc_unit=128, z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
+                 n_input=784, fc_unit=128, z_dim=128, g_lr=8e-4, d_lr=8e-4):
 
         """
         # General Settings
@@ -34,7 +38,6 @@ class GAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 8e-4
         :param d_lr: discriminator learning rate, default 8e-4
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -54,7 +57,6 @@ class GAN:
         self.z_dim = z_dim
         self.beta1 = 0.5
         self.d_lr, self.g_lr = d_lr, g_lr
-        self.eps = epsilon
 
         # pre-defined
         self.d_loss = 0.
@@ -77,24 +79,22 @@ class GAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = tf.layers.flatten(x)
-
-            x = t.dense(x, self.fc_unit, name='d-fc-1')
+            x = t.dense(x, self.fc_unit, name='disc-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.dense(x, 1, name='d-fc-2')
+            x = t.dense(x, 1, name='discd-fc-2')
 
             return x
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, self.fc_unit, name='g-fc-1')
+            x = t.dense(z, self.fc_unit, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.dense(x, self.n_input, name='g-fc-2')
+            x = t.dense(x, self.n_input, name='gen-fc-2')
             x = tf.nn.sigmoid(x)
 
-        return x
+            return x
 
     def build_gan(self):
         # Generator
@@ -106,24 +106,22 @@ class GAN:
 
         # General GAN loss function referred in the paper
         """
-        log = lambda x: tf.log(x + self.eps)
-
-        self.g_loss = -tf.reduce_mean(log(d_fake))
-        self.d_loss = -tf.reduce_mean(log(d_real) + log(1. - d_fake))
+        self.g_loss = -tf.reduce_mean(t.safe_log(d_fake))
+        self.d_loss = -tf.reduce_mean(t.safe_log(d_real) + t.safe_log(1. - d_fake))
         """
 
         # Softmax Loss
         # Z_B = sigma x∈B exp(−μ(x)), −μ(x) is discriminator
-        z_b = tf.reduce_sum(tf.exp(-d_real)) + tf.reduce_sum(tf.exp(-d_fake)) + self.eps
+        z_b = tf.reduce_sum(tf.exp(-d_real)) + tf.reduce_sum(tf.exp(-d_fake)) + t.eps
 
         b_plus = self.batch_size
         b_minus = self.batch_size * 2
 
         # L_G = sigma x∈B+ μ(x)/abs(B) + sigma x∈B- μ(x)/abs(B) + ln(Z_B), B+ : batch _size
-        self.g_loss = tf.reduce_sum(d_real / b_plus) + tf.reduce_sum(d_fake / b_minus) + tf.log(z_b)
+        self.g_loss = tf.reduce_sum(d_real / b_plus) + tf.reduce_sum(d_fake / b_minus) + t.safe_log(z_b)
 
         # L_D = sigma x∈B+ μ(x)/abs(B) + ln(Z_B), B+ : batch _size
-        self.d_loss = tf.reduce_sum(d_real / b_plus) + tf.log(z_b)
+        self.d_loss = tf.reduce_sum(d_real / b_plus) + t.safe_log(z_b)
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
