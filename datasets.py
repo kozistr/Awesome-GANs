@@ -14,6 +14,9 @@ from multiprocessing import Pool
 from sklearn.model_selection import train_test_split
 
 
+seed = 1337
+
+
 class DataSetLoader:
 
     @staticmethod
@@ -27,7 +30,7 @@ class DataSetLoader:
         elif ext == 'npy':
             return 'npy'
         else:
-            raise ValueError("[-] There'is no supporting file... :(")
+            raise ValueError("[-] There'is no supporting file... [%s] :(" % ext)
 
     @staticmethod
     def get_img(path, size=(64, 64), interp=cv2.INTER_CUBIC):
@@ -70,7 +73,7 @@ class DataSetLoader:
         self.op = name.split('_')
 
         try:
-            assert len(self.op) == 1
+            assert len(self.op) == 2
         except AssertionError:
             raise AssertionError("[-] Invalid Target Types :(")
 
@@ -92,7 +95,7 @@ class DataSetLoader:
         try:
             assert os.path.exists(self.path)
         except AssertionError:
-            raise AssertionError("[-] Path does not exist :(")
+            raise AssertionError("[-] Path(%s) does not exist :(" % self.path)
 
         self.buffer_size = buffer_size
         self.n_threads = n_threads
@@ -104,12 +107,18 @@ class DataSetLoader:
 
         self.types = ('img', 'tfr', 'h5', 'npy')  # Supporting Data Types
         self.op_src = self.get_extension(self.file_ext)
-        self.op_dst = self.op[0]
+        self.op_dst = self.op[1]
 
         try:
-            assert (self.op_src in self.types and self.op_dst in self.types)
+            chk_src, chk_dst = False, False
+            for t in self.types:
+                if self.op_src == t:
+                    chk_src = True
+                if self.op_dst == t:
+                    chk_dst = True
+            assert chk_src and chk_dst
         except AssertionError:
-            raise AssertionError("[-] Invalid Operation Types :(")
+            raise AssertionError("[-] Invalid Operation Types (%s, %s) :(" % (self.op_src, self.op_dst))
 
         if self.op_src == self.types[0]:
             self.load_img()
@@ -124,7 +133,7 @@ class DataSetLoader:
 
         # Random Shuffle
         order = np.arange(self.raw_data.shape[0])
-        np.random.RandomState(1337).shuffle(order)
+        np.random.RandomState(seed).shuffle(order)
         self.raw_data = self.raw_data[order]
 
         # Clip [0, 255]
@@ -460,7 +469,7 @@ class CelebADataSet:
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
-                 ds_path=None, ds_type="CelebA",
+                 ds_path=None, ds_type="CelebA", img_scale="-1,1",
                  use_save=False, save_type='to_h5', save_file_name=None,
                  use_concat_data=False):
 
@@ -482,6 +491,7 @@ class CelebADataSet:
         # DataSet Settings
         :param ds_path: DataSet's Path
         :param ds_type: which DataSet is
+        :param img_scale: img normalize
         :param use_save: saving into another file format
         :param save_type: file format to save
         :param save_file_name: file name to save
@@ -522,9 +532,10 @@ class CelebADataSet:
         'CelebA' or 'CelebA-HQ'
         """
         self.ds_path = ds_path
-        self.ds_image_path = ds_path + "/Img/img_aling_celeba/"
+        self.ds_image_path = ds_path + "/Img/img_align_celeba/"
         self.ds_label_path = ds_path + "/Anno/list_attr_celeba.txt"
         self.ds_type = ds_type
+        self.img_scale = img_scale
 
         try:
             assert self.ds_path
@@ -556,13 +567,13 @@ class CelebADataSet:
         except AssertionError:
             raise AssertionError("[-] save-file/folder-name is required!")
 
-        self.images = DataSetLoader(path=self.ds_path,
+        self.images = DataSetLoader(path=self.ds_image_path,
                                     size=self.image_shape,
                                     use_save=self.use_save,
                                     name=self.save_type,
                                     save_file_name=self.save_file_name,
                                     use_image_scaling=True,
-                                    image_scale='0,1').raw_data  # numpy arrays
+                                    image_scale=self.img_scale).raw_data  # numpy arrays
         self.labels = self.load_attr()
 
         if self.use_concat_data:
