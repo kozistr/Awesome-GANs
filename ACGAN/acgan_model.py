@@ -142,7 +142,6 @@ class ACGAN:
     def build_acgan(self):
         # Generator
         self.g = self.generator(self.z, self.y)
-        self.g_test = self.generator(self.z, self.y, reuse=True, is_train=False)
 
         # Discriminator
         c_real, d_real, _ = self.discriminator(self.x)
