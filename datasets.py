@@ -8,7 +8,6 @@ import h5py
 import numpy as np
 import tensorflow as tf
 
-from PIL import Image
 from glob import glob
 from tqdm import tqdm
 from multiprocessing import Pool
@@ -253,8 +252,8 @@ class MNISTDataSet:
         except AssertionError:
             raise AssertionError("[-] MNIST DataSet Path is required!")
 
-        from tensorflow.examples.tutorials.mnist import data
-        self.data = data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
+        from tensorflow.examples.tutorials.mnist import input_data
+        self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
         # training data
         self.train_data = self.data.train
