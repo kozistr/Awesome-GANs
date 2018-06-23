@@ -104,9 +104,9 @@ class ACGAN:
 
             net = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, self.n_classes + 1, name='disc-fc-1')
-            logit = x[self.n_classes:]
-            cat = x[:self.n_classes]
+            x = tf.layers.dense(net, self.n_classes + 1, name='disc-fc-1')
+            logit = x[:, self.n_classes:]
+            cat = x[:, :self.n_classes]
 
             return cat, logit, net
 
