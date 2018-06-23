@@ -297,13 +297,13 @@ class CiFarDataSet:
 
         return labels_one_hot
 
-    def __init__(self, height=64, width=64, channel=3,
+    def __init__(self, height=32, width=32, channel=3,
                  use_split=False, split_rate=0.2, random_state=42, ds_name="cifar-10", ds_path=None):
 
         """
         # General Settings
-        :param height: input image height, default 64
-        :param width: input image width, default 64
+        :param height: input image height, default 32
+        :param width: input image width, default 32
         :param channel: input image channel, default 3 (RGB)
         - in case of CIFAR, image size is 32 x 32 x 3 (HWC).
 
