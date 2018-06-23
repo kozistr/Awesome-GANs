@@ -5,8 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.examples.tutorials.mnist import input_data
-
 import sys
 import time
 
@@ -19,13 +17,12 @@ from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/GAN-model.ckpt'
 }
 
 train_step = {
     'global_step': 250001,
-    'logging_interval': 2500,
+    'logging_interval': 2000,
 }
 
 
@@ -45,8 +42,6 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        # sample_x, _ = mnist.train.next_batch(model.sample_num)
 
         d_overpowered = False
         for step in range(train_step['global_step']):
@@ -69,7 +64,7 @@ def main():
                                   model.z: batch_z,
                               })
 
-            d_overpowered = d_loss < (g_loss / 2)
+            d_overpowered = d_loss < (g_loss / 2.)
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, _ = mnist.test.next_batch(model.batch_size)
@@ -86,8 +81,7 @@ def main():
                 # Print loss
                 print("[+] Step %08d => " % step,
                       " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss),
-                      )
+                      " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
                 sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)

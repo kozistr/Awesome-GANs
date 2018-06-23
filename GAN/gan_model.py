@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tfutil as t
 
 
 tf.set_random_seed(777)  # reproducibility
@@ -6,17 +7,16 @@ tf.set_random_seed(777)  # reproducibility
 
 class GAN:
 
-    def __init__(self, s, batch_size=32, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
-                 n_input=784, fc_unit=128,
-                 z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
+    def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
+                 sample_num=10 * 10, sample_size=10,
+                 n_input=784, fc_unit=128, z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 32
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
+        :param height: input image height, default 28
+        :param width: input image width, default 28
         :param channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input dataset's classes
@@ -25,8 +25,6 @@ class GAN:
         # Output Settings
         :param sample_num: the number of output images, default 64
         :param sample_size: sample image size, default 8
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
 
         # For DNN model
         :param n_input: input image size, default 784(28x28)
@@ -42,15 +40,13 @@ class GAN:
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
+        self.height = height
+        self.width = width
         self.channel = channel
         self.n_classes = n_classes
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.n_input = n_input
         self.fc_unit = fc_unit
@@ -60,19 +56,11 @@ class GAN:
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
-        '''
-        self.batch = tf.Variable(0)
-        self.opt = lambda x: tf.train.exponential_decay(
-            learning_rate=x,
-            global_step=self.batch,
-            decay_rate=0.95,
-            decay_steps=100,
-            staircase=True
-        )
-        '''
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
+
+        self.g = None
 
         self.d_op = None
         self.g_op = None
@@ -91,15 +79,20 @@ class GAN:
         with tf.variable_scope("discriminator", reuse=reuse):
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-1')
-            x = tf.layers.dense(x, 1, activation=None, name='d-fc-2')
+            x = t.dense(x, self.fc_unit, name='d-fc-1')
+            x = tf.nn.leaky_relu(x)
 
-        return x
+            x = t.dense(x, 1, name='d-fc-2')
+
+            return x
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
-            x = tf.layers.dense(x, self.n_input, activation=tf.nn.sigmoid, name='g-fc-2')
+            x = t.dense(z, self.fc_unit, name='g-fc-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.dense(x, self.n_input, name='g-fc-2')
+            x = tf.nn.sigmoid(x)
 
         return x
 
@@ -133,14 +126,8 @@ class GAN:
         self.d_loss = tf.reduce_sum(d_real / b_plus) + tf.log(z_b)
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # g = tf.reshape(self.g, shape=[-1, self.output_height, self.output_height, self.channel])
-        # tf.summary.image("generated", g)  # generated images by Generative Model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
