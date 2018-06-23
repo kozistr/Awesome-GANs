@@ -59,9 +59,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 │    │     ├── train_xxx.png
 │    │     └── train_xxx.png
 │    ├── model  (model)
-│    │     ├── checkpoint
-│    │     ├── ...
-│    │     └── xxx.ckpt
+│    │     └── model.txt (google-drive link for pre-trained model)
 │    ├── gan_model.py (gan model)
 │    ├── gan_train.py (gan trainer)
 │    ├── gan_tb.png   (Tensor-Board result)
