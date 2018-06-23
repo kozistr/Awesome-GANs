@@ -271,3 +271,13 @@ def sce_loss(data, label):
 
 def softce_loss(data, label):
     return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=data, labels=label))
+
+
+def pullaway_loss(x):
+    n = x.get_shape()[0]
+
+    # PullAway Loss # 2.4 Repelling Regularizer in 1609.03126.pdf
+    normalized = x / tf.sqrt(tf.reduce_sum(tf.square(x), 1, keep_dims=True))
+    similarity = tf.matmul(normalized, normalized, transpose_b=True)
+
+    return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
