@@ -37,8 +37,10 @@ def main():
                  width=64,
                  channel=3,
                  ds_path="D:/DataSet/CelebA/",
-                 ds_type="CelebA")
-    ds_iter = DataIterator(x=iu.transform(ds.images, inv_type='127'),
+                 ds_type="CelebA",
+                 use_img_scale=False,
+                 img_scale="-1,1")
+    ds_iter = DataIterator(x=iu.transform(ds.images),
                            y=None,
                            batch_size=train_step['batch_size'],
                            label_off=False)
