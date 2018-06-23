@@ -1,4 +1,4 @@
-# Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)[![Build Status](https://travis-ci.org/dwyl/esta.svg?branch=master)](https://travis-ci.org/)
+# Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 ## Environments
@@ -39,10 +39,8 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 ## DataSets
 Now supporting(?) DataSets are... (code is in /datasets.py)
 * MNIST 
-* CiFar-10
-* CiFar-100
-* CelebA
-* CelebA-HQ
+* CiFar-10 / 100
+* CelebA/CelebA-HQ
 * pix2pix DataSets
 * DIV2K DataSets
 * ~~ImageNet DataSets~~
@@ -64,6 +62,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 │    ├── gan_train.py (gan trainer)
 │    ├── gan_tb.png   (Tensor-Board result)
 │    └── readme.md    (results & explains)
+├── tfutil.py         (useful TF util)
 ├── image_utils.py    (image processing)
 └── datasets.py       (DataSet loader)
 ```
