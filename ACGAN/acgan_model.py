@@ -99,6 +99,7 @@ class ACGAN:
         with tf.variable_scope("classifier", reuse=reuse):
             x = t.dense(x, self.fc_unit, name='c-fc-1')
             x = tf.nn.leaky_relu(x)
+
             x = t.dense(x, self.n_classes, name='c-fc-2')
 
             return x
@@ -177,7 +178,6 @@ class ACGAN:
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         c_real_loss = t.sce_loss(c_real, self.y)

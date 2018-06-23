@@ -68,7 +68,7 @@ def main():
                                              model.z: batch_z,
                                          })
 
-            d_overpowered = d_loss < g_loss / 2.
+            d_overpowered = d_loss < g_loss / 3.
 
             if step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
@@ -81,8 +81,6 @@ def main():
                                                             model.y: batch_y,
                                                             model.z: batch_z,
                                                         })
-
-                d_overpowered = d_loss < g_loss / 2
 
                 # Print loss
                 print("[+] Step %08d => " % step,
