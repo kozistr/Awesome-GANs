@@ -14,6 +14,7 @@ tf.set_random_seed(seed)
 # ---------------------------------------------------------------------------------------------
 # For convenience :)
 
+
 def run(*args, **kwargs):
     return tf.get_default_session().run(*args, **kwargs)
 
@@ -50,6 +51,7 @@ def gaussian_noise(x, std=5e-2):
 # ---------------------------------------------------------------------------------------------
 # Image Sampling with TF
 
+
 def down_sampling(img, interp='tf.image.ResizeMethod.BILINEAR'):
     shape = img.get_shape()  # [batch, height, width, channels]
 
@@ -74,6 +76,7 @@ def resize_nn(x, size):
 
 # ---------------------------------------------------------------------------------------------
 # Optimizer
+
 
 class Optimizer(object):
 
@@ -105,6 +108,7 @@ class Optimizer(object):
 # ---------------------------------------------------------------------------------------------
 # Network
 
+
 class Network:
 
     def __init__(self):
@@ -113,6 +117,7 @@ class Network:
 
 # ---------------------------------------------------------------------------------------------
 # Functions
+
 
 w_init = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
 b_init = tf.zeros_initializer()
@@ -124,6 +129,7 @@ eps = 1e-5
 
 
 # Layers
+
 
 def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='conv2d'):
     """
@@ -199,7 +205,9 @@ def dense(x, f=1024, reuse=None, name='fc'):
                            reuse=reuse,
                            name=name)
 
+
 # Normalize
+
 
 def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="bn"):
     return tf.layers.batch_normalization(inputs=x,
@@ -233,7 +241,9 @@ def instance_norm(x, affine=True, reuse=None, name=""):
 def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
+
 # Activations
+
 
 def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
     with tf.variable_scope(name):
@@ -247,10 +257,12 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
 
         return tf.maximum(_alpha * x, x)
 
+
 # Losses
 
+
 def l1_loss(x, y):
-    return tf.reduce_mean((tf.abs(x - y))
+    return tf.reduce_mean(tf.abs(x - y))
 
 
 def mse_loss(x, y):  # l2_loss
