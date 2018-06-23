@@ -18,7 +18,6 @@ import image_utils as iu
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/StarGAN-model.ckpt'
 }
 
@@ -49,12 +48,19 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        # Celeb-A DataSet images
-        ds = DataSet(input_height=64,
-                     input_width=64,
-                     input_channel=3,
-                     attr_labels=attr_labels,
-                     ds_path="/home/zero/hdd/DataSet/CelebA")
+        # loading CelebA DataSet
+        ds = DataSet(height=64,
+                     width=64,
+                     channel=3,
+                     ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+                     ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
+                     # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
+                     ds_type="CelebA",
+                     use_save=False,
+                     save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
+                     save_type="to_h5",
+                     use_img_scale=False,
+                     img_scale="-1,1")
 
         # x_A # Celeb-A
         img_a = np.reshape(ds.images, [-1, 64, 64, 3])
@@ -90,6 +96,8 @@ def main():
                     perm = np.arange(ds.num_images)
                     np.random.shuffle(perm)
 
+                    # To-Do
+                    # Getting Proper DataSet
                     img_a, img_b = img_a[perm], img_a[perm]
                     attr_a, attr_b = attr_a[perm], attr_a[perm]
 
@@ -100,6 +108,9 @@ def main():
 
                 x_a, y_a = img_a[start:end], attr_a[start:end][:]
                 x_b, y_b = img_a[start:end], attr_a[start:end][:]
+
+                x_a = iu.transform(x_a, inv_type='127')
+                x_b = iu.transform(x_b, inv_type='127')
 
                 batch_a = ds.concat_data(x_a, y_a)
                 batch_b = ds.concat_data(x_b, y_b)
@@ -159,10 +170,11 @@ def main():
                     # Generated image save
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
+                    model.saver.save(s, results['model'], global_step)
 
                 global_step += 1
 
