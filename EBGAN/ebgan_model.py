@@ -73,6 +73,7 @@ class EBGAN:
         self.pt_loss = 0.
 
         self.g = None
+        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -144,28 +145,30 @@ class EBGAN:
 
             return embeddings, decoded
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, reuse=None, is_train=True):
         """
         # referred architecture in the paper
         : (512)fc - (256)4c2s - (128)4c2s (3)4c2s
         :param z: embeddings
         :param reuse: re-usable
+        :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
             assert self.fc_unit == 4 * 4 * self.gf_dim // 2
 
             x = t.dense(z, self.fc_unit, name='gen-fc-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.leaky_relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, self.gf_dim // 2))
 
             x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
-            x = t.batch_norm(x, name='gen-bn-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
-            x = t.batch_norm(x, name='gen-bn-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
             x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-3')
@@ -176,6 +179,7 @@ class EBGAN:
     def build_ebgan(self):
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         d_embed_real, d_decode_real = self.discriminator(self.x)
