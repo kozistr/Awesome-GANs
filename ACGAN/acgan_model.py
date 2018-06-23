@@ -85,27 +85,12 @@ class ACGAN:
 
         self.build_acgan()  # build ACGAN model
 
-    def classifier(self, x, reuse=None):
-        """
-        # Following a C Network, CiFar-like-hood, referred in the paper
-        :param x: image, shape=(-1, 28, 28, 1)
-        :param reuse: re-usable
-        :return: logits
-        """
-        with tf.variable_scope("classifier", reuse=reuse):
-            x = t.dense(x, 1024, name='c-fc-1')
-            x = tf.nn.leaky_relu(x)
-
-            x = t.dense(x, self.n_classes, name='c-fc-2')
-
-            return x
-
     def discriminator(self, x, reuse=None):
         """
         # Following a D Network, CiFar-like-hood, referred in the paper
         :param x: image
         :param reuse: re-usable
-        :return: logits
+        :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
             x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
@@ -116,14 +101,15 @@ class ACGAN:
                 x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), k=3, s=(i % 2 + 1), name='disc-conv2d-%d' % (i + 2))
                 x = t.batch_norm(x)
                 x = tf.nn.leaky_relu(x, alpha=0.2)
-                x = tf.layers.dropout(x, 0.5, name='d-dropout-%d' % i)
+                x = tf.layers.dropout(x, 0.5, name='d-dropout2d-%d' % (i + 1))
 
-            x = tf.layers.flatten(x)
+            net = tf.layers.flatten(x)
 
-            net = tf.layers.dense(x, self.n_classes + 1, name='d-fc-2')  # logits
-            x = tf.sigmoid(x)
+            x = tf.layers.dense(x, self.n_classes + 1, name='disc-fc-1')
+            logit = x[self.n_classes:]
+            cat = x[:self.n_classes]
 
-            return x, net
+            return cat, logit, net
 
     def generator(self, z, y, reuse=None, is_train=True):
         """
@@ -154,26 +140,22 @@ class ACGAN:
 
     def build_acgan(self):
         # Generator
-        self.g = self.generator(self.y, self.z)
-        self.g_test = self.generator(self.y, self.z, is_train=False)
+        self.g = self.generator(self.z, self.y)
+        self.g_test = self.generator(self.z, self.y, is_train=False)
 
         # Discriminator
-        d_real, d_real_net = self.discriminator(self.x)
-        d_fake, d_fake_net = self.discriminator(self.g, reuse=True)
-
-        # Classifier
-        c_real = self.classifier(d_real_net)
-        c_fake = self.classifier(d_fake_net, reuse=True)
+        c_real, d_real, _ = self.discriminator(self.x)
+        c_fake, d_fake, _ = self.discriminator(self.g, reuse=True)
 
         # sigmoid CE Loss
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
+        self.d_loss = (d_real_loss + d_fake_loss) / 2.
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
-        c_real_loss = t.sce_loss(c_real, self.y)
-        c_fake_loss = t.sce_loss(c_fake, self.y)
-        self.c_loss = c_real_loss + c_fake_loss
+        c_real_loss = t.ssoftce_loss(c_real, self.y)
+        c_fake_loss = t.ssoftce_loss(c_fake, self.y)
+        self.c_loss = (c_real_loss + c_fake_loss) / 2.
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
@@ -188,13 +170,13 @@ class ACGAN:
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
-        c_params = [v for v in t_vars if v.name.startswith('c')]
+        c_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(self.d_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(self.g_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(self.g_lr,
+        self.c_op = tf.train.AdamOptimizer(self.c_lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
 
         # Merge summary
