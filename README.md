@@ -127,7 +127,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 2. ~~Implement TempoGAN~~ - later when DataSet is ready
 3. Fix PGGAN, SGAN, SGAN++
 4. Implement SAGAN - later when DataSet is ready
-5. -
+5. 
 
 ## ETC
 
