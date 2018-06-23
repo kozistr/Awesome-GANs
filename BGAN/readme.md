@@ -8,6 +8,7 @@
 ## Architecture Networks
 
 * just 2 fc layers network for D/G nets
+* In original BGAN paper, using simple 4 conv layers * 3 fc layers
 
 ## Tensorboard
 
