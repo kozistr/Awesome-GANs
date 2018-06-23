@@ -36,11 +36,16 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_path="D:/DataSet/CelebA/",
+                 ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
+                 use_save=False,
+                 save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
+                 save_type="to_h5",
                  use_img_scale=False,
                  img_scale="-1,1")
-    ds_iter = DataIterator(x=iu.transform(ds.images),
+    ds_iter = DataIterator(x=iu.transform(ds.images, inv_type='127'),
                            y=None,
                            batch_size=train_step['batch_size'],
                            label_off=False)
