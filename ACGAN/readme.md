@@ -7,11 +7,10 @@
 ## Architecture Networks
 
 * Same with the AC-GAN paper.
-* But, i just used hyper-parameters like weight initializer, batch_size, etc...
+* But, i just used hyper-parameters like weight initializer, etc...
 
 *DIFFS* | *AC-GAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **batch size** | 100 | 64 |
  **weight initializer** | `Isotropic Gaussian` | ``HE Initializer`` |
  **z-noise size** | 110 | 128 |
  **Activation noise std** | ``0 ~ 0.2`` | ``None`` |
