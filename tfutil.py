@@ -294,7 +294,7 @@ def ssoftce_loss(data, label):
 
 def pullaway_loss(x, n):
     # PullAway Loss # 2.4 Repelling Regularizer in 1609.03126.pdf
-    normalized = x / tf.sqrt(tf.reduce_sum(tf.square(x), 1, keep_dims=True))
+    normalized = x / tf.sqrt(tf.reduce_sum(tf.square(x), 1, keepdims=True))
     similarity = tf.matmul(normalized, normalized, transpose_b=True)
 
     return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
