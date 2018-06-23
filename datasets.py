@@ -469,7 +469,7 @@ class CelebADataSet:
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
-                 ds_path=None, ds_type="CelebA", img_scale="-1,1",
+                 ds_path=None, ds_type="CelebA", use_img_scale=True, img_scale="-1,1",
                  use_save=False, save_type='to_h5', save_file_name=None,
                  use_concat_data=False):
 
@@ -491,6 +491,7 @@ class CelebADataSet:
         # DataSet Settings
         :param ds_path: DataSet's Path
         :param ds_type: which DataSet is
+        :param use_img_scale: using img scaling?
         :param img_scale: img normalize
         :param use_save: saving into another file format
         :param save_type: file format to save
@@ -535,6 +536,8 @@ class CelebADataSet:
         self.ds_image_path = ds_path + "/Img/img_align_celeba/"
         self.ds_label_path = ds_path + "/Anno/list_attr_celeba.txt"
         self.ds_type = ds_type
+
+        self.use_img_scale = use_img_scale
         self.img_scale = img_scale
 
         try:
@@ -572,7 +575,7 @@ class CelebADataSet:
                                     use_save=self.use_save,
                                     name=self.save_type,
                                     save_file_name=self.save_file_name,
-                                    use_image_scaling=True,
+                                    use_image_scaling=use_img_scale,
                                     image_scale=self.img_scale).raw_data  # numpy arrays
         self.labels = self.load_attr()
 
