@@ -93,9 +93,9 @@ class ACGAN:
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            if y:
-                y = tf.reshape(y, (-1, 1, 1, self.n_classes))  # sth wrong...
-                x = tf.concat([x, y])
+            # if y:
+            #     y = tf.reshape(y, (-1, 1, 1, self.n_classes))  # sth wrong...
+            #     x = tf.concat([x, y])
 
             x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x, alpha=0.2)
@@ -126,12 +126,10 @@ class ACGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            if y:
-                x = tf.concat([z, y], axis=1)  # 128 + 10
-            else:
-                x = z
-
-            x = t.dense(x, self.gf_dim, name='gen-fc-1')
+            # if y:
+            #     x = tf.concat([z, y], axis=1)  # 128 + 10
+            # else:
+            x = t.dense(z, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, 24))
@@ -148,8 +146,8 @@ class ACGAN:
 
     def build_acgan(self):
         # Generator
-        self.g = self.generator(self.z, self.y)
-        self.g_test = self.generator(self.z, self.y, reuse=True, is_train=False)
+        self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         c_real, d_real = self.discriminator(self.x)
