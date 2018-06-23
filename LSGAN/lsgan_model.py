@@ -1,39 +1,14 @@
 import tensorflow as tf
+import tfutil as t
 
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def conv2d(input_, filter_=64, k=5, d=1, activation=tf.nn.leaky_relu, pad='same', name="conv2d"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d(inputs=input_,
-                                filters=filter_,
-                                kernel_size=k,
-                                strides=d,
-                                padding=pad,
-                                activation=activation,
-                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                bias_initializer=tf.constant_initializer(0.),
-                                name=name)
-
-
-def deconv2d(input_, filter_=64, k=5, d=2, activation=tf.nn.leaky_relu, pad='same', name="deconv2d"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d_transpose(inputs=input_,
-                                          filters=filter_,
-                                          kernel_size=k,
-                                          strides=d,
-                                          padding=pad,
-                                          activation=activation,
-                                          kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                          bias_initializer=tf.constant_initializer(0.),
-                                          name=name)
-
-
 class LSGAN:
 
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
+    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+                 sample_num=10 * 10, sample_size=10,
                  n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
                  z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-12):
 
@@ -41,8 +16,8 @@ class LSGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
+        :param height: input image height, default 28
+        :param width: input image width, default 28
         :param channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input dataset's classes
@@ -51,8 +26,6 @@ class LSGAN:
         # Output Settings
         :param sample_num: the number of output images, default 64
         :param sample_size: sample image size, default 8
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
 
         # For CNN model
         :param n_input: input image size, default 784(28x28)
@@ -70,16 +43,14 @@ class LSGAN:
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
+        self.height = height
+        self.width = width
         self.channel = channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
         self.n_classes = n_classes
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.n_input = n_input
         self.df_dim = df_dim
@@ -95,6 +66,8 @@ class LSGAN:
         self.g_loss = 0.
         self.d_loss = 0.
 
+        self.g = None
+
         self.d_op = None
         self.g_op = None
 
@@ -104,7 +77,7 @@ class LSGAN:
 
         # Placeholder
         self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.input_height, self.input_width, self.channel],
+                                shape=[None, self.height, self.width, self.channel],
                                 name="x-image")                                        # (-1, 28, 28, 1)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
@@ -112,35 +85,40 @@ class LSGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = conv2d(x, self.df_dim, name='d-conv-1')
+            x = t.conv2d(x, self.df_dim, name='d-conv-1')
+            x = tf.nn.leaky_relu(x)
             x = tf.layers.dropout(x, 0.5, name='d_dropout-1')
 
-            x = conv2d(x, self.df_dim * 2, name='d-conv-2')
+            x = t.conv2d(x, self.df_dim * 2, name='d-conv-2')
+            x = tf.nn.leaky_relu(x)
             x = tf.layers.dropout(x, 0.5, name='d-dropout-2')
 
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, self.fc_unit / 2, activation=tf.nn.leaky_relu, name='d-fc-1')
+            x = t.dense(x, self.fc_unit / 2, name='d-fc-1')
+            x = tf.nn.leaky_relu(x)
             x = tf.layers.dropout(x, 0.5, name='d-dropout-3')
 
-            x = tf.layers.dense(x, 1, name='d-fc-2')  # logits
+            x = t.dense(x, 1, name='d-fc-2')  # logits
 
             return x
 
     def generator(self, z, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.layers.dense(z, self.gf_dim * 2 * 7 * 7, activation=tf.nn.leaky_relu, name='g-fc-1')
+            x = t.dense(z, self.gf_dim * 2 * 7 * 7, name='g-fc-1')
+            x = tf.nn.leaky_relu(x)
+
             x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 2])
 
-            x = deconv2d(x, self.gf_dim, k=2, d=2, name='g-deconv-1')
-            x = deconv2d(x, 1, k=2, d=2, activation=tf.nn.sigmoid, name='g-deconv-2')
+            x = t.deconv2d(x, self.gf_dim, k=2, s=2, name='g-deconv-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.deconv2d(x, 1, k=2, s=2, name='g-deconv-2')
+            x = tf.sigmoid(x)
 
             return x
 
     def build_lsgan(self):
-        def mse_loss(pred, data, n=self.batch_size):
-            return tf.sqrt(2 * tf.nn.l2_loss(pred - data)) / n
-
         # Generator
         self.g = self.generator(self.z)
 
@@ -149,22 +127,16 @@ class LSGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # LSGAN Loss
-        d_real_loss = tf.reduce_sum(mse_loss(d_real, tf.ones_like(d_real)))
-        d_fake_loss = tf.reduce_sum(mse_loss(d_fake, tf.zeros_like(d_fake)))
+        d_real_loss = t.mse_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = t.mse_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
-        self.g_loss = tf.reduce_sum(mse_loss(d_fake, tf.ones_like(d_fake)))
+        self.g_loss = t.mse_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.histogram("d_real", d_real)
-        tf.summary.histogram("d_fake", d_fake)
-
-        tf.summary.scalar("d_real_loss", d_real_loss)
-        tf.summary.scalar("d_fake_loss", d_fake_loss)
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # optimizer
         t_vars = tf.trainable_variables()
