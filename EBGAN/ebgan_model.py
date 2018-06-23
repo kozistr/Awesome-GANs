@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -10,7 +14,7 @@ class EBGAN:
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  n_input=784, df_dim=64, gf_dim=64, fc_unit=256,
-                 z_dim=128, g_lr=8e-4, d_lr=8e-4, enable_pull_away=True, epsilon=1e-9):
+                 z_dim=128, g_lr=8e-4, d_lr=8e-4, enable_pull_away=True):
 
         """
         # General Settings
@@ -38,7 +42,6 @@ class EBGAN:
         :param g_lr: generator learning rate, default 8e-4
         :param d_lr: discriminator learning rate, default 8e-4
         :param enable_pull_away: enabling PULLAWAY loss, default True
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -63,7 +66,6 @@ class EBGAN:
         self.beta2 = 0.9
         self.d_lr, self.g_lr = d_lr, g_lr  # 1e-3 in the paper
         self.EnablePullAway = enable_pull_away
-        self.eps = epsilon
         self.pt_lambda = 0.1
 
         # 1 is enough.
@@ -100,7 +102,7 @@ class EBGAN:
             x = t.conv2d(x, self.df_dim * 1, 4, 2, name='enc-conv2d-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-1')
+            x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-2')
             x = tf.nn.leaky_relu(x)
 
             # (-1, 7, 7, 128)
@@ -150,18 +152,18 @@ class EBGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, self.fc_unit * 4, name='g-fc-1')
+            x = t.dense(z, self.fc_unit * 4, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.dense(x, 7 * 7 * self.fc_unit // 2, name='g-fc-2')
+            x = t.dense(x, 7 * 7 * self.fc_unit // 2, name='gen-fc-2')
             x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
-            x = t.deconv2d(x, self.gf_dim, 4, 2, name='g-deconv2d-1')
+            x = t.deconv2d(x, self.gf_dim, 4, 2, name='gen-deconv2d-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.deconv2d(x, 1, 4, 2, name='g-deconv2d-2')
+            x = t.deconv2d(x, 1, 4, 2, name='gen-deconv2d-2')
             x = tf.nn.sigmoid(x)
 
             return x
