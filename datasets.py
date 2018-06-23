@@ -100,8 +100,12 @@ class DataSetLoader:
         self.buffer_size = buffer_size
         self.n_threads = n_threads
 
-        self.file_list = sorted(os.listdir(self.path))
-        self.file_ext = self.file_list[0].split('.')[-1]
+        if os.path.isfile(self.path):
+            self.file_list = [self.path]
+            self.file_ext = self.path.split('.')[-1]
+        else:
+            self.file_list = sorted(os.listdir(self.path))
+            self.file_ext = self.file_list[0].split('.')[-1]
         self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
         self.raw_data = np.ndarray([])  # (N, H * W * C)
 
@@ -469,7 +473,7 @@ class CelebADataSet:
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
                  n_threads=30, use_split=False, split_rate=0.2,
-                 ds_path=None, ds_type="CelebA", use_img_scale=True, img_scale="-1,1",
+                 ds_image_path=None, ds_label_path=None, ds_type="CelebA", use_img_scale=True, img_scale="-1,1",
                  use_save=False, save_type='to_h5', save_file_name=None,
                  use_concat_data=False):
 
@@ -489,7 +493,8 @@ class CelebADataSet:
         :param split_rate: image split rate (into train & val)
 
         # DataSet Settings
-        :param ds_path: DataSet's Path
+        :param ds_image_path: DataSet's Image Path
+        :param ds_label_path: DataSet's Label Path
         :param ds_type: which DataSet is
         :param use_img_scale: using img scaling?
         :param img_scale: img normalize
@@ -532,25 +537,24 @@ class CelebADataSet:
         Expected DatSet's Type
         'CelebA' or 'CelebA-HQ'
         """
-        self.ds_path = ds_path
-        self.ds_image_path = ds_path + "/Img/img_align_celeba/"
-        self.ds_label_path = ds_path + "/Anno/list_attr_celeba.txt"
+        self.ds_image_path = ds_image_path
+        self.ds_label_path = ds_label_path
         self.ds_type = ds_type
 
         self.use_img_scale = use_img_scale
         self.img_scale = img_scale
 
         try:
-            assert self.ds_path
+            assert self.ds_image_path and self.ds_label_path
         except AssertionError:
-            raise AssertionError("[-] CelebA/CelebA-HQ DataSets' Path is required!")
+            raise AssertionError("[-] CelebA/CelebA-HQ DataSets' Path is required! (%s)")
 
         if self.ds_type == "CelebA":
             self.num_images = 202599  # the number of CelebA    images
         elif self.ds_type == "CelebA-HQ":
             self.num_images = 30000   # the number of CelebA-HQ images
 
-            tmp_path = self.ds_path + "/imgHQ00000."
+            tmp_path = self.ds_image_path + "/imgHQ00000."
             if os.path.exists(tmp_path + "dat"):
                 raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
                                         "[-] plz, use original PGGAN repo or"
@@ -577,13 +581,13 @@ class CelebADataSet:
                                     save_file_name=self.save_file_name,
                                     use_image_scaling=use_img_scale,
                                     image_scale=self.img_scale).raw_data  # numpy arrays
-        self.labels = self.load_attr()
+        self.labels = self.load_attr(path=self.ds_label_path)
 
         if self.use_concat_data:
             self.images = self.concat_data(self.images, self.labels)
 
-    def load_attr(self):
-        with open(self.ds_label_path, 'r') as f:
+    def load_attr(self, path):
+        with open(path, 'r') as f:
             img_attr = []
 
             self.num_images = int(f.readline().strip())
