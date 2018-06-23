@@ -12,7 +12,8 @@ import ebgan_model as ebgan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import MNISTDataSet as DataSet
+from datasets import DataIterator
+from datasets import CelebADataSet as DataSet
 
 
 results = {
@@ -21,6 +22,8 @@ results = {
 }
 
 train_step = {
+    'epochs': 25,
+    'batch_size': 64,
     'global_step': 200001,
     'logging_interval': 1000,
 }
@@ -29,8 +32,16 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST Dataset load
-    mnist = DataSet(ds_path="D:/DataSet/mnist/").data
+    # loading CelebA DataSet
+    ds = DataSet(height=64,
+                 width=64,
+                 channel=3,
+                 ds_path="D:/DataSet/CelebA/",
+                 ds_type="CelebA")
+    ds_iter = DataIterator(x=iu.transform(ds.images, inv_type='127'),
+                           y=None,
+                           batch_size=train_step['batch_size'],
+                           label_off=False)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -43,70 +54,64 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        d_loss = 0.
-        d_overpowered = False
-        for global_step in range(train_step['global_step']):
-            batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+        global_step = 0
+        for epoch in range(train_step['epochs']):
+            for batch_x in ds_iter.iterate():
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-            # Update D network
-            if not d_overpowered:
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
                                       model.x: batch_x,
                                       model.z: batch_z,
                                   })
 
-            # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
-                              feed_dict={
-                                  model.z: batch_z,
-                              })
+                # Update G network
+                _, g_loss = s.run([model.g_op, model.g_loss],
+                                  feed_dict={
+                                      model.z: batch_z,
+                                  })
 
-            d_overpowered = d_loss < g_loss / 2.
+                # Logging
+                if global_step % train_step['logging_interval'] == 0:
+                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-            # Logging
-            if global_step % train_global_step['logging_interval'] == 0:
-                batch_x, _ = mnist.test.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                    d_loss, g_loss, pt_loss, summary = s.run([model.d_loss, model.g_loss, model.pt_loss, model.merged],
+                                                             feed_dict={
+                                                                 model.x: batch_x,
+                                                                 model.z: batch_z,
+                                                             })
 
-                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                feed_dict={
-                                                    model.x: batch_x,
-                                                    model.z: batch_z,
-                                                })
+                    # Print loss
+                    print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
+                          " D  loss : {:.8f}".format(d_loss),
+                          " G  loss : {:.8f}".format(g_loss),
+                          " PT loss : {:.8f}".format(pt_loss))
 
-                d_overpowered = d_loss < g_loss / 2.
+                    # Training G model with sample image and noise
+                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                    samples = s.run(model.g,
+                                    feed_dict={
+                                        model.z: sample_z,
+                                    })
 
-                # Print loss
-                print("[+] Step %08d => " % global_step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                    # Summary saver
+                    model.writer.add_summary(summary, global_step)
 
-                # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.z: sample_z,
-                                })
+                    # Export image generated by model G
+                    sample_image_height = model.sample_size
+                    sample_image_width = model.sample_size
+                    sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
-                # Summary saver
-                model.writer.add_summary(summary, global_step)
+                    # Generated image save
+                    iu.save_images(samples,
+                                   size=[sample_image_height, sample_image_width],
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
-                # Export image generated by model G
-                sample_image_height = model.sample_size
-                sample_image_width = model.sample_size
-                sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
+                    # Model save
+                    model.saver.save(s, results['model'], global_step)
 
-                # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
-
-                # Model save
-                model.saver.save(s, results['model'], global_step)
+                global_step += 1
 
     end_time = time.time() - start_time  # Clocking end
 

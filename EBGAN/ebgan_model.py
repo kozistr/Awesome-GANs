@@ -11,37 +11,34 @@ tf.set_random_seed(777)  # reproducibility
 
 class EBGAN:
 
-    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, df_dim=64, gf_dim=64, fc_unit=256,
-                 z_dim=128, g_lr=8e-4, d_lr=8e-4, enable_pull_away=True):
+                 df_dim=64, gf_dim=64, fc_unit=512,
+                 z_dim=128, g_lr=2e-4, d_lr=2e-4, enable_pull_away=True):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: input image height, default 28
-        :param width: input image width, default 28
-        :param channel: input image channel, default 1 (gray-scale)
-        - in case of MNIST, image size is 28x28x1(HWC).
-        :param n_classes: input dataset's classes
-        - in case of MNIST, 10 (0 ~ 9)
+        :param height: input image height, default 64
+        :param width: input image width, default 64
+        :param channel: input image channel, default 3
+        :param n_classes: input DataSet's classes
 
         # Output Settings
-        :param sample_num: the number of output images, default 196
-        :param sample_size: sample image size, default 14
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
 
         # For CNN model
-        :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
-        :param fc_unit: the number of fully connected filters, default 256
+        :param fc_unit: the number of fully connected filters, default 512
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
-        :param g_lr: generator learning rate, default 8e-4
-        :param d_lr: discriminator learning rate, default 8e-4
-        :param enable_pull_away: enabling PULLAWAY loss, default True
+        :param g_lr: generator learning rate, default 2e-4
+        :param d_lr: discriminator learning rate, default 2e-4
+        :param enable_pull_away: enabling PULL-AWAY loss, default True
         """
 
         self.s = s
@@ -56,7 +53,6 @@ class EBGAN:
         self.sample_num = sample_num
         self.sample_size = sample_size
 
-        self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
         self.fc_unit = fc_unit
@@ -64,13 +60,13 @@ class EBGAN:
         self.z_dim = z_dim
         self.beta1 = 0.5
         self.beta2 = 0.9
-        self.d_lr, self.g_lr = d_lr, g_lr  # 1e-3 in the paper
+        self.d_lr, self.g_lr = d_lr, g_lr
         self.EnablePullAway = enable_pull_away
         self.pt_lambda = 0.1
 
-        # 1 is enough.
-        # but in case of the large batch, it needs value more than 1.
-        self.margin = max(1., self.batch_size / 64.)
+        # 1 is enough. But in case of the large batch, it needs value more than 1.
+        # 20 for CelebA, 80 for LSUN
+        self.margin = 20.  # max(1., self.batch_size / 64.)
 
         self.g_loss = 0.
         self.d_loss = 0.
@@ -87,13 +83,14 @@ class EBGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")    # (-1, 28, 28, 1)
+        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")    # (-1, 64, 64, 3)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_ebgan()  # build EBGAN model
 
     def encoder(self, x, reuse=None):
         """
+        (64)4c2s - (128)4c2s - (256)4c2s
         :param x: images
         :param reuse: re-usable
         :return: logits
@@ -103,28 +100,32 @@ class EBGAN:
             x = tf.nn.leaky_relu(x)
 
             x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-2')
+            x = t.batch_norm(x, name='enc-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            # (-1, 7, 7, 128)
-            x = tf.layers.flatten(x)
-
-            x = t.dense(x, self.fc_unit, name='enc-fc-1')
+            x = t.conv2d(x, self.df_dim * 4, 4, 2, name='enc-conv2d-3')
+            x = t.batch_norm(x, name='enc-bn-2')
+            x = tf.nn.leaky_relu(x)
 
             return x
 
     def decoder(self, x, reuse=None):
         """
+        (128)4c2s - (64)4c2s - (3)4c2s
         :param x: embeddings
         :param reuse: re-usable
         :return: prob
         """
         with tf.variable_scope('decoder', reuse=reuse):
-            x = t.dense(x, self.gf_dim * 7 * 7, name='dec-fc-1')
+            x = t.deconv2d(x, self.df_dim * 2, 4, 2, name='dec-deconv2d-1')
+            x = t.batch_norm(x, name='dec-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, (-1, 7, 7, self.gf_dim))
+            x = t.deconv2d(x, self.df_dim * 1, 4, 2, name='dec-deconv2d-2')
+            x = t.batch_norm(x, name='dec-bn-2')
+            x = tf.nn.leaky_relu(x)
 
-            x = t.deconv2d(x, self.channel, 4, 2, name='dec-deconv2d-1')
+            x = t.deconv2d(x, self.channel, 4, 2, name='dec-deconv2d-3')
             x = tf.nn.sigmoid(x)
 
             return x
@@ -146,25 +147,29 @@ class EBGAN:
     def generator(self, z, reuse=None):
         """
         # referred architecture in the paper
-        : FC1024_BR-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
+        : (512)fc - (256)4c2s - (128)4c2s (3)4c2s
         :param z: embeddings
         :param reuse: re-usable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, self.fc_unit * 4, name='gen-fc-1')
+            assert self.fc_unit == 4 * 4 * self.gf_dim // 2
+
+            x = t.dense(z, self.fc_unit, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.dense(x, 7 * 7 * self.fc_unit // 2, name='gen-fc-2')
+            x = tf.reshape(x, (-1, 4, 4, self.gf_dim // 2))
+
+            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
+            x = t.batch_norm(x, name='gen-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.flatten(x)
-
-            x = t.deconv2d(x, self.gf_dim, 4, 2, name='gen-deconv2d-1')
+            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
+            x = t.batch_norm(x, name='gen-bn-2')
             x = tf.nn.leaky_relu(x)
 
-            x = t.deconv2d(x, 1, 4, 2, name='gen-deconv2d-2')
-            x = tf.nn.sigmoid(x)
+            x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-3')
+            x = tf.nn.tanh(x)
 
             return x
 
@@ -183,7 +188,7 @@ class EBGAN:
         if self.EnablePullAway:
             self.pt_loss = t.pullaway_loss(d_embed_fake)
 
-        self.g_loss = d_fake_loss + self.pt_lambda * self.pt_loss  # g_loss = mse + lambda * pt_loss
+        self.g_loss = d_fake_loss + self.pt_lambda * self.pt_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
