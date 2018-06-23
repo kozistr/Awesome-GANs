@@ -178,9 +178,9 @@ class ACGAN:
 
         self.d_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.lr * 4,
+        self.g_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(self.lr * 4,
+        self.c_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
         # Merge summary
         self.merged = tf.summary.merge_all()
