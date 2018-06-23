@@ -2,75 +2,33 @@ import tensorflow as tf
 
 import vgg19
 
+import sys
+
+sys.path.append('../')
+import tfutil as t
+
 
 tf.set_random_seed(777)  # reproducibility
 
 
-def sub_pixel_conv2d(x, f, s=2):
-    """
-    # ref : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py
-    """
-    if f is None:
-        f = int(int(x.get_shape()[-1]) / (s ** 2))
-
-    bsize, a, b, c = x.get_shape().as_list()
-    bsize = tf.shape(x)[0]
-
-    x_s = tf.split(x, s, 3)
-    x_r = tf.concat(x_s, 2)
-
-    return tf.reshape(x_r, (bsize, s * a, s * b, f))
-
-
-def conv2d(x, f=64, k=3, s=1, act=None, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 1
-    :param act: activation function, default None
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: covn2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            bias_initializer=tf.zeros_initializer(),
-                            activation=act,
-                            padding=pad,
-                            name=name)
-
-
-def batch_norm(x, momentum=0.9, eps=1e-5, is_train=True):
-    return tf.layers.batch_normalization(inputs=x,
-                                         momentum=momentum,
-                                         epsilon=eps,
-                                         scale=True,
-                                         trainable=is_train)
-
-
 class SRGAN:
 
-    def __init__(self, s, batch_size=16, input_height=384, input_width=384, input_channel=3,
-                 sample_num=1 * 1, sample_size=1, output_height=384, output_width=384,
+    def __init__(self, s, batch_size=16, height=384, width=384, channel=3,
+                 sample_num=1 * 1, sample_size=1,
                  df_dim=64, gf_dim=64, g_lr=1e-4, d_lr=1e-4):
 
         """ Super-Resolution GAN Class
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 16
-        :param input_height: input image height, default 384
-        :param input_width: input image width, default 384
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 384
+        :param width: input image width, default 384
+        :param channel: input image channel, default 3 (RGB)
         - in case of DIV2K-HR, image size is 384x384x3(HWC).
 
         # Output Settings
         :param sample_num: the number of output images, default 1
         :param sample_size: sample image size, default 1
-        :param output_height: output images height, default 384
-        :param output_width: output images width, default 384
 
         # For CNN model
         :param df_dim: discriminator filter, default 64
@@ -84,19 +42,17 @@ class SRGAN:
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
 
-        self.lr_image_shape = [None, self.input_height // 4, self.input_width // 4, self.input_channel]
-        self.hr_image_shape = [None, self.input_height, self.input_width, self.input_channel]
+        self.lr_image_shape = [None, self.height // 4, self.width // 4, self.channel]
+        self.hr_image_shape = [None, self.height, self.width, self.channel]
 
         self.vgg_image_shape = [224, 224, 3]
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
@@ -148,20 +104,23 @@ class SRGAN:
         :return: HR (High Resolution) or SR (Super Resolution) images
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = conv2d(x, self.df_dim, act=tf.nn.leaky_relu, name='n64s1-1')
+            x = t.conv2d(x, self.df_dim, 3, 1, name='n64s1-1')
+            x = tf.nn.leaky_relu(x)
 
             strides = [2, 1]
             filters = [1, 2, 2, 4, 4, 8, 8]
 
             for i, f in enumerate(filters):
-                x = conv2d(x, f=f, s=strides[i % 2], name='n%ds%d-%d' % (f, strides[i % 2], i + 1))
-                x = batch_norm(x)
+                x = t.conv2d(x, f=f, k=3, s=strides[i % 2], name='n%ds%d-%d' % (f, strides[i % 2], i + 1))
+                x = t.batch_norm(x, name='n%d-bn-%d' % (f, i + 1))
                 x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)  # (-1, 96 * 96 * 64)
 
-            x = tf.layers.dense(x, 1024, activation=tf.nn.leaky_relu, name='d-fc-0')
-            logits = tf.layers.dense(x, 1, name='d-fc-1')
+            x = t.dense(x, 1024, name='disc-fc-1')
+            x = tf.nn.leaky_relu(x)
+
+            logits = t.dense(x, 1, name='disc-fc-2')
             prob = tf.nn.sigmoid(logits)
 
             return logits, prob
@@ -177,13 +136,13 @@ class SRGAN:
         with tf.variable_scope("generator", reuse=reuse):
             def residual_block(x, name="", _is_train=True):
                 with tf.variable_scope(name):
-                    x = conv2d(x, self.gf_dim, name="n64s1-2")
-                    x = batch_norm(x, is_train=_is_train)
+                    x = t.conv2d(x, self.gf_dim, name="n64s1-2")
+                    x = t.batch_norm(x, is_train=_is_train, name="n64s1-bn-2")
                     x = tf.nn.relu(x)
-
                     return x
 
-            x = conv2d(x, self.gf_dim, act=tf.nn.relu, name='n64s1-1')
+            x = t.conv2d(x, self.gf_dim, 3, 1, name='n64s1-1')
+            x = tf.nn.relu(x)
             x_ = x  # for later, used at layer concat
 
             # B residual blocks
@@ -193,18 +152,19 @@ class SRGAN:
                 xx = tf.add(x, xx)
                 x = xx
 
-            x = conv2d(x, self.gf_dim, name='n64s1-3')
-            x = batch_norm(x, is_train=is_train)
+            x = t.conv2d(x, self.gf_dim, 3, 1, name='n64s1-3')
+            x = t.batch_norm(x, is_train=is_train, name='n64s1-bn-3')
 
             x = tf.add(x_, x)
 
             # subpixel conv blocks
             for i in range(1, 3):
-                x = conv2d(x, self.gf_dim * 4, name='n256s1-%d' % (i + 2))
-                x = sub_pixel_conv2d(x, f=None, s=2)
+                x = t.conv2d(x, self.gf_dim * 4, 3, 1, name='n256s1-%d' % (i + 2))
+                x = t.sub_pixel_conv2d(x, f=None, s=2)
                 x = tf.nn.relu(x)
 
-            x = conv2d(x, self.input_channel, act=tf.nn.tanh, k=1, name='n3s1')  # (-1, 384, 384, 3)
+            x = t.conv2d(x, self.channel, 1, 1, name='n3s1')  # (-1, 384, 384, 3)
+            x = tf.nn.tanh(x)
 
             return x
 
@@ -226,12 +186,6 @@ class SRGAN:
             return net  # last layer
 
     def build_srgan(self):
-        def mse_loss(pred, data):
-            return tf.reduce_mean(tf.reduce_sum(tf.square(pred - data), axis=[3]))
-
-        def sigmoid_loss(logits, label):
-            return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=label))
-
         # Generator
         self.g = self.generator(self.x_lr)
         self.g_test = self.generator(self.x_lr, reuse=True, is_train=False)
@@ -248,14 +202,14 @@ class SRGAN:
         vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
 
         # Losses
-        d_real_loss = sigmoid_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = sigmoid_loss(d_fake, tf.zeros_like(d_fake))
+        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
 
-        self.g_adv_loss = self.adv_scaling * sigmoid_loss(d_fake, tf.ones_like(d_fake))
-        self.g_mse_loss = mse_loss(self.g, self.x_hr)
+        self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
+        self.g_mse_loss = t.mse_loss(self.g, self.x_hr)
         # tf.losses.mean_squared_error(self.g, self.x_hr, reduction=tf.losses.Reduction.MEAN)
-        self.g_cnt_loss = self.vgg_scaling * mse_loss(vgg_bottle_real, vgg_bottle_fake)
+        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_real, vgg_bottle_fake)
         # tf.losses.mean_squared_error(vgg_bottle_fake, vgg_bottle_real, reduction=tf.losses.Reduction.MEAN)
         self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
 

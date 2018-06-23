@@ -5,7 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-import os
 import sys
 import time
 
@@ -16,11 +15,8 @@ import image_utils as iu
 from datasets import Div2KDataSet as DataSet
 
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/SRGAN-model.ckpt'
 }
 
@@ -52,7 +48,7 @@ def main():
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False, gpu_options=gpu_config)
 
     with tf.Session(config=config) as s:
-        with tf.device("/gpu:1"):
+        with tf.device("/gpu:1"):  # Change
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
@@ -182,7 +178,7 @@ def main():
                         iu.img_save(samples, sample_dir)
 
                     # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
+                    model.saver.save(s, results['model'], global_step)
 
                 global_step += 1
 
