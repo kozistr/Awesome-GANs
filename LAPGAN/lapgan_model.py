@@ -1,20 +1,8 @@
 import tensorflow as tf
+import tfutil as t
 
 
 tf.set_random_seed(777)
-
-
-def conv2d(input_, filter_=64, k=5, s=1, activation=tf.nn.leaky_relu, pad='same', name="conv2d"):
-    with tf.variable_scope(name):
-        return tf.layers.conv2d(inputs=input_,
-                                filters=filter_,
-                                kernel_size=k,
-                                strides=s,
-                                padding=pad,
-                                activation=activation,
-                                kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                bias_initializer=tf.constant_initializer(0.),
-                                name=name)
 
 
 # In image_utils, up/down_sampling
@@ -33,7 +21,7 @@ def image_sampling(img, sampling_type='down'):
 
 class LAPGAN:
 
-    def __init__(self, s, batch_size=128, input_height=32, input_width=32, input_channel=3, n_classes=10,
+    def __init__(self, s, batch_size=128, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  z_dim=128, gf_dim=64, df_dim=64, fc_unit=512):
 
@@ -41,9 +29,9 @@ class LAPGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 128
-        :param input_height: input image height, default 64
-        :param input_width: input image width, default 64
-        :param input_channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 64
+        :param width: input image width, default 64
+        :param channel: input image channel, default 3 (RGB)
         :param n_classes: the number of classes, default 10
         - in case of CIFAR, image size is 32x32x3(HWC), classes are 10.
 
@@ -60,15 +48,15 @@ class LAPGAN:
 
         self.s = s
         self.batch_size = batch_size
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
         self.n_classes = n_classes
 
         self.sample_size = sample_size
         self.sample_num = sample_num
 
-        self.image_shape = [self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [self.height, self.width, self.channel]
 
         self.z_dim = z_dim
 
@@ -80,7 +68,7 @@ class LAPGAN:
         self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')  # one_hot
 
         self.x1_fine = tf.placeholder(tf.float32,
-                                      shape=[None, self.input_height, self.input_width, self.input_channel],
+                                      shape=[None, self.height, self.width, self.channel],
                                       name='x-images')
         self.x1_scaled = image_sampling(self.x1_fine, 'down')
         self.x1_coarse = image_sampling(self.x1_scaled, 'up')
@@ -100,14 +88,16 @@ class LAPGAN:
                                          shape=[None, self.z_noises[i]],
                                          name='z-noise_{0}'.format(i)))
 
+        self.do_rate = tf.placeholder(tf.float32, None, name='do-rate')
+
         self.g = []       # generators
         self.g_loss = []  # generator losses
 
-        self.d_reals = []  # discriminator_real logit
-        self.d_fakes = []  # discriminator_fake logit
+        self.d_reals = []       # discriminator_real logit
+        self.d_fakes = []       # discriminator_fake logit
         self.d_reals_prob = []  # discriminator_real prob
         self.d_fakes_prob = []  # discriminator_fake prob
-        self.d_loss = []  # discriminator_real losses
+        self.d_loss = []        # discriminator_real losses
 
         # Training Options
         self.d_op = []
@@ -120,7 +110,7 @@ class LAPGAN:
             learning_rate=self.learning_rate,
             decay_rate=0.9,
             decay_steps=150,
-            global_step=750,
+            global_step=750,  # for cifar DataSet
             staircase=False,
         )
 
@@ -144,41 +134,47 @@ class LAPGAN:
 
         with tf.variable_scope('discriminator_{0}'.format(scale), reuse=reuse):
             if scale == 8:
-                x1 = tf.reshape(x1, [-1, scale * scale * 3])
+                x1 = tf.reshape(x1, [-1, scale * scale * 3])  # tf.layers.flatten(x1)
 
                 h = tf.concat([x1, y], axis=1)
 
-                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='d-fc-1')
+                h = t.dense(h, self.fc_unit, name='d-fc-1')
+                h = tf.nn.leaky_relu(h)
                 h = tf.layers.dropout(h, 0.5, name='d-dropout-1')
-                h = tf.layers.dense(h, self.fc_unit // 2, activation=tf.nn.leaky_relu, name='d-fc-2')
+
+                h = t.dense(h, self.fc_unit // 2, name='d-fc-2')
+                h = tf.nn.leaky_relu(h)
                 h = tf.layers.dropout(h, 0.5, name='d-dropout-2')
-                h = tf.layers.dense(h, 1, name='d-fc-3')
+
+                h = t.dense(h, 1, name='d-fc-3')
             else:
                 x = x1 + x2
 
-                y = tf.layers.dense(y, scale * scale, activation=tf.nn.leaky_relu, name='d-fc-1')
-                y = tf.reshape(y, [-1, scale, scale, 1])
+                y = t.dense(y, scale * scale, name='d-fc-1')
+                y = tf.nn.leaky_relu(y)
+                y = tf.reshape(y, [-1, scale, scale, 1])  # tf.layers.flatten(x1)
 
                 h = tf.concat([x, y], axis=3)
 
-                h = conv2d(h, filter_=self.df_dim, pad='valid', name='d-conv-1')
-                h = conv2d(h, filter_=self.df_dim, activation=None, pad='valid', name='d-conv-2')
+                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='d-conv-1')
+                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='d-conv-2')
 
                 h = tf.layers.flatten(h)
                 h = tf.nn.leaky_relu(h)
                 h = tf.layers.dropout(h, 0.5,  name='d-dropout-1')
 
-                h = tf.layers.dense(h, 1, name='d-fc-2')
+                h = t.dense(h, 1, name='d-fc-2')
 
             return h
 
-    def generator(self, x, y, z, scale=32, reuse=None):
+    def generator(self, x, y, z, scale=32, reuse=None, do_rate=0.5):
         """
         :param x: images to fake
         :param y: classes
         :param z: noise
         :param scale: image size
         :param reuse: variable re-use
+        :param do_rate: dropout rate
         :return: logits
         """
 
@@ -189,15 +185,19 @@ class LAPGAN:
                 h = tf.concat([z, y], axis=1)
 
                 # FC Layers
-                h = tf.layers.dense(h, self.fc_unit, activation=tf.nn.leaky_relu, name='g-fc-1')
-                h = tf.layers.dropout(h, 0.5, name='g-dropout-1')
-                h = tf.layers.dense(h, self.fc_unit // 2, activation=tf.nn.leaky_relu, name='g-fc-2')
-                h = tf.layers.dropout(h, 0.5, name='g-dropout-2')
-                h = tf.layers.dense(h, 3 * 8 * 8, name='g-fc-3')
+                h = t.dense(h, self.fc_unit, name='g-fc-1')
+                h = tf.nn.leaky_relu(h)
+                h = tf.layers.dropout(h, do_rate, name='g-dropout-1')
+
+                h = t.dense(h, self.fc_unit // 2, name='g-fc-2')
+                h = tf.nn.leaky_relu(h)
+                h = tf.layers.dropout(h, do_rate, name='g-dropout-2')
+
+                h = t.dense(h, 3 * 8 * 8, name='g-fc-3')
 
                 h = tf.reshape(h, [-1, 8, 8, 3])
             else:
-                y = tf.layers.dense(y, scale * scale, name='g-fc-0')
+                y = t.dense(y, scale * scale, name='g-fc-0')
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
 
@@ -205,26 +205,23 @@ class LAPGAN:
 
                 # Convolution Layers
                 for idx in range(1, scale // 8 - 1):
-                    h = conv2d(h, filter_=self.gf_dim, name='g-deconv-{0}'.format(idx))
+                    h = t.conv2d(h, self.gf_dim, name='g-deconv-{0}'.format(idx))
 
-                h = conv2d(h, filter_=3, activation=None, name='g-deconv-{0}'.format(scale // 8))
+                h = t.conv2d(h, 3, name='g-deconv-{0}'.format(scale // 8))
 
             return h
 
     def bulid_lapgan(self):
-        def sce_loss(x, y):
-            return tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y)
-
         # Generator & Discriminator
-        g1 = self.generator(x=self.x1_coarse, y=self.y, z=self.z[0], scale=32)
+        g1 = self.generator(x=self.x1_coarse, y=self.y, z=self.z[0], scale=32, do_rate=self.do_rate)
         d1_fake = self.discriminator(x1=g1, x2=self.x1_coarse, y=self.y, scale=32)
         d1_real = self.discriminator(x1=self.x1_diff, x2=self.x1_coarse, y=self.y, scale=32, reuse=True)
 
-        g2 = self.generator(x=self.x2_coarse, y=self.y, z=self.z[1], scale=16)
+        g2 = self.generator(x=self.x2_coarse, y=self.y, z=self.z[1], scale=16, do_rate=self.do_rate)
         d2_fake = self.discriminator(x1=g2, x2=self.x2_coarse, y=self.y, scale=16)
         d2_real = self.discriminator(x1=self.x2_diff, x2=self.x2_coarse, y=self.y, scale=16, reuse=True)
 
-        g3 = self.generator(x=None, y=self.y, z=self.z[2], scale=8)
+        g3 = self.generator(x=None, y=self.y, z=self.z[2], scale=8, do_rate=self.do_rate)
         d3_fake = self.discriminator(x1=g3, x2=None, y=self.y, scale=8)
         d3_real = self.discriminator(x1=self.x3_fine, x2=None, y=self.y, scale=8, reuse=True)
 
@@ -232,34 +229,17 @@ class LAPGAN:
         self.d_reals = [d1_real, d2_real, d3_real]
         self.d_fakes = [d1_fake, d2_fake, d3_fake]
 
-        # Prob
-        m_sigmoid = lambda x: tf.reduce_mean(tf.sigmoid(x))
-        with tf.variable_scope('prob'):
-            for i in range(len(self.g)):
-                self.d_reals_prob.append(m_sigmoid(self.d_reals[i]))
-                self.d_fakes_prob.append(m_sigmoid(self.d_fakes[i]))
-
         # Losses
         with tf.variable_scope('loss'):
             for i in range(len(self.g)):
-                self.d_loss.append(tf.reduce_mean(sce_loss(self.d_reals[i], tf.ones_like(self.d_reals[i])) +
-                                                  sce_loss(self.d_fakes[i], tf.zeros_like(self.d_fakes[i])),
-                                                  name="d_loss_{0}".format(i)))
-                self.g_loss.append(tf.reduce_mean(sce_loss(self.d_fakes[i], tf.ones_like(self.d_fakes[i])),
-                                                  name="g_loss_{0}".format(i)))
+                self.d_loss.append(t.sce_loss(self.d_reals[i], tf.ones_like(self.d_reals[i])) +
+                                   t.sce_loss(self.d_fakes[i], tf.zeros_like(self.d_fakes[i])))
+                self.g_loss.append(t.sce_loss(self.d_fakes[i], tf.ones_like(self.d_fakes[i])))
 
         # Summary
         for i in range(len(self.g)):
-            # tf.summary.scalar('d_real_{0}'.format(i), self.d_reals[i])
-            # tf.summary.scalar('d_fake_{0}'.format(i), self.d_fakes[i])
-            tf.summary.scalar('d_real_prob_{0}'.format(i), self.d_reals_prob[i])
-            tf.summary.scalar('d_fake_prob_{0}'.format(i), self.d_fakes_prob[i])
-            tf.summary.scalar('d_loss_{0}'.format(i), self.d_loss[i])
-            tf.summary.scalar('g_loss_{0}'.format(i), self.g_loss[i])
-
-            tf.summary.histogram("z_{0}".format(i), self.z[i])
-
-        # tf.summary.image("g", g1)  # generated image from G model
+            tf.summary.scalar('loss/d_loss_{0}'.format(i), self.d_loss[i])
+            tf.summary.scalar('loss/g_loss_{0}'.format(i), self.g_loss[i])
 
         # Optimizer
         t_vars = tf.trainable_variables()
