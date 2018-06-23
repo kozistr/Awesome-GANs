@@ -175,7 +175,7 @@ class ACGAN:
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
-        c_params = [v for v in t_vars if v.name_startswith('d') or v.name_startswith('g')]
+        c_params = [v for v in t_vars if v.name.startswith('d') or v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
