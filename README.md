@@ -1,6 +1,8 @@
 # Awesome-GANs with Tensorflow [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome)
 Tensorflow implementation of GANs(Generative Adversarial Networks)
 
+**IMPORTANT: Currently, i'm just re-building the whole codes. So, maybe there're codes which don't work properly. :(**
+
 ## Environments
 ### Preferred Environment
 * OS  : Windows 10 / Linux Ubuntu x86-64 ~
