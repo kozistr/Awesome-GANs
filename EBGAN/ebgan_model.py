@@ -122,9 +122,9 @@ class EBGAN:
             x = t.dense(x, self.gf_dim * 7 * 7, name='dec-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.flatten(x)
+            x = tf.reshape(x, (-1, 7, 7, self.gf_dim))
 
-            x = t.deconv2d(x, 1, 4, 2, name='dec-deconv2d-1')
+            x = t.deconv2d(x, self.channel, 4, 2, name='dec-deconv2d-1')
             x = tf.nn.sigmoid(x)
 
             return x
