@@ -102,13 +102,15 @@ class ACGAN:
                 x = tf.nn.leaky_relu(x, alpha=0.2)
                 x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-%d' % (i + 1))
 
-            net = tf.layers.flatten(x)
+            x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(net, self.n_classes + 1, name='disc-fc-1')
+            x = t.dense(x, self.n_classes + 1, name='disc-fc-1')
+            print(x.get_shape())
+
             logit = x[:, self.n_classes:]
             cat = x[:, :self.n_classes]
 
-            return cat, logit, net
+            return cat, logit
 
     def generator(self, z, y, reuse=None, is_train=True):
         """
@@ -127,6 +129,8 @@ class ACGAN:
             x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
 
+            x = tf.reshape(x, (-1, 4, 4, 24))
+
             for i in range(1, 3):
                 x = t.deconv2d(x, self.gf_dim // 2, 5, 2, name='gen-deconv2d-%d' % (i + 1))
                 x = t.batch_norm(x, is_train=is_train, reuse=reuse, name="gen-bn-%d" % i)
@@ -143,8 +147,8 @@ class ACGAN:
         self.g_test = self.generator(self.z, self.y, reuse=True, is_train=False)
 
         # Discriminator
-        c_real, d_real, _ = self.discriminator(self.x)
-        c_fake, d_fake, _ = self.discriminator(self.g, reuse=True)
+        c_real, d_real = self.discriminator(self.x)
+        c_fake, d_fake = self.discriminator(self.g, reuse=True)
 
         # sigmoid ce loss
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
