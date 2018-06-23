@@ -78,13 +78,13 @@ def main():
                                       model.z: batch_z,
                                   })
 
-                # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.y: batch_y,
-                                      model.z: batch_z,
-                                  })
+                # Update G/C networks
+                _, g_loss, _, c_loss = s.run([model.g_op, model.g_loss, model.c_op, model.c_loss],
+                                             feed_dict={
+                                                 model.x: batch_x,
+                                                 model.y: batch_y,
+                                                 model.z: batch_z,
+                                             })
 
                 if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
