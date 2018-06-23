@@ -75,13 +75,13 @@ def main():
                                           model.z: batch_z,
                                       })
 
-                # Update G/C network
-                _, g_loss, _, c_loss = s.run([model.g_op, model.g_loss, model.c_op, model.c_loss],
-                                             feed_dict={
-                                                 model.x: batch_x,
-                                                 model.y: batch_y,
-                                                 model.z: batch_z,
-                                             })
+                # Update G network
+                _, g_loss = s.run([model.g_op, model.g_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.y: batch_y,
+                                      model.z: batch_z,
+                                  })
 
                 d_overpowered = d_loss < g_loss / 3.
 

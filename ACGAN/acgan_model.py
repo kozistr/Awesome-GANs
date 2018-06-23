@@ -155,10 +155,13 @@ class ACGAN:
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
-        # sparse softmax ce loss
+        # softmax ce loss
         c_real_loss = t.softce_loss(c_real, self.y)
         c_fake_loss = t.softce_loss(c_fake, self.y)
         self.c_loss = (c_real_loss + c_fake_loss) / 2.
+
+        self.d_loss += self.c_loss
+        self.g_loss += self.c_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
@@ -173,14 +176,11 @@ class ACGAN:
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
-        c_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
