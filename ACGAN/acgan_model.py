@@ -153,8 +153,8 @@ class ACGAN:
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # sparse softmax ce loss
-        c_real_loss = t.ssoftce_loss(c_real, self.y)
-        c_fake_loss = t.ssoftce_loss(c_fake, self.y)
+        c_real_loss = t.softce_loss(c_real, self.y)
+        c_fake_loss = t.softce_loss(c_fake, self.y)
         self.c_loss = (c_real_loss + c_fake_loss) / 2.
 
         # Summary
