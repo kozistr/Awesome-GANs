@@ -12,27 +12,45 @@ import magan_model as magan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import MNISTDataSet as DataSet
+from datasets import DataIterator
+from datasets import CelebADataSet as DataSet
 
 
 results = {
     'output': './gen_img/',
-    'checkpoint': './model/checkpoint',
     'model': './model/MAGAN-model.ckpt'
 }
 
 train_step = {
-    'epoch': 250,
+    'epochs': 25,
+    'batch_size': 64,
+    'global_step': 200001,
     'n_iter': 1000,
-    'logging_interval': 2500,
+    'logging_interval': 1000,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST Dataset load
-    mnist = DataSet(ds_path="./").data
+    # loading CelebA DataSet
+    ds = DataSet(height=64,
+                 width=64,
+                 channel=3,
+                 ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
+                 ds_type="CelebA",
+                 use_save=False,
+                 save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
+                 save_type="to_h5",
+                 use_img_scale=False,
+                 img_scale="-1,1")
+
+    ds_iter = DataIterator(x=ds.images,
+                           y=None,
+                           batch_size=train_step['batch_size'],
+                           label_off=True)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -45,19 +63,15 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, [-1] + model.image_shape[1:])
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-
         global_step = 0
-        N = mnist.train.images.shape[0] // model.batch_size  # training set size
+        N = ds.num_images // model.batch_size  # training set size
 
         # Pre-Train
         print("[+] pre-train")
         for _ in range(2):
-            for iter_ in range(N):
-                batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+            for batch_x in ds_iter.iterate():
+                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
+                                     (model.batch_size, model.height, model.width, model.channel))
 
                 s.run([model.d_real_op, model.d_real_loss],
                       feed_dict={
@@ -71,23 +85,20 @@ def main():
                        })
 
         s_g_0 = np.inf  # Sg_0 = infinite
-        d_overpowered = False
-
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
-            for i in range(N):
-                batch_x, _ = mnist.train.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+            for batch_x in ds_iter.iterate():
+                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
+                                     (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
-                if not d_overpowered:
-                    _, d_loss, d_real_loss = s.run([model.d_op, model.d_loss, model.d_real_loss],
-                                                   feed_dict={
-                                                       model.x: batch_x,
-                                                       model.z: batch_z,
-                                                       model.m: margin,
-                                                   })
+                _, d_loss, d_real_loss = s.run([model.d_op, model.d_loss, model.d_real_loss],
+                                               feed_dict={
+                                                   model.x: batch_x,
+                                                   model.z: batch_z,
+                                                   model.m: margin,
+                                               })
 
                 # Update D real sample
                 s_d += np.sum(d_real_loss)
@@ -103,12 +114,8 @@ def main():
                 # Update G fake sample
                 s_g += np.sum(d_fake_loss)
 
-                d_overpowered = d_loss < g_loss / 2.
-
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_x, _ = mnist.test.next_batch(model.batch_size)
-                    batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
@@ -118,17 +125,15 @@ def main():
                                                         model.m: margin,
                                                     })
 
-                    d_overpowered = d_loss < g_loss / 2.
-
                     # Print loss
                     print("[+] Epoch %03d Global Step %05d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
-                    samples = s.run(model.g,
+                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                    samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.x: sample_x,
                                         model.z: sample_z,
                                         model.m: margin,
                                     })
@@ -147,7 +152,7 @@ def main():
                                    image_path=sample_dir)
 
                     # Model save
-                    model.saver.save(s, results['model'], global_step=global_step)
+                    model.saver.save(s, results['model'], global_step)
 
                 global_step += 1
 

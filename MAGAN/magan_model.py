@@ -1,5 +1,10 @@
 import tensorflow as tf
 
+import sys
+
+sys.path.append('../')
+import tfutil as t
+
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -23,17 +28,17 @@ class AdaMaxOptimizer:
 
 class MAGAN:
 
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10, output_height=28, output_width=28,
-                 n_input=784, df_dim=64, gf_dim=64, fc_d_unit=32, fc_g_unit=1024,
-                 z_dim=128, g_lr=5e-4, d_lr=5e-4, epsilon=1e-12):
+    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+                 sample_num=10 * 10, sample_size=10,
+                 n_input=784, df_dim=64, gf_dim=64, fc_unit=512,
+                 z_dim=128, g_lr=2e-4, d_lr=2e-4):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
+        :param height: input image height, default 28
+        :param width: input image width, default 28
         :param channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input dataset's classes
@@ -42,48 +47,40 @@ class MAGAN:
         # Output Settings
         :param sample_num: the number of output images, default 100
         :param sample_size: sample image size, default 10
-        :param output_height: output images height, default 28
-        :param output_width: output images width, default 28
 
         # For CNN model
         :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
-        :param fc_d_unit: the number of fully connected filters used in D net, default 32
-        :param fc_g_unit: the number of fully connected filters used in G net, default 1024
+        :param fc_unit: the number of fully connected filters, default 512
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
-        :param g_lr: generator learning rate, default 5e-4
-        :param d_lr: discriminator learning rate, default 5e-4
-        :param epsilon: epsilon, default 1e-12
+        :param g_lr: generator learning rate, default 2e-4
+        :param d_lr: discriminator learning rate, default 2e-4
         """
 
         self.s = s
         self.batch_size = batch_size
 
-        self.input_height = input_height
-        self.input_width = input_width
+        self.height = height
+        self.width = width
         self.channel = channel
-        self.image_shape = [self.batch_size, self.input_height, self.input_width, self.channel]
+        self.image_shape = [self.batch_size, self.height, self.width, self.channel]
         self.n_classes = n_classes
 
         self.sample_num = sample_num
         self.sample_size = sample_size
-        self.output_height = output_height
-        self.output_width = output_width
 
         self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
-        self.fc_d_unit = fc_d_unit
-        self.fc_g_unit = fc_g_unit
+        self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
         self.beta2 = 0.9
         self.d_lr, self.g_lr = d_lr, g_lr
-        self.eps = epsilon
         self.pt_lambda = 0.1
 
         # pre-defined
@@ -91,6 +88,9 @@ class MAGAN:
         self.d_loss = 0.
         self.d_real_loss = 0.
         self.d_fake_loss = 0.
+
+        self.g = None
+        self.g_test = None
 
         self.d_op = None
         self.d_real_op = None
@@ -102,7 +102,7 @@ class MAGAN:
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.input_height, self.input_width, self.channel],
+                                shape=[None, self.height, self.width, self.channel],
                                 name="x-image")                                        # (-1, 28, 28, 1)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
         self.m = tf.placeholder(tf.float32, name='margin')
@@ -111,43 +111,49 @@ class MAGAN:
 
     def encoder(self, x, reuse=None):
         """
+        (64)4c2s - (128)4c2s - (256)4c2s
         :param x: images
         :param reuse: re-usable
-        :return: embeddings
+        :return: logits
         """
         with tf.variable_scope('encoder', reuse=reuse):
-            x = tf.layers.conv2d(x,
-                                 filters=self.fc_d_unit * 2,
-                                 kernel_size=4, strides=2, padding='SAME', name='enc-conv-1')
+            x = t.conv2d(x, self.df_dim * 1, 4, 2, name='enc-conv2d-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.flatten(x)
+            x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-2')
+            x = t.batch_norm(x, name='enc-bn-1')
+            x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.dense(x, units=self.fc_d_unit, name='enc-fc-1')
+            x = t.conv2d(x, self.df_dim * 4, 4, 2, name='enc-conv2d-3')
+            x = t.batch_norm(x, name='enc-bn-2')
+            x = tf.nn.leaky_relu(x)
 
             return x
 
     def decoder(self, x, reuse=None):
         """
+        (128)4c2s - (64)4c2s - (3)4c2s
         :param x: embeddings
         :param reuse: re-usable
         :return: prob
         """
         with tf.variable_scope('decoder', reuse=reuse):
-            x = tf.layers.dense(x, units=self.fc_d_unit * 2 * 14 * 14, name='dec-fc-1')
+            x = t.deconv2d(x, self.df_dim * 2, 4, 2, name='dec-deconv2d-1')
+            x = t.batch_norm(x, name='dec-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [-1, 14, 14, self.fc_d_unit * 2])
+            x = t.deconv2d(x, self.df_dim * 1, 4, 2, name='dec-deconv2d-2')
+            x = t.batch_norm(x, name='dec-bn-2')
+            x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.conv2d_transpose(x, filters=1,
-                                           kernel_size=4, strides=2, padding='SAME', name='dec-deconv-1')
+            x = t.deconv2d(x, self.channel, 4, 2, name='dec-deconv2d-3')
             x = tf.nn.sigmoid(x)
 
             return x
 
     def discriminator(self, x, reuse=None):
         """
-        # architecture
+        # referred architecture in the paper
         : (64)4c2s-FC32-FC64*14*14_BR-(1)4dc2s_S
         :param x: images
         :param reuse: re-usable
@@ -159,63 +165,56 @@ class MAGAN:
 
             return embeddings, decoded
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, reuse=None, is_train=True):
         """
-        # architecture
-        : (FC1024_BR)-FC7x7x128_BR-(64)4dc2s_BR-(1)4dc2s_S
+        # referred architecture in the paper
+        : (512)fc - (256)4c2s - (128)4c2s (3)4c2s
         :param z: embeddings
         :param reuse: re-usable
+        :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            # x = tf.layers.dense(z, units=self.fc_g_unit, name='g-fc-1')
-            # x = tf.nn.leaky_relu(x)
+            assert self.fc_unit == 4 * 4 * self.gf_dim // 2
 
-            x = tf.layers.dense(z, units=7 * 7 * self.fc_g_unit // 4, name='g-fc-2')
+            x = t.dense(z, self.fc_unit, name='gen-fc-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, [-1, 7, 7, self.fc_g_unit // 4])
+            x = tf.reshape(x, (-1, 4, 4, self.gf_dim // 2))
 
-            x = tf.layers.conv2d_transpose(x, filters=self.gf_dim,
-                                           kernel_size=4, strides=2, padding='SAME', name='g-deconv-1')
+            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.layers.conv2d_transpose(x, filters=1,
-                                           kernel_size=4, strides=2, padding='SAME', name='g-deconv-2')
-            x = tf.nn.sigmoid(x)
+            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-3')
+            x = tf.nn.tanh(x)
 
             return x
 
     def build_magan(self):
-        def mse_loss(pred, data, n=self.batch_size):
-            """
-            :param pred: prediction
-            :param data: image
-            :param n: batch_size
-            :return: MSE(Mean Square Error) loss
-            """
-            return tf.sqrt(2. * tf.nn.l2_loss(pred - data)) / n
-
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
         _, d_fake = self.discriminator(self.g, reuse=True)
 
-        self.d_real_loss = mse_loss(self.x, d_real)
-        self.d_fake_loss = mse_loss(self.g, d_fake)
+        self.d_real_loss = t.mse_loss(self.x, d_real)
+        self.d_fake_loss = t.mse_loss(self.g, d_fake)
         self.d_loss = self.d_real_loss + tf.maximum(0., self.m - self.d_fake_loss)
         self.g_loss = self.d_fake_loss
 
         # Summary
-        tf.summary.histogram("z-noise", self.z)
-
-        # tf.summary.image("g", self.g)  # generated images by Generative Model
-        tf.summary.scalar("d_loss", self.d_loss)
-        tf.summary.scalar("d_real_loss", self.d_real_loss)
-        tf.summary.scalar("d_fake_loss", self.d_fake_loss)
-        tf.summary.scalar("g_loss", self.g_loss)
+        tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/d_real_loss", self.d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", self.d_fake_loss)
+        tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
@@ -223,15 +222,15 @@ class MAGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_real_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                                beta1=self.beta1,
-                                                beta2=self.beta2).minimize(self.d_real_loss, var_list=d_params)
+                                                beta1=self.beta1, beta2=self.beta2).minimize(self.d_real_loss,
+                                                                                             var_list=d_params)
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1,
-                                           beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss,
+                                                                                        var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1,
-                                           beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss,
+                                                                                        var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
