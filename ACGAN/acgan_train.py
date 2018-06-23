@@ -43,6 +43,13 @@ def main():
                            batch_size=train_step['batch_size'],
                            label_off=False)  # using label # maybe someday, i'll change this param's name
 
+    # Generated image save
+    test_images = iu.transform(ds.test_images[:100], inv_type='127')
+    iu.save_images(test_images,
+                   size=[10, 10],
+                   image_path=results['output'] + 'sample.png',
+                   inv_type='127')
+
     # GPU configure
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -58,32 +65,30 @@ def main():
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        d_loss = 0.
-        d_overpowered = False
-
         global_step = 0
         for epoch in range(train_step['epochs']):
             for batch_x, batch_y in ds_iter.iterate():
+                batch_y_rnd = np.zeros(shape=[model.batch_size, model.n_classes])
+                batch_y_rnd[np.arange(model.batch_size), np.random.randint(0, model.n_classes, model.batch_size)] = 1
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
-                if not d_overpowered:
-                    _, d_loss = s.run([model.d_op, model.d_loss],
-                                      feed_dict={
-                                          model.x: batch_x,
-                                          model.y: batch_y,
-                                          model.z: batch_z,
-                                      })
+                _, d_loss = s.run([model.d_op, model.d_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.y: batch_y,
+                                      model.y_rnd: batch_y_rnd,
+                                      model.z: batch_z,
+                                  })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
                                       model.x: batch_x,
                                       model.y: batch_y,
+                                      model.y_rnd: batch_y_rnd,
                                       model.z: batch_z,
                                   })
-
-                d_overpowered = d_loss < g_loss / 3.
 
                 if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
@@ -92,11 +97,12 @@ def main():
                                                             feed_dict={
                                                                 model.x: batch_x,
                                                                 model.y: batch_y,
+                                                                model.y_rnd: batch_y_rnd,
                                                                 model.z: batch_z,
                                                             })
 
                     # Print loss
-                    print("[+] Step %08d => " % global_step,
+                    print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss),
                           " C loss : {:.8f}".format(c_loss))
@@ -105,7 +111,8 @@ def main():
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                     samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.y: sample_y,  # dummy
+                                        model.y: sample_y,
+                                        model.y_rnd: batch_y_rnd,
                                         model.z: sample_z,
                                     })
 

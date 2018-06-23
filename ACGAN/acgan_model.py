@@ -13,7 +13,7 @@ class ACGAN:
 
     def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=16, gf_dim=384, z_dim=128, lr=2e-4, epsilon=1e-9):
+                 df_dim=16, gf_dim=384, z_dim=100, lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -22,7 +22,7 @@ class ACGAN:
         :param height: image height, default 32
         :param width: image width, default 32
         :param channel: image channel, default 3
-        :param n_classes: DataSet's classes
+        :param n_classes: DataSet's classes, default 10
 
         # Output Settings
         :param sample_num: the number of output images, default 100
@@ -58,6 +58,7 @@ class ACGAN:
         self.beta2 = 0.999
         self.lr = lr
         self.eps = epsilon
+        self.lambda_ = 1.  # loss weight
 
         # pre-defined
         self.g_loss = 0.
@@ -78,13 +79,14 @@ class ACGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 32, 32, 3)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")      # (-1, 128)
+                                name="x-image")                                                    # (-1, 32, 32, 3)
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")          # (-1, 10)
+        self.y_rnd = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-rnd-label")  # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")              # (-1, 100)
 
         self.build_acgan()  # build ACGAN model
 
-    def discriminator(self, x, y=None, reuse=None):
+    def discriminator(self, x, reuse=None):
         """
         # Following a D Network, CiFar-like-hood, referred in the paper
         :param x: images
@@ -93,10 +95,6 @@ class ACGAN:
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            # if y:
-            #     y = tf.reshape(y, (-1, 1, 1, self.n_classes))  # sth wrong...
-            #     x = tf.concat([x, y])
-
             x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x, alpha=0.2)
             x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-1')
@@ -107,14 +105,15 @@ class ACGAN:
                 x = tf.nn.leaky_relu(x, alpha=0.2)
                 x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-%d' % (i + 1))
 
-            x = tf.layers.flatten(x)
+            net = tf.layers.flatten(x)
 
-            x = t.dense(x, self.n_classes + 1, name='disc-fc-1')
+            # x = t.dense(x, 1024, name='disc-fc-1')
+            # net = tf.nn.leaky_relu(x)
 
-            logit = x[:, self.n_classes:]
-            cat = x[:, :self.n_classes]
+            cat = t.dense(net, self.n_classes, name='disc-fc-cat')
+            disc = t.dense(net, 1, name='disc-fc-disc')
 
-            return cat, logit
+            return cat, disc, net
 
     def generator(self, z, y=None, reuse=None, is_train=True):
         """
@@ -126,10 +125,12 @@ class ACGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            # if y:
-            #     x = tf.concat([z, y], axis=1)  # 128 + 10
-            # else:
-            x = t.dense(z, self.gf_dim, name='gen-fc-1')
+            if y:
+                x = tf.concat([z, y], axis=1)  # (-1, 110)
+            else:
+                x = z                          # (-1, 100)
+
+            x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, 24))
@@ -146,26 +147,26 @@ class ACGAN:
 
     def build_acgan(self):
         # Generator
-        self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
+        self.g = self.generator(self.z, self.y_rnd)
+        self.g_test = self.generator(self.z, self.y, reuse=True, is_train=False)
 
         # Discriminator
-        c_real, d_real = self.discriminator(self.x)
-        c_fake, d_fake = self.discriminator(self.g, reuse=True)
+        c_real, d_real, _ = self.discriminator(self.x)
+        c_fake, d_fake, c_net = self.discriminator(self.g, reuse=True)
 
         # sigmoid ce loss
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = (d_real_loss + d_fake_loss) / 2.
+        self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # softmax ce loss
         c_real_loss = t.softce_loss(c_real, self.y)
-        c_fake_loss = t.softce_loss(c_fake, self.y)
-        self.c_loss = (c_real_loss + c_fake_loss) / 2.
+        c_fake_loss = t.softce_loss(c_fake, self.y_rnd)
+        self.c_loss = c_real_loss + c_fake_loss
 
-        self.d_loss += self.c_loss
-        self.g_loss += self.c_loss
+        self.d_loss = self.lambda_ * self.d_loss + self.c_loss
+        self.g_loss = self.lambda_ * self.g_loss + self.c_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
