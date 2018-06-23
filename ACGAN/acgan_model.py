@@ -123,7 +123,7 @@ class ACGAN:
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.concat([z, y], axis=1)  # 128 + 10
 
-            x = tf.reshape(x, (-1, 1, 1, x.get_shape()[-1]))  # (batch_size, 1, 1, fm_size)
+            # x = tf.reshape(x, (-1, 1, 1, x.get_shape()[-1]))  # (batch_size, 1, 1, fm_size)
 
             x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
@@ -131,7 +131,7 @@ class ACGAN:
             x = tf.reshape(x, (-1, 4, 4, 24))
 
             for i in range(1, 3):
-                x = t.deconv2d(x, self.gf_dim // 2, 5, 2, name='gen-deconv2d-%d' % (i + 1))
+                x = t.deconv2d(x, self.gf_dim // (2 ** i), 5, 2, name='gen-deconv2d-%d' % (i + 1))
                 x = t.batch_norm(x, is_train=is_train, reuse=reuse, name="gen-bn-%d" % i)
                 x = tf.nn.relu(x)
 
