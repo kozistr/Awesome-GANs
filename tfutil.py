@@ -273,6 +273,10 @@ def softce_loss(data, label):
     return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=data, labels=label))
 
 
+def ssoftce_loss(data, label):
+    return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=data, lables=label))
+
+
 def pullaway_loss(x):
     n = x.get_shape()[0]
 
