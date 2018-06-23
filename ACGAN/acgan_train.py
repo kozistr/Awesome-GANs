@@ -63,7 +63,7 @@ def main():
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for batch_x, batch_y in ds_iter.iterate():
+            for batch_x, _ in ds_iter.iterate():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -71,7 +71,7 @@ def main():
                     _, d_loss = s.run([model.d_op, model.d_loss],
                                       feed_dict={
                                           model.x: batch_x,
-                                          model.y: batch_y,
+                                          # model.y: batch_y,
                                           model.z: batch_z,
                                       })
 
@@ -79,7 +79,7 @@ def main():
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
                                       model.x: batch_x,
-                                      model.y: batch_y,
+                                      # model.y: batch_y,
                                       model.z: batch_z,
                                   })
 
@@ -105,7 +105,7 @@ def main():
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                     samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.y: sample_y,
+                                        # model.y: sample_y,
                                         model.z: sample_z,
                                     })
 

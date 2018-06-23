@@ -84,14 +84,19 @@ class ACGAN:
 
         self.build_acgan()  # build ACGAN model
 
-    def discriminator(self, x, reuse=None):
+    def discriminator(self, x, y=None, reuse=None):
         """
         # Following a D Network, CiFar-like-hood, referred in the paper
-        :param x: image
+        :param x: images
+        :param y: labels
         :param reuse: re-usable
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
+            if y:
+                y = tf.reshape(y, (-1, 1, 1, self.n_classes))  # sth wrong...
+                x = tf.concat([x, y])
+
             x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x, alpha=0.2)
             x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-1')
@@ -111,7 +116,7 @@ class ACGAN:
 
             return cat, logit
 
-    def generator(self, z, y, reuse=None, is_train=True):
+    def generator(self, z, y=None, reuse=None, is_train=True):
         """
         # Following a G Network, CiFar-like-hood, referred in the paper
         :param z: noise
@@ -121,9 +126,10 @@ class ACGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.concat([z, y], axis=1)  # 128 + 10
-
-            # x = tf.reshape(x, (-1, 1, 1, x.get_shape()[-1]))  # (batch_size, 1, 1, fm_size)
+            if y:
+                x = tf.concat([z, y], axis=1)  # 128 + 10
+            else:
+                x = z
 
             x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
