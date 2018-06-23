@@ -2,11 +2,24 @@ import numpy as np
 import scipy.misc
 
 
+def transform(images, inv_type='255'):
+    if inv_type == '255':
+        images /= 255.
+    elif inv_type == '127':
+        images = (images / 127.5) - 1.
+    else:
+        raise NotImplementedError("[-] Only 255 and 127")
+
+    return images.astype(np.float32)
+
+
 def inverse_transform(images, inv_type='255'):
     if inv_type == '255':    # [ 0  1]
         images *= 255
     elif inv_type == '127':  # [-1, 1]
         images = (images + 1) * (255 / 2.)
+    else:
+        raise NotImplementedError("[-] Only 255 and 127")
 
     # clipped by [0, 255]
     images[images > 255] = 255
