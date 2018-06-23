@@ -13,7 +13,7 @@ class ACGAN:
 
     def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=16, gf_dim=384, z_dim=100, lr=2e-4, epsilon=1e-9):
+                 df_dim=16, gf_dim=384, z_dim=100, lr=2e-4):
 
         """
         # General Settings
@@ -35,7 +35,6 @@ class ACGAN:
         # Training Option
         :param z_dim: z dimension (kinda noise), default 100
         :param lr: learning rate, default 2e-4
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -57,8 +56,6 @@ class ACGAN:
         self.beta1 = 0.5
         self.beta2 = 0.999
         self.lr = lr
-        self.eps = epsilon
-        self.lambda_ = 1.  # loss weight
 
         # pre-defined
         self.g_loss = 0.
@@ -158,8 +155,8 @@ class ACGAN:
         c_fake_loss = t.softce_loss(c_fake, self.y)
         self.c_loss = c_real_loss + c_fake_loss
 
-        # self.d_loss = self.lambda_ * self.d_loss + self.c_loss
-        # self.g_loss = self.lambda_ * self.g_loss - self.c_loss
+        # self.d_loss = self.d_loss + self.c_loss
+        # self.g_loss = self.g_loss - self.c_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)

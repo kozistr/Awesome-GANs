@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'epochs': 200,
+    'epochs': 101,
     'batch_size': 100,
     'global_step': 50001,
     'logging_interval': 500,
@@ -56,7 +56,9 @@ def main():
 
     with tf.Session(config=config) as s:
         # ACGAN Model
-        model = acgan.ACGAN(s, batch_size=train_step['batch_size'])
+        model = acgan.ACGAN(s,
+                            batch_size=train_step['batch_size'],
+                            n_classes=ds.n_classes)
 
         # Initializing
         s.run(tf.global_variables_initializer())
