@@ -2,11 +2,22 @@
 
 ## Loss Function
 
+* used ``sce_loss`` with D/G/C nets
 
 ## Architecture Networks
 
 * Same with the AC-GAN paper.
 * But, i just used hyper-parameters like weight initializer, batch_size, etc...
+
+*DIFFS* | *AC-GAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **batch size** | 100 | 64 |
+ **weight initializer** | `Isotropic Gaussian` | ``HE Initializer`` |
+ **z-noise size** | 110 | 128 |
+ **Activation noise std** | ``0 ~ 0.2`` | ``None`` |
+
+> Isotropic Gaussian parameters : (µ = 0, σ = 0.02) <br/>
+> HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
