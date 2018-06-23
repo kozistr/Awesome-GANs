@@ -13,6 +13,8 @@
 
 ![result](./gan_tb.png)
 
+> Elapsed time : 760s with ``GTX 1060 6GB x 1``
+
 ## Result
 
 *Name* | *Global Step 50k*  | *Global Step 100k* | *Global Step 200k*
