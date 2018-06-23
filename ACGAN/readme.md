@@ -29,4 +29,4 @@
 **ACGAN**     | ![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png)
 
 ## To-Do
-* 
+* prevent model collapse. Sometimes it happens... :(
