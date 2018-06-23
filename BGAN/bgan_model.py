@@ -65,7 +65,6 @@ class BGAN:
         self.g_loss = 0.
 
         self.g = None
-        self.g_test = None
 
         self.d_op = None
         self.g_op = None
