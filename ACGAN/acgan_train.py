@@ -52,7 +52,11 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-        
+
+        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
+        for i in range(10):
+            sample_y[10 * i:10 * (i + 1), i] = 1
+
         d_loss = 0.
         d_overpowered = False
         for global_step in range(train_step['global_step']):
@@ -78,9 +82,7 @@ def main():
 
                 d_overpowered = d_loss < g_loss / 3.
 
-                if global_step % trainl_step['logging_interval'] == 0:
-                    batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                    batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+                if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     d_loss, g_loss, c_loss, summary = s.run([model.d_loss, model.g_loss, model.c_loss, model.merged],
@@ -115,7 +117,8 @@ def main():
                     # Generated image save
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

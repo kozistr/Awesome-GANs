@@ -9,8 +9,7 @@ class ACGAN:
 
     def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, df_dim=16, gf_dim=384,
-                 z_dim=128, g_lr=2e-4, d_lr=2e-4, c_lr=2e-4, epsilon=1e-9):
+                 df_dim=16, gf_dim=384, z_dim=128, lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
@@ -22,19 +21,16 @@ class ACGAN:
         :param n_classes: DataSet's classes
 
         # Output Settings
-        :param sample_num: the number of output images, default 128
+        :param sample_num: the number of output images, default 100
         :param sample_size: sample image size, default 10
 
         # For CNN model
-        :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 16
         :param gf_dim: generator filter, default 384
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 100
-        :param g_lr: generator learning rate, default 2e-4
-        :param d_lr: discriminator learning rate, default 2e-4
-        :param c_lr: classifier learning rate, default 2e-4
+        :param lr: learning rate, default 2e-4
         :param epsilon: epsilon, default 1e-9
         """
 
@@ -50,14 +46,13 @@ class ACGAN:
         self.sample_num = sample_num
         self.sample_size = sample_size
 
-        self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
         self.beta1 = 0.5
         self.beta2 = 0.999
-        self.d_lr, self.g_lr, self.c_lr = d_lr, g_lr, c_lr
+        self.lr = lr
         self.eps = epsilon
 
         # pre-defined
@@ -147,12 +142,13 @@ class ACGAN:
         c_real, d_real, _ = self.discriminator(self.x)
         c_fake, d_fake, _ = self.discriminator(self.g, reuse=True)
 
-        # sigmoid CE Loss
+        # sigmoid ce loss
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
+        # sparse softmax ce loss
         c_real_loss = t.ssoftce_loss(c_real, self.y)
         c_fake_loss = t.ssoftce_loss(c_fake, self.y)
         self.c_loss = (c_real_loss + c_fake_loss) / 2.
@@ -172,11 +168,11 @@ class ACGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
         c_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(self.c_lr,
+        self.c_op = tf.train.AdamOptimizer(self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
 
         # Merge summary
