@@ -86,7 +86,7 @@ class BGAN:
                 x = t.dense(x, self.fc_unit, name='disc-fc-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
-            logits = t.dense(x, 1, name='disc-fc-2')
+            logits = t.dense(x, 1, name='disc-fc-3')
             prob = tf.nn.sigmoid(logits)
 
         return prob, logits
@@ -107,7 +107,6 @@ class BGAN:
     def build_bgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         d_real, _ = self.discriminator(self.x)
