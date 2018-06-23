@@ -7,19 +7,19 @@ tf.set_random_seed(777)  # reproducibility
 
 class ACGAN:
 
-    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+    def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, df_dim=16, gf_dim=128, fc_unit=512,
-                 z_dim=128, g_lr=8e-4, d_lr=2e-4, c_lr=8e-4, epsilon=1e-9):
+                 n_input=784, df_dim=16, gf_dim=384,
+                 z_dim=128, g_lr=2e-4, d_lr=2e-4, c_lr=2e-4, epsilon=1e-9):
 
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 64
-        :param height: image height, default 28
-        :param width: image width, default 28
-        :param channel: image channel, default 1 (gray-scale)
-        :param n_classes: input dataset's classes
+        :param batch_size: training batch size, default 100
+        :param height: image height, default 32
+        :param width: image width, default 32
+        :param channel: image channel, default 3
+        :param n_classes: DataSet's classes
 
         # Output Settings
         :param sample_num: the number of output images, default 128
@@ -28,14 +28,13 @@ class ACGAN:
         # For CNN model
         :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 16
-        :param gf_dim: generator filter, default 128
-        :param fc_unit: the number of fully connected filters, default 1024
+        :param gf_dim: generator filter, default 384
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 100
-        :param g_lr: generator learning rate, default 1e-3
+        :param g_lr: generator learning rate, default 2e-4
         :param d_lr: discriminator learning rate, default 2e-4
-        :param c_lr: classifier learning rate, default 1e-3
+        :param c_lr: classifier learning rate, default 2e-4
         :param epsilon: epsilon, default 1e-9
         """
 
@@ -54,7 +53,6 @@ class ACGAN:
         self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
-        self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
@@ -81,7 +79,7 @@ class ACGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 28, 28, 1)
+                                name="x-image")  # (-1, 32, 32, 3)
         self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")      # (-1, 128)
 
@@ -95,7 +93,7 @@ class ACGAN:
         :return: logits
         """
         with tf.variable_scope("classifier", reuse=reuse):
-            x = t.dense(x, self.fc_unit, name='c-fc-1')
+            x = t.dense(x, 1024, name='c-fc-1')
             x = tf.nn.leaky_relu(x)
 
             x = t.dense(x, self.n_classes, name='c-fc-2')
@@ -105,7 +103,7 @@ class ACGAN:
     def discriminator(self, x, reuse=None):
         """
         # Following a D Network, CiFar-like-hood, referred in the paper
-        :param x: image, shape=(-1, 28, 28, 1)
+        :param x: image
         :param reuse: re-usable
         :return: logits
         """
@@ -122,37 +120,35 @@ class ACGAN:
 
             x = tf.layers.flatten(x)
 
-            x = tf.layers.dense(x, 11, name='d-fc-2')  # logits
+            net = tf.layers.dense(x, self.n_classes + 1, name='d-fc-2')  # logits
             x = tf.sigmoid(x)
 
-            return x
+            return x, net
 
-    def generator(self, y, z, reuse=None, is_train=True):
+    def generator(self, z, y, reuse=None, is_train=True):
         """
         # Following a G Network, CiFar-like-hood, referred in the paper
+        :param z: noise
         :param y: image label
-        :param z: image noise
         :param reuse: re-usable
         :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.concat([z, y], axis=1)
+            x = tf.concat([z, y], axis=1)  # 128 + 10
 
-            x = tf.layers.dense(x, self.gf_dim * 2, name='g-fc-0')
+            x = tf.reshape(x, (-1, 1, 1, x.get_shape()[-1]))  # (batch_size, 1, 1, fm_size)
+
+            x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
 
-            x = tf.layers.dense(x, self.gf_dim * 7 * 7, name='g-fc-1')
-            x = tf.nn.relu(x)
+            for i in range(1, 3):
+                x = t.deconv2d(x, self.gf_dim // 2, 5, 2, name='gen-deconv2d-%d' % (i + 1))
+                x = t.batch_norm(x, is_train=is_train)
+                x = tf.nn.relu(x)
 
-            x = tf.reshape(x, [-1, 7, 7, self.gf_dim])
-
-            x = t.deconv2d(x, f=self.gf_dim // 2, k=5, s=2, name='g-deconv-1')
-            x = t.batch_norm(x, is_train=is_train)
-            x = tf.nn.relu(x)
-
-            x = t.deconv2d(x, f=1, k=5, s=2, name='g-deconv-2')  # channel
-            x = tf.nn.sigmoid(x)  # x = tf.nn.tanh(x)
+            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-3')
+            x = tf.nn.tanh(x)  # scaling to [-1, 1]
 
             return x
 

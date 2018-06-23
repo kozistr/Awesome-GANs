@@ -12,6 +12,7 @@ import acgan_model as acgan
 
 sys.path.append('../')
 import image_utils as iu
+from datasets import DataIterator
 from datasets import CiFarDataSet as DataSet
 
 
@@ -21,20 +22,25 @@ results = {
 }
 
 train_step = {
-    'global_step': 200001,
-    'logging_interval': 2000,
+    'batch_size': 100,
+    'global_step': 50001,
+    'logging_interval': 500,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
 
-    # MNIST DataSet load
-    mnist = DataSet(height=32,
-                    width=32,
-                    channel=3,
-                    ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
-                    ds_name='cifar-10')
+    # Loading Cifar-10 DataSet
+    ds = DataSet(height=32,
+                 width=32,
+                 channel=3,
+                 ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
+                 ds_name='cifar-10')
+    ds_iter = DataIterator(x=iu.transform(ds.train_images, '127'),
+                           y=ds.train_labels,
+                           batch_size=train_step['batch_size'],
+                           label_off=False)  # using label # maybe someday, i'll change this param's name
 
     # GPU configure
     config = tf.ConfigProto()
@@ -42,79 +48,76 @@ def main():
 
     with tf.Session(config=config) as s:
         # ACGAN Model
-        model = acgan.ACGAN(s)
+        model = acgan.ACGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        _, sample_y = mnist.train.next_batch(model.sample_num)
-
         d_overpowered = False
         for step in range(train_step['global_step']):
-            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-            # Update D network
-            if not d_overpowered:
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.y: batch_y,
-                                      model.z: batch_z,
-                                  })
-
-            # Update G/C network
-            _, g_loss, _, c_loss = s.run([model.g_op, model.g_loss, model.c_op, model.c_loss],
-                                         feed_dict={
-                                             model.x: batch_x,
-                                             model.y: batch_y,
-                                             model.z: batch_z,
-                                         })
-
-            d_overpowered = d_loss < g_loss / 3.
-
-            if step % train_step['logging_interval'] == 0:
-                batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+            for batch_x, batch_y in ds_iter.iterate():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                d_loss, g_loss, c_loss, summary = s.run([model.d_loss, model.g_loss, model.c_loss, model.merged],
-                                                        feed_dict={
-                                                            model.x: batch_x,
-                                                            model.y: batch_y,
-                                                            model.z: batch_z,
-                                                        })
+                # Update D network
+                if not d_overpowered:
+                    _, d_loss = s.run([model.d_op, model.d_loss],
+                                      feed_dict={
+                                          model.x: batch_x,
+                                          model.y: batch_y,
+                                          model.z: batch_z,
+                                      })
 
-                # Print loss
-                print("[+] Step %08d => " % step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss),
-                      " C loss : {:.8f}".format(c_loss))
+                # Update G/C network
+                _, g_loss, _, c_loss = s.run([model.g_op, model.g_loss, model.c_op, model.c_loss],
+                                             feed_dict={
+                                                 model.x: batch_x,
+                                                 model.y: batch_y,
+                                                 model.z: batch_z,
+                                             })
 
-                # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g_test,
-                                feed_dict={
-                                    model.y: sample_y,
-                                    model.z: sample_z,
-                                })
+                d_overpowered = d_loss < g_loss / 3.
 
-                # Summary saver
-                model.writer.add_summary(summary, step)
+                if step % train_step['logging_interval'] == 0:
+                    batch_x, batch_y = mnist.test.next_batch(model.batch_size)
+                    batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])
+                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                # Export image generated by model G
-                sample_image_height = model.sample_size
-                sample_image_width = model.sample_size
-                sample_dir = results['output'] + 'train_{:08d}.png'.format(step)
+                    d_loss, g_loss, c_loss, summary = s.run([model.d_loss, model.g_loss, model.c_loss, model.merged],
+                                                            feed_dict={
+                                                                model.x: batch_x,
+                                                                model.y: batch_y,
+                                                                model.z: batch_z,
+                                                            })
 
-                # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
+                    # Print loss
+                    print("[+] Step %08d => " % step,
+                          " D loss : {:.8f}".format(d_loss),
+                          " G loss : {:.8f}".format(g_loss),
+                          " C loss : {:.8f}".format(c_loss))
 
-                # Model save
-                model.saver.save(s, results['model'], global_step=step)
+                    # Training G model with sample image and noise
+                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                    samples = s.run(model.g_test,
+                                    feed_dict={
+                                        model.y: sample_y,
+                                        model.z: sample_z,
+                                    })
+
+                    # Summary saver
+                    model.writer.add_summary(summary, step)
+
+                    # Export image generated by model G
+                    sample_image_height = model.sample_size
+                    sample_image_width = model.sample_size
+                    sample_dir = results['output'] + 'train_{:08d}.png'.format(step)
+
+                    # Generated image save
+                    iu.save_images(samples,
+                                   size=[sample_image_height, sample_image_width],
+                                   image_path=sample_dir)
+
+                    # Model save
+                    model.saver.save(s, results['model'], global_step=step)
 
     end_time = time.time() - start_time  # Clocking end
 
