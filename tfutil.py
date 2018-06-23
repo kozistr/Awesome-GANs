@@ -131,7 +131,7 @@ eps = 1e-5
 # Layers
 
 
-def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='conv2d'):
+def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv2d'):
     """
     :param x: input
     :param f: filters
@@ -139,6 +139,7 @@ def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='conv2d'):
     :param s: strides
     :param pad: padding
     :param reuse: reusable
+    :param is_train: trainable
     :param name: scope name
     :return: net
     """
@@ -168,7 +169,7 @@ def sub_pixel_conv2d(x, f, s=2):
     return tf.reshape(x_r, (bsize, s * a, s * b, f))
 
 
-def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='deconv2d'):
     """
     :param x: input
     :param f: filters
@@ -176,6 +177,7 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
     :param s: strides
     :param pad: padding
     :param reuse: reusable
+    :param is_train: trainable
     :param name: scope name
     :return: net
     """
@@ -189,12 +191,13 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
                                       name=name)
 
 
-def dense(x, f=1024, reuse=None, name='fc'):
+def dense(x, f=1024, reuse=None, is_train=True, name='fc'):
     """
     :param x: input
     :param f: fully connected units
     :param reuse: reusable
     :param name: scope name
+    :param is_train: trainable
     :return: net
     """
     return tf.layers.dense(inputs=x,
