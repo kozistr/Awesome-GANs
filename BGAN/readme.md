@@ -3,7 +3,7 @@
 ## Loss Function
 
 * used ``GAN loss`` at D net
-* used ``BGAN loss`` at G net
+* used ``L2 loss`` at G net
 
 ## Architecture Networks
 
