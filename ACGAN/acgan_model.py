@@ -159,8 +159,8 @@ class ACGAN:
         c_fake_loss = t.softce_loss(c_fake, self.y)
         self.c_loss = c_real_loss + c_fake_loss
 
-        self.d_loss = self.lambda_ * self.d_loss + self.c_loss
-        self.g_loss = self.lambda_ * self.g_loss + self.c_loss
+        # self.d_loss = self.lambda_ * self.d_loss + self.c_loss
+        # self.g_loss = self.lambda_ * self.g_loss - self.c_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
