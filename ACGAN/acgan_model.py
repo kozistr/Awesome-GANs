@@ -98,9 +98,9 @@ class ACGAN:
 
             for i in range(5):
                 x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), k=3, s=(i % 2 + 1), name='disc-conv2d-%d' % (i + 2))
-                x = t.batch_norm(x)
+                x = t.batch_norm(x, reuse=reuse, name="disc-bn-%d" % (i + 1))
                 x = tf.nn.leaky_relu(x, alpha=0.2)
-                x = tf.layers.dropout(x, 0.5, name='d-dropout2d-%d' % (i + 1))
+                x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-%d' % (i + 1))
 
             net = tf.layers.flatten(x)
 
@@ -129,7 +129,7 @@ class ACGAN:
 
             for i in range(1, 3):
                 x = t.deconv2d(x, self.gf_dim // 2, 5, 2, name='gen-deconv2d-%d' % (i + 1))
-                x = t.batch_norm(x, is_train=is_train)
+                x = t.batch_norm(x, is_train=is_train, reuse=reuse, name="gen-bn-%d" % i)
                 x = tf.nn.relu(x)
 
             x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-3')
