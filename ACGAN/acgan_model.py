@@ -132,7 +132,7 @@ class ACGAN:
                 x = t.batch_norm(x, is_train=is_train, reuse=reuse, name="gen-bn-%d" % i)
                 x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-3')
+            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
             x = tf.nn.tanh(x)  # scaling to [-1, 1]
 
             return x
