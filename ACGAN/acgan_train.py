@@ -12,7 +12,7 @@ import acgan_model as acgan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import MNISTDataSet as DataSet
+from datasets import CiFarDataSet as DataSet
 
 
 results = {
@@ -30,7 +30,11 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST DataSet load
-    mnist = DataSet(ds_path="./").data
+    mnist = DataSet(height=32,
+                    width=32,
+                    channel=3,
+                    ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
+                    ds_name='cifar-10')
 
     # GPU configure
     config = tf.ConfigProto()

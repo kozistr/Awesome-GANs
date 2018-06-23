@@ -19,9 +19,7 @@ class ACGAN:
         :param height: image height, default 28
         :param width: image width, default 28
         :param channel: image channel, default 1 (gray-scale)
-        - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input dataset's classes
-        - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
         :param sample_num: the number of output images, default 128
@@ -109,28 +107,25 @@ class ACGAN:
         # Following a D Network, CiFar-like-hood, referred in the paper
         :param x: image, shape=(-1, 28, 28, 1)
         :param reuse: re-usable
-        :return: logits, networks
+        :return: logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = t.conv2d(x, self.df_dim, k=3, s=2, name='d-conv-0')
-            x = tf.nn.leaky_relu(x)
-            x = tf.layers.dropout(x, 0.5, name='d-dropout-0')
+            x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
+            x = tf.nn.leaky_relu(x, alpha=0.2)
+            x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-1')
 
-            for i in range(1, 2 * 2 + 1):
-                f = self.df_dim * (i + 1)
-                x = t.conv2d(x, f=f, k=3, s=(i % 2 + 1), name='d-conv-%d' % i)
+            for i in range(5):
+                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), k=3, s=(i % 2 + 1), name='disc-conv2d-%d' % (i + 2))
                 x = t.batch_norm(x)
-                x = tf.nn.leaky_relu(x)
+                x = tf.nn.leaky_relu(x, alpha=0.2)
                 x = tf.layers.dropout(x, 0.5, name='d-dropout-%d' % i)
 
             x = tf.layers.flatten(x)
 
-            x = t.dense(x, self.fc_unit * 2, name='d-fc-1')
-            net = tf.nn.leaky_relu(x)
+            x = tf.layers.dense(x, 11, name='d-fc-2')  # logits
+            x = tf.sigmoid(x)
 
-            x = tf.layers.dense(net, 1, name='d-fc-2')  # logits
-
-            return x, net
+            return x
 
     def generator(self, y, z, reuse=None, is_train=True):
         """
