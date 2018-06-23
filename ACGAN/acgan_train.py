@@ -68,8 +68,6 @@ def main():
         global_step = 0
         for epoch in range(train_step['epochs']):
             for batch_x, batch_y in ds_iter.iterate():
-                batch_y_rnd = np.zeros(shape=[model.batch_size, model.n_classes])
-                batch_y_rnd[np.arange(model.batch_size), np.random.randint(0, model.n_classes, model.batch_size)] = 1
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -77,7 +75,6 @@ def main():
                                   feed_dict={
                                       model.x: batch_x,
                                       model.y: batch_y,
-                                      model.y_rnd: batch_y_rnd,
                                       model.z: batch_z,
                                   })
 
@@ -86,7 +83,6 @@ def main():
                                   feed_dict={
                                       model.x: batch_x,
                                       model.y: batch_y,
-                                      model.y_rnd: batch_y_rnd,
                                       model.z: batch_z,
                                   })
 
@@ -97,7 +93,6 @@ def main():
                                                             feed_dict={
                                                                 model.x: batch_x,
                                                                 model.y: batch_y,
-                                                                model.y_rnd: batch_y_rnd,
                                                                 model.z: batch_z,
                                                             })
 
@@ -112,7 +107,6 @@ def main():
                     samples = s.run(model.g_test,
                                     feed_dict={
                                         model.y: sample_y,
-                                        model.y_rnd: batch_y_rnd,
                                         model.z: sample_z,
                                     })
 
