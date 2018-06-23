@@ -12,7 +12,6 @@
 *DIFFS* | *AC-GAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **weight initializer** | `Isotropic Gaussian` | ``HE Initializer`` |
- **z-noise size** | 110 | 128 |
  **Activation noise std** | ``0 ~ 0.2`` | ``None`` |
 
 > Isotropic Gaussian parameters : (µ = 0, σ = 0.02) <br/>
