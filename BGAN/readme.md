@@ -2,19 +2,24 @@
 
 ## Loss Function
 
+* used ``GAN loss`` at D net
+* used ``BGAN loss`` at G net
 
 ## Architecture Networks
 
+* just 2 fc layers network for D/G nets
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/bgan_tb.png)
+![result](./bgan_tb.png)
+
+> Elapsed time : s with ``GTX 1060 6GB x 1``
 
 ## Result
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**BGAN**      | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00050000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BGAN/gen_img/train_00200000.png)
+**BGAN**      | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00200000.png)
 
 ## To-Do
 * Add Loss Function & Explains

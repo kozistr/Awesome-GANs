@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -9,8 +13,7 @@ class BGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, fc_unit=256,
-                 z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
+                 n_input=784, fc_unit=256, z_dim=128, g_lr=1e-4, d_lr=1e-4):
 
         """
         # General Settings
@@ -35,7 +38,6 @@ class BGAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -57,7 +59,6 @@ class BGAN:
         self.beta1 = .5
         self.beta2 = .9
         self.d_lr, self.g_lr = d_lr, g_lr
-        self.eps = epsilon
 
         # pre-defined
         self.d_loss = 0.
@@ -82,22 +83,23 @@ class BGAN:
     def discriminator(self, x, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
             for i in range(2):
-                x = t.dense(x, self.fc_unit, name='d-fc-%d' % i)
+                x = t.dense(x, self.fc_unit, name='disc-fc-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
-            logits = t.dense(x, 1, name='d-fc-2')
+            logits = t.dense(x, 1, name='disc-fc-2')
             prob = tf.nn.sigmoid(logits)
 
         return prob, logits
 
-    def generator(self, x, reuse=None, is_train=True):
+    def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope("generator", reuse=reuse):
+            x = z
             for i in range(2):
-                x = t.dense(x, self.fc_unit, name='g-fc-%d' % i)
-                x = t.batch_norm(x, is_train=is_train)
+                x = t.dense(x, self.fc_unit, name='gen-fc-%d' % (i + 1))
+                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
-            logits = t.dense(x, self.n_input, name='g-fc-2')
+            logits = t.dense(x, self.n_input, name='gen-fc-3')
             prob = tf.nn.sigmoid(logits)
 
         return prob
@@ -105,7 +107,7 @@ class BGAN:
     def build_bgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, is_train=False)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         d_real, _ = self.discriminator(self.x)
