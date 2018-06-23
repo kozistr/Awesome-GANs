@@ -1,65 +1,28 @@
 import tensorflow as tf
 
+import sys
+
+sys.path.append('../')
+import tfutil as t
+
 
 tf.set_random_seed(777)
 
 
-def batch_normalize(x, eps=1e-5):
-    return tf.layers.batch_normalization(x,
-                                         momentum=0.9,
-                                         epsilon=eps,
-                                         scale=True,
-                                         training=True)
-
-
-def conv2d(x, f=64, k=3, s=2, pad='SAME'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 2
-    :param pad: padding (valid or same), default same
-    :return: conv2d net
-    """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            use_bias=False,
-                            padding=pad)
-
-
-def deconv2d(x, f=64, k=3, s=2, pad='SAME'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 3
-    :param s: strides, default 2
-    :param pad: padding (valid or same), default same
-    :return: deconv2d net
-    """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                      use_bias=False,
-                                      padding=pad)
-
-
 class WGAN:
 
-    def __init__(self, s, batch_size=32, input_height=28, input_width=28, input_channel=1, n_classes=10,
+    def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=32, df_dim=32, epsilon=1e-9,
+                 z_dim=128, gf_dim=32, df_dim=32,
                  enable_bn=False, enable_adam=False, enable_gp=False):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 32
-        :param input_height: input image height, default 28
-        :param input_width: input image width, default 28
-        :param input_channel: input image channel, default 1 (gray-scale)
+        :param height: input image height, default 28
+        :param width: input image width, default 28
+        :param channel: input image channel, default 1 (gray-scale)
         - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input DatSset's classes
         - in case of MNIST, 10 (0 ~ 9)
@@ -72,7 +35,6 @@ class WGAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param gf_dim: the number of generator filters, default 32
         :param df_dim: the number of discriminator filters, default 32
-        :param epsilon: epsilon, default 1e-9
         :param enable_bn: enabling batch normalization, default False
         :param enable_adam: enabling adam optimizer, default False
         :param enable_gp: enabling gradient penalty, default False
@@ -80,23 +42,22 @@ class WGAN:
 
         self.s = s
         self.batch_size = batch_size
-        self.input_height = input_height
-        self.input_width = input_width
-        self.input_channel = input_channel
+        self.height = height
+        self.width = width
+        self.channel = channel
         self.n_classes = n_classes
 
         self.sample_size = sample_size
         self.sample_num = sample_num
 
-        self.image_shape = [self.input_height, self.input_width, self.input_channel]
+        self.image_shape = [self.height, self.width, self.channel]
 
         self.z_dim = z_dim
         self.gf_dim = gf_dim
         self.df_dim = df_dim
-        self.eps = epsilon
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.input_height, self.input_width, self.input_channel],
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
                                 name='x-images')
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
                                 name='z-noise')
@@ -133,19 +94,19 @@ class WGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = conv2d(x, self.df_dim)
+            x = t.conv2d(x, self.df_dim, 3, 2, name="disc-conv2d-1")
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="disc-bn-1")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = conv2d(x, self.df_dim * 2)
+            x = t.conv2d(x, self.df_dim * 2, 3, 2, name="disc-conv2d-2")
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="disc-bn-2")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = conv2d(x, self.df_dim * 4, s=1)
+            x = t.conv2d(x, self.df_dim * 4, k=3, s=1, name="disc-conv2d-3")
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="disc-bn-3")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
             x = tf.layers.flatten(x)
@@ -156,32 +117,29 @@ class WGAN:
 
     def generator(self, z, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
-            x = tf.layers.dense(z, self.gf_dim * 4 * 7 * 7)
+            x = t.dense(z, self.gf_dim * 4 * 7 * 7, name="gen-fc-1")
             x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 4])
 
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="gen-bn-1")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = deconv2d(x, self.gf_dim * 2)
+            x = t.deconv2d(x, self.gf_dim * 2, k=3, s=2, name="gen-deconv2d-1")
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="gen-bn-2")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = deconv2d(x, self.gf_dim * 1)
+            x = t.deconv2d(x, self.gf_dim * 1, k=3, s=2, name="gen-deconv2d-2")
             if self.EnableBN:
-                x = batch_normalize(x)
+                x = t.batch_norm(x, name="gen-bn-3")
             x = tf.nn.leaky_relu(x, alpha=0.2)
 
-            x = deconv2d(x, 1, s=1)
+            x = t.deconv2d(x, 1, k=3, s=1, name="gen-deconv2d-3")
             x = tf.nn.sigmoid(x)  # tf.nn.tanh(x)
 
             return x
 
     def build_wgan(self):
-        def log(x, eps=self.eps):
-            return tf.log(x + eps)
-
         # Generator
         self.g = self.generator(self.z)
 
@@ -195,18 +153,14 @@ class WGAN:
         # self.d_loss = d_real_loss + d_fake_loss
         # self.g_loss = -tf.reduce_mean(log(d_fake))
 
-        d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real,
-                                                                             labels=tf.ones_like(d_real)))
-        d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
-                                                                             labels=tf.zeros_like(d_fake)))
+        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake,
-                                                                             labels=tf.ones_like(d_fake)))
+        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # The gradient penalty loss
         if self.EnableGP:
-            alpha = tf.random_uniform(shape=[self.batch_size] + self.image_shape,
-                                      minval=0., maxval=1., name='alpha')
+            alpha = tf.random_uniform(shape=[self.batch_size] + self.image_shape, minval=0., maxval=1., name='alpha')
             diff = self.g - self.x  # fake data - real data
             interpolates = self.x + alpha * diff
             d_interp = self.discriminator(interpolates, reuse=True)
@@ -218,13 +172,6 @@ class WGAN:
             self.d_loss += self.d_lambda * self.gradient_penalty
 
         # Summary
-        # tf.summary.histogram("z", self.z)
-
-        # g = tf.reshape(self.g, shape=[-1] + self.image_shape)
-        # tf.summary.image("g", g)  # generated image from G model
-        # tf.summary.histogram("d_real", d_real)
-        # tf.summary.histogram("d_fake", d_fake)
-
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
