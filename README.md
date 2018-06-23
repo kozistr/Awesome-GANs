@@ -3,7 +3,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 **IMPORTANT: Currently, i'm just re-building the whole codes. So, maybe there're codes which don't work properly. :(**
 
-**Tested GANs: AC-GAN,**
+**Tested GANs: AC-GAN, BGAN**
 
 ## Environments
 ### Preferred Environment
@@ -70,6 +70,10 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 ├── image_utils.py    (image processing)
 └── datasets.py       (DataSet loader)
 ```
+
+## pre-trained Models
+
+Here's a google drive link. you can download pre-trained model from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA) !
 
 ## Papers & Codes
 
