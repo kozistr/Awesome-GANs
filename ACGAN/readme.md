@@ -24,9 +24,9 @@
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
+*Name* | *Global Step 10k* | *Global Step 25k* | *Global Step 50k*
 :---: | :---: | :---: | :---:
-**ACGAN**     | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00050000.png)
+**ACGAN**     | ![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png)
 
 ## To-Do
 * 
