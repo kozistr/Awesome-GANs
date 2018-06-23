@@ -49,7 +49,7 @@ def main():
     ds_iter = DataIterator(x=ds.images,
                            y=None,
                            batch_size=train_step['batch_size'],
-                           label_off=False)
+                           label_off=True)
 
     # GPU configure
     config = tf.ConfigProto()
