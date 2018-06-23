@@ -125,10 +125,7 @@ class ACGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            if y:
-                x = tf.concat([z, y], axis=1)  # (-1, 110)
-            else:
-                x = z                          # (-1, 100)
+            x = tf.concat([z, y], axis=1)  # (-1, 110)
 
             x = t.dense(x, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
