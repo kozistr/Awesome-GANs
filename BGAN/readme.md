@@ -13,7 +13,7 @@
 
 ![result](./bgan_tb.png)
 
-> Elapsed time : s with ``GTX 1060 6GB x 1``
+> Elapsed time : 920s with ``GTX 1060 6GB x 1``
 
 ## Result
 
@@ -22,4 +22,9 @@
 **BGAN**      | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00200000.png)
 
 ## To-Do
-* Add Loss Function & Explains
+* Add KL/Reverse-KL divergence
+* Add JS divergence
+* Add f-divergence
+* Add Reinforce-based BGAN
+* Add Squared-Hellinger
+
