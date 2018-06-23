@@ -186,7 +186,7 @@ class EBGAN:
         self.d_loss = d_real_loss + tf.maximum(0., self.margin - d_fake_loss)
 
         if self.EnablePullAway:
-            self.pt_loss = t.pullaway_loss(d_embed_fake)
+            self.pt_loss = t.pullaway_loss(d_embed_fake, self.batch_size)
 
         self.g_loss = d_fake_loss + self.pt_lambda * self.pt_loss
 
