@@ -3,7 +3,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 **IMPORTANT: Currently, i'm just re-building the whole codes. So, maybe there're codes which don't work properly. :(**
 
-**Tested GANs: AC-GAN, BGAN, GAN**
+**Tested GANs: AC-GAN, BGAN, GAN, EBGAN,**
 
 ## Environments
 ### Preferred Environment
@@ -24,7 +24,7 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * python 3.x
 * tensorflow 1.x
 * numpy
-* scipy (some features are about to **deprecated**, they'll be replaced)
+* scipy (some features are about to **deprecated**, it'll be replaced to OpenCV SOON!)
 * scikit-image
 * opencv-python
 * pillow
@@ -42,13 +42,14 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## DataSets
 Now supporting(?) DataSets are... (code is in /datasets.py)
-* MNIST 
+* MNIST / ~~Fashion MNIST~~
 * CiFar-10 / 100
 * CelebA/CelebA-HQ
 * pix2pix DataSets
 * DIV2K DataSets
 * ~~ImageNet DataSets~~
 * ~~UrbanSound8K~~
+* ~~3DShapeNet DataSet~~
 * (more DataSets will be added soon!)
 
 ## Repo Tree
