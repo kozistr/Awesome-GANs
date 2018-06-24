@@ -97,15 +97,15 @@ class CoGAN:
         with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
             x = tf.reshape(x, (-1, self.height, self.width, self.channel))
 
-            x = t.conv2d(x, f=self.df_dim * 1, k=5, s=1, reuse=False, name='disc-' + name + '-conv2d-1')
+            x = t.conv2d(x, f=self.df_dim * 1, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-1')
             x = t.prelu(x, reuse=False, name='disc-' + name + '-prelu-1')
-            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME',
-                                        name='disc-' + name + '-max_pool2d-1')
+            # x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME',
+            #                             name='disc-' + name + '-max_pool2d-1')
 
-            x = t.conv2d(x, f=self.df_dim * 2, k=5, s=1, reuse=False, name='disc-' + name + '-conv2d-2')
+            x = t.conv2d(x, f=self.df_dim * 2, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-2')
             x = t.prelu(x, reuse=False, name='disc-' + name + '-prelu-2')
-            x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME',
-                                        name='disc-' + name + '-max_pool2d-2')
+            # x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME',
+            #                             name='disc-' + name + '-max_pool2d-2')
 
             x = tf.layers.flatten(x)
 
@@ -116,11 +116,10 @@ class CoGAN:
         return x
 
     def generator(self, z, y=None, share_params=False, reuse=False, training=True, name=""):
-        # x = t.dense(z, self.fc_g_unit, reuse=share_params, name='gen-dense-0')
-        # x = t.prelu(x, reuse=share_params, name='gen-prelu-0')
+        x = t.dense(z, self.fc_g_unit, reuse=share_params, name='gen-dense-0')
+        x = t.prelu(x, reuse=share_params, name='gen-prelu-0')
 
-        """
-        x = t.dense(z, self.gf_dim * 8 * 7 * 7, reuse=share_params, name='gen-dense-1')
+        x = t.dense(x, self.gf_dim * 8 * 7 * 7, reuse=share_params, name='gen-dense-1')
         x = t.batch_norm(x, reuse=share_params, is_train=training, name='gen-bn-0')
         x = t.prelu(x, reuse=share_params, name='gen-prelu-1')
 
@@ -130,22 +129,24 @@ class CoGAN:
             x = t.deconv2d(x, f=self.gf_dim * 4 // i, k=3, s=2, reuse=share_params, name='gen-deconv2d-%d' % i)
             x = t.batch_norm(x, reuse=share_params, is_train=training, name="gen-bn-%d" % i)
             x = t.prelu(x, reuse=share_params, name='gen-prelu-%d' % (i + 1))
-        """
 
+        """
         x = z
-        for i in range(1, 5):
+        loop = 3
+        for i in range(1, loop):
             x = t.dense(x, self.fc_g_unit, reuse=share_params, name='gen-fc-%d' % i)
             x = t.batch_norm(x, reuse=share_params, is_train=training, name='gen-bn-%d' % i)
             x = t.prelu(x, reuse=share_params, name='gen-prelu-%d' % i)
+        """
 
         with tf.variable_scope("generator-%s" % name, reuse=reuse):
-            """
             x = t.deconv2d(x, f=self.channel, k=6, s=1, reuse=False, name='gen-' + name + '-deconv2d-3')
             x = tf.sigmoid(x, name='gen' + name + '-sigmoid-0')
-            """
 
-            x = t.dense(x, self.n_input, reuse=False, name='gen-' + name + '-fc-5')
+            """
+            x = t.dense(x, self.n_input, reuse=False, name='gen-' + name + '-fc-%d' % loop)
             x = tf.sigmoid(x, name='gen-' + name + '-sigmoid-1')
+            """
 
         return x
 

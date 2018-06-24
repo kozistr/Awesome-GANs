@@ -10,6 +10,8 @@
 
 *DIFFS* | *CoGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
+ **Pooling** | ``max_pooling2d`` | ``conv2d pooling`` |
+ **G net**   | ``5 fc layers``   | ``3 fc layers`` |
  **conv2d filters** | ``D[20, 50]`` | ``D[32, 64]`` |
  **fc units** | ``D[500]`` | ``D[512]`` |
 
