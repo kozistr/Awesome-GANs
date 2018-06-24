@@ -12,7 +12,6 @@
 
 *DIFFS* | *EBGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **activation function** | ``ReLU`` | ``Leaky_ReLU`` |
  **weight initializer**  | ``N(0, 2e-3)`` | ``HE initializer`` |
  **score function**      | ``modified inception score`` | ``just sce``
 
@@ -30,4 +29,5 @@
 **EBGAN**     | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00200000.png)
 
 ## To-Do
-*
+*  Concat noise into every layer of the generator
+
