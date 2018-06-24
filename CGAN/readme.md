@@ -7,6 +7,8 @@
 
 ## Architecture Networks
 
+* Similar as CGAN paper
+
 *DIFFS* | *CGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **G net FC Units** | `[200, 1000]` | ``[256, 1024]`` |

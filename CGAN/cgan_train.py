@@ -41,6 +41,18 @@ def main():
         # CGAN Model
         model = cgan.CGAN(s, batch_size=train_step['batch_size'])
 
+        # Load model & Graph & Weights
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
         # initializing
         s.run(tf.global_variables_initializer())
 
@@ -48,7 +60,7 @@ def main():
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        for global_step in range(train_step['global_step']):
+        for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
