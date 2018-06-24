@@ -2,22 +2,31 @@
 
 ## Loss Function
 
-* ```sigmoid cross entropy``` is used both of the networks ```gen & disc```.
+* used ``sce loss`` at D/G nets.
 
 ## Architecture Networks
 
-* Similar as in the *CoGAN paper*.
+* Similar as CoGAN paper.
+
+*DIFFS* | *CoGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **Pooling** | ``max_pooling2d`` | ``conv2d pooling`` |
+ 
+> Learning Rate : 1e-1 ~ to 1e-6, factor = 1 + 4e-5 <br/>
+> HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/cogan_tb.png)
+![result](./cogan_tb.png)
+
+> Elapsed Time : s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 49.5k* | *Global Step 99k* | *Global Step 150k*
+*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**Gen 1**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00049500.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00099000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_1_00150000.png)
-**Gen 2**  | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00049500.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00099000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/CoGAN/gen_img/train_2_00150000.png)
+**Gen 1**      | ![img](./gen_img/train_1_00050000.png) | ![img](./gen_img/train_1_00100000.png) | ![img](./gen_img/train_1_00200000.png)
+**Gen 2**      | ![img](./gen_img/train_2_00050000.png) | ![img](./gen_img/train_2_00100000.png) | ![img](./gen_img/train_2_00200000.png)
 
 ## To-Do
-*
+* 

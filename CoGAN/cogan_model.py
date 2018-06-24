@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -8,9 +12,8 @@ tf.set_random_seed(777)  # reproducibility
 class CoGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=8 * 8, sample_size=8,
-                 n_input=784, fc_unit=1024, df_dim=64, gf_dim=64,
-                 z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+                 sample_num=10 * 10, sample_size=10,
+                 n_input=784, fc_unit=1024, df_dim=64, gf_dim=64, z_dim=128, lr=2e-4):
 
         """
         # General Settings
@@ -35,9 +38,7 @@ class CoGAN:
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
-        :param g_lr: generator learning rate, default 2e-4
-        :param d_lr: discriminator learning rate, default 2e-4
-        :param epsilon: epsilon, default 1e-9
+        :param lr: learning rate, default 2e-4
         """
 
         self.s = s
@@ -60,8 +61,7 @@ class CoGAN:
         self.z_dim = z_dim
         self.beta1 = .5
         self.beta2 = .999
-        self.d_lr, self.g_lr = d_lr, g_lr
-        self.eps = epsilon
+        self.lr = lr
 
         # pre-defined
         self.d_loss = 0.
@@ -104,8 +104,7 @@ class CoGAN:
 
                 x = tf.concat([x, y], axis=1)
 
-                x = t.dense(x, self.height * self.width * self.channel,
-                            name='disc-' + name + '-dense-0-y')
+                x = t.dense(x, self.n_input, name='disc-' + name + '-dense-0-y')
                 x = tf.reshape(x, self.image_shape)
             else:
                 pass
@@ -129,7 +128,6 @@ class CoGAN:
         x = t.prelu(x, reuse=share_params, name='disc-prelu-2')
 
         x = t.dense(x, 1, reuse=share_params, name='disc-dense-1')
-
         return x
 
     def generator(self, z, y=None, share_params=False, reuse=False, training=True, name=""):
@@ -163,7 +161,7 @@ class CoGAN:
 
         with tf.variable_scope("generator-%s" % name, reuse=reuse):
             x = t.deconv2d(x, f=self.channel, k=6, s=1, reuse=False, name='gen-' + name + '-deconv2d-3')
-            x = tf.nn.sigmoid(x, name='gen' + name + '-sigmoid-0')
+            x = tf.sigmoid(x, name='gen' + name + '-sigmoid-0')
 
         return x
 
@@ -209,9 +207,9 @@ class CoGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
