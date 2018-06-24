@@ -95,6 +95,8 @@ class CoGAN:
 
     def discriminator(self, x, y=None, share_params=False, reuse=False, name=""):
         with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
+            x = tf.reshape(x, (-1, self.height, self.width, self.channel))
+
             x = t.conv2d(x, f=self.df_dim * 1, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-0')
             x = t.prelu(x, reuse=False, name='disc-' + name + '-prelu-0')
             # x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc' + name + '-max_pool2d-0')
