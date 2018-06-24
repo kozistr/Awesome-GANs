@@ -89,8 +89,7 @@ class CoGAN:
         self.x_1 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image1")  # (-1, 784)
         self.x_2 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image2")  # (-1, 784)
         self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")   # (-1, 10)
-        self.z_1 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise1')    # (-1, 128)
-        self.z_2 = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise2')    # (-1, 128)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')       # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
@@ -133,8 +132,9 @@ class CoGAN:
             x = t.prelu(x, reuse=share_params, name='gen-prelu-%d' % (i + 1))
         """
 
+        x = z
         for i in range(1, 5):
-            x = t.dense(z, self.fc_g_unit, reuse=share_params, name='gen-fc-%d' % i)
+            x = t.dense(x, self.fc_g_unit, reuse=share_params, name='gen-fc-%d' % i)
             x = t.batch_norm(x, reuse=share_params, is_train=training, name='gen-bn-%d' % i)
             x = t.prelu(x, reuse=share_params, name='gen-prelu-%d' % i)
 
@@ -151,11 +151,11 @@ class CoGAN:
 
     def build_cogan(self):
         # Generator
-        self.g_1 = self.generator(self.z_1, self.y, share_params=False, reuse=False, name='g1')
-        self.g_2 = self.generator(self.z_2, self.y, share_params=True, reuse=False, name='g2')
+        self.g_1 = self.generator(self.z, self.y, share_params=False, reuse=False, name='g1')
+        self.g_2 = self.generator(self.z, self.y, share_params=True, reuse=False, name='g2')
 
-        self.g_sample_1 = self.generator(self.z_2, self.y, share_params=True, reuse=True, training=False, name='g1')
-        self.g_sample_2 = self.generator(self.z_2, self.y, share_params=True, reuse=True, training=False, name='g2')
+        self.g_sample_1 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g1')
+        self.g_sample_2 = self.generator(self.z, self.y, share_params=True, reuse=True, training=False, name='g2')
 
         # Discriminator
         d_1_real = self.discriminator(self.x_1, self.y, share_params=False, reuse=False, name='d1')

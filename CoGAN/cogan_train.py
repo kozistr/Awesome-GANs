@@ -21,7 +21,7 @@ results = {
 }
 
 train_step = {
-    'batch_size': 128,
+    'batch_size': 64,
     'global_step': 150001,
     'logging_interval': 1000,
 }
@@ -63,8 +63,7 @@ def main():
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
-            batch_z_1 = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-            batch_z_2 = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             _, d_loss = s.run([model.d_op, model.d_loss],
@@ -72,8 +71,7 @@ def main():
                                   model.x_1: batch_x,
                                   model.x_2: batch_rot_x,
                                   # model.y: batch_y,
-                                  model.z_1: batch_z_1,
-                                  model.z_2: batch_z_2,
+                                  model.z: batch_z,
                               })
 
             # Update G network
@@ -82,23 +80,20 @@ def main():
                                   model.x_1: batch_x,
                                   model.x_2: batch_rot_x,
                                   # model.y: batch_y,
-                                  model.z_1: batch_z_1,
-                                  model.z_2: batch_z_2,
+                                  model.z: batch_z,
                               })
 
             if global_step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
                 batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
-                batch_z_1 = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-                batch_z_2 = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
                                                     model.x_1: batch_x,
                                                     model.x_2: batch_rot_x,
                                                     # model.y: batch_y,
-                                                    model.z_1: batch_z_1,
-                                                    model.z_2: batch_z_2,
+                                                    model.z: batch_z,
                                                 })
 
                 # Print loss
@@ -107,19 +102,17 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
-                sample_z_1 = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                sample_z_2 = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                sample_z = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples_1 = s.run(model.g_sample_1,
                                   feed_dict={
                                       # model.y: sample_y,
-                                      model.z_1: sample_z_1,
-                                      model.z_2: sample_z_2,
+                                      model.z: sample_z,
                                   })
+                sample_z = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples_2 = s.run(model.g_sample_2,
                                   feed_dict={
                                       # model.y: sample_y,
-                                      model.z_1: sample_z_1,
-                                      model.z_2: sample_z_2,
+                                      model.z: sample_z,
                                   })
 
                 samples_1 = np.reshape(samples_1, [-1] + model.image_shape[1:])
