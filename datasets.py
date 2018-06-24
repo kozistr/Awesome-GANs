@@ -76,9 +76,10 @@ class DataSetLoader:
 
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
                  buffer_size=4096, n_threads=8,
-                 use_image_scaling=True, image_scale='0,1'):
+                 use_image_scaling=True, image_scale='0,1', debug=True):
 
         self.op = name.split('_')
+        self.debug = debug
 
         try:
             assert len(self.op) == 2
@@ -114,8 +115,13 @@ class DataSetLoader:
         else:
             self.file_list = sorted(os.listdir(self.path))
             self.file_ext = self.file_list[0].split('.')[-1]
-        self.file_names = glob(os.path.join(self.path, '/*.%s' % self.file_ext))
-        self.raw_data = np.ndarray([])  # (N, H * W * C)
+        self.file_names = glob(self.path + '/*')
+        self.raw_data = np.ndarray([], dtype=np.uint8)  # (N, H * W * C)
+
+        if self.debug:
+            print("[*[ Detected Path            is [%s]" % self.path)
+            print("[*[ Detected File Extension  is [%s]" % self.file_ext)
+            print("[*] Detected First File Name is [%s] (%d File(s))" % (self.file_names[0], len(self.file_names)))
 
         self.types = ('img', 'tfr', 'h5', 'npy')  # Supporting Data Types
         self.op_src = self.get_extension(self.file_ext)
@@ -131,6 +137,9 @@ class DataSetLoader:
             assert chk_src and chk_dst
         except AssertionError:
             raise AssertionError("[-] Invalid Operation Types (%s, %s) :(" % (self.op_src, self.op_dst))
+
+        if self.debug:
+            print("[*] Detect %s file(s)" % self.op_src)
 
         if self.op_src == self.types[0]:
             self.load_img()
@@ -185,6 +194,12 @@ class DataSetLoader:
 
         for i, fn in tqdm(enumerate(self.file_names)):
             self.raw_data[i] = self.get_img(fn, (self.height, self.width)).flatten()
+            if self.debug:  # just once
+                print(self.raw_data[i].shape)
+                print(self.raw_data[i].size)
+                print(np.min(self.raw_data[i]), np.max(self.raw_data[i]))
+                print(self.raw_data[i])
+                self.debug = False
 
     def load_tfr(self):
         self.raw_data = tf.data.TFRecordDataset(self.file_names, compression_type='', buffer_size=self.buffer_size)
@@ -217,12 +232,27 @@ class DataSetLoader:
                 if init:
                     self.raw_data = data
                     init = False
+
+                    if self.debug:  # just once
+                        print(self.raw_data[0].shape)
+                        print(self.raw_data[0].size)
+                        print(np.min(self.raw_data[0]), np.max(self.raw_data[0]))
+                        print(self.raw_data[0])
+                        self.debug = False
+
                     continue
                 else:
                     self.raw_data = np.concatenate((self.raw_data, data))
 
     def load_npy(self):
         self.raw_data = np.rollaxis(np.squeeze(np.load(self.file_names), axis=0), 0, 3)
+
+        if self.debug:  # just once
+            print(self.raw_data[0].shape)
+            print(self.raw_data[0].size)
+            print(np.min(self.raw_data[0]), np.max(self.raw_data[0]))
+            print(self.raw_data[0])
+            self.debug = False
 
     def convert_to_img(self):
         def to_img(i):
