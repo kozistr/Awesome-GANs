@@ -6,12 +6,10 @@
 
 ## Architecture Networks
 
-* Similar as CoGAN paper.
-* In Gen Net, not just 5 fc layers, 
+* Same as CoGAN paper.
 
 *DIFFS* | *CoGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **Pooling** | ``max_pooling2d`` | ``conv2d pooling`` |
  **conv2d filters** | ``D[20, 50]`` | ``D[32, 64]`` |
  **fc units** | ``D[500]`` | ``D[512]`` |
 
