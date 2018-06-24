@@ -112,10 +112,11 @@ class DataSetLoader:
         if os.path.isfile(self.path):
             self.file_list = [self.path]
             self.file_ext = self.path.split('.')[-1]
+            self.file_names = [self.path]
         else:
             self.file_list = sorted(os.listdir(self.path))
             self.file_ext = self.file_list[0].split('.')[-1]
-        self.file_names = glob(self.path + '/*')
+            self.file_names = glob(self.path + '/*')
         self.raw_data = np.ndarray([], dtype=np.uint8)  # (N, H * W * C)
 
         if self.debug:
