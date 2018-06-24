@@ -268,8 +268,12 @@ def l1_loss(x, y):
     return tf.reduce_mean(tf.abs(x - y))
 
 
-def mse_loss(x, y):  # l2_loss
-    return tf.reduce_mean(tf.squared_difference(x=x, y=y))
+def l2_loss(x, y):
+    return tf.nn.l2_loss(y - x)
+
+
+def mse_loss(x, y, n):  # ~ l2_loss
+    return tf.sqrt(2. * tf.nn.l2_loss(y - x)) / n
 
 
 def rmse_loss(x, y):
