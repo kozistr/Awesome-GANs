@@ -85,11 +85,13 @@ class CGAN:
             x = t.dense(x, self.fc_unit * 5, name='disc-fc-x')
             x = tf.reshape(x, (-1, self.fc_unit, 5))
             x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-x')
+            x = tf.nn.relu(x)
             x = tf.layers.dropout(x, do_rate, name='disc-do-x')
 
             y = t.dense(y, (self.fc_unit // 4) * 5, name='disc-fc-y')
             y = tf.reshape(y, (-1, (self.fc_unit // 4), 5))
             y = tf.reduce_max(y, axis=1, keepdims=False, name='disc-maxout-y')
+            y = tf.nn.relu(y)
             y = tf.layers.dropout(y, do_rate, name='disc-do-y')
 
             x = tf.concat([x, y], axis=1)
@@ -97,6 +99,7 @@ class CGAN:
             x = t.dense(x, self.fc_unit * 4, name='disc-fc-1')
             x = tf.reshape(x, (-1, self.fc_unit, 4))
             x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-1')
+            x = tf.nn.relu(x)
             x = tf.layers.dropout(x, do_rate, name='disc-do-1')
 
             x = t.dense(x, 1, name='disc-fc-2')
