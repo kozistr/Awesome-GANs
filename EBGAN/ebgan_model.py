@@ -19,7 +19,7 @@ class EBGAN:
         return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=10 * 10, sample_size=10,
+                 sample_num=5 * 5, sample_size=5,
                  df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, g_lr=2e-4, d_lr=2e-4,
                  enable_pull_away=True):
 
@@ -163,7 +163,6 @@ class EBGAN:
             assert self.fc_unit == 4 * 4 * self.gf_dim // 2
 
             x = t.dense(z, self.fc_unit, name='gen-fc-1')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.leaky_relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, self.gf_dim // 2))

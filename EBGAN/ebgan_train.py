@@ -93,17 +93,16 @@ def main():
                 if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                    d_loss, g_loss, pt_loss, summary = s.run([model.d_loss, model.g_loss, model.pt_loss, model.merged],
-                                                             feed_dict={
-                                                                 model.x: batch_x,
-                                                                 model.z: batch_z,
-                                                             })
+                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                    feed_dict={
+                                                        model.x: batch_x,
+                                                        model.z: batch_z,
+                                                    })
 
                     # Print loss
                     print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
                           " D  loss : {:.8f}".format(d_loss),
-                          " G  loss : {:.8f}".format(g_loss),
-                          " PT loss : {:.8f}".format(pt_loss))
+                          " G  loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
