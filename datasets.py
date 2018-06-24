@@ -17,6 +17,14 @@ from sklearn.model_selection import train_test_split
 seed = 1337
 
 
+def one_hot(labels_dense, num_classes=10):
+    num_labels = labels_dense.shape[0]
+    index_offset = np.arange(num_labels) * num_classes
+    labels_one_hot = np.zeros((num_labels, num_classes))
+    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+    return labels_one_hot
+
+
 class DataSetLoader:
 
     @staticmethod
@@ -300,15 +308,6 @@ class CiFarDataSet:
         with open(file, 'rb') as f:
             return p.load(f, encoding='bytes')
 
-    @staticmethod
-    def one_hot(labels_dense, num_classes=10):
-        num_labels = labels_dense.shape[0]
-        index_offset = np.arange(num_labels) * num_classes
-        labels_one_hot = np.zeros((num_labels, num_classes))
-        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-
-        return labels_one_hot
-
     def __init__(self, height=32, width=32, channel=3,
                  use_split=False, split_rate=0.2, random_state=42, ds_name="cifar-10", ds_path=None):
 
@@ -413,13 +412,13 @@ class CiFarDataSet:
                                  random_state=self.random_state)
 
             self.valid_images = valid_images
-            self.valid_labels = self.one_hot(valid_labels, self.n_classes)
+            self.valid_labels = one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
         self.test_images = test_images
 
-        self.train_labels = self.one_hot(train_labels, self.n_classes)
-        self.test_labels = self.one_hot(test_labels, self.n_classes)
+        self.train_labels = one_hot(train_labels, self.n_classes)
+        self.test_labels = one_hot(test_labels, self.n_classes)
 
     def cifar_100(self):
         self.n_classes = 100  # labels
@@ -452,13 +451,13 @@ class CiFarDataSet:
                                  random_state=self.random_state)
 
             self.valid_images = valid_images
-            self.valid_labels = self.one_hot(valid_labels, self.n_classes)
+            self.valid_labels = one_hot(valid_labels, self.n_classes)
 
         self.train_images = train_images
         self.test_images = test_images
 
-        self.train_labels = self.one_hot(train_labels, self.n_classes)
-        self.test_labels = self.one_hot(test_labels, self.n_classes)
+        self.train_labels = one_hot(train_labels, self.n_classes)
+        self.test_labels = one_hot(test_labels, self.n_classes)
 
 
 class CelebADataSet:
@@ -472,7 +471,7 @@ class CelebADataSet:
 
     def __init__(self,
                  height=64, width=64, channel=3, attr_labels=(),
-                 n_threads=30, use_split=False, split_rate=0.2,
+                 n_threads=30, use_split=False, split_rate=0.2, random_state=42,
                  ds_image_path=None, ds_label_path=None, ds_type="CelebA", use_img_scale=True, img_scale="-1,1",
                  use_save=False, save_type='to_h5', save_file_name=None,
                  use_concat_data=False):
@@ -491,6 +490,7 @@ class CelebADataSet:
         :param n_threads: the number of threads
         :param use_split: splitting train DataSet into train/val
         :param split_rate: image split rate (into train & val)
+        :param random_state: random seed for shuffling, default 42
 
         # DataSet Settings
         :param ds_image_path: DataSet's Image Path
@@ -523,6 +523,7 @@ class CelebADataSet:
         self.n_threads = n_threads
         self.use_split = use_split
         self.split_rate = split_rate
+        self.random_state = random_state
 
         self.attr = []      # loaded labels
         self.images = []
@@ -585,6 +586,16 @@ class CelebADataSet:
 
         if self.use_concat_data:
             self.images = self.concat_data(self.images, self.labels)
+
+        # split training data set into train / val
+        if self.use_split:
+            self.train_images, self.valid_images, self.train_labels, self.valid_labels = \
+                train_test_split(self.images, self.labels,
+                                 test_size=self.split_rate,
+                                 random_state=self.random_state)
+
+            self.train_labels = one_hot(self.train_labels, len(self.attr_labels))
+            self.valid_labels = one_hot(self.valid_labels, len(self.attr_labels))
 
     def load_attr(self, path):
         with open(path, 'r') as f:
