@@ -19,8 +19,8 @@ class EBGAN:
         return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=5 * 5, sample_size=5,
-                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, g_lr=2e-4, d_lr=2e-4,
+                 sample_num=4 * 4, sample_size=4,
+                 df_dim=64, gf_dim=64, z_dim=128, g_lr=2e-4, d_lr=2e-4,
                  enable_pull_away=True):
 
         """
@@ -39,7 +39,6 @@ class EBGAN:
         # For CNN model
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
-        :param fc_unit: the number of fully connected filters, default 512
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
@@ -62,7 +61,6 @@ class EBGAN:
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
-        self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
@@ -153,26 +151,24 @@ class EBGAN:
     def generator(self, z, reuse=None, is_train=True):
         """
         # referred architecture in the paper
-        : (512)fc - (256)4c2s - (128)4c2s (3)4c2s
+        : fc - (256)4c2s - (128)4c2s - (3)4c2s
         :param z: embeddings
         :param reuse: re-usable
         :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            assert self.fc_unit == 4 * 4 * self.gf_dim // 2
-
-            x = t.dense(z, self.fc_unit, name='gen-fc-1')
+            x = t.dense(z, 8 * 8 * self.gf_dim, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            x = tf.reshape(x, (-1, 4, 4, self.gf_dim // 2))
+            x = tf.reshape(x, (-1, 8, 8, self.gf_dim))
 
             x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-3')
