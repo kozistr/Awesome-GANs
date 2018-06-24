@@ -138,9 +138,6 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Invalid Operation Types (%s, %s) :(" % (self.op_src, self.op_dst))
 
-        if self.debug:
-            print("[*] Detect %s file(s)" % self.op_src)
-
         if self.op_src == self.types[0]:
             self.load_img()
         elif self.op_src == self.types[1]:
@@ -195,10 +192,9 @@ class DataSetLoader:
         for i, fn in tqdm(enumerate(self.file_names)):
             self.raw_data[i] = self.get_img(fn, (self.height, self.width)).flatten()
             if self.debug:  # just once
-                print(self.raw_data[i].shape)
-                print(self.raw_data[i].size)
-                print(np.min(self.raw_data[i]), np.max(self.raw_data[i]))
-                print(self.raw_data[i])
+                print("[*] Image Shape   : ", self.raw_data[i].shape)
+                print("[*] Image Size    : ", self.raw_data[i].size)
+                print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[i]), np.max(self.raw_data[i])))
                 self.debug = False
 
     def load_tfr(self):
@@ -234,10 +230,9 @@ class DataSetLoader:
                     init = False
 
                     if self.debug:  # just once
-                        print(self.raw_data[0].shape)
-                        print(self.raw_data[0].size)
-                        print(np.min(self.raw_data[0]), np.max(self.raw_data[0]))
-                        print(self.raw_data[0])
+                        print("[*] Image Shape   : ", self.raw_data[0].shape)
+                        print("[*] Image Size    : ", self.raw_data[0].size)
+                        print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
                         self.debug = False
 
                     continue
@@ -248,10 +243,9 @@ class DataSetLoader:
         self.raw_data = np.rollaxis(np.squeeze(np.load(self.file_names), axis=0), 0, 3)
 
         if self.debug:  # just once
-            print(self.raw_data[0].shape)
-            print(self.raw_data[0].size)
-            print(np.min(self.raw_data[0]), np.max(self.raw_data[0]))
-            print(self.raw_data[0])
+            print("[*] Image Shape   : ", self.raw_data[0].shape)
+            print("[*] Image Size    : ", self.raw_data[0].size)
+            print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
             self.debug = False
 
     def convert_to_img(self):
