@@ -594,9 +594,6 @@ class CelebADataSet:
                                  test_size=self.split_rate,
                                  random_state=self.random_state)
 
-            self.train_labels = one_hot(self.train_labels, len(self.attr_labels))
-            self.valid_labels = one_hot(self.valid_labels, len(self.attr_labels))
-
     def load_attr(self, path):
         with open(path, 'r') as f:
             img_attr = []
