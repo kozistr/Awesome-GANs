@@ -36,7 +36,7 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
                  ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
                  # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
@@ -48,7 +48,7 @@ def main():
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (4, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
     iu.save_images(test_images,
                    size=[4, 4],
                    image_path=results['output'] + 'sample.png',
