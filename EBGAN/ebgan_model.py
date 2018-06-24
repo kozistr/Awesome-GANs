@@ -11,6 +11,13 @@ tf.set_random_seed(777)  # reproducibility
 
 class EBGAN:
 
+    @staticmethod
+    def pullaway_loss(x, n):
+        # PullAway Loss # 2.4 Repelling Regularizer in 1609.03126.pdf
+        normalized = x / tf.sqrt(tf.reduce_sum(tf.square(x), 1, keepdims=True))
+        similarity = tf.matmul(normalized, normalized, transpose_b=True)
+        return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
+
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, g_lr=2e-4, d_lr=2e-4,
@@ -66,7 +73,7 @@ class EBGAN:
 
         # 1 is enough. But in case of the large batch, it needs value more than 1.
         # 20 for CelebA, 80 for LSUN
-        self.margin = 20.  # max(1., self.batch_size / 64.)
+        self.margin = max(1., self.batch_size / 64.)  # 20.
 
         self.g_loss = 0.
         self.d_loss = 0.
@@ -188,7 +195,7 @@ class EBGAN:
         self.d_loss = d_real_loss + tf.maximum(0., self.margin - d_fake_loss)
 
         if self.EnablePullAway:
-            self.pt_loss = t.pullaway_loss(d_embed_fake, self.batch_size)
+            self.pt_loss = self.pullaway_loss(d_embed_fake, self.batch_size)
 
         self.g_loss = d_fake_loss + self.pt_lambda * self.pt_loss
 
