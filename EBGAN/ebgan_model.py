@@ -183,8 +183,8 @@ class EBGAN:
         d_embed_real, d_decode_real = self.discriminator(self.x)
         d_embed_fake, d_decode_fake = self.discriminator(self.g, reuse=True)
 
-        d_real_loss = t.mse_loss(d_decode_real, self.x)
-        d_fake_loss = t.mse_loss(d_decode_fake, self.g)
+        d_real_loss = t.mse_loss(d_decode_real, self.x, self.batch_size)
+        d_fake_loss = t.mse_loss(d_decode_fake, self.g, self.batch_size)
         self.d_loss = d_real_loss + tf.maximum(0., self.margin - d_fake_loss)
 
         if self.EnablePullAway:
