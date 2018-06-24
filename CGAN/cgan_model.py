@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -9,8 +13,7 @@ class CGAN:
 
     def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, maxout_unit=8, fc_unit=128,
-                 z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-9):
+                 n_input=784, fc_unit=256, z_dim=100, g_lr=8e-4, d_lr=8e-4):
 
         """
         # General Settings
@@ -28,15 +31,13 @@ class CGAN:
         :param sample_size: sample image size, default 8
 
         # For DNN model
-        :param n_input: input image size, default 784(28x28)
-        :param maxout_unit : max-out unit, default 8
-        :param fc_unit: fully connected units, default 128
+        :param n_input: input image size, default 784 (28x28)
+        :param fc_unit: fully connected units, default 256
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 128
+        :param z_dim: z dimension (kinda noise), default 100
         :param g_lr: generator learning rate, default 8e-4
         :param d_lr: discriminator learning rate, default 8e-4
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -50,14 +51,12 @@ class CGAN:
         self.sample_size = sample_size
 
         self.n_input = n_input
-        self.maxout_unit = maxout_unit
         self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.g_lr = g_lr
         self.d_lr = d_lr
         self.beta1 = 0.5
-        self.eps = epsilon
 
         # pre-defined
         self.d_loss = 0.
@@ -77,46 +76,59 @@ class CGAN:
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")        # (-1, 784)
         self.c = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='c-condition')  # (-1, 10)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 100)
+        self.do_rate = tf.placeholder(tf.float32, shape=[], name='do_rate')
 
         self.build_cgan()  # build CGAN model
 
-    def discriminator(self, x, y, reuse=None):
+    def discriminator(self, x, y, do_rate=0.5, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
+            x = t.dense(x, self.fc_unit * 5, name='disc-fc-x')
+            x = tf.reshape(x, (-1, self.fc_unit, 5))
+            x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-x')
+            x = tf.layers.dropout(x, do_rate, name='disc-do-x')
+
+            y = t.dense(y, (self.fc_unit // 4) * 5, name='disc-fc-y')
+            y = tf.reshape(y, (-1, (self.fc_unit // 4), 5))
+            y = tf.reduce_max(y, axis=1, keepdims=False, name='disc-maxout-y')
+            y = tf.layers.dropout(y, do_rate, name='disc-do-y')
+
             x = tf.concat([x, y], axis=1)
 
-            x = t.dense(x, self.maxout_unit * self.fc_unit, name='d-fc-1')
+            x = t.dense(x, self.fc_unit * 4, name='disc-fc-1')
+            x = tf.reshape(x, (-1, self.fc_unit, 4))
+            x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-1')
+            x = tf.layers.dropout(x, do_rate, name='disc-do-1')
 
-            x = tf.reshape(x, [-1, self.maxout_unit, self.fc_unit])
-
-            x = tf.reduce_max(x, reduction_indices=[1], name='d-reduce_max-1')
-            x = tf.nn.dropout(x, .5)
-
-            x = t.dense(x, 1, name='d-fc-2')
+            x = t.dense(x, 1, name='disc-fc-2')
             x = tf.nn.sigmoid(x)
 
             return x
 
-    def generator(self, z, y, reuse=None, is_train=True):
+    def generator(self, z, y, do_rate=0.5, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
+            y = t.dense(y, self.fc_unit * 1, name='gen-fc-y')
+            y = tf.nn.relu(y)
+            y = tf.layers.dropout(y, do_rate, name='gen-do-y')
+
+            z = t.dense(z, self.fc_unit * 4, name='gen-fc-z')
+            z = tf.nn.relu(z)
+            z = tf.layers.dropout(z, do_rate, name='gen-do-z')
+
             x = tf.concat([z, y], axis=1)
 
-            x = t.dense(x, self.fc_unit, name='g-fc-1')
-            x = tf.nn.dropout(x, .5) if is_train else tf.nn.dropout(x, 1.)
-            x = tf.nn.leaky_relu(x)
-
-            x = t.dense(x, self.n_input, name='g-fc-2')
+            x = t.dense(x, self.n_input, name='gen-fc-1')
             x = tf.nn.sigmoid(x)
 
             return x
 
     def build_cgan(self):
         # Generator
-        self.g = self.generator(self.z, self.c)
-        self.g_test = self.generator(self.z, self.c, is_train=False)
+        self.g = self.generator(self.z, self.c, self.do_rate)
+        self.g_test = self.generator(self.z, self.c, self.do_rate, reuse=True)
 
         # Discriminator
-        d_real = self.discriminator(self.x, self.c)
-        d_fake = self.discriminator(self.g, self.c, reuse=True)
+        d_real = self.discriminator(self.x, self.c, self.do_rate)
+        d_fake = self.discriminator(self.g, self.c, self.do_rate, reuse=True)
 
         # Losses
         d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
