@@ -36,16 +36,25 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
-                 ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
+                 # ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
-                 use_save=False,
-                 # save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
-                 # save_type="to_h5",
+                 use_save=True,
+                 save_file_name="D:\\DataSet/CelebA/CelebA-64.h5",
+                 save_type="to_h5",
                  use_img_scale=False,
                  # img_scale="-1,1"
                  )
+
+    # saving sample images
+    test_images = np.reshape(iu.transform(ds.images[:4], inv_type='127'), (4, 64, 64, 3))
+    print(test_images, test_images.shape, test_images.size)
+    print(np.min(test_images), np.max(test_images))
+    iu.save_images(test_images,
+                   size=[4, 4],
+                   image_path=results['output'] + 'sample.png',
+                   inv_type='127')
 
     ds_iter = DataIterator(x=ds.images,
                            y=None,
@@ -100,7 +109,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g_test,
+                    samples = s.run(model.g,
                                     feed_dict={
                                         model.z: sample_z,
                                     })
