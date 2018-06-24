@@ -13,8 +13,8 @@ class EBGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=512,
-                 z_dim=128, g_lr=2e-4, d_lr=2e-4, enable_pull_away=True):
+                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, g_lr=2e-4, d_lr=2e-4,
+                 enable_pull_away=True):
 
         """
         # General Settings
@@ -127,14 +127,12 @@ class EBGAN:
             x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, self.channel, 4, 2, name='dec-deconv2d-3')
-            x = tf.nn.sigmoid(x)
+            x = tf.nn.tanh(x)
 
             return x
 
     def discriminator(self, x, reuse=None):
         """
-        # referred architecture in the paper
-        : (64)4c2s-FC32-FC64*14*14_BR-(1)4dc2s_S
         :param x: images
         :param reuse: re-usable
         :return: prob, embeddings, gen-ed_image
