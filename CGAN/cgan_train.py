@@ -23,7 +23,7 @@ results = {
 train_step = {
     'batch_size': 100,
     'global_step': 200001,
-    'logging_interval': 2000,
+    'logging_interval': 1000,
 }
 
 
@@ -89,7 +89,7 @@ def main():
 
                 # Training G model with sample image and noise
                 sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g_test,
+                samples = s.run(model.g,
                                 feed_dict={
                                     model.c: sample_y,
                                     model.z: sample_z,

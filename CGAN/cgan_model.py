@@ -63,7 +63,6 @@ class CGAN:
         self.g_loss = 0.
 
         self.g = None
-        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -82,52 +81,57 @@ class CGAN:
 
     def discriminator(self, x, y, do_rate=0.5, reuse=None):
         with tf.variable_scope("discriminator", reuse=reuse):
+            """
             x = t.dense(x, self.fc_unit * 5, name='disc-fc-x')
             x = tf.reshape(x, (-1, self.fc_unit, 5))
-            x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-x')
+            x = tf.reduce_max(x, axis=-1, keepdims=False, name='disc-maxout-x')
             x = tf.nn.relu(x)
             x = tf.layers.dropout(x, do_rate, name='disc-do-x')
 
             y = t.dense(y, (self.fc_unit // 4) * 5, name='disc-fc-y')
             y = tf.reshape(y, (-1, (self.fc_unit // 4), 5))
-            y = tf.reduce_max(y, axis=1, keepdims=False, name='disc-maxout-y')
+            y = tf.reduce_max(y, axis=-1, keepdims=False, name='disc-maxout-y')
             y = tf.nn.relu(y)
             y = tf.layers.dropout(y, do_rate, name='disc-do-y')
+            """
 
             x = tf.concat([x, y], axis=1)
 
-            x = t.dense(x, self.fc_unit * 4, name='disc-fc-1')
-            x = tf.reshape(x, (-1, self.fc_unit, 4))
-            x = tf.reduce_max(x, axis=1, keepdims=False, name='disc-maxout-1')
+            x = t.dense(x, self.fc_unit * 5, name='disc-fc-1')
+            x = tf.reshape(x, (-1, self.fc_unit, 5))
+            x = tf.reduce_max(x, axis=-1, keepdims=False, name='disc-maxout-1')
             x = tf.nn.relu(x)
             x = tf.layers.dropout(x, do_rate, name='disc-do-1')
 
-            x = t.dense(x, 1, name='disc-fc-2')
-            x = tf.nn.sigmoid(x)
+            x = t.dense(x, self.fc_unit * 4, name='disc-fc-2')
+            x = tf.reshape(x, (-1, self.fc_unit, 4))
+            x = tf.reduce_max(x, axis=-1, keepdims=False, name='disc-maxout-2')
+            x = tf.nn.relu(x)
+            x = tf.layers.dropout(x, do_rate, name='disc-do-2')
 
+            x = t.dense(x, 1, name='disc-fc-3')
+            x = tf.sigmoid(x)
             return x
 
     def generator(self, z, y, do_rate=0.5, reuse=None):
         with tf.variable_scope("generator", reuse=reuse):
-            y = t.dense(y, self.fc_unit * 1, name='gen-fc-y')
-            y = tf.nn.relu(y)
-            y = tf.layers.dropout(y, do_rate, name='gen-do-y')
-
-            z = t.dense(z, self.fc_unit * 4, name='gen-fc-z')
-            z = tf.nn.relu(z)
-            z = tf.layers.dropout(z, do_rate, name='gen-do-z')
-
             x = tf.concat([z, y], axis=1)
 
-            x = t.dense(x, self.n_input, name='gen-fc-1')
-            x = tf.nn.sigmoid(x)
+            x = t.dense(x, self.fc_unit * 1, name='gen-fc-1')
+            x = tf.nn.relu(x)
+            x = tf.layers.dropout(x, do_rate, name='gen-do-1')
 
+            x = t.dense(x, self.fc_unit * 4, name='gen-fc-2')
+            x = tf.nn.relu(x)
+            x = tf.layers.dropout(x, do_rate, name='gen-do-2')
+
+            x = t.dense(x, self.n_input, name='gen-fc-3')
+            x = tf.sigmoid(x)
             return x
 
     def build_cgan(self):
         # Generator
         self.g = self.generator(self.z, self.c, self.do_rate)
-        self.g_test = self.generator(self.z, self.c, self.do_rate, reuse=True)
 
         # Discriminator
         d_real = self.discriminator(self.x, self.c, self.do_rate)
@@ -138,6 +142,10 @@ class CGAN:
         d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = -tf.reduce_mean(t.safe_log(d_fake))
+        # d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+        # d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+        # self.d_loss = d_real_loss + d_fake_loss
+        # self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
