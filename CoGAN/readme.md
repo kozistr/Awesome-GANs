@@ -7,12 +7,14 @@
 ## Architecture Networks
 
 * Similar as CoGAN paper.
+* In Gen Net, 
 
 *DIFFS* | *CoGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Pooling** | ``max_pooling2d`` | ``conv2d pooling`` |
- 
-> Learning Rate : 1e-1 ~ to 1e-6, factor = 1 + 4e-5 <br/>
+ **conv2d filters** | ``D[20, 50]`` | ``D[32, 64]`` |
+ **fc units** | ``D[500]`` | ``D[512]`` |
+
 > HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard

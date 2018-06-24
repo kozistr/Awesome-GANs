@@ -41,6 +41,18 @@ def main():
         # CoGAN Model
         model = cogan.CoGAN(s, batch_size=train_step['batch_size'])
 
+        # Load model & Graph & Weights
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
         # Initializing
         s.run(tf.global_variables_initializer())
 
@@ -48,10 +60,10 @@ def main():
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        for global_step in range(train_step['global_step']):
+        for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
             batch_x = np.reshape(batch_x, model.image_shape)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(0.., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             _, d_loss = s.run([model.d_op, model.d_loss],
@@ -74,7 +86,7 @@ def main():
             if global_step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
                 batch_x = np.reshape(batch_x, model.image_shape)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
@@ -90,14 +102,14 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                sample_z = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples_1 = s.run(model.g_sample_1,
                                   feed_dict={
                                       # model.y: sample_y,
                                       model.z: sample_z,
                                   })
 
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                sample_z = np.random.uniform(0., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples_2 = s.run(model.g_sample_2,
                                   feed_dict={
                                       # model.y: sample_y,

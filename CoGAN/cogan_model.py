@@ -13,7 +13,7 @@ class CoGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, fc_unit=1024, df_dim=64, gf_dim=64, z_dim=128, lr=2e-4):
+                 n_input=784, fc_d_unit=512, fc_g_unit=1024, df_dim=32, gf_dim=64, z_dim=128, lr=2e-4):
 
         """
         # General Settings
@@ -32,8 +32,9 @@ class CoGAN:
 
         # For DNN model
         :param n_input: input image size, default 784(28x28)
-        :param fc_unit: fully connected units, default 1024
-        :param df_dim: the number of disc filters, default 64
+        :param fc_d_unit: discriminator fully connected units, default 512
+        :param fc_g_unit: generator fully connected units, default 1024
+        :param df_dim: the number of disc filters, default 32
         :param gf_dim: the number of gen filters, default 64
 
         # Training Option
@@ -54,7 +55,8 @@ class CoGAN:
         self.sample_size = sample_size
 
         self.n_input = n_input
-        self.fc_unit = fc_unit
+        self.fc_d_unit = fc_d_unit
+        self.fc_g_unit = fc_g_unit
         self.df_dim = df_dim
         self.gf_dim = gf_dim
 
@@ -84,35 +86,16 @@ class CoGAN:
         self.saver = None
 
         # Placeholder
-        self.x_1 = tf.placeholder(tf.float32, shape=[self.batch_size,
-                                                     self.height, self.width, self.channel],
-                                  name="x-image1")  # (-1, 28, 28, 1)
-        self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size,
-                                                     self.height, self.width, self.channel],
-                                  name="x-image2")  # (-1, 28, 28, 1)
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes],
-                                name="y-label")   # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
-                                name='z-noise')   # (-1, 128)
+        self.x_1 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input], name="x-image1")  # (-1, 28, 28, 1)
+        self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input], name="x-image2")  # (-1, 28, 28, 1)
+        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')       # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
     def discriminator(self, x, y=None, share_params=False, reuse=False, name=""):
         with tf.variable_scope("discriminator-%s" % name, reuse=reuse):
-            if y is None:
-                x = tf.layers.flatten(x)
-
-                x = tf.concat([x, y], axis=1)
-
-                x = t.dense(x, self.n_input, name='disc-' + name + '-dense-0-y')
-                x = tf.reshape(x, self.image_shape)
-            else:
-                pass
-
-            # Using conv2d pooling instead of max_pool2d because of the speed.
-            # In the CoGAN paper, max_pool2d is used.
-
-            x = t.conv2d(x, f=self.df_dim, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-0')
+            x = t.conv2d(x, f=self.df_dim * 1, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-0')
             x = t.prelu(x, reuse=False, name='disc-' + name + '-prelu-0')
             # x = tf.nn.max_pool(x, ksize=2, strides=2, padding='SAME', name='disc' + name + '-max_pool2d-0')
 
@@ -123,41 +106,27 @@ class CoGAN:
 
             x = tf.layers.flatten(x)
 
-        x = t.dense(x, self.fc_unit, reuse=share_params, name='disc-dense-0')
-        x = t.batch_norm(x, is_train=share_params, name='disc-bn-1')
+        x = t.dense(x, self.fc_d_unit, reuse=share_params, name='disc-dense-0')
+        # x = t.batch_norm(x, is_train=share_params, name='disc-bn-1')
         x = t.prelu(x, reuse=share_params, name='disc-prelu-2')
 
         x = t.dense(x, 1, reuse=share_params, name='disc-dense-1')
         return x
 
     def generator(self, z, y=None, share_params=False, reuse=False, training=True, name=""):
-        if y is None:
-            x = tf.concat([z, y], axis=1)
-        else:
-            x = z
+        # x = t.dense(z, self.fc_g_unit, reuse=share_params, name='gen-dense-0')
+        # x = t.prelu(x, reuse=share_params, name='gen-prelu-0')
 
-        x = tf.layers.flatten(x)
-
-        x = tf.layers.dense(x, self.fc_unit, reuse=share_params, name='gen-dense-0')
-        x = t.prelu(x, reuse=share_params, name='gen-prelu-0')
-
-        x = tf.layers.dense(x, self.gf_dim * 8 * 7 * 7, reuse=share_params, name='gen-dense-1')
+        x = t.dense(z, self.gf_dim * 8 * 7 * 7, reuse=share_params, name='gen-dense-1')
         x = t.batch_norm(x, reuse=share_params, is_train=training, name='gen-bn-0')
         x = t.prelu(x, reuse=share_params, name='gen-prelu-1')
 
         x = tf.reshape(x, (self.batch_size, 7, 7, self.gf_dim * 8))
 
-        # x = deconv2d(x, f=self.gf_dim * 16, k=4, s=1, reuse=share_params, name='gen-deconv2d-0')
-        # x = batch_norm(x, reuse=share_params, training=training, name="gen-bn-0")
-        # x = prelu(x, reuse=share_params, name='gen-prelu-1')
-
-        x = t.deconv2d(x, f=self.gf_dim * 4, k=3, s=2, reuse=share_params, name='gen-deconv2d-1')
-        x = t.batch_norm(x, reuse=share_params, is_train=training, name="gen-bn-1")
-        x = t.prelu(x, reuse=share_params, name='gen-prelu-2')
-
-        x = t.deconv2d(x, f=self.gf_dim * 2, k=3, s=2, reuse=share_params, name='gen-deconv2d-2')
-        x = t.batch_norm(x, reuse=share_params, is_train=training, name="gen-bn-2")
-        x = t.prelu(x, reuse=share_params, name='gen-prelu-3')
+        for i in range(1, 3):
+            x = t.deconv2d(x, f=self.gf_dim * 4 // i, k=3, s=2, reuse=share_params, name='gen-deconv2d-%d' % i)
+            x = t.batch_norm(x, reuse=share_params, is_train=training, name="gen-bn-%d" % i)
+            x = t.prelu(x, reuse=share_params, name='gen-prelu-%d' % (i + 1))
 
         with tf.variable_scope("generator-%s" % name, reuse=reuse):
             x = t.deconv2d(x, f=self.channel, k=6, s=1, reuse=False, name='gen-' + name + '-deconv2d-3')
