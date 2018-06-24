@@ -254,7 +254,7 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
             tf.get_variable_scope().reuse_variables()
 
         _alpha = tf.get_variable('_alpha',
-                                 shape=x.get_shape(),
+                                 shape=x.get_shape()[-1],
                                  initializer=tf.constant_initializer(stddev),
                                  dtype=x.dtype)
 
