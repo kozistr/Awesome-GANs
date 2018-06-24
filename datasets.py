@@ -195,7 +195,7 @@ class DataSetLoader:
             if self.debug:  # just once
                 print("[*] Image Shape   : ", self.raw_data[i].shape)
                 print("[*] Image Size    : ", self.raw_data[i].size)
-                print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[i]), np.max(self.raw_data[i])))
+                print("[*] Image MIN/MAX :  (%d, %d)" % (np.min(self.raw_data[i]), np.max(self.raw_data[i])))
                 self.debug = False
 
     def load_tfr(self):
@@ -233,7 +233,7 @@ class DataSetLoader:
                     if self.debug:  # just once
                         print("[*] Image Shape   : ", self.raw_data[0].shape)
                         print("[*] Image Size    : ", self.raw_data[0].size)
-                        print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
+                        print("[*] Image MIN/MAX :  (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
                         self.debug = False
 
                     continue
@@ -246,7 +246,7 @@ class DataSetLoader:
         if self.debug:  # just once
             print("[*] Image Shape   : ", self.raw_data[0].shape)
             print("[*] Image Size    : ", self.raw_data[0].size)
-            print("[*] Image MIN/MAX : (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
+            print("[*] Image MIN/MAX :  (%d, %d)" % (np.min(self.raw_data[0]), np.max(self.raw_data[0])))
             self.debug = False
 
     def convert_to_img(self):
