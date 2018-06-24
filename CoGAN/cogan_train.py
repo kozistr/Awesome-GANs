@@ -22,7 +22,7 @@ results = {
 
 train_step = {
     'batch_size': 128,
-    'global_step': 200001,
+    'global_step': 150001,
     'logging_interval': 1000,
 }
 
@@ -62,8 +62,8 @@ def main():
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_rot_x = tf.contrib.image_rotate(batch_x, 90.)
-            batch_z = np.random.uniform(0.., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
+            batch_z = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             _, d_loss = s.run([model.d_op, model.d_loss],
@@ -85,7 +85,7 @@ def main():
 
             if global_step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-                batch_rot_x = tf.contrib.image_rotate(batch_x, 90.)
+                batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
                 batch_z = np.random.uniform(0., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],

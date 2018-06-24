@@ -12,7 +12,7 @@ tf.set_random_seed(777)  # reproducibility
 class CoGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
+                 sample_num=4 * 4, sample_size=4,
                  n_input=784, fc_d_unit=512, fc_g_unit=1024, df_dim=32, gf_dim=64, z_dim=128, lr=2e-4):
 
         """
@@ -86,10 +86,10 @@ class CoGAN:
         self.saver = None
 
         # Placeholder
-        self.x_1 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input], name="x-image1")  # (-1, 28, 28, 1)
-        self.x_2 = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_input], name="x-image2")  # (-1, 28, 28, 1)
-        self.y = tf.placeholder(tf.float32, shape=[self.batch_size, self.n_classes], name="y-label")   # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')       # (-1, 128)
+        self.x_1 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image1")  # (-1, 784)
+        self.x_2 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image2")  # (-1, 784)
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")   # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')       # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
@@ -123,7 +123,7 @@ class CoGAN:
         x = t.batch_norm(x, reuse=share_params, is_train=training, name='gen-bn-0')
         x = t.prelu(x, reuse=share_params, name='gen-prelu-1')
 
-        x = tf.reshape(x, (self.batch_size, 7, 7, self.gf_dim * 8))
+        x = tf.reshape(x, (-1, 7, 7, self.gf_dim * 8))
 
         for i in range(1, 3):
             x = t.deconv2d(x, f=self.gf_dim * 4 // i, k=3, s=2, reuse=share_params, name='gen-deconv2d-%d' % i)
