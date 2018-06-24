@@ -276,12 +276,12 @@ def mse_loss(x, y, n):  # ~ l2_loss
     return tf.sqrt(2. * tf.nn.l2_loss(y - x)) / n
 
 
-def rmse_loss(x, y):
-    return tf.sqrt(mse_loss(x, y))
+def rmse_loss(x, y, n):
+    return tf.sqrt(mse_loss(x, y, n))
 
 
-def psnr_loss(x, y):
-    return 20. * tf.log(tf.reduce_max(x) / mse_loss(x, y))
+def psnr_loss(x, y, n):
+    return 20. * tf.log(tf.reduce_max(x) / mse_loss(x, y, n))
 
 
 def sce_loss(data, label):
