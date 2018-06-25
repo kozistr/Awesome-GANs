@@ -128,7 +128,7 @@ class DCGAN:
     def bulid_dcgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, is_train=False)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
