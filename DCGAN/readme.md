@@ -20,13 +20,13 @@
 
 ![result](./dcgan_tb.png)
 
-> Elapsed Time : s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 3 hour 5 minute 32s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 25k*
+*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 20k*
 :---: | :---: | :---: | :---:
-**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_40000.png)
+**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
 
 ## To-Do
 * 
