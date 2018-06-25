@@ -10,10 +10,10 @@
 
 *DIFFS* | *DRAGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **Weight initializer** | ``xavier initializer`` | ``HE initializer`` |
  **z noise** | ``100`` | ``128`` |
-
-> Normal Distribution Initializer : (µ = 0, σ = 0.02) <br/>
+ **image scale** | ``-1,1`` | ``0,1`` |
+ 
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard

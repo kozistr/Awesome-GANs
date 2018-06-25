@@ -75,7 +75,7 @@ class DRAGAN:
         # Training Options
         self.lambda_ = 10.  # Higher lambda value, More stable. But slower...
         self.beta1 = .5
-        self.beta2 = .999
+        self.beta2 = .9
         self.lr = 2e-4
 
         self.bulid_dragan()  # build DRAGAN model
@@ -99,7 +99,7 @@ class DRAGAN:
                 x = tf.nn.relu(x)
 
             x = t.dense(x, self.n_input, name='gen-fc-5')
-            x = tf.nn.tanh(x)
+            x = tf.nn.sigmoid(x)
             return x
 
     def bulid_dragan(self):
