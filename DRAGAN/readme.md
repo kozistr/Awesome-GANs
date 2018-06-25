@@ -2,7 +2,7 @@
 
 ## Loss Function
 
-* using ```sce loss``` instead of ```adv loss``` on ```D/G net``` with ```gradient panelty```.
+* used ``sce loss`` at D/G nets.
 
 ## Architecture Networks
 
