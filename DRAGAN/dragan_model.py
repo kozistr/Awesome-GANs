@@ -117,10 +117,10 @@ class DRAGAN:
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # DRAGAN loss with GP (gradient penalty)
-        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='_alpha')
+        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
         diff = self.x_p - self.x
         interpolates = self.x + alpha * diff
-        _, d_inter = self.discriminator(interpolates, reuse=True)
+        d_inter = self.discriminator(interpolates, reuse=True)
         grads = tf.gradients(d_inter, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1]))
         self.gp = tf.reduce_mean(tf.square(slopes - 1.))
