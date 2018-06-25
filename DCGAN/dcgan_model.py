@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -7,18 +11,18 @@ tf.set_random_seed(777)
 
 class DCGAN:
 
-    def __init__(self, s, batch_size=64, height=32, width=32, channel=3,
+    def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
                  sample_num=10 * 10, sample_size=10,
-                 z_dim=128, gf_dim=64, df_dim=64, eps=1e-9):
+                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: input image height, default 32
-        :param width: input image width, default 32
+        :param height: input image height, default 64
+        :param width: input image width, default 64
         :param channel: input image channel, default 3 (RGB)
-        - in case of CIFAR, image size is 32x32x3(HWC).
+        - in case of CelebA, image size is 64x64x3(HWC).
 
         # Output Settings
         :param sample_num: the number of sample images, default 100
@@ -29,8 +33,8 @@ class DCGAN:
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
 
-        # Training Settings
-        :param eps: epsilon, default 1e-12
+        # Training Settigns
+        :param lr: learning rate, default 2e-4
         """
 
         self.s = s
@@ -45,8 +49,6 @@ class DCGAN:
         self.image_shape = [self.height, self.width, self.channel]
 
         self.z_dim = z_dim
-
-        self.eps = eps
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
@@ -66,61 +68,62 @@ class DCGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name='x-images')
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='x-images')
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
-        self.beta1 = 0.5
-        self.lr = 2e-4
+        self.beta1 = 0.5  # 0.9 is not good at oscillation & instability
+        self.lr = lr      # 1e-3 is too high...
 
         self.bulid_dcgan()  # build DCGAN model
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = t.conv2d(x, self.df_dim, name='d-conv-0')
+            x = t.conv2d(x, self.df_dim * 1, 5, 1, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 2, name='d-conv-1')
-            x = t.batch_norm(x)
+            x = t.conv2d(x, self.df_dim * 2, 5, 2, name='disc-conv2d-2')
+            x = t.batch_norm(x, name='disc-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 4, name='d-conv-2')
-            x = t.batch_norm(x)
+            x = t.conv2d(x, self.df_dim * 4, 5, 2, name='disc-conv2d-3')
+            x = t.batch_norm(x, name='disc-bn-2')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 8, name='d-conv-3')
-            x = t.batch_norm(x)
+            x = t.conv2d(x, self.df_dim * 8, 5, 2, name='disc-conv2d-4')
+            x = t.batch_norm(x, name='disc-bn-3')
             x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
-            logits = t.dense(x, 1, name='d-fc-1')
+            logits = t.dense(x, 1, name='disc-fc-1')
             prob = tf.nn.sigmoid(logits)
 
             return prob, logits
 
     def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim * 8 * 4 * 4)
+            x = t.dense(z, self.gf_dim * 16 * 4 * 4, name='gen-fc-1')
+            x = tf.nn.relu(x)
 
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
-            x = t.batch_norm(x, is_train=is_train)
-            x = tf.nn.leaky_relu(x)
+            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 16])
 
-            x = t.deconv2d(x, self.gf_dim * 4, name='g-deconv-1')
-            x = t.batch_norm(x, is_train=is_train)
-            x = tf.nn.leaky_relu(x)
+            x = t.deconv2d(x, self.gf_dim * 8, 5, 2, name='gen-deconv2d-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
+            x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 2, name='g-deconv-2')
-            x = t.batch_norm(x, is_train=is_train)
-            x = tf.nn.leaky_relu(x)
+            x = t.deconv2d(x,  self.gf_dim * 4, 5, 2, name='gen-deconv2d-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
+            x = tf.nn.relu(x)
 
-            logits = t.deconv2d(x, self.channel, name='g-deconv-3')
-            prob = tf.nn.tanh(logits)
+            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-3')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = tf.nn.relu(x)
 
-            return prob
+            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
+            x = tf.nn.tanh(x)
+
+            return x
 
     def bulid_dcgan(self):
         # Generator

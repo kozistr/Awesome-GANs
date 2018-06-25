@@ -2,21 +2,32 @@
 
 ## Loss Function
 
-* using ```sigmoid loss``` instead of ```adv loss```.
+* used ``sce loss`` at D/G nets.
 
 ## Architecture Networks
 
-* same as in the **DCGAN paper**.
+* Same as DCGAN paper.
+
+*DIFFS* | *DCGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **Optimizer** | ``SGD`` | ``Adam`` |
+ **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **z noise** | ``100`` | ``128`` |
+
+> Normal Distribution Initializer : (µ = 0, σ = 0.02) <br/>
+> HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/dcgan_tb.png)
+![result](./dcgan_tb.png)
+
+> Elapsed Time : s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
+*Name* | *Global Step 25k* | *Global Step 50k* | *Global Step 100k*
 :---: | :---: | :---: | :---:
-**DCGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_80_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_160_100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DCGAN/gen_img/train_240_150000.png)
+**DCGAN**      | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
 
 ## To-Do
-* Optimizing Models...
+* 
