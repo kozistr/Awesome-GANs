@@ -6,7 +6,7 @@
 
 ## Architecture Networks
 
-* Same as DrAGAN paper.
+* Same as DRAGAN paper.
 
 *DIFFS* | *DRAGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
@@ -24,9 +24,9 @@
 
 ## Result
 
-*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 25k*
+*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
 :---: | :---: | :---: | :---:
-**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_40000.png)
+**DRAGAN**      | ![img](./gen_img/train_50000.png) | ![img](./gen_img/train_100000.png) | ![img](./gen_img/train_200000.png)
 
 ## To-Do
 * 
