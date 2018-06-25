@@ -26,7 +26,7 @@
 
 *Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 25k*
 :---: | :---: | :---: | :---:
-**DCGAN**      | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
+**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_40000.png)
 
 ## To-Do
 * 
