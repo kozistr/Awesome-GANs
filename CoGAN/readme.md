@@ -25,10 +25,10 @@
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
+*Name* | *Global Step 25k* | *Global Step 50k* | *Global Step 100k*
 :---: | :---: | :---: | :---:
-**Gen 1**      | ![img](./gen_img/train_1_00050000.png) | ![img](./gen_img/train_1_00100000.png) | ![img](./gen_img/train_1_00150000.png)
-**Gen 2**      | ![img](./gen_img/train_2_00050000.png) | ![img](./gen_img/train_2_00100000.png) | ![img](./gen_img/train_2_00150000.png)
+**Gen 1**      | ![img](./gen_img/train_1_00025000.png) | ![img](./gen_img/train_1_00050000.png) | ![img](./gen_img/train_1_00100000.png)
+**Gen 2**      | ![img](./gen_img/train_2_00025000.png) | ![img](./gen_img/train_2_00050000.png) | ![img](./gen_img/train_2_00100000.png)
 
 ## To-Do
 * 

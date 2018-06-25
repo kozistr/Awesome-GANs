@@ -21,9 +21,9 @@ results = {
 }
 
 train_step = {
-    'batch_size': 64,
-    'global_step': 100001,
-    'logging_interval': 1000,
+    'batch_size': 128,
+    'global_step': 12500,
+    'logging_interval': 250,
 }
 
 
@@ -62,7 +62,7 @@ def main():
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
+            # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
@@ -85,7 +85,7 @@ def main():
 
             if global_step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-                # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))[:]
+                # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
@@ -113,9 +113,6 @@ def main():
                                       # model.y: sample_y,
                                       model.z: sample_z,
                                   })
-
-                samples_1 = np.reshape(samples_1, [-1] + model.image_shape[1:])
-                samples_2 = np.reshape(samples_2, [-1] + model.image_shape[1:])
 
                 # Summary saver
                 model.writer.add_summary(summary, global_step)
