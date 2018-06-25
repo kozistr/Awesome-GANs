@@ -151,27 +151,29 @@ class EBGAN:
     def generator(self, z, reuse=None, is_train=True):
         """
         # referred architecture in the paper
-        : (512)4c - (256)4c2s - (128)4c2s - (3)4c2s
+        : (1024)4c - (512)4c2s - (256)4c2s - (128)4c2s - (3)4c2s
         :param z: embeddings
         :param reuse: re-usable
         :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            assert self.z_dim % 64 == 0
+            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
 
-            x = tf.reshape(z, (-1, 8, 8, self.z_dim // 64))
-
-            x = t.deconv2d(x, self.gf_dim * 8, 4, 1, name='gen-deconv2d-1')
+            x = tf.reshape(x, (-1, 4, 4, self.gf_dim * 8))
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-3')
+            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = tf.nn.relu(x)
+
+            x = t.deconv2d(x, self.gf_dim * 1, 4, 2, name='gen-deconv2d-3')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-4')
             x = tf.nn.relu(x)
 
             x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-4')
