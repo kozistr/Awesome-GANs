@@ -63,6 +63,8 @@ def main():
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
+            batch_x = (batch_x * 2.) - 1.  # [0, 1] to [-1, 1]
+
             batch_x_p = get_perturbed_images(batch_x)
 
             batch_x = np.reshape(batch_x, [-1] + model.image_shape)
