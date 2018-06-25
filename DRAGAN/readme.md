@@ -6,17 +6,27 @@
 
 ## Architecture Networks
 
-* Similar as in the **DCGAN paper**.
+* Same as DrAGAN paper.
+
+*DIFFS* | *DRAGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **z noise** | ``100`` | ``128`` |
+
+> Normal Distribution Initializer : (µ = 0, σ = 0.02) <br/>
+> HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN/dragan_tb.png)
+![result](./dragan_tb.png)
+
+> Elapsed Time : s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
+*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 25k*
 :---: | :---: | :---: | :---:
-**DRAGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN/gen_img/train_80_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN/gen_img/train_160_100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/DRAGAN/gen_img/train_240_150000.png)
+**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_40000.png)
 
 ## To-Do
-* Optimizing Models...
+* 

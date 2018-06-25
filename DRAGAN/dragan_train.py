@@ -21,9 +21,9 @@ results = {
 }
 
 train_step = {
-    'global_step': 250000,
     'batch_size': 64,
-    'logging_interval': 2500,
+    'global_step': 200001,
+    'logging_interval': 2000,
 }
 
 
@@ -45,13 +45,13 @@ def main():
         model = dragan.DRAGAN(s, batch_size=train_step['batch_size'])
 
         # Load model & Graph & Weights
-        global_step = 0
+        saved_global_step = 0
         ckpt = tf.train.get_checkpoint_state('./model/')
         if ckpt and ckpt.model_checkpoint_path:
             model.saver.restore(s, ckpt.model_checkpoint_path)
 
-            global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
-            print("[+] global step : %s" % global_step, " successfully loaded")
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %s" % saved_global_step, " successfully loaded")
         else:
             print('[-] No checkpoint file found')
 
@@ -59,38 +59,21 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        mnist = DataSet(ds_path="./").data
+        mnist = DataSet(ds_path="D:\\DataSet/mnist/").data
 
-        sample_x, _ = mnist.test.next_batch(model.sample_num)
-        sample_x = np.reshape(sample_x, [model.sample_num] + model.image_shape)
-        # sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
-        # for i in range(10):
-        #     sample_y[10 * i:10 * (i + 1), i] = 1
-        # sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-
-        # Export real image
-        valid_image_height = model.sample_size
-        valid_image_width = model.sample_size
-        sample_dir = results['output'] + 'valid.png'
-
-        # Generated image save
-        iu.save_images(sample_x,
-                       size=[valid_image_height, valid_image_width],
-                       image_path=sample_dir)
-
-        for step in range(train_step['global_step']):
-            batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_x_ = get_perturbed_images(batch_x)
+        for global_step in range(saved_global_step, train_step['global_step']):
+            batch_x, _ = mnist.train.next_batch(model.batch_size)
+            batch_x_p = get_perturbed_images(batch_x)
 
             batch_x = np.reshape(batch_x, [-1] + model.image_shape)
-            batch_x_ = np.reshape(batch_x_, [-1] + model.image_shape)
+            batch_x_p = np.reshape(batch_x_p, [-1] + model.image_shape)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             _, d_loss = s.run([model.d_op, model.d_loss],
                               feed_dict={
                                   model.x: batch_x,
-                                  model.x_: batch_x_,
+                                  model.x_p: batch_x_p,
                                   model.z: batch_z,
                               })
 
@@ -100,13 +83,13 @@ def main():
                                   model.z: batch_z,
                               })
 
-            if step % train_step['logging_interval'] == 0:
+            if global_step % train_step['logging_interval'] == 0:
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                 feed_dict={
                                                     model.x: batch_x,
-                                                    model.x_: batch_x_,
+                                                    model.x_p: batch_x_p,
                                                     model.z: batch_z,
                                                 })
 
@@ -115,11 +98,9 @@ def main():
                       " D loss : {:.8f}".format(d_loss),
                       " G loss : {:.8f}".format(g_loss))
 
-                # z for sample
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-
                 # Training G model with sample image and noise
-                samples = s.run(model.g_test,
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                samples = s.run(model.g,
                                 feed_dict={
                                     model.z: sample_z,
                                 })
@@ -137,10 +118,11 @@ def main():
                 # Generated image save
                 iu.save_images(samples,
                                size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
+                               image_path=sample_dir,
+                               inv_type='127')
 
                 # Model save
-                model.saver.save(s, results['model'], global_step=global_step)
+                model.saver.save(s, results['model'], global_step)
 
             global_step += 1
 
