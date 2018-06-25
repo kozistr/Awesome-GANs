@@ -20,7 +20,7 @@
 
 ![result](./dragan_tb.png)
 
-> Elapsed Time : s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 3213s with ``GTX 1060 6GB x 1``
 
 ## Result
 
