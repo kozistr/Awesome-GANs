@@ -10,7 +10,6 @@
 
 *DIFFS* | *DCGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **Optimizer** | ``SGD`` | ``Adam`` |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z noise** | ``100`` | ``128`` |
 

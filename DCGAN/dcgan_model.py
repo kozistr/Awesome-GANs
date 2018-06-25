@@ -33,7 +33,7 @@ class DCGAN:
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
 
-        # Training Settigns
+        # Training Settings
         :param lr: learning rate, default 2e-4
         """
 
@@ -79,7 +79,7 @@ class DCGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = t.conv2d(x, self.df_dim * 1, 5, 1, name='disc-conv2d-1')
+            x = t.conv2d(x, self.df_dim * 1, 5, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x)
 
             x = t.conv2d(x, self.df_dim * 2, 5, 2, name='disc-conv2d-2')
@@ -103,21 +103,22 @@ class DCGAN:
 
     def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim * 16 * 4 * 4, name='gen-fc-1')
-            x = tf.nn.relu(x)
+            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
 
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 16])
-
-            x = t.deconv2d(x, self.gf_dim * 8, 5, 2, name='gen-deconv2d-1')
+            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 4, 5, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x, self.gf_dim * 4, 5, 2, name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-3')
+            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-2')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = tf.nn.relu(x)
+
+            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-3')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-4')
             x = tf.nn.relu(x)
 
             x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
