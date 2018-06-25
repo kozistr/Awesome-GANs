@@ -86,7 +86,8 @@ def main():
         cont = int(global_step / 750)
         for epoch in range(cont, cont + train_step['epoch']):
             for batch_x in ds_iter.iterate():
-                batch_x = iu.transform(batch_x, inv_type='127')
+                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
+                                     (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network

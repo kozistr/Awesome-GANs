@@ -25,7 +25,7 @@
 
 ## Result
 
-*Name* | *Global Step 25k* | *Global Step 50k* | *Global Step 100k*
+*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 25k*
 :---: | :---: | :---: | :---:
 **DCGAN**      | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
 

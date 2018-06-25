@@ -12,7 +12,7 @@ tf.set_random_seed(777)
 class DCGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
-                 sample_num=10 * 10, sample_size=10,
+                 sample_num=8 * 8, sample_size=8,
                  z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
 
         """
@@ -25,8 +25,8 @@ class DCGAN:
         - in case of CelebA, image size is 64x64x3(HWC).
 
         # Output Settings
-        :param sample_num: the number of sample images, default 100
-        :param sample_size: sample image size, default 10
+        :param sample_num: the number of sample images, default 64
+        :param sample_size: sample image size, default 8
 
         # Model Settings
         :param z_dim: z noise dimension, default 128
