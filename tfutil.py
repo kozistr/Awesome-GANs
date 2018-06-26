@@ -224,7 +224,7 @@ def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="b
 
 def instance_norm(x, affine=True, reuse=None, name=""):
     with tf.variable_scope('instance_normalize-%s' % name, reuse=reuse):
-        mean, variance = tf.nn.moments(x, [1, 2], keep_dims=True)
+        mean, variance = tf.nn.moments(x, [1, 2], keepdims=True)
 
         normalized = tf.div(x - mean, tf.sqrt(variance + eps))
 
