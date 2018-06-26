@@ -90,7 +90,7 @@ def main():
                                        })
                 sum_d_loss += d_real_loss
 
-            print("[*] Epoch {:1d} Sum of d_real_loss : {:.8f}".format(i, sum_d_loss))
+            print("[*] Epoch {:1d} Sum of d_real_loss : {:.8f}".format(i + 1, sum_d_loss))
 
         # Initial margin value
         margin = (sum_d_loss / n_steps)
@@ -98,7 +98,7 @@ def main():
         print("[+] Margin : {0}".format(margin))
 
         s_g_0 = np.inf  # Sg_0 = infinite
-        for epoch in range(train_step['epoch']):
+        for epoch in range(train_step['epochs']):
             s_d, s_g = 0., 0.
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
