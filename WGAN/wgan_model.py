@@ -23,9 +23,7 @@ class WGAN:
         :param height: input image height, default 28
         :param width: input image width, default 28
         :param channel: input image channel, default 1 (gray-scale)
-        - in case of MNIST, image size is 28x28x1(HWC).
         :param n_classes: input DatSset's classes
-        - in case of MNIST, 10 (0 ~ 9)
 
         # Output Settings
         :param sample_num: the number of output images, default 64
@@ -64,7 +62,7 @@ class WGAN:
 
         # Training Options - based on the WGAN paper
         self.beta1 = 0.5
-        self.learning_rate = 2e-4  # very slow
+        self.learning_rate = 2e-4
         self.critic = 5
         self.clip = .01
         self.d_clip = []  # (-0.01 ~ 0.01)
@@ -148,11 +146,6 @@ class WGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # The WGAN losses
-        # d_real_loss = -tf.reduce_mean(log(d_real))
-        # d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
-        # self.d_loss = d_real_loss + d_fake_loss
-        # self.g_loss = -tf.reduce_mean(log(d_fake))
-
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
@@ -160,13 +153,13 @@ class WGAN:
 
         # The gradient penalty loss
         if self.EnableGP:
-            alpha = tf.random_uniform(shape=[self.batch_size] + self.image_shape, minval=0., maxval=1., name='alpha')
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
             diff = self.g - self.x  # fake data - real data
             interpolates = self.x + alpha * diff
             d_interp = self.discriminator(interpolates, reuse=True)
             gradients = tf.gradients(d_interp, [interpolates])[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-            self.gradient_penalty = tf.reduce_mean((slopes - 1.) ** 2)
+            self.gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.))
 
             # Update D loss
             self.d_loss += self.d_lambda * self.gradient_penalty

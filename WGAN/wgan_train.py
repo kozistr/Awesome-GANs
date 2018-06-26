@@ -22,7 +22,7 @@ results = {
 
 train_step = {
     'global_step': 200001,
-    'logging_interval': 2000,
+    'logging_interval': 1000,
 }
 
 
@@ -30,7 +30,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # MNIST Dataset load
-    mnist = DataSet(ds_path="D:/DatSet/mnist/").data
+    mnist = DataSet(ds_path="D:\\DatSet/mnist/").data
 
     # GPU configure
     config = tf.ConfigProto()
@@ -45,10 +45,6 @@ def main():
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        sample_x, _ = mnist.train.next_batch(model.sample_num)
-        sample_x = sample_x.reshape([-1] + model.image_shape)
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         for global_step in range(train_step['global_step']):
             # Update critic
@@ -103,9 +99,9 @@ def main():
                       " G loss : {:.8f}".format(g_loss))
 
                 # Training G model with sample image and noise
+                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                 samples = s.run(model.g,
                                 feed_dict={
-                                    model.x: sample_x,
                                     model.z: sample_z,
                                 })
 
@@ -123,7 +119,7 @@ def main():
                                image_path=sample_dir)
 
                 # Model save
-                model.saver.save(s, results['model'], global_step=global_step)
+                model.saver.save(s, results['model'], global_step)
 
     end_time = time.time() - start_time  # Clocking end
 
