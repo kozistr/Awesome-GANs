@@ -212,6 +212,8 @@ class LAPGAN:
 
                 h = t.conv2d(h, self.channel, 5, 1, name='gen-deconv2d-3')
 
+            h = tf.nn.tanh(h)
+
             return h
 
     def bulid_lapgan(self):

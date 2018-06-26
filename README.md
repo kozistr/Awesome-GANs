@@ -3,7 +3,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 **IMPORTANT: Currently, i'm just re-building the whole codes. So, maybe there're codes which don't work properly. :(**
 
-**Tested GANs: AC-GAN, BGAN, GAN, EBGAN, CGAN, CoGAN, DCGAN, DRAGAN, LSGAN**
+**Tested GANs: AC-GAN, BGAN, GAN, EBGAN, CGAN, CoGAN, DCGAN, DRAGAN, LSGAN, LAPGAN**
 
 ## Environments
 ### Preferred Environment

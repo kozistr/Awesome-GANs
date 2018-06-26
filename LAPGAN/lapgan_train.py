@@ -90,6 +90,7 @@ def main():
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
                     batch_x = ds.test_images[np.random.randint(0, len(ds.test_images), model.sample_num)]
+                    batch_x = iu.transform(batch_x, inv_type='127')
 
                     z = []
                     for i in range(3):
