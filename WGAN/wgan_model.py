@@ -94,12 +94,12 @@ class WGAN:
     def mean_pool_conv(self, x, f, name):
         with tf.name_scope("mean_pool_conv-%s" % name):
             x = tf.add_n([x[:, ::2, ::2, :], x[:, 1::2, ::2, :], x[:, ::2, 1::2, :], x[:, 1::2, 1::2, :]]) / 4.
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1' % name)
+            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
             return x
 
     def conv_mean_pool(self, x, f, name):
         with tf.name_scope("conv_mean_pool-%s" % name):
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1' % name)
+            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
             x = tf.add_n([x[:, ::2, ::2, :], x[:, 1::2, ::2, :], x[:, ::2, 1::2, :], x[:, 1::2, 1::2, :]]) / 4.
             return x
 
@@ -107,7 +107,7 @@ class WGAN:
         with tf.name_scope("upsample_conv-%s" % name):
             x = tf.concat([x, x, x, x], axis=-1)
             x = tf.depth_to_space(x, 2)
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1' % name)
+            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
             return x
 
     def residual_block(self, x, f, sampling=None, name=""):
