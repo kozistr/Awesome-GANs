@@ -58,6 +58,9 @@ def main():
     with tf.Session(config=config) as s:
         # WGAN Model
         model = wgan.WGAN(s,
+                          height=32,
+                          width=32,
+                          channel=3,
                           enable_adam=True,
                           enable_gp=True)  # Improved-WGAN with gradient penalty
 
