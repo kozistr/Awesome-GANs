@@ -25,7 +25,6 @@ train_step = {
     'epochs': 50,
     'batch_size': 64,
     'global_step': 200001,
-    'n_iter': 1000,
     'logging_interval': 1000,
 }
 
@@ -47,6 +46,13 @@ def main():
                  use_img_scale=False,
                  img_scale="-1,1")
 
+    # saving sample images
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    iu.save_images(test_images,
+                   size=[4, 4],
+                   image_path=results['output'] + 'sample.png',
+                   inv_type='127')
+
     ds_iter = DataIterator(x=ds.images,
                            y=None,
                            batch_size=train_step['batch_size'],
@@ -64,25 +70,32 @@ def main():
         s.run(tf.global_variables_initializer())
 
         global_step = 0
-        n_iters = ds.num_images // model.batch_size  # training set size
+        n_steps = ds.num_images // model.batch_size  # training set size
 
         # Pre-Train
-        print("[+] pre-train")
+        print("[*] pre-training - getting proper Margin")
+        sum_d_loss = 0.
         for _ in range(2):
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                      (model.batch_size, model.height, model.width, model.channel))
 
-                s.run([model.d_real_op, model.d_real_loss],
+                s.run([model.d_real_op],
                       feed_dict={
                           model.x: batch_x,
                       })
 
+        for batch_x in ds_iter.iterate():
+            batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
+                                 (model.batch_size, model.height, model.width, model.channel))
+
+            sum_d_loss += s.run([model.d_real_loss],
+                                feed_dict={
+                                    model.x: batch_x,
+                                })
+
         # Initial margin value
-        margin = s.run(model.d_real_loss,
-                       feed_dict={
-                           model.x: sample_x,
-                       })
+        margin = (sum_d_loss / n_steps)
 
         s_g_0 = np.inf  # Sg_0 = infinite
         for epoch in range(train_step['epoch']):
@@ -132,7 +145,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g_test,
+                    samples = s.run(model.g,
                                     feed_dict={
                                         model.z: sample_z,
                                         model.m: margin,
@@ -158,8 +171,8 @@ def main():
                 global_step += 1
 
             # Update margin
-            if s_d / n_iters < margin and s_d < s_g and s_g_0 <= s_g:
-                margin = s_d / n_iters
+            if s_d / n_steps < margin and s_d < s_g and s_g_0 <= s_g:
+                margin = s_d / n_steps
 
             s_g_0 = s_g
 
