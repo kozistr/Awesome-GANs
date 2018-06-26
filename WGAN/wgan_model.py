@@ -77,7 +77,6 @@ class WGAN:
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
-
         self.gradient_penalty = 0.
 
         self.g = None
@@ -189,7 +188,7 @@ class WGAN:
         d_real = self.discriminator(self.x)
         d_fake = self.discriminator(self.g, reuse=True)
 
-        # The WGAN losses
+        # Losses
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss

@@ -69,7 +69,7 @@ def main():
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for batch_x in ds_iter.iterate():
+            for _ in range(len(ds.train_images) // model.batch_size):
                 # Update critic
                 model.critic = 5
                 if global_step % 500 == 0 or global_step < 25:
@@ -79,6 +79,7 @@ def main():
 
                 for _ in range(model.critic):
                     batch_x = ds_iter.next_batch()
+                    batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     # Update d_clip
@@ -89,9 +90,11 @@ def main():
                     _, d_loss = s.run([model.d_op, model.d_loss],
                                       feed_dict={
                                           model.x: batch_x,
-                                          model.z: batch_z
+                                          model.z: batch_z,
                                       })
 
+                batch_x = ds_iter.next_batch()
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update G network
@@ -134,7 +137,8 @@ def main():
                     # Generated image save
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
