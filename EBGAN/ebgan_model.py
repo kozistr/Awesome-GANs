@@ -103,15 +103,14 @@ class EBGAN:
         """
         with tf.variable_scope('encoder', reuse=reuse):
             x = t.conv2d(x, self.df_dim * 1, 4, 2, name='enc-conv2d-1')
-            x = tf.nn.leaky_relu(x)
-
-            x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-2')
             x = t.batch_norm(x, name='enc-bn-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 4, 4, 2, name='enc-conv2d-3')
+            x = t.conv2d(x, self.df_dim * 2, 4, 2, name='enc-conv2d-2')
             x = t.batch_norm(x, name='enc-bn-2')
             x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 4, 4, 2, name='enc-conv2d-3')
 
             return x
 
