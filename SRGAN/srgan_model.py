@@ -15,7 +15,7 @@ class SRGAN:
 
     def __init__(self, s, batch_size=16, height=384, width=384, channel=3,
                  sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=64, g_lr=1e-4, d_lr=1e-4):
+                 df_dim=64, gf_dim=64, lr=1e-4):
 
         """ Super-Resolution GAN Class
         # General Settings
@@ -35,8 +35,7 @@ class SRGAN:
         :param gf_dim: generator filter, default 64
 
         # Training Option
-        :param g_lr: generator learning rate, default 1e-4
-        :param d_lr: discriminator learning rate, default 1e-4
+        :param lr: learning rate, default 1e-4
         """
 
         self.s = s
@@ -60,8 +59,7 @@ class SRGAN:
         self.beta1 = 0.9
         self.beta2 = 0.999
 
-        self.d_lr = d_lr
-        self.g_lr = g_lr
+        self.lr = lr
         self.lr_decay_rate = 1e-1
         self.lr_decay_epoch = 100
 
@@ -81,7 +79,7 @@ class SRGAN:
         self.g = None
         self.g_test = None
         self.adv_scaling = 1e-3
-        self.vgg_scaling = 2e-6
+        self.vgg_scaling = 1. / 12.75  # 6e-3
 
         self.d_op = None
         self.g_op = None
@@ -136,9 +134,9 @@ class SRGAN:
         with tf.variable_scope("generator", reuse=reuse):
             def residual_block(x, name="", _is_train=True):
                 with tf.variable_scope(name):
-                    x = t.conv2d(x, self.gf_dim, name="n64s1-2")
+                    x = t.conv2d(x, self.gf_dim, 3, 1, name="n64s1-2")
                     x = t.batch_norm(x, is_train=_is_train, name="n64s1-bn-2")
-                    x = tf.nn.relu(x)
+                    x = t.prelu(x, reuse=reuse, name='n64s1-prelu-1')
                     return x
 
             x = t.conv2d(x, self.gf_dim, 3, 1, name='n64s1-1')
@@ -207,9 +205,9 @@ class SRGAN:
         self.d_loss = d_real_loss + d_fake_loss
 
         self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
-        self.g_mse_loss = t.mse_loss(self.g, self.x_hr)
+        self.g_mse_loss = t.mse_loss(self.g, self.x_hr, self.batch_size)
         # tf.losses.mean_squared_error(self.g, self.x_hr, reduction=tf.losses.Reduction.MEAN)
-        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_real, vgg_bottle_fake)
+        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_real, vgg_bottle_fake, self.batch_size)
         # tf.losses.mean_squared_error(vgg_bottle_fake, vgg_bottle_real, reduction=tf.losses.Reduction.MEAN)
         self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
 
@@ -227,15 +225,15 @@ class SRGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                         var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
                                                                                         var_list=g_params)
 
         # pre-train
-        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                                 beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_mse_loss,
                                                                                              var_list=g_params)
 
