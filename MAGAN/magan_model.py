@@ -14,7 +14,7 @@ tf.set_random_seed(777)  # reproducibility
 class MAGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=6 * 6, sample_size=6,
+                 sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=512, z_dim=350, lr=5e-4):
 
         """
@@ -27,8 +27,8 @@ class MAGAN:
         :param n_classes: input DataSet's classes, default 41
 
         # Output Settings
-        :param sample_num: the number of output images, default 36
-        :param sample_size: sample image size, default 6
+        :param sample_num: the number of output images, default 100
+        :param sample_size: sample image size, default 10
 
         # For CNN model
         :param df_dim: discriminator conv2d filter, default 64
@@ -68,6 +68,7 @@ class MAGAN:
         self.d_fake_loss = 0.
 
         self.g = None
+        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -155,6 +156,7 @@ class MAGAN:
     def build_magan(self):
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
