@@ -2,21 +2,31 @@
 
 ## Loss Function
 
-* Using ```mse loss``` on ```D/G nets```.
+* used ``mse loss`` at D/G nets.
 
 ## Architecture Networks
 
-* ```Simple Conv Net```
+* Same as DCGAN paper.
+
+*DIFFS* | *DCGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **z noise** | ``100`` | ``128`` |
+
+> Normal Distribution Initializer : (µ = 0, σ = 0.02) <br/>
+> HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/lsgan_tb.png)
+![result](./lsgan_tb.png)
+
+> Elapsed Time : 3 hour 5 minute 32s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
+*Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 20k*
 :---: | :---: | :---: | :---:
-**LSGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00052500.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LSGAN/gen_img/train_00152500.png) 
+**DCGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
 
 ## To-Do
 * 

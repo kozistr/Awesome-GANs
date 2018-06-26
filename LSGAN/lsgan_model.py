@@ -7,37 +7,31 @@ tf.set_random_seed(777)  # reproducibility
 
 class LSGAN:
 
-    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
+    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 n_input=784, df_dim=64, gf_dim=64, fc_unit=1024,
-                 z_dim=128, g_lr=8e-4, d_lr=8e-4, epsilon=1e-12):
+                 df_dim=64, gf_dim=64, fc_unit=1024, z_dim=128, lr=2e-4):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: input image height, default 28
-        :param width: input image width, default 28
-        :param channel: input image channel, default 1 (gray-scale)
-        - in case of MNIST, image size is 28x28x1(HWC).
-        :param n_classes: input dataset's classes
-        - in case of MNIST, 10 (0 ~ 9)
+        :param height: input image height, default 64
+        :param width: input image width, default 64
+        :param channel: input image channel, default 3 (gray-scale)
+        :param n_classes: input DataSet's classes
 
         # Output Settings
         :param sample_num: the number of output images, default 64
         :param sample_size: sample image size, default 8
 
         # For CNN model
-        :param n_input: input image size, default 784(28x28)
         :param df_dim: discriminator filter, default 64
         :param gf_dim: generator filter, default 64
         :param fc_unit: the number of fully connected filters, default 1024
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
-        :param g_lr: generator learning rate, default 8e-4
-        :param d_lr: discriminator learning rate, default 8e-4
-        :param epsilon: epsilon, default 1e-12
+        :param lr: learning rate, default 2e-4
         """
 
         self.s = s
@@ -52,15 +46,13 @@ class LSGAN:
         self.sample_num = sample_num
         self.sample_size = sample_size
 
-        self.n_input = n_input
         self.df_dim = df_dim
         self.gf_dim = gf_dim
         self.fc_unit = fc_unit
 
         self.z_dim = z_dim
         self.beta1 = 0.5
-        self.d_lr, self.g_lr = d_lr, g_lr
-        self.eps = epsilon
+        self.lr = lr
 
         # pre-defined
         self.g_loss = 0.
@@ -76,45 +68,61 @@ class LSGAN:
         self.saver = None
 
         # Placeholder
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                        # (-1, 28, 28, 1)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
+                                name="x-image")  # (-1, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
+                                name='z-noise')  # (-1, 128)
 
         self.build_lsgan()  # build LSGAN model
 
     def discriminator(self, x, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
-            x = t.conv2d(x, self.df_dim, name='d-conv-1')
+        """ Same as DCGAN Disc Net """
+        with tf.variable_scope('discriminator', reuse=reuse):
+            x = t.conv2d(x, self.df_dim * 1, 5, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x)
-            x = tf.layers.dropout(x, 0.5, name='d_dropout-1')
 
-            x = t.conv2d(x, self.df_dim * 2, name='d-conv-2')
+            x = t.conv2d(x, self.df_dim * 2, 5, 2, name='disc-conv2d-2')
+            x = t.batch_norm(x, name='disc-bn-1')
             x = tf.nn.leaky_relu(x)
-            x = tf.layers.dropout(x, 0.5, name='d-dropout-2')
+
+            x = t.conv2d(x, self.df_dim * 4, 5, 2, name='disc-conv2d-3')
+            x = t.batch_norm(x, name='disc-bn-2')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 8, 5, 2, name='disc-conv2d-4')
+            x = t.batch_norm(x, name='disc-bn-3')
+            x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
 
-            x = t.dense(x, self.fc_unit / 2, name='d-fc-1')
-            x = tf.nn.leaky_relu(x)
-            x = tf.layers.dropout(x, 0.5, name='d-dropout-3')
+            logits = t.dense(x, 1, name='disc-fc-1')
+            prob = tf.nn.sigmoid(logits)
 
-            x = t.dense(x, 1, name='d-fc-2')  # logits
+            return prob, logits
 
-            return x
+    def generator(self, z, reuse=None, is_train=True):
+        """ Same as DCGAN Gen Net """
+        with tf.variable_scope('generator', reuse=reuse):
+            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
 
-    def generator(self, z, reuse=None):
-        with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, self.gf_dim * 2 * 7 * 7, name='g-fc-1')
-            x = tf.nn.leaky_relu(x)
+            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
+            x = tf.nn.relu(x)
 
-            x = tf.reshape(x, [-1, 7, 7, self.gf_dim * 2])
+            x = t.deconv2d(x, self.gf_dim * 4, 5, 2, name='gen-deconv2d-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
+            x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim, k=2, s=2, name='g-deconv-1')
-            x = tf.nn.leaky_relu(x)
+            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
+            x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, 1, k=2, s=2, name='g-deconv-2')
-            x = tf.sigmoid(x)
+            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-3')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-4')
+            x = tf.nn.relu(x)
+
+            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
+            x = tf.nn.tanh(x)
 
             return x
 
@@ -127,10 +135,10 @@ class LSGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # LSGAN Loss
-        d_real_loss = t.mse_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.mse_loss(d_fake, tf.zeros_like(d_fake))
+        d_real_loss = t.mse_loss(d_real, tf.ones_like(d_real), self.batch_size)
+        d_fake_loss = t.mse_loss(d_fake, tf.zeros_like(d_fake), self.batch_size)
         self.d_loss = (d_real_loss + d_fake_loss) / 2.
-        self.g_loss = t.mse_loss(d_fake, tf.ones_like(d_fake))
+        self.g_loss = t.mse_loss(d_fake, tf.ones_like(d_fake), self.batch_size)
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
@@ -143,9 +151,9 @@ class LSGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
