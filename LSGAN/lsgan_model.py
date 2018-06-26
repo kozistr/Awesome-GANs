@@ -11,7 +11,7 @@ tf.set_random_seed(777)  # reproducibility
 
 class LSGAN:
 
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
+    def __init__(self, s, batch_size=64, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=1024, z_dim=128, lr=2e-4):
 
@@ -19,8 +19,8 @@ class LSGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: input image height, default 64
-        :param width: input image width, default 64
+        :param height: input image height, default 32
+        :param width: input image width, default 32
         :param channel: input image channel, default 3 (gray-scale)
         :param n_classes: input DataSet's classes
 
@@ -93,10 +93,6 @@ class LSGAN:
             x = t.batch_norm(x, name='disc-bn-2')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 8, 5, 2, name='disc-conv2d-4')
-            x = t.batch_norm(x, name='disc-bn-3')
-            x = tf.nn.leaky_relu(x)
-
             x = tf.layers.flatten(x)
 
             logits = t.dense(x, 1, name='disc-fc-1')
@@ -107,25 +103,21 @@ class LSGAN:
     def generator(self, z, reuse=None, is_train=True):
         """ Same as DCGAN Gen Net """
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
+            x = t.dense(z, self.gf_dim * 4 * 4 * 4, name='gen-fc-1')
 
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
+            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 4])
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 4, 5, 2, name='gen-deconv2d-1')
+            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-2')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-3')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-4')
-            x = tf.nn.relu(x)
-
-            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
+            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-3')
             x = tf.nn.tanh(x)
 
             return x
