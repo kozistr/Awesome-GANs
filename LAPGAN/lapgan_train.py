@@ -16,6 +16,9 @@ from datasets import DataIterator
 from datasets import CiFarDataSet as DataSet
 
 
+np.random.seed(1337)
+
+
 results = {
     'output': './gen_img/',
     'model': './model/LAPGAN-model.ckpt'
@@ -51,10 +54,14 @@ def main():
         ds_iter = DataIterator(ds.train_images, ds.train_labels,
                                train_step['batch_size'])
 
+        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
+        for i in range(10):
+            sample_y[10 * i:10 * (i + 1), i] = 1
+
         global_step = 0
         for epoch in range(train_step['epoch']):
             for batch_images, batch_labels in ds_iter.iterate():
-                batch_images = iu.transform(batch_images, inv_type='127')
+                batch_x = iu.transform(batch_images, inv_type='127')
 
                 z = []
                 for i in range(3):
@@ -63,8 +70,8 @@ def main():
                 # Update D/G networks
                 img_fake, img_coarse, d_loss_1, g_loss_1, \
                 _, _, _, d_loss_2, g_loss_2, \
-                _, _, _, _, d_loss_3, g_loss_3, \
-                _, _, _, _ = s.run([
+                _, _, d_loss_3, g_loss_3, \
+                _, _, _, _, _, _ = s.run([
                     model.g[0], model.x1_coarse, model.d_loss[0], model.g_loss[0],
 
                     model.x2_fine, model.g[1], model.x2_coarse, model.d_loss[1], model.g_loss[1],
@@ -74,15 +81,15 @@ def main():
                     model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2],
                 ],
                     feed_dict={
-                        model.x1_fine: batch_images,  # images
-                        model.y: batch_labels,        # classes
+                        model.x1_fine: batch_x,  # images
+                        model.y: batch_labels,   # classes
                         model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
                         model.do_rate: 0.5,
                     })
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_x, batch_y = batch_images[:model.sample_num], batch_labels[:model.sample_num]
+                    batch_x = ds.test_images[np.random.randint(0, len(ds.test_images), model.sample_num)]
 
                     z = []
                     for i in range(3):
@@ -91,8 +98,8 @@ def main():
                     # Update D/G networks
                     img_fake, img_coarse, d_loss_1, g_loss_1, \
                     _, _, _, d_loss_2, g_loss_2, \
-                    _, _, _, _, d_loss_3, g_loss_3, \
-                    _, _, _, _, summary = s.run([
+                    _, _, d_loss_3, g_loss_3, \
+                    _, _, _, _, _, _, summary = s.run([
                         model.g[0], model.x1_coarse, model.d_loss[0], model.g_loss[0],
 
                         model.x2_fine, model.g[1], model.x2_coarse, model.d_loss[1], model.g_loss[1],
@@ -104,8 +111,8 @@ def main():
                         model.merged,
                     ],
                         feed_dict={
-                            model.x1_fine: batch_images,  # images
-                            model.y: batch_labels,  # classes
+                            model.x1_fine: batch_x,  # images
+                            model.y: sample_y,       # classes
                             model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
                             model.do_rate: 0.,
                         })

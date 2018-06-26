@@ -197,7 +197,7 @@ class LAPGAN:
 
                 h = tf.reshape(h, [-1, 8, 8, self.channel])
             else:
-                y = t.dense(y, scale * scale, name='gen-fc-0')
+                y = t.dense(y, scale * scale, name='gen-fc-y')
 
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
