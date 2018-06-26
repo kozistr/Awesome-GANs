@@ -99,6 +99,7 @@ def main():
 
         print("[+] Margin : {0}".format(margin))
 
+        old_margin = 0.
         s_g_0 = np.inf  # Sg_0 = infinite
         for epoch in range(train_step['epochs']):
             s_d, s_g = 0., 0.
@@ -147,7 +148,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g_test,
+                    samples = s.run(model.g,
                                     feed_dict={
                                         model.z: sample_z,
                                         model.m: margin,
@@ -175,6 +176,8 @@ def main():
             # Update margin
             if s_d / n_steps < margin and s_d < s_g and s_g_0 <= s_g:
                 margin = s_d / n_steps
+                print("[*] Margin updated from {:8f} to {:8f}".format(old_margin, margin))
+                old_margin = margin
 
             s_g_0 = s_g
 
