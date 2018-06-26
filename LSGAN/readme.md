@@ -6,9 +6,9 @@
 
 ## Architecture Networks
 
-* Same as DCGAN paper.
+* Same as LSGAN paper.
 
-*DIFFS* | *DCGAN Paper* | *ME*  |
+*DIFFS* | *LSGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z noise** | ``100`` | ``128`` |
@@ -26,7 +26,7 @@
 
 *Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 15k*
 :---: | :---: | :---: | :---:
-**DCGAN**      | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00150000.png)
+**LSGAN**      | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00150000.png)
 
 ## To-Do
 * 
