@@ -80,20 +80,24 @@ def main():
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                      (model.batch_size, model.height, model.width, model.channel))
+                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 s.run([model.d_op],
                       feed_dict={
                           model.x: batch_x,
+                          model.z: batch_z,
                           model.m: 0.,
                       })
 
         for batch_x in ds_iter.iterate():
             batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                  (model.batch_size, model.height, model.width, model.channel))
+            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             sum_d_loss += s.run([model.d_real_loss],
                                 feed_dict={
                                     model.x: batch_x,
+                                    model.z: batch_z,
                                     model.m: 0.,
                                 })
 
