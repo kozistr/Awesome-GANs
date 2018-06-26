@@ -104,6 +104,8 @@ def main():
         # Initial margin value
         margin = (sum_d_loss / n_steps)
 
+        print("[+] Margin : {0}".format(margin))
+
         s_g_0 = np.inf  # Sg_0 = infinite
         for epoch in range(train_step['epoch']):
             s_d, s_g = 0., 0.
