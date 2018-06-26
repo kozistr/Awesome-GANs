@@ -92,6 +92,8 @@ class MAGAN:
         with tf.variable_scope('encoder', reuse=reuse):
             for i in range(1, 5):
                 x = t.conv2d(x, self.df_dim * (2 ** (i - 1)), 4, 2, name='enc-conv2d-%d' % i)
+                if i > 1:
+                    x = t.batch_norm(x, name='enc-bn-%d' % (i - 1))
                 x = tf.nn.leaky_relu(x)
             return x
 
@@ -104,7 +106,8 @@ class MAGAN:
         with tf.variable_scope('decoder', reuse=reuse):
             x = z
             for i in range(1, 4):
-                x = t.deconv2d(x, self.df_dim * 8 // (2 ** i), 4, 2, name='dec-deconv2d-%d' % (i + 1))
+                x = t.deconv2d(x, self.df_dim * 8 // (2 ** i), 4, 2, name='dec-deconv2d-%d' % i)
+                x = t.batch_norm(x, name='dec-bn-%d' % i)
                 x = tf.nn.leaky_relu(x)
             x = t.deconv2d(x, self.channel, 4, 2, name='enc-deconv2d-4')
             x = tf.nn.tanh(x)
@@ -124,22 +127,25 @@ class MAGAN:
 
             return embeddings, decoded
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, reuse=None, is_train=True):
         """
         # referred architecture in the paper
         MNIST  : Input - DC(128, 7c1s) - DC(64, 4c2s) - DC(1, 4c2s)
         :param z: embeddings
         :param reuse: re-usable
+        :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.reshape(z, (-1, 1, 1, self.z_dim))
 
             x = t.deconv2d(x, self.df_dim * 8, 4, 1, name='gen-deconv2d-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
             for i in range(1, 4):
                 x = t.deconv2d(x, self.df_dim * 8 // (2 ** i), 4, 2, name='gen-deconv2d-%d' % (i + 1))
+                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % (i + 1))
                 x = tf.nn.relu(x)
 
             x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-5')
