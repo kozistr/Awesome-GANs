@@ -84,7 +84,7 @@ def main():
                 s.run([model.d_op],
                       feed_dict={
                           model.x: batch_x,
-                          model.margin: 0.,
+                          model.m: 0.,
                       })
 
         for batch_x in ds_iter.iterate():
@@ -94,7 +94,7 @@ def main():
             sum_d_loss += s.run([model.d_real_loss],
                                 feed_dict={
                                     model.x: batch_x,
-                                    model.margin: 0.,
+                                    model.m: 0.,
                                 })
 
         # Initial margin value
