@@ -2,13 +2,13 @@
 
 ## Loss Function
 
-* Using ```sce loss``` for G/D nets.
+* used ```sce loss``` for G/D nets.
 
 ## Architecture Networks
 
 * Similar as LAPGAN paper.
 
-*DIFFS* | *DCGAN Paper* | *ME*  |
+*DIFFS* | *LAPGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z noise** | ``100`` | ``128`` |
@@ -26,15 +26,9 @@
 
 ## Tensorboard
 
-* Discriminator
+![result](./lapgan_tb.png)
 
-![result](./lapgan_d_tb.png)
-
-* Generator
-
-![result](./lapgan_g_tb.png)
-
-> Elapsed time : s with ``GTX 1060 6GB x 1``
+> Elapsed time : 2 hour 58 minute 50s with ``GTX 1060 6GB x 1``
 
 ## Result
 
