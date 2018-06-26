@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'epoch': 100,
+    'epoch': 200,
     'batch_size': 64,
     'logging_interval': 1000,
 }
@@ -35,7 +35,7 @@ def main():
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as s:
-        # LAPGAN model # D/G Models are same as DCGAN
+        # LAPGAN model
         model = lapgan.LAPGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing variables

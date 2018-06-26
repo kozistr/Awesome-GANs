@@ -27,7 +27,7 @@ class LAPGAN:
 
     def __init__(self, s, batch_size=128, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 z_dim=128, gf_dim=64, df_dim=64, fc_unit=512):
+                 z_dim=128, gf_dim=64, df_dim=64, d_fc_unit=512, g_fc_unit=1024):
 
         """
         # General Settings
@@ -47,7 +47,8 @@ class LAPGAN:
         :param z_dim: z noise dimension, default 128
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
-        :param fc_unit: the number of fully connected filters, default 512
+        :param d_fc_unit: the number of fully connected filters used at Disc, default 512
+        :param g_fc_unit: the number of fully connected filters used at Gen, default 1024
         """
 
         self.s = s
@@ -66,14 +67,15 @@ class LAPGAN:
 
         self.gf_dim = gf_dim
         self.df_dim = df_dim
-        self.fc_unit = fc_unit
+        self.d_fc_unit = d_fc_unit
+        self.g_fc_unit = g_fc_unit
 
         # Placeholders
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')  # one_hot
-
-        self.x1_fine = tf.placeholder(tf.float32,
-                                      shape=[None, self.height, self.width, self.channel],
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes],
+                                name='y-classes')  # one_hot
+        self.x1_fine = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
                                       name='x-images')
+
         self.x1_scaled = image_sampling(self.x1_fine, 'down')
         self.x1_coarse = image_sampling(self.x1_scaled, 'up')
         self.x1_diff = self.x1_fine - self.x1_coarse
@@ -109,14 +111,7 @@ class LAPGAN:
 
         self.beta1 = 0.5
         self.beta2 = 0.9
-        self.learning_rate = 8e-4
-        self.lr = tf.train.exponential_decay(
-            learning_rate=self.learning_rate,
-            decay_rate=0.9,
-            decay_steps=150,
-            global_step=750,  # for cifar DataSet
-            staircase=False,
-        )
+        self.lr = 8e-4
 
         self.saver = None
         self.merged = None
@@ -142,32 +137,36 @@ class LAPGAN:
 
                 h = tf.concat([x1, y], axis=1)
 
-                h = t.dense(h, self.fc_unit, name='disc-fc-1')
-                h = tf.nn.leaky_relu(h)
+                h = t.dense(h, self.d_fc_unit, name='disc-fc-1')
+                h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, 0.5, name='disc-dropout-1')
 
-                h = t.dense(h, self.fc_unit // 2, name='d-fc-2')
-                h = tf.nn.leaky_relu(h)
+                h = t.dense(h, self.d_fc_unit // 2, name='d-fc-2')
+                h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, 0.5, name='disc-dropout-2')
 
-                h = t.dense(h, 1, name='d-fc-3')
+                h = t.dense(h, 1, name='disc-fc-3')
             else:
                 x = x1 + x2
 
-                y = t.dense(y, scale * scale, name='disc-fc-1')
-                y = tf.nn.leaky_relu(y)
-                y = tf.reshape(y, [-1, scale, scale, 1])  # tf.layers.flatten(x1)
+                y = t.dense(y, scale * scale, name='disc-fc-y')
+                y = tf.nn.relu(y)
 
-                h = tf.concat([x, y], axis=3)
+                y = tf.reshape(y, [-1, scale, scale, 1])
 
-                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='disc-conv2d-1')
-                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='disc-conv2d-2')
+                h = tf.concat([x, y], axis=3)  # (-1, scale, scale, channel + 1)
+
+                h = t.conv2d(h, self.df_dim, 5, 1, pad='SAME', name='disc-conv2d-1')
+                h = tf.nn.relu(h)
+                h = tf.layers.dropout(h, 0.5, name='disc-dropout-1')
+
+                h = t.conv2d(h, self.df_dim, 5, 2, pad='SAME', name='disc-conv2d-2')
+                h = tf.nn.relu(h)
+                h = tf.layers.dropout(h, 0.5, name='disc-dropout-2')
 
                 h = tf.layers.flatten(h)
-                h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, 0.5,  name='disc-dropout-1')
 
-                h = t.dense(h, 1, name='den-fc-2')
+                h = t.dense(h, 1, name='disc-fc-2')
 
             return h
 
@@ -188,30 +187,32 @@ class LAPGAN:
             if scale == 8:
                 h = tf.concat([z, y], axis=1)
 
-                # FC Layers
-                h = t.dense(h, self.fc_unit, name='gen-fc-1')
-                h = tf.nn.leaky_relu(h)
+                h = t.dense(h, self.g_fc_unit, name='gen-fc-1')
+                h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, do_rate, name='gen-dropout-1')
 
-                h = t.dense(h, self.fc_unit // 2, name='gen-fc-2')
-                h = tf.nn.leaky_relu(h)
+                h = t.dense(h, self.g_fc_unit, name='gen-fc-2')
+                h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, do_rate, name='gen-dropout-2')
 
-                h = t.dense(h, 3 * 8 * 8, name='gen-fc-3')
+                h = t.dense(h, self.channel * 8 * 8, name='gen-fc-3')
 
-                h = tf.reshape(h, [-1, 8, 8, 3])
+                h = tf.reshape(h, [-1, 8, 8, self.channel])
             else:
                 y = t.dense(y, scale * scale, name='gen-fc-0')
+
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
 
                 h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
 
-                # Convolution Layers
-                for idx in range(1, scale // 8 - 1):
-                    h = t.conv2d(h, self.gf_dim, name='gen-deconv2d-{0}'.format(idx))
+                h = t.deconv2d(h, self.gf_dim, 5, 1, name='gen-deconv2d-1')
+                h = tf.nn.relu(h)
 
-                h = t.conv2d(h, 3, name='gen-deconv2d-{0}'.format(scale // 8))
+                h = t.deconv2d(h, self.gf_dim, 5, 1, name='gen-deconv2d-2')
+                h = tf.nn.relu(h)
+
+                h = t.deconv2d(h, self.channel, 5, 2, name='gen-deconv2d-3')
 
             h = tf.nn.tanh(h)
 
@@ -250,11 +251,11 @@ class LAPGAN:
         # Optimizer
         t_vars = tf.trainable_variables()
         for idx, i in enumerate([32, 16, 8]):
-            self.d_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+            self.d_op.append(tf.train.AdamOptimizer(learning_rate=self.lr,
                                                     beta1=self.beta1, beta2=self.beta2).
                              minimize(loss=self.d_loss[idx],
                                       var_list=[v for v in t_vars if v.name.startswith('discriminator_{0}'.format(i))]))
-            self.g_op.append(tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+            self.g_op.append(tf.train.AdamOptimizer(learning_rate=self.lr,
                                                     beta1=self.beta1, beta2=self.beta2).
                              minimize(loss=self.g_loss[idx],
                                       var_list=[v for v in t_vars if v.name.startswith('generator_{0}'.format(i))]))
