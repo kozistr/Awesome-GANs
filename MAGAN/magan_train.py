@@ -74,6 +74,7 @@ def main():
 
         # Pre-Train
         print("[*] pre-training - getting proper Margin")
+
         sum_d_loss = 0.
         for _ in range(2):
             for batch_x in ds_iter.iterate():
@@ -83,6 +84,7 @@ def main():
                 s.run([model.d_op],
                       feed_dict={
                           model.x: batch_x,
+                          model.margin: 0.,
                       })
 
         for batch_x in ds_iter.iterate():
@@ -92,6 +94,7 @@ def main():
             sum_d_loss += s.run([model.d_real_loss],
                                 feed_dict={
                                     model.x: batch_x,
+                                    model.margin: 0.,
                                 })
 
         # Initial margin value
