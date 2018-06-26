@@ -7,7 +7,11 @@
 
 ## Architecture Networks
 
-* slightly different as in the **WGAN paper**.
+* Same with the WGAN paper.
+
+*DIFFS* | *WGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **Dim** | ``NCHW`` | ``NHWC`` |
 
 ## Tensorboard
 
