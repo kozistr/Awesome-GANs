@@ -204,10 +204,10 @@ class LAPGAN:
 
                 h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
 
-                h = t.conv2d(h, self.gf_dim * 1, 5, 1, name='gen-conv2d-1')
+                h = t.conv2d(h, self.gf_dim * 1, 5, 1, name='gen-deconv2d-1')
                 h = tf.nn.relu(h)
 
-                h = t.conv2d(h, self.gf_dim * 1, 5, 1, name='gen-conv2d-2')
+                h = t.conv2d(h, self.gf_dim * 1, 5, 1, name='gen-deconv2d-2')
                 h = tf.nn.relu(h)
 
                 h = t.conv2d(h, self.channel, 5, 1, name='gen-conv2d-3')
