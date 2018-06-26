@@ -80,7 +80,7 @@ def main():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                      (model.batch_size, model.height, model.width, model.channel))
 
-                s.run([model.d_real_op],
+                s.run([model.d_op],
                       feed_dict={
                           model.x: batch_x,
                       })
