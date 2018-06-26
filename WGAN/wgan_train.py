@@ -42,7 +42,7 @@ def main():
     ds_iter = DataIterator(x=iu.transform(ds.train_images, '127'),
                            y=ds.train_labels,
                            batch_size=train_step['batch_size'],
-                           label_off=False)  # using label # maybe someday, i'll change this param's name
+                           label_off=True)  # using label # maybe someday, i'll change this param's name
 
     # Generated image save
     test_images = iu.transform(ds.test_images[:100], inv_type='127')
@@ -58,6 +58,7 @@ def main():
     with tf.Session(config=config) as s:
         # WGAN Model
         model = wgan.WGAN(s,
+                          batch_size=train_step['batch_size'],
                           height=32,
                           width=32,
                           channel=3,
@@ -69,7 +70,7 @@ def main():
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for _ in range(len(ds.train_images) // model.batch_size):
+            for _ in range(ds_iter.num_batches):
                 # Update critic
                 model.critic = 5
                 if global_step % 500 == 0 or global_step < 25:
@@ -79,7 +80,6 @@ def main():
 
                 for _ in range(model.critic):
                     batch_x = ds_iter.next_batch()
-                    batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                     # Update d_clip
@@ -94,7 +94,6 @@ def main():
                                       })
 
                 batch_x = ds_iter.next_batch()
-                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update G network
