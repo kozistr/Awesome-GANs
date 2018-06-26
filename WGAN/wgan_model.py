@@ -162,7 +162,7 @@ class WGAN:
 
             x = tf.nn.relu(x)
 
-            x = tf.reduce_mean(x, axis=[1, 2])l
+            x = tf.reduce_mean(x, axis=[1, 2])
 
             x = t.dense(x, 1, name='disc-fc-1')
             return x
