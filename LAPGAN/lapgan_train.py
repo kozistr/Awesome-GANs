@@ -45,7 +45,6 @@ def main():
         dataset = DataSet(height=32,
                           width=32,
                           channel=3,
-                          use_split=False,
                           ds_name='cifar-10',
                           ds_path='D:\\DataSet/cifar/cifar-10-batches-py/')
 

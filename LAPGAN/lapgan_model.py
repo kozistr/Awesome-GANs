@@ -156,11 +156,11 @@ class LAPGAN:
 
                 h = tf.concat([x, y], axis=3)  # (-1, scale, scale, channel + 1)
 
-                h = t.conv2d(h, self.df_dim, 5, 1, pad='SAME', name='disc-conv2d-1')
+                h = t.conv2d(h, self.df_dim * 1, 5, 1, pad='SAME', name='disc-conv2d-1')
                 h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, 0.5, name='disc-dropout-1')
 
-                h = t.conv2d(h, self.df_dim, 5, 2, pad='SAME', name='disc-conv2d-2')
+                h = t.conv2d(h, self.df_dim * 2, 5, 1, pad='SAME', name='disc-conv2d-2')
                 h = tf.nn.relu(h)
                 h = tf.layers.dropout(h, 0.5, name='disc-dropout-2')
 
@@ -206,13 +206,13 @@ class LAPGAN:
 
                 h = tf.concat([z, y, x], axis=3)  # concat into 5 dims
 
-                h = t.deconv2d(h, self.gf_dim, 5, 1, name='gen-deconv2d-1')
+                h = t.deconv2d(h, self.gf_dim * 2, 5, 1, name='gen-deconv2d-1')
                 h = tf.nn.relu(h)
 
-                h = t.deconv2d(h, self.gf_dim, 5, 1, name='gen-deconv2d-2')
+                h = t.deconv2d(h, self.gf_dim * 1, 5, 1, name='gen-deconv2d-2')
                 h = tf.nn.relu(h)
 
-                h = t.deconv2d(h, self.channel, 5, 2, name='gen-deconv2d-3')
+                h = t.deconv2d(h, self.channel, 5, 1, name='gen-deconv2d-3')
 
             h = tf.nn.tanh(h)
 
