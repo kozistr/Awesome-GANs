@@ -20,7 +20,7 @@
 
 ![result](./lsgan_tb.png)
 
-> Elapsed Time : s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 1 hour 53 minute 34s with ``GTX 1060 6GB x 1``
 
 ## Result
 
