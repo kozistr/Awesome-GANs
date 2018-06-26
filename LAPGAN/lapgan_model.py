@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -29,8 +33,8 @@ class LAPGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 128
-        :param height: input image height, default 64
-        :param width: input image width, default 64
+        :param height: input image height, default 32
+        :param width: input image width, default 32
         :param channel: input image channel, default 3 (RGB)
         :param n_classes: the number of classes, default 10
         - in case of CIFAR, image size is 32x32x3(HWC), classes are 10.
@@ -93,10 +97,10 @@ class LAPGAN:
         self.g = []       # generators
         self.g_loss = []  # generator losses
 
-        self.d_reals = []       # discriminator_real logit
-        self.d_fakes = []       # discriminator_fake logit
-        self.d_reals_prob = []  # discriminator_real prob
-        self.d_fakes_prob = []  # discriminator_fake prob
+        self.d_reals = []       # discriminator_real logits
+        self.d_fakes = []       # discriminator_fake logits
+        self.d_reals_prob = []  # discriminator_real probs
+        self.d_fakes_prob = []  # discriminator_fake probs
         self.d_loss = []        # discriminator_real losses
 
         # Training Options
@@ -138,32 +142,32 @@ class LAPGAN:
 
                 h = tf.concat([x1, y], axis=1)
 
-                h = t.dense(h, self.fc_unit, name='d-fc-1')
+                h = t.dense(h, self.fc_unit, name='disc-fc-1')
                 h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, 0.5, name='d-dropout-1')
+                h = tf.layers.dropout(h, 0.5, name='disc-dropout-1')
 
                 h = t.dense(h, self.fc_unit // 2, name='d-fc-2')
                 h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, 0.5, name='d-dropout-2')
+                h = tf.layers.dropout(h, 0.5, name='disc-dropout-2')
 
                 h = t.dense(h, 1, name='d-fc-3')
             else:
                 x = x1 + x2
 
-                y = t.dense(y, scale * scale, name='d-fc-1')
+                y = t.dense(y, scale * scale, name='disc-fc-1')
                 y = tf.nn.leaky_relu(y)
                 y = tf.reshape(y, [-1, scale, scale, 1])  # tf.layers.flatten(x1)
 
                 h = tf.concat([x, y], axis=3)
 
-                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='d-conv-1')
-                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='d-conv-2')
+                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='disc-conv2d-1')
+                h = t.conv2d(h, self.df_dim, 5, pad='valid', name='disc-conv2d-2')
 
                 h = tf.layers.flatten(h)
                 h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, 0.5,  name='d-dropout-1')
+                h = tf.layers.dropout(h, 0.5,  name='disc-dropout-1')
 
-                h = t.dense(h, 1, name='d-fc-2')
+                h = t.dense(h, 1, name='den-fc-2')
 
             return h
 
@@ -185,19 +189,19 @@ class LAPGAN:
                 h = tf.concat([z, y], axis=1)
 
                 # FC Layers
-                h = t.dense(h, self.fc_unit, name='g-fc-1')
+                h = t.dense(h, self.fc_unit, name='gen-fc-1')
                 h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, do_rate, name='g-dropout-1')
+                h = tf.layers.dropout(h, do_rate, name='gen-dropout-1')
 
-                h = t.dense(h, self.fc_unit // 2, name='g-fc-2')
+                h = t.dense(h, self.fc_unit // 2, name='gen-fc-2')
                 h = tf.nn.leaky_relu(h)
-                h = tf.layers.dropout(h, do_rate, name='g-dropout-2')
+                h = tf.layers.dropout(h, do_rate, name='gen-dropout-2')
 
-                h = t.dense(h, 3 * 8 * 8, name='g-fc-3')
+                h = t.dense(h, 3 * 8 * 8, name='gen-fc-3')
 
                 h = tf.reshape(h, [-1, 8, 8, 3])
             else:
-                y = t.dense(y, scale * scale, name='g-fc-0')
+                y = t.dense(y, scale * scale, name='gen-fc-0')
                 y = tf.reshape(y, [-1, scale, scale, 1])
                 z = tf.reshape(z, [-1, scale, scale, 1])
 
@@ -205,9 +209,11 @@ class LAPGAN:
 
                 # Convolution Layers
                 for idx in range(1, scale // 8 - 1):
-                    h = t.conv2d(h, self.gf_dim, name='g-deconv-{0}'.format(idx))
+                    h = t.conv2d(h, self.gf_dim, name='gen-deconv2d-{0}'.format(idx))
 
-                h = t.conv2d(h, 3, name='g-deconv-{0}'.format(scale // 8))
+                h = t.conv2d(h, 3, name='gen-deconv2d-{0}'.format(scale // 8))
+
+            h = tf.nn.tanh(h)
 
             return h
 

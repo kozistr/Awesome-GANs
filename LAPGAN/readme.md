@@ -6,23 +6,25 @@
 
 ## Architecture Networks
 
-* Simple CNN Networks.
+* Similar as LAPGAN paper.
 
 ## Tensorboard
 
-### Disc
+* Discriminator
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_d_tb.png)
+![result](./lapgan_d_tb.png)
 
-### Gen
+* Generator
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/lapgan_g_tb.png)
+![result](./lapgan_g_tb.png)
+
+> Elapsed time : s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 10k* | *Global Step 50k* | *Global Step 90k*
+*Name* | *Global Step 10k* | *Global Step 50k* | *Global Step 100k*
 :---: | :---: | :---: | :---:
-**LAPGAN**    | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_32_10000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_160_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/LAPGAN/gen_img/train_288_90000.png)
+**LAPGAN**    | ![img](./gen_img/train_32_10000.png) | ![img](./gen_img/train_160_50000.png) | ![img](./gen_img/train_288_90000.png)
 
 ## To-Do
 * 
