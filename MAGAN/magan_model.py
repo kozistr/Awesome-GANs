@@ -130,11 +130,12 @@ class MAGAN:
         MNIST  : Input - DC(128, 7c1s) - DC(64, 4c2s) - DC(1, 4c2s)
         :param z: embeddings
         :param reuse: re-usable
-        :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.deconv2d(z, self.df_dim * 8, 4, 1, name='gen-deconv2d-1')
+            x = tf.reshape(z, (-1, 1, 1, self.z_dim))
+
+            x = t.deconv2d(x, self.df_dim * 8, 4, 1, name='gen-deconv2d-1')
             x = tf.nn.relu(x)
 
             for i in range(1, 4):
