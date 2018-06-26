@@ -91,74 +91,74 @@ class WGAN:
 
         self.build_wgan()  # build WGAN model
 
-    def mean_pool_conv(self, x, f, name):
-        with tf.name_scope("mean_pool_conv-%s" % name):
+    def mean_pool_conv(self, x, f, reuse=None, name=""):
+        with tf.variable_scope("mean_pool_conv-%s" % name, reuse=reuse):
             x = tf.add_n([x[:, ::2, ::2, :], x[:, 1::2, ::2, :], x[:, ::2, 1::2, :], x[:, 1::2, 1::2, :]]) / 4.
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
+            x = t.conv2d(x, f, 3, 1, name='mean_pool_conv2d-1')
             return x
 
-    def conv_mean_pool(self, x, f, name):
-        with tf.name_scope("conv_mean_pool-%s" % name):
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
+    def conv_mean_pool(self, x, f, reuse=None, name=""):
+        with tf.variable_scope("conv_mean_pool-%s" % name, reuse=reuse):
+            x = t.conv2d(x, f, 3, 1, name='conv2d_mean_pool-1')
             x = tf.add_n([x[:, ::2, ::2, :], x[:, 1::2, ::2, :], x[:, ::2, 1::2, :], x[:, 1::2, 1::2, :]]) / 4.
             return x
 
-    def upsample_conv(self, x, f, name):
-        with tf.name_scope("upsample_conv-%s" % name):
+    def upsample_conv(self, x, f, reuse=None, name=""):
+        with tf.variable_scope("%s-upsample_conv" % name, reuse=reuse):
             x = tf.concat([x, x, x, x], axis=-1)
             x = tf.depth_to_space(x, 2)
-            x = t.conv2d(x, f, 3, 1, name='conv2d-1')
+            x = t.conv2d(x, f, 3, 1, name='upsample_conv2d-1')
             return x
 
-    def residual_block(self, x, f, sampling=None, name=""):
-        with tf.name_scope(name):
+    def residual_block(self, x, f, sampling=None, reuse=None, name=""):
+        with tf.variable_scope(name, reuse=reuse):
             shortcut = tf.identity(x)
 
             if name.startswith('gen'):
-                x = t.batch_norm(x, name='bn-1')
+                x = t.batch_norm(x, name='%s-bn-1' % name)
             x = tf.nn.relu(x)
 
             if sampling == 'up':
-                x = self.upsample_conv(x, f, sampling + "-1")
-            elif sampling == 'down' or sampling is None:
-                x = t.conv2d(x, f, name='%s-conv2d-1' % sampling)
+                x = self.upsample_conv(x, f, reuse, name + "-" + sampling + "-1")
+            elif sampling == 'down' or sampling == 'none':
+                x = t.conv2d(x, f, name='%s-conv2d-1' % (name + "-" + sampling))
 
             if name.startswith('gen'):
-                x = t.batch_norm(x, name='bn-2')
+                x = t.batch_norm(x, name='%s-bn-2' % name)
             x = tf.nn.relu(x)
 
-            if sampling == 'up' or sampling is None:
-                x = t.conv2d(x, f, name='%s-conv2d-1' % sampling)
+            if sampling == 'up' or sampling == 'none':
+                x = t.conv2d(x, f, name='%s-conv2d-1' % (name + "-" + sampling))
             elif sampling == 'down':
-                x = self.conv_mean_pool(x, f, sampling + "-1")
+                x = self.conv_mean_pool(x, f, reuse, name + "-" + sampling + "-1")
 
             if sampling == 'up':
-                shortcut = self.upsample_conv(shortcut, f, sampling + "-2")
+                shortcut = self.upsample_conv(shortcut, f, reuse, name + "-" + sampling + "-2")
             elif sampling == 'down':
-                shortcut = self.conv_mean_pool(shortcut, f, sampling + "-2")
+                shortcut = self.conv_mean_pool(shortcut, f, reuse, name + "-" + sampling + "-2")
 
             return shortcut + x
 
-    def residual_block_init(self, x, f, name=""):
-        with tf.name_scope("%s-res_block_init" % name):
+    def residual_block_init(self, x, f, reuse=None, name=""):
+        with tf.variable_scope("%s-res_block_init" % name, reuse=reuse):
             shortcut = tf.identity(x)
 
             x = t.conv2d(x, f, name='conv2d-1')
             x = tf.nn.relu(x)
 
-            x = self.conv_mean_pool(x, f, 'rb_init-1')
-            shortcut = self.mean_pool_conv(shortcut, 1, 'rb_init-1')
+            x = self.conv_mean_pool(x, f, reuse=reuse, name='rb_init-1')
+            shortcut = self.mean_pool_conv(shortcut, 1, reuse=reuse, name='rb_init-1')
 
             return shortcut + x
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
 
-            x = self.residual_block_init(x, self.z_dim, name='disc')
+            x = self.residual_block_init(x, self.z_dim, reuse=reuse, name='disc')
 
-            x = self.residual_block(x, self.z_dim, sampling='down', name='disc-res_block-1')
-            x = self.residual_block(x, self.z_dim, name='disc-res_block-2')
-            x = self.residual_block(x, self.z_dim, name='disc-res_block-3')
+            x = self.residual_block(x, self.z_dim, reuse=reuse, sampling='down', name='disc-res_block-1')
+            x = self.residual_block(x, self.z_dim, reuse=reuse, sampling='none', name='disc-res_block-2')
+            x = self.residual_block(x, self.z_dim, reuse=reuse, sampling='none', name='disc-res_block-3')
 
             x = tf.nn.relu(x)
 
