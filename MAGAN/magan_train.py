@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'epochs': 25,
+    'epochs': 50,
     'batch_size': 64,
     'global_step': 200001,
     'n_iter': 1000,
@@ -64,7 +64,7 @@ def main():
         s.run(tf.global_variables_initializer())
 
         global_step = 0
-        N = ds.num_images // model.batch_size  # training set size
+        n_iters = ds.num_images // model.batch_size  # training set size
 
         # Pre-Train
         print("[+] pre-train")
@@ -149,7 +149,8 @@ def main():
                     # Generated image save
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
@@ -157,8 +158,8 @@ def main():
                 global_step += 1
 
             # Update margin
-            if s_d / N < margin and s_d < s_g and s_g_0 <= s_g:
-                margin = s_d / N
+            if s_d / n_iters < margin and s_d < s_g and s_g_0 <= s_g:
+                margin = s_d / n_iters
 
             s_g_0 = s_g
 
