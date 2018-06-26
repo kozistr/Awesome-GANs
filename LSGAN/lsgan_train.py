@@ -22,7 +22,7 @@ results = {
 }
 
 train_step = {
-    'epoch': 21,
+    'epoch': 201,
     'batch_size': 64,
     'global_step': 200001,
     'logging_interval': 1000,
@@ -107,7 +107,7 @@ def main():
                                                     })
 
                     # Print loss
-                    print("[+] Step %08d => " % global_step,
+                    print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss))
 
