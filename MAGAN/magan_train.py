@@ -76,30 +76,21 @@ def main():
         print("[*] pre-training - getting proper Margin")
 
         sum_d_loss = 0.
-        for _ in range(2):
+        for i in range(2):
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                      (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                s.run([model.d_op],
-                      feed_dict={
-                          model.x: batch_x,
-                          model.z: batch_z,
-                          model.m: 0.,
-                      })
+                _, d_real_loss = s.run([model.d_op, model.d_real_loss],
+                                       feed_dict={
+                                           model.x: batch_x,
+                                           model.z: batch_z,
+                                           model.m: 0.,
+                                       })
+                sum_d_loss += d_real_loss
 
-        for batch_x in ds_iter.iterate():
-            batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
-                                 (model.batch_size, model.height, model.width, model.channel))
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-            sum_d_loss += s.run([model.d_real_loss],
-                                feed_dict={
-                                    model.x: batch_x,
-                                    model.z: batch_z,
-                                    model.m: 0.,
-                                })
+            print("[*] Epoch {:1d} Sum of d_real_loss : {:.8f}".format(i, sum_d_loss))
 
         # Initial margin value
         margin = (sum_d_loss / n_steps)
