@@ -142,7 +142,7 @@ class MAGAN:
                 x = t.deconv2d(x, self.df_dim * 8 // (2 ** i), 4, 2, name='gen-deconv2d-%d' % (i + 1))
                 x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-4')
+            x = t.deconv2d(x, self.channel, 4, 2, name='gen-deconv2d-5')
             x = tf.nn.tanh(x)
             return x
 
