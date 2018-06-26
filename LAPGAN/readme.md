@@ -40,7 +40,7 @@
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 150k*
 :---: | :---: | :---: | :---:
-**LAPGAN**    | ![img](./gen_img/train_32_10000.png) | ![img](./gen_img/train_160_50000.png) | ![img](./gen_img/train_288_90000.png)
+**LAPGAN**    | ![img](./gen_img/train_50000.png) | ![img](./gen_img/train_100000.png) | ![img](./gen_img/train_150000.png)
 
 ## To-Do
 * 
