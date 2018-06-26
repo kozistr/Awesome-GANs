@@ -101,8 +101,6 @@ class LAPGAN:
 
         self.d_reals = []       # discriminator_real logits
         self.d_fakes = []       # discriminator_fake logits
-        self.d_reals_prob = []  # discriminator_real probs
-        self.d_fakes_prob = []  # discriminator_fake probs
         self.d_loss = []        # discriminator_real losses
 
         # Training Options
