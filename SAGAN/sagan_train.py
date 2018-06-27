@@ -48,9 +48,9 @@ def main():
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:4], inv_type='127'), (4, 128, 128, 3))
     iu.save_images(test_images,
-                   size=[4, 4],
+                   size=[2, 2],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
 
