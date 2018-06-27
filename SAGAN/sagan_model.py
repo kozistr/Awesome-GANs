@@ -87,8 +87,8 @@ class SAGAN:
 
         self.build_sagan()  # build SAGAN model
 
-    def attention(self, x, reuse=None):
-        with tf.variable_scope("attention", reuse=reuse):
+    def attention(self, x, reuse=None, name=""):
+        with tf.variable_scope("%s-attention" % name, reuse=reuse):
             f = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-f')
             g = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-g')
             h = t.conv2d(x, self.df_dim, 1, 1, name='attention-conv2d-h')
@@ -121,7 +121,7 @@ class SAGAN:
                 x = tf.nn.leaky_relu(x, alpha=0.1)
 
             # Self-Attention Layer
-            x = x  # self.attention(x, self.gf_dim * 1, name='gen-attention-1')
+            x = self.attention(x, self.df_dim * 1, name='disc')
 
             for i in range(self.n_layer // 2, self.n_layer):
                 x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), 4, 2, name='disc-conv2d-%d' % (i + 2))  # SN
@@ -159,7 +159,7 @@ class SAGAN:
                 x = tf.nn.relu(x)
 
             # Self-Attention Layer
-            x = x  # self.attention(x, self.gf_dim * 1, name='gen-attention-1')
+            x = self.attention(x, self.gf_dim * 1, name='gen')
 
             for i in range(self.n_layer // 2, self.n_layer):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
