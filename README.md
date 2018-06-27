@@ -131,10 +131,11 @@ Here's a **google drive link**. You can download pre-trained models from [here](
 
 ## To-Do
 1. Re-Run All GAN Codes
-2. Implement 3DGAN
+2. Implement SAGAN
 3. Fix PGGAN, SGAN, SGAN++
-4. ~~Implement SAGAN~~ - later when DataSet is ready
-5. ~~Implement TempoGAN~~ - later when DataSet is ready
+4. ~~Implement 3DGAN~~ - later when DataSet is ready.
+5. ~~Implement SAGAN~~ - later when DataSet is ready.
+6. ~~Implement TempoGAN~~ - later when DataSet is ready. 
 
 ## ETC
 
