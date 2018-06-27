@@ -15,7 +15,7 @@ class SAGAN:
 
     def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, gf_dim=384, fc_unit=512, z_dim=128, lr=1e-4):
+                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4):
 
         """
         # General Settings
