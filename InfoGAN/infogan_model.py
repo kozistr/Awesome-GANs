@@ -169,7 +169,7 @@ class InfoGAN:
     def build_infogan(self):
         # Generator
         self.g = self.generator(self.z, self.c)
-        self.g_test = self.generator(self.z, self.c, is_train=False)
+        self.g_test = self.generator(self.z, self.c, reuse=True, is_train=False)
 
         # Discriminator
         d_real, d_real_cont, d_real_cat = self.discriminator(self.x)
