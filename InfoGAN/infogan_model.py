@@ -147,13 +147,13 @@ class InfoGAN:
             x = tf.concat([z, c], axis=1)  # (-1, 128 + 1 + 10)
 
             x = t.dense(x, 2 * 2 * 448, name='gen-fc-1')
-            x = t.batch_norm(x, is_train=is_train)
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
             x = tf.reshape(x, (-1, 2, 2, 448))
 
             x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
-            x = t.batch_norm(x, is_train=is_train)
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
             x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
@@ -162,7 +162,7 @@ class InfoGAN:
             x = t.deconv2d(x, self.gf_dim * 1, 4, 2, name='gen-deconv2d-3')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, 3, 4, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x, 3, 4, 2, name='gen-deconv2d-4')
             x = tf.nn.tanh(x)
             return x
 
@@ -202,7 +202,7 @@ class InfoGAN:
 
         # Optimizer
         t_vars = tf.trainable_variables()
-        d_params = [v for v in t_vars if v.name.startswith('d') or v.name.startswith('c')]
+        d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
