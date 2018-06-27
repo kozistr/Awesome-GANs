@@ -87,6 +87,24 @@ class SAGAN:
 
         self.build_sagan()  # build SAGAN model
 
+    def attention(self, x, reuse=None):
+        with tf.variable_scope("attention", reuse=reuse):
+            f = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-f')
+            g = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-g')
+            h = t.conv2d(x, self.df_dim, 1, 1, name='attention-conv2d-h')
+
+            f = tf.layers.flatten(f)
+            g = tf.layers.flatten(g)
+            h = tf.layers.flatten(h)
+
+            s = tf.matmul(g, f, transpose_b=True)
+            attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
+
+            o = tf.matmul(attention_map, h)  # (N, C)
+            gamma = tf.get_variable('gamma', shape=[1], initializer=tf.zeros_initializer())
+
+            return gamma * o + x
+
     def discriminator(self, x, reuse=None):
         """
         :param x: images
@@ -95,22 +113,24 @@ class SAGAN:
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = t.conv2d(x, self.df_dim, 3, 2, name='disc-conv2d-1')
-            x = tf.nn.leaky_relu(x, alpha=0.2)
-            x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-1')
+            x = t.conv2d(x, self.df_dim, 4, 2, name='disc-conv2d-1')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            for i in range(5):
-                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), k=3, s=(i % 2 + 1), name='disc-conv2d-%d' % (i + 2))
-                x = t.batch_norm(x, reuse=reuse, name="disc-bn-%d" % (i + 1))
-                x = tf.nn.leaky_relu(x, alpha=0.2)
-                x = tf.layers.dropout(x, 0.5, name='disc-dropout2d-%d' % (i + 1))
+            for i in range(self.n_layer // 2):
+                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), 4, 2, name='disc-conv2d-%d' % (i + 2))  # SN
+                x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            net = tf.layers.flatten(x)
+            # Self-Attention Layer
+            x = x  # self.attention(x, self.gf_dim * 1, name='gen-attention-1')
 
-            cat = t.dense(net, self.n_classes, name='disc-fc-cat')
-            disc = t.dense(net, 1, name='disc-fc-disc')
+            for i in range(self.n_layer // 2, self.n_layer):
+                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), 4, 2, name='disc-conv2d-%d' % (i + 2))  # SN
+                x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            return cat, disc, net
+            x = tf.layers.flatten(x)
+
+            x = t.dense(x, 1, name='disc-fc-1')
+            return x
 
     def generator(self, z, reuse=None, is_train=True):
         """
