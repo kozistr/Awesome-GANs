@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 import sys
 
@@ -6,6 +7,7 @@ sys.path.append('../')
 import tfutil as t
 
 
+np.random.seed(777)
 tf.set_random_seed(777)  # reproducibility
 
 
@@ -46,6 +48,9 @@ class SAGAN:
         self.channel = channel
         self.image_shape = [self.batch_size, self.height, self.width, self.channel]
         self.n_classes = n_classes
+
+        self.n_layer = np.log2(self.height) - 2  # 5
+        assert self.height == self.width
 
         self.sample_num = sample_num
         self.sample_size = sample_size
@@ -116,18 +121,44 @@ class SAGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, 4 * 4 * self.fc_unit, name='gen-fc-1')
+            x = t.dense(z, 4 * 4 * self.gf_dim * 8, name='gen-fc-1')
             x = tf.nn.relu(x)
 
-            x = tf.reshape(x, (-1, 4, 4, self.fc_unit))
+            x = tf.reshape(x, (-1, 4, 4, self.gf_dim * 8))
 
+            up_sampling = True
+            for i in range(self.n_layer // 2):
+                f = self.gf_dim * 8 // (2 ** (i + 1))
+                if up_sampling:
+                    x = x  # up-sampling
+                    x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
+                else:
+                    x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN
 
+                x = t.batch_norm(x, name='gen-bn-%d' % i)
+                x = tf.nn.relu(x)
 
+            # Self-Attention Layer
+            x = x  # self.attention(x, self.gf_dim * 1, name='gen-attention-1')
+
+            for i in range(self.n_layer // 2, self.n_layer):
+                f = self.gf_dim * 8 // (2 ** (i + 1))
+                if up_sampling:
+                    x = x  # up-sampling
+                    x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
+                else:
+                    x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN
+
+                x = t.batch_norm(x, name='gen-bn-%d' % i)
+                x = tf.nn.relu(x)
+
+            x = t.conv2d(x, self.channel, 5, 1, name='gen-conv2d-5')
+            x = tf.nn.tanh(x)
             return x
 
     def build_sagan(self):
         # Generator
-        self.g = self.generator(self.z, self.y)
+        self.g = self.generator(self.z)
 
         # Discriminator
         c_real, d_real, _ = self.discriminator(self.x)
