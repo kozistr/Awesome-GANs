@@ -46,31 +46,35 @@ def main():
     start_time = time.time()  # Clocking start
 
     # loading CelebA DataSet
-    ds = DataSet(height=32,
-                 width=32,
+    labels = ['Black_Hair', 'Blond_Hair', 'Blurry', 'Eyeglasses', 'Gray_Hair', 'Male', 'Smiling', 'Wavy_Hair',
+              'Wearing_Hat', 'Young']
+
+    ds = DataSet(height=64,
+                 width=64,
                  channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-32.h5",
+                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
                  ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 attr_labels=labels,
                  # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
                  use_save=False,
-                 save_file_name="D:\\DataSet/CelebA/CelebA-32.h5",
+                 save_file_name="D:\\DataSet/CelebA/CelebA-64.h5",
                  save_type="to_h5",
                  use_img_scale=False,
                  # img_scale="-1,1"
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 32, 32, 3))
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
     iu.save_images(test_images,
                    size=[4, 4],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
 
     ds_iter = DataIterator(x=ds.images,
-                           y=None,
+                           y=ds.labels,
                            batch_size=train_step['batch_size'],
-                           label_off=True)
+                           label_off=False)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -79,6 +83,9 @@ def main():
     with tf.Session(config=config) as s:
         # InfoGAN Model
         model = infogan.InfoGAN(s,
+                                height=64,
+                                width=64,
+                                channel=3,
                                 batch_size=train_step['batch_size'],
                                 n_categories=len(ds.labels))
         # fixed z-noise
@@ -89,7 +96,7 @@ def main():
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for batch_x in ds_iter.iterate():
+            for batch_x, batch_y in ds_iter.iterate():
                 batch_x = iu.transform(batch_x, inv_type='127')
                 batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
 

@@ -10,7 +10,7 @@
 
 *DIFFS* | *InfoGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **asdf** | `` `` | `` `` |
+ **G fc units** | ``2 * 2 * 448`` | ``2 * 2 * 512`` |
 
 ## Tensorboard
 

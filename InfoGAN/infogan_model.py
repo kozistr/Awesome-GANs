@@ -120,10 +120,14 @@ class InfoGAN:
             x = t.batch_norm(x, name='disc-bn-2')
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
+            x = t.conv2d(x, self.df_dim * 8, 4, 2, name='disc-conv2d-4')
+            x = t.batch_norm(x, name='disc-bn-3')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
+
             x = tf.layers.flatten(x)
 
             x = t.dense(x, self.fc_unit, name='disc-fc-1')
-            x = t.batch_norm(x, name='disc-bn-3')
+            x = t.batch_norm(x, name='disc-bn-4')
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = t.dense(x, 1 + self.n_cont + self.n_cat, name='disc-fc-2')
@@ -145,23 +149,26 @@ class InfoGAN:
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.concat([z, c], axis=1)  # (-1, 128 + 1 + 10)
 
-            x = t.dense(x, 2 * 2 * 448, name='gen-fc-1')
+            x = t.dense(x, 2 * 2 * 512, name='gen-fc-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = tf.reshape(x, (-1, 2, 2, 448))
+            x = tf.reshape(x, (-1, 2, 2, 512))
 
-            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-1')
+            x = t.deconv2d(x, self.gf_dim * 8, 4, 2, name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x, self.gf_dim * 4, 4, 2, name='gen-deconv2d-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 1, 4, 2, name='gen-deconv2d-3')
+            x = t.deconv2d(x, self.gf_dim * 2, 4, 2, name='gen-deconv2d-3')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, 3, 4, 2, name='gen-deconv2d-4')
+            x = t.deconv2d(x, self.gf_dim * 1, 4, 2, name='gen-deconv2d-4')
+            x = tf.nn.relu(x)
+
+            x = t.deconv2d(x, 3, 4, 2, name='gen-deconv2d-5')
             x = tf.nn.tanh(x)
             return x
 
