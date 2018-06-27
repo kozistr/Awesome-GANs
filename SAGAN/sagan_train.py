@@ -71,8 +71,7 @@ def main():
 
     with tf.Session(config=config) as s:
         # SAGAN Model
-        model = sagan.SAGAN(s,
-                            batch_size=train_step['batch_size'])
+        model = sagan.SAGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
