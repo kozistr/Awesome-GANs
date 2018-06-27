@@ -234,6 +234,10 @@ def dense(x, f=1024, reuse=None, is_train=True, name='fc'):
 # Normalize
 
 
+def l2_norm(x, eps=1e-12):
+    return x / (tf.sqrt(tf.reduce_sum(tf.square(x))) + eps)
+
+
 def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="bn"):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
@@ -266,6 +270,19 @@ def instance_norm(x, affine=True, reuse=None, name=""):
 def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
+
+def spectral_norm(x, iters=1, reuse=None, name=""):
+    x_shape = x.get_shape()
+
+    x = tf.reshape(x, (-1, x_shape[-1]))  # (n * h * w, c)
+
+    u = tf.get_variable('u', shape=(1, x_shape[-1]), initializer=tf.truncated_normal_initializer(), trainable=False)
+
+    u_hat = u
+    v_hat = None  # derivation
+    for i in range(iters):
+        v_ = tf.matmul(u_hat, x, transpose_b=True)
+        v_hat = l2_norm(v_)
 
 # Activations
 
