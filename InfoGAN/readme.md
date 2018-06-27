@@ -10,7 +10,7 @@
 
 *DIFFS* | *InfoGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **Dim** | ``NCHW`` | ``NHWC`` |
+ **asdf** | `` `` | `` `` |
 
 ## Tensorboard
 
