@@ -46,11 +46,11 @@ def main():
     ds = DataSet(height=32,
                  width=32,
                  channel=3,
-                 # ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
+                 ds_image_path="D:\\DataSet/CelebA/CelebA-32.h5",
                  ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
-                 use_save=True,
+                 use_save=False,
                  save_file_name="D:\\DataSet/CelebA/CelebA-32.h5",
                  save_type="to_h5",
                  use_img_scale=False,
@@ -76,7 +76,7 @@ def main():
     with tf.Session(config=config) as s:
         # InfoGAN Model
         model = infogan.InfoGAN(s, batch_size=train_step['batch_size'],
-                                n_cat=len(ds.labels))
+                                n_categories=len(ds.labels))
 
         # Initializing
         s.run(tf.global_variables_initializer())
