@@ -43,31 +43,32 @@ def main():
     start_time = time.time()  # Clocking start
 
     # loading CelebA DataSet
-    ds = DataSet(height=32,
-                 width=32,
-                 channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-32.h5",
-                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
-                 ds_type="CelebA",
-                 use_save=False,
-                 save_file_name="D:\\DataSet/CelebA/CelebA-32.h5",
-                 save_type="to_h5",
-                 use_img_scale=False,
-                 # img_scale="-1,1"
-                 )
+    with tf.device('/cpu:0'):
+        ds = DataSet(height=32,
+                     width=32,
+                     channel=3,
+                     ds_image_path="D:\\DataSet/CelebA/CelebA-32.h5",
+                     ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                     # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                     ds_type="CelebA",
+                     use_save=False,
+                     save_file_name="D:\\DataSet/CelebA/CelebA-32.h5",
+                     save_type="to_h5",
+                     use_img_scale=False,
+                     # img_scale="-1,1"
+                     )
 
-    # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 32, 32, 3))
-    iu.save_images(test_images,
-                   size=[4, 4],
-                   image_path=results['output'] + 'sample.png',
-                   inv_type='127')
+        # saving sample images
+        test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 32, 32, 3))
+        iu.save_images(test_images,
+                       size=[4, 4],
+                       image_path=results['output'] + 'sample.png',
+                       inv_type='127')
 
-    ds_iter = DataIterator(x=ds.images,
-                           y=ds.labels,
-                           batch_size=train_step['batch_size'],
-                           label_off=False)
+        ds_iter = DataIterator(x=ds.images,
+                               y=None,
+                               batch_size=train_step['batch_size'],
+                               label_off=True)
 
     # GPU configure
     config = tf.ConfigProto()
@@ -86,7 +87,7 @@ def main():
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for batch_x, _ in ds_iter.iterate():
+            for batch_x in ds_iter.iterate():
                 batch_x = iu.transform(batch_x, inv_type='127')
                 batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
 

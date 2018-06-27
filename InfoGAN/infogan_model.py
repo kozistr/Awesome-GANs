@@ -130,8 +130,7 @@ class InfoGAN:
             prob, cont, cat = x[:, 0], x[:, 1:1 + self.n_cont], x[:, 1 + self.n_cont:]  # logits
 
             prob = tf.nn.sigmoid(prob)  # probability
-            cont = cont  # continuous
-            cat = tf.nn.softmax(cat)  # categories
+            cat = tf.nn.softmax(cat)    # categories
 
             return prob, cont, cat
 
@@ -176,27 +175,21 @@ class InfoGAN:
         d_fake, d_fake_cont, d_fake_cat = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_adv_real_loss = -tf.reduce_mean(t.safe_log(d_real))
-        d_adv_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
-        self.d_adv_loss = d_adv_real_loss + d_adv_fake_loss
+        self.d_adv_loss = -tf.reduce_mean(t.safe_log(d_real) + t.safe_log(1. - d_fake))
 
         d_cont_loss = tf.reduce_mean(tf.square(d_fake_cont / .5))
-        cont = self.c[:, self.n_cont:]
-        d_cat_loss = -(tf.reduce_mean(tf.reduce_sum(cont * d_fake_cont)) + tf.reduce_mean(cont * cont))
+        cat = self.c[:, self.n_cont:]
+        d_cat_loss = -(tf.reduce_mean(tf.reduce_sum(cat * d_fake_cont)) + tf.reduce_mean(cat * cat))
 
         d_info_loss = self.lambda_ * (d_cont_loss + d_cat_loss)
 
         self.d_loss = self.d_adv_loss + d_info_loss
-
         self.g_loss = -tf.reduce_mean(t.safe_log(d_fake)) + d_info_loss
 
         # Summary
-        tf.summary.scalar("loss/d_adv_real_loss", d_adv_real_loss)
-        tf.summary.scalar("loss/d_adv_fake_loss", d_adv_fake_loss)
         tf.summary.scalar("loss/d_adv_loss", self.d_adv_loss)
         tf.summary.scalar("loss/d_cont_loss", d_cont_loss)
         tf.summary.scalar("loss/d_cat_loss", d_cat_loss)
-        tf.summary.scalar("loss/d_info_loss", d_info_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
