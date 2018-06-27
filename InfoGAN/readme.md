@@ -25,4 +25,5 @@
 **InfoGAN**   | ![img](./gen_img/train_00020000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
 
 ## To-Do
-* 
+* MemoryError... I dunno why :(
+

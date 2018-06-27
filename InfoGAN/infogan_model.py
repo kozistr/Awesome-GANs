@@ -122,11 +122,11 @@ class InfoGAN:
 
             x = tf.layers.flatten(x)
 
-            x = t.dense(x, self.fc_unit, name='rec-fc-1')
-            x = t.batch_norm(x, name='rec-bn-1')
+            x = t.dense(x, self.fc_unit, name='disc-fc-1')
+            x = t.batch_norm(x, name='disc-bn-3')
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            x = t.dense(x, 1 + self.n_cont + self.n_cat, name='rec-fc-2')
+            x = t.dense(x, 1 + self.n_cont + self.n_cat, name='disc-fc-2')
             prob, cont, cat = x[:, 0], x[:, 1:1 + self.n_cont], x[:, 1 + self.n_cont:]  # logits
 
             prob = tf.nn.sigmoid(prob)  # probability
@@ -168,7 +168,7 @@ class InfoGAN:
     def build_infogan(self):
         # Generator
         self.g = self.generator(self.z, self.c)
-        self.g_test = self.generator(self.z, self.c, reuse=True, is_train=False)
+        # self.g_test = self.generator(self.z, self.c, reuse=True, is_train=False)
 
         # Discriminator
         d_real, d_real_cont, d_real_cat = self.discriminator(self.x)

@@ -78,14 +78,14 @@ def main():
 
     with tf.Session(config=config) as s:
         # InfoGAN Model
-        model = infogan.InfoGAN(s, batch_size=train_step['batch_size'],
+        model = infogan.InfoGAN(s,
+                                batch_size=train_step['batch_size'],
                                 n_categories=len(ds.labels))
+        # fixed z-noise
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         # Initializing
         s.run(tf.global_variables_initializer())
-
-        # fixed z-noise
-        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         global_step = 0
         for epoch in range(train_step['epochs']):
@@ -131,22 +131,22 @@ def main():
                                                     })
 
                     # Print loss
-                    print("[+] Step %08d => " % global_step,
+                    print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
                     sample_z_con = np.zeros((model.sample_num, model.n_continous_factor))
-                    for i in range(model.n_con):
+                    for i in range(10):
                         sample_z_con[10 * i: 10 * (i + 1), 0] = np.linspace(-2, 2, 10)
 
                     sample_z_cat = np.zeros((model.sample_num, model.n_categories))
-                    for i in range(model.n_cat):
+                    for i in range(10):
                         sample_z_cat[10 * i: 10 * (i + 1), i] = 1
 
                     sample_c = np.concatenate((sample_z_con, sample_z_cat), axis=1)
 
-                    samples = s.run(model.g_test,
+                    samples = s.run(model.g,
                                     feed_dict={
                                         model.c: sample_c,
                                         model.z: sample_z,
