@@ -64,6 +64,8 @@ class SAGAN:
         self.beta2 = .9
         self.lr = lr
 
+        self.lambda_ = 10.  # for gradient penalty
+
         # pre-defined
         self.g_loss = 0.
         self.d_loss = 0.
@@ -143,7 +145,7 @@ class SAGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            def up_sampling(x, factor=2):
+            def up_sample(x, factor=2):
                 _, h, w, _ = x.get_shape()
                 return tf.image.resize_nearest_neighbor(x, (h * factor, w * factor))
 
@@ -156,7 +158,7 @@ class SAGAN:
             for i in range(self.n_layer // 2):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
                 if up_sampling:
-                    x = up_sampling(x)
+                    x = up_sample(x)
                     x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
                 else:
                     x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN

@@ -11,7 +11,7 @@
 
 *DIFFS* | *SAGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
- **weight initializer** | `Isotropic Gaussian` | ``HE Initializer`` |
+ **image size** | ``128`` | ``64`` |
 
 > Isotropic Gaussian parameters : (µ = 0, σ = 0.02) <br/>
 > HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
@@ -29,5 +29,4 @@
 **ACGAN**     | ![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png)
 
 ## To-Do
-* Implement Spectral Normalization
 * 

@@ -23,8 +23,8 @@ results = {
 
 train_step = {
     'epochs': 101,
-    'batch_size': 100,
-    'global_step': 50001,
+    'batch_size': 64,
+    'global_step': 100001,
     'logging_interval': 500,
 }
 
@@ -33,14 +33,14 @@ def main():
     start_time = time.time()  # Clocking start
 
     # loading CelebA DataSet
-    ds = DataSet(height=128,
-                 width=128,
+    ds = DataSet(height=64,
+                 width=64,
                  channel=3,
-                 # ds_image_path="D:\\DataSet/CelebA/CelebA-128.h5",
+                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
                  ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
-                 use_save=True,
+                 use_save=False,
                  save_file_name="D:\\DataSet/CelebA/CelebA-128.h5",
                  save_type="to_h5",
                  use_img_scale=False,
@@ -48,7 +48,7 @@ def main():
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:4], inv_type='127'), (4, 128, 128, 3))
+    test_images = np.reshape(iu.transform(ds.images[:4], inv_type='127'), (4, 64, 64, 3))
     iu.save_images(test_images,
                    size=[2, 2],
                    image_path=results['output'] + 'sample.png',
@@ -58,12 +58,6 @@ def main():
                            y=None,
                            batch_size=train_step['batch_size'],
                            label_off=True)
-    # Generated image save
-    test_images = iu.transform(ds.images[:16], inv_type='127')
-    iu.save_images(test_images,
-                   size=[4, 4],
-                   image_path=results['output'] + 'sample.png',
-                   inv_type='127')
 
     # GPU configure
     config = tf.ConfigProto()
