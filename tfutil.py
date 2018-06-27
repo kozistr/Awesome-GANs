@@ -153,6 +153,28 @@ def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv2
                             name=name)
 
 
+def conv1d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv1d'):
+    """
+    :param x: input
+    :param f: filters
+    :param k: kernel size
+    :param s: strides
+    :param pad: padding
+    :param reuse: reusable
+    :param is_train: trainable
+    :param name: scope name
+    :return: net
+    """
+    return tf.layers.conv1d(inputs=x,
+                            filters=f, kernel_size=k, strides=s,
+                            kernel_initializer=w_init,
+                            kernel_regularizer=w_reg,
+                            bias_initializer=b_init,
+                            padding=pad,
+                            reuse=reuse,
+                            name=name)
+
+
 def sub_pixel_conv2d(x, f, s=2):
     """
     # ref : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py
