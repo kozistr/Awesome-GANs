@@ -11,7 +11,7 @@ tf.set_random_seed(777)  # reproducibility
 
 class InfoGAN:
 
-    def __init__(self, s, batch_size=64, height=32, width=32, channel=3,
+    def __init__(self, s, batch_size=16, height=32, width=32, channel=3,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=128, n_categories=10, n_continous_factor=1,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4):
@@ -19,7 +19,7 @@ class InfoGAN:
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 64
+        :param batch_size: training batch size, default 16
         :param height: input image height, default 32
         :param width: input image width, default 32
         :param channel: input image channel, default 3 (RGB)
@@ -35,7 +35,7 @@ class InfoGAN:
 
         # Training Option
         :param n_categories: the number of categories, default 10
-        :param n_continous_factor: the number of cont factors, default 10
+        :param n_continous_factor: the number of cont factors, default 1
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-3
         :param d_lr: discriminator learning rate, default 2e-4
