@@ -22,11 +22,21 @@ results = {
 }
 
 train_step = {
-    'epochs': 25,
+    'epochs': 5,
     'batch_size': 16,
     'global_step': 200001,
     'logging_interval': 1000,
 }
+
+
+def gen_category(n_size, n_dim):
+    return np.random.randn(n_size, n_dim) * .5  # gaussian
+
+
+def gen_continuous(n_size, n_dim):
+    code = np.zeros((n_size, n_dim))
+    code[range(n_size), np.random.randint(0, n_dim, n_size)] = 1
+    return code
 
 
 def main():
@@ -71,43 +81,51 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        # _, sample_y = mnist.test.next_batch(model.sample_num)
-        sample_c = np.concatenate((sample_y, np.zeros([model.sample_num, model.n_cont])), axis=1)
+        # fixed z-noise
+        sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
 
         global_step = 0
         for epoch in range(train_step['epochs']):
-            for batch_x, batch_y in ds_iter.iterate():
+            for batch_x, _ in ds_iter.iterate():
                 batch_x = iu.transform(batch_x, inv_type='127')
                 batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
+
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-                batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 2])), axis=1)
+
+                batch_z_con = gen_continuous(model.batch_size, model.z_cat)
+                batch_z_cat = gen_category(model.batch_size, model.z_cat)
+                batch_c = np.concatenate((batch_z_con, batch_z_cat), axis=1)
 
                 # Update D network
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
                                       model.c: batch_c,
+                                      model.x: batch_x,
+                                      model.y: batch_y,
+                                      model.z: batch_z,
                                 })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
+                                      model.c: batch_c,
                                       model.x: batch_x,
                                       model.z: batch_z,
-                                      model.c: batch_c,
                                   })
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-                    batch_c = np.concatenate((batch_y, np.random.uniform(-1., 1., [model.batch_size, 100])), axis=1)
+
+                    batch_z_con = gen_continuous(model.batch_size, model.z_cat)
+                    batch_z_cat = gen_category(model.batch_size, model.z_cat)
+                    batch_c = np.concatenate((batch_z_con, batch_z_cat), axis=1)
 
                     d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
                                                     feed_dict={
+                                                        model.c: batch_c,
                                                         model.x: batch_x,
                                                         model.z: batch_z,
-                                                        model.c: batch_c,
                                                     })
 
                     # Print loss
@@ -116,11 +134,20 @@ def main():
                           " G loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
-                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
+                    sample_z_con = np.zeros((model.sample_num, model.n_con))
+                    for i in range(model.n_con):
+                        sample_z_con[10 * i: 10 * (i + 1), 0] = np.linspace(-2, 2, 10)
+
+                    sample_z_cat = np.zeros((model.sample_num, model.n_cat))
+                    for i in range(model.n_cat):
+                        sample_z_cat[10 * i: 10 * (i + 1), i] = 1
+
+                    sample_c = np.concatenate((sample_z_con, sample_z_cat), axis=1)
+
                     samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.z: sample_z,
                                         model.c: sample_c,
+                                        model.z: sample_z,
                                     })
 
                     # Summary saver

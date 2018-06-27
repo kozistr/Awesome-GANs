@@ -13,7 +13,7 @@ class InfoGAN:
 
     def __init__(self, s, batch_size=64, height=32, width=32, channel=3,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=128, n_categories=10, n_continous_factor=10,
+                 df_dim=64, gf_dim=64, fc_unit=128, n_categories=10, n_continous_factor=1,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4):
 
         """
@@ -79,8 +79,8 @@ class InfoGAN:
         self.d_fake = 0.
 
         self.g_loss = 0.
+        self.d_adv_loss = 0.
         self.d_loss = 0.
-        self.q_loss = 0.
 
         self.g = None
         self.g_test = None
@@ -96,29 +96,11 @@ class InfoGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                                # (-1, 32, 32, 3)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_cat], name='y-label')          # (-1, 10)
-        self.z_cat = tf.placeholder(tf.float32, shape=[None, self.n_cat], name='z-label')      # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 128)
-        self.z_con = tf.concat([self.z, self.z_cat], axis=1)
+                                name="x-image")                                                     # (-1, 32, 32, 3)
+        self.c = tf.placeholder(tf.float32, shape=[None, self.n_cont + self.n_cat], name='c-cond')  # (-1, 11)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')               # (-1, 128)
 
         self.build_infogan()  # build InfoGAN model
-
-    def classifier(self, x, reuse=None):
-        """
-        :param x: ~ D
-        :param reuse: re-usable
-        :return: prob, logits
-        """
-        with tf.variable_scope("classifier", reuse=reuse):
-            x = t.dense(x, 128, name='rec-fc-1')
-            x = t.batch_norm(x, name='rec-bn-1')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
-
-            logits = t.dense(x, self.n_cat * self.n_cont, name='rec-fc-2')
-            prob = tf.nn.softmax(logits)
-
-            return prob, logits
 
     def discriminator(self, x, reuse=None):
         """
@@ -138,23 +120,31 @@ class InfoGAN:
             x = t.batch_norm(x, name='disc-bn-2')
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            net = tf.layers.flatten(x)
+            x = tf.layers.flatten(x)
 
-            x = t.dense(net, 1, name='disc-fc-1')
+            x = t.dense(x, self.fc_unit, name='rec-fc-1')
+            x = t.batch_norm(x, name='rec-bn-1')
+            x = tf.nn.leaky_relu(x, alpha=0.1)
 
-            return x, net
+            x = t.dense(x, 1 + self.n_cont + self.n_cat, name='rec-fc-2')
+            prob, cont, cat = x[:, 0], x[:, 1:1 + self.n_cont], x[:, 1 + self.n_cont:]  # logits
+
+            prob = tf.nn.sigmoid(prob)  # probability
+            cont = cont  # continuous
+            cat = tf.nn.softmax(cat)  # categories
+
+            return prob, cont, cat
 
     def generator(self, z, c, reuse=None, is_train=True):
         """
-        :param z: 228 z-noise
+        :param z: 139 z-noise
         :param c: 10 categories * 10 dimensions
         :param reuse: re-usable
         :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = tf.concat([z, c], axis=1)  # (-1, 138)
-            assert x.get_shape()[-1] == self.n_cat + self.z_dim
+            x = tf.concat([z, c], axis=1)  # (-1, 128 + 1 + 10)
 
             x = t.dense(x, 2 * 2 * 448, name='gen-fc-1')
             x = t.batch_norm(x, is_train=is_train)
@@ -178,40 +168,41 @@ class InfoGAN:
 
     def build_infogan(self):
         # Generator
-        self.g = self.generator(self.z, self.y)
-        self.g_test = self.generator(self.z, self.y, is_train=False)
+        self.g = self.generator(self.z, self.c)
+        self.g_test = self.generator(self.z, self.c, is_train=False)
 
         # Discriminator
-        d_real, d_real_cat = self.discriminator(self.x)
-        d_fake, d_fake_cat = self.discriminator(self.g, reuse=True)
-
-        # Classifier
-        _, c_real = self.classifier(d_real_cat)
-        _, c_fake = self.classifier(d_fake_cat, reuse=True)
+        d_real, d_real_cont, d_real_cat = self.discriminator(self.x)
+        d_fake, d_fake_cont, d_fake_cat = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+        d_adv_real_loss = -tf.reduce_mean(t.safe_log(d_real))
+        d_adv_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
+        self.d_adv_loss = d_adv_real_loss + d_adv_fake_loss
 
-        q_real_loss = t.softce_loss(c_real, self.y)
-        q_fake_loss = t.softce_loss(c_fake, self.z_cat)
+        d_cont_loss = tf.reduce_mean(tf.square(d_fake_cont / .5))
+        cont = self.c[:, self.n_cont:]
+        d_cat_loss = -(tf.reduce_mean(tf.reduce_sum(cont * d_fake_cont)) + tf.reduce_mean(cont * cont))
 
-        self.d_loss += self.lambda_ * q_real_loss
-        self.g_loss += self.lambda_ * q_fake_loss
+        d_info_loss = self.lambda_ * (d_cont_loss + d_cat_loss)
+
+        self.d_loss = self.d_adv_loss + d_info_loss
+
+        self.g_loss = -tf.reduce_mean(t.safe_log(d_fake)) + d_info_loss
 
         # Summary
-        tf.summary.scalar("loss/d_real_loss", d_real_loss)
-        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
+        tf.summary.scalar("loss/d_adv_real_loss", d_adv_real_loss)
+        tf.summary.scalar("loss/d_adv_fake_loss", d_adv_fake_loss)
+        tf.summary.scalar("loss/d_adv_loss", self.d_adv_loss)
+        tf.summary.scalar("loss/d_cont_loss", d_cont_loss)
+        tf.summary.scalar("loss/d_cat_loss", d_cat_loss)
+        tf.summary.scalar("loss/d_info_loss", d_info_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("loss/q_real_loss", q_real_loss)
-        tf.summary.scalar("loss/q_fake_loss", q_fake_loss)
 
         # Optimizer
         t_vars = tf.trainable_variables()
-        d_params = [v for v in t_vars if v.name.startswith('d')]
+        d_params = [v for v in t_vars if v.name.startswith('d') or v.name.startswith('c')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
