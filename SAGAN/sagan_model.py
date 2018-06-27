@@ -89,13 +89,15 @@ class SAGAN:
 
     def attention(self, x, reuse=None, name=""):
         with tf.variable_scope("%s-attention" % name, reuse=reuse):
+            def hw_flatten(x):
+                n, h, w, c = x.get_shape()
+                return tf.reshape(x, (n, -1, c))
+
             f = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-f')
             g = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-g')
             h = t.conv2d(x, self.df_dim, 1, 1, name='attention-conv2d-h')
 
-            f = tf.layers.flatten(f)
-            g = tf.layers.flatten(g)
-            h = tf.layers.flatten(h)
+            f, g, h = hw_flatten(f), hw_flatten(g), hw_flatten(h)
 
             s = tf.matmul(g, f, transpose_b=True)
             attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
@@ -141,6 +143,10 @@ class SAGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
+            def up_sampling(x, factor=2):
+                _, h, w, _ = x.get_shape()
+                return tf.image.resize_nearest_neighbor(x, (h * factor, w * factor))
+
             x = t.dense(z, 4 * 4 * self.gf_dim * 8, name='gen-fc-1')
             x = tf.nn.relu(x)
 
@@ -150,7 +156,7 @@ class SAGAN:
             for i in range(self.n_layer // 2):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
                 if up_sampling:
-                    x = x  # up-sampling
+                    x = up_sampling(x)
                     x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
                 else:
                     x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN
@@ -181,14 +187,18 @@ class SAGAN:
         self.g = self.generator(self.z)
 
         # Discriminator
-        c_real, d_real, _ = self.discriminator(self.x)
-        c_fake, d_fake, _ = self.discriminator(self.g, reuse=True)
+        d_real = self.discriminator(self.x)
+        d_fake = self.discriminator(self.g, reuse=True)
 
         # sigmoid ce loss
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+
+        # gradient-penalty
+        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
+
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
