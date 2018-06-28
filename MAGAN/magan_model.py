@@ -138,7 +138,7 @@ class MAGAN:
         with tf.variable_scope("generator", reuse=reuse):
             x = tf.reshape(z, (-1, 1, 1, self.z_dim))
 
-            x = t.deconv2d(x, self.df_dim * 8, 4, 1, name='gen-deconv2d-1')
+            x = t.deconv2d(x, self.df_dim * 8, 4, 1, pad='VALID', name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
