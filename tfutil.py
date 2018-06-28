@@ -350,18 +350,20 @@ def spectral_norm(x, n_iter=1):
     u_hat = u
     v_hat = None
     for _ in range(n_iter):
-        v_ = tf.matmul(u_hat, x, transpose_b=True)
+        v_ = tf.matmul(u_hat, tf.transpose(x))
         v_hat = l2_norm(v_)
 
         u_ = tf.matmul(v_hat, x)
         u_hat = l2_norm(u_)
 
-    sigma = tf.matmul(tf.matmul(v_hat, x), u_hat, transpose_b=True)
-    norm = x / sigma
+    sigma = tf.matmul(tf.matmul(v_hat, x), tf.transpose(u_hat))
+    x_norm = x / sigma
 
-    u.assign(u_hat)  # tf.assign
+    with tf.control_dependencies([u.assign(u_hat)]):
+        x_norm = tf.reshape(x_norm, x_shape)
 
-    return tf.reshape(norm, x_shape)
+    return x_norm
+
 
 # Activations
 
