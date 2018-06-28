@@ -59,6 +59,8 @@ class SAGAN:
         self.gf_dim = gf_dim
         self.fc_unit = fc_unit
 
+        self.up_sampling = True
+
         self.z_dim = z_dim
         self.beta1 = 0.
         self.beta2 = .9
@@ -89,11 +91,11 @@ class SAGAN:
 
         self.build_sagan()  # build SAGAN model
 
-    def attention(self, x, reuse=None, name=""):
+    def attention(self, x, f_, reuse=None, name=""):
         with tf.variable_scope("%s-attention" % name, reuse=reuse):
-            f = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-f')
-            g = t.conv2d(x, self.df_dim // 8, 1, 1, name='attention-conv2d-g')
-            h = t.conv2d(x, self.df_dim, 1, 1, name='attention-conv2d-h')
+            f = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-f')
+            g = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-g')
+            h = t.conv2d_alt(x, f_, 1, 1, sn=True, name='attention-conv2d-h')
 
             f, g, h = t.hw_flatten(f), t.hw_flatten(g), t.hw_flatten(h)
 
@@ -113,23 +115,23 @@ class SAGAN:
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            x = t.conv2d(x, self.df_dim, 4, 2, name='disc-conv2d-1')
+            x = t.conv2d_alt(x, self.df_dim, 4, 2, pad=1, sn=True, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
             for i in range(self.n_layer // 2):
-                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), 4, 2, name='disc-conv2d-%d' % (i + 2))  # SN
+                x = t.conv2d_alt(x, self.df_dim * (2 ** (i + 1)), 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
                 x = tf.nn.leaky_relu(x, alpha=0.1)
 
             # Self-Attention Layer
-            x = self.attention(x, self.df_dim * 1, name='disc')
+            x = self.attention(x, self.df_dim * 1, reuse=reuse, name='disc')
 
             for i in range(self.n_layer // 2, self.n_layer):
-                x = t.conv2d(x, self.df_dim * (2 ** (i + 1)), 4, 2, name='disc-conv2d-%d' % (i + 2))  # SN
+                x = t.conv2d_alt(x, self.df_dim * (2 ** (i + 1)), 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
                 x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = t.flatten(x)
 
-            x = t.dense(x, 1, name='disc-fc-1')
+            x = t.dense_alt(x, 1, sn=True, name='disc-fc-1')
             return x
 
     def generator(self, z, reuse=None, is_train=True):
@@ -141,38 +143,36 @@ class SAGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense(z, 4 * 4 * self.gf_dim * 8, name='gen-fc-1')
-            x = tf.nn.relu(x)
+            x = t.dense_alt(z, 4 * 4 * self.gf_dim * 8, sn=True, name='gen-fc-1')
 
             x = tf.reshape(x, (-1, 4, 4, self.gf_dim * 8))
 
-            up_sampling = True
             for i in range(self.n_layer // 2):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
-                if up_sampling:
+                if self.up_sampling:
                     x = t.up_sampling(x, interp='tf.image.ResizeMethod.NEAREST_NEIGHBOR')
-                    x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
+                    x = t.conv2d_alt(x, f, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))
                 else:
-                    x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN
+                    x = t.deconv2d_alt(x, f, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))
 
-                x = t.batch_norm(x, name='gen-bn-%d' % i)
+                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
                 x = tf.nn.relu(x)
 
             # Self-Attention Layer
-            x = self.attention(x, self.gf_dim * 1, name='gen')
+            x = self.attention(x, self.gf_dim * 1, reuse=reuse, name='gen')
 
             for i in range(self.n_layer // 2, self.n_layer):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
-                if up_sampling:
+                if self.up_sampling:
                     x = t.up_sampling(x, interp='tf.image.ResizeMethod.NEAREST_NEIGHBOR')
-                    x = t.conv2d(x, f, 5, 1, name='gen-conv2d-%d' % (i + 1))  # SN
+                    x = t.conv2d_alt(x, f, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))  # SN
                 else:
-                    x = t.deconv2d(x, f, 4, 2, name='gen-deconv2d-%d' % (i + 1))  # SN
+                    x = t.deconv2d_alt(x, f, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))  # SN
 
-                x = t.batch_norm(x, name='gen-bn-%d' % i)
+                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
                 x = tf.nn.relu(x)
 
-            x = t.conv2d(x, self.channel, 5, 1, name='gen-conv2d-5')
+            x = t.conv2d_alt(x, self.channel, 5, 1, pad=2, sn=True, name='gen-conv2d-5')
             x = tf.nn.tanh(x)
             return x
 
