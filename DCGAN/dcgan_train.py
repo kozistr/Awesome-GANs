@@ -38,6 +38,9 @@ def main():
         # DCGAN model
         model = dcgan.DCGAN(s, batch_size=train_step['batch_size'])
 
+        # Initializing variables
+        s.run(tf.global_variables_initializer())
+
         # Load model & Graph & Weights
         saved_global_step = 0
 
@@ -50,9 +53,6 @@ def main():
             print("[+] global step : %d" % saved_global_step, " successfully loaded")
         else:
             print('[-] No checkpoint file found')
-
-        # Initializing variables
-        s.run(tf.global_variables_initializer())
 
         # Training, Test data set
         # loading CelebA DataSet
@@ -83,8 +83,9 @@ def main():
                                label_off=True)
 
         global_step = saved_global_step
-        cont = global_step // (ds.num_images // model.batch_size)
-        for epoch in range(cont, cont + train_step['epoch']):
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
                                      (model.batch_size, model.height, model.width, model.channel))

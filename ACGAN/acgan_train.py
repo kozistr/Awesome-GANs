@@ -38,6 +38,7 @@ def main():
                  channel=3,
                  ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
                  ds_name='cifar-10')
+
     ds_iter = DataIterator(x=iu.transform(ds.train_images, '127'),
                            y=ds.train_labels,
                            batch_size=train_step['batch_size'],
@@ -67,8 +68,21 @@ def main():
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        global_step = 0
-        for epoch in range(train_step['epochs']):
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
+        global_step = saved_global_step
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epochs']):
             for batch_x, batch_y in ds_iter.iterate():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 

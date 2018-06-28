@@ -32,6 +32,26 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
+    # Training, Test data set
+    # loading Cifar DataSet
+    ds = DataSet(height=32,
+                 width=32,
+                 channel=3,
+                 ds_path='D:\\DataSet/cifar/cifar-10-batches-py/',
+                 ds_name='cifar-10')
+
+    # saving sample images
+    test_images = np.reshape(iu.transform(ds.test_images[:16], inv_type='127'), (16, 32, 32, 3))
+    iu.save_images(test_images,
+                   size=[4, 4],
+                   image_path=results['output'] + 'sample.png',
+                   inv_type='127')
+
+    ds_iter = DataIterator(x=ds.train_images,
+                           y=None,
+                           batch_size=train_step['batch_size'],
+                           label_off=True)
+
     # GPU configure
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -39,6 +59,9 @@ def main():
     with tf.Session(config=config) as s:
         # GAN Model
         model = lsgan.LSGAN(s, train_step['batch_size'])
+
+        # Initializing variables
+        s.run(tf.global_variables_initializer())
 
         # Load model & Graph & Weights
         saved_global_step = 0
@@ -53,32 +76,10 @@ def main():
         else:
             print('[-] No checkpoint file found')
 
-        # Initializing variables
-        s.run(tf.global_variables_initializer())
-
-        # Training, Test data set
-        # loading CelebA DataSet
-        ds = DataSet(height=32,
-                     width=32,
-                     channel=3,
-                     ds_path='D:\\DataSet/cifar/cifar-10-batches-py/',
-                     ds_name='cifar-10')
-
-        # saving sample images
-        test_images = np.reshape(iu.transform(ds.test_images[:16], inv_type='127'), (16, 32, 32, 3))
-        iu.save_images(test_images,
-                       size=[4, 4],
-                       image_path=results['output'] + 'sample.png',
-                       inv_type='127')
-
-        ds_iter = DataIterator(x=ds.train_images,
-                               y=None,
-                               batch_size=train_step['batch_size'],
-                               label_off=True)
-
         global_step = saved_global_step
-        cont = global_step // (len(ds.train_images) // model.batch_size)
-        for epoch in range(cont, cont + train_step['epoch']):
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)
+        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
                 batch_x = iu.transform(batch_x, inv_type='127')
                 batch_x = np.reshape(batch_x, [-1] + model.image_shape[1:])

@@ -34,6 +34,16 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
+    # Training, test data set
+    ds = DataSet(height=32,
+                 width=32,
+                 channel=3,
+                 ds_path='D:\\DataSet/cifar/cifar-10-batches-py/',
+                 ds_name='cifar-10')
+
+    ds_iter = DataIterator(ds.train_images, ds.train_labels,
+                           train_step['batch_size'])
+
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
@@ -44,22 +54,25 @@ def main():
         # Initializing variables
         s.run(tf.global_variables_initializer())
 
-        # Training, test data set
-        ds = DataSet(height=32,
-                     width=32,
-                     channel=3,
-                     ds_path='D:\\DataSet/cifar/cifar-10-batches-py/',
-                     ds_name='cifar-10')
+        # Load model & Graph & Weights
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            model.saver.restore(s, ckpt.model_checkpoint_path)
 
-        ds_iter = DataIterator(ds.train_images, ds.train_labels,
-                               train_step['batch_size'])
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %s" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
 
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        global_step = 0
-        for epoch in range(train_step['epoch']):
+        global_step = saved_global_step
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)  # recover n_epoch
+        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epoch']):
             for batch_images, batch_labels in ds_iter.iterate():
                 batch_x = iu.transform(batch_images, inv_type='127')
 

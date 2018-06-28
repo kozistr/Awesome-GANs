@@ -43,9 +43,20 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
+        # Load model & Graph & Weights
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %s" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
         d_loss = 0.
         d_overpowered = False
-        for global_step in range(train_step['global_step']):
+        for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
             batch_x = batch_x.reshape(-1, model.n_input)
             batch_z = np.random.uniform(-1., 1., size=[model.batch_size, model.z_dim]).astype(np.float32)

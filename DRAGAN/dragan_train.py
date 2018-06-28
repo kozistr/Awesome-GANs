@@ -44,6 +44,9 @@ def main():
         # DRAGAN model
         model = dragan.DRAGAN(s, batch_size=train_step['batch_size'])
 
+        # Initializing variables
+        s.run(tf.global_variables_initializer())
+
         # Load model & Graph & Weights
         saved_global_step = 0
         ckpt = tf.train.get_checkpoint_state('./model/')
@@ -55,10 +58,7 @@ def main():
         else:
             print('[-] No checkpoint file found')
 
-        # Initializing variables
-        s.run(tf.global_variables_initializer())
-
-        # Celeb-A DataSet images
+        # MNIST DataSet images
         mnist = DataSet(ds_path="D:\\DataSet/mnist/").data
 
         for global_step in range(saved_global_step, train_step['global_step']):

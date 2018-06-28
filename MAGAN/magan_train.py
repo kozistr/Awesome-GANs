@@ -69,7 +69,17 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        global_step = 0
+        # Load model & Graph & Weights
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %s" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
         n_steps = ds.num_images // model.batch_size  # training set size
 
         # Pre-Train
@@ -101,7 +111,11 @@ def main():
 
         old_margin = 0.
         s_g_0 = np.inf  # Sg_0 = infinite
-        for epoch in range(train_step['epochs']):
+
+        global_step = saved_global_step
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epochs']):
             s_d, s_g = 0., 0.
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
