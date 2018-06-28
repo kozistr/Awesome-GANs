@@ -86,9 +86,10 @@ class SAGAN:
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                        # (-1, 32, 32, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 128)
+                                shape=[self.batch_size, self.height, self.width, self.channel],
+                                name="x-image")                                                       # (64, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")            # (-1, 128)
+        self.z_test = tf.placeholder(tf.float32, shape=[self.sample_num, self.z_dim], name="z-test-noise")  # (-1, 128)
 
         self.build_sagan()  # build SAGAN model
 
@@ -181,7 +182,7 @@ class SAGAN:
     def build_sagan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
+        self.g_test = self.generator(self.z_test, reuse=True, is_train=False)
 
         # Discriminator
         d_real = self.discriminator(self.x)

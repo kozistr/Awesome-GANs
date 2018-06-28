@@ -127,7 +127,7 @@ def main():
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
                     samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.z: sample_z,
+                                        model.z_test: sample_z,
                                     })
 
                     # Summary saver
