@@ -49,7 +49,7 @@ class SAGAN:
         self.image_shape = [self.batch_size, self.height, self.width, self.channel]
         self.n_classes = n_classes
 
-        self.n_layer = np.log2(self.height) - 2  # 5
+        self.n_layer = int(np.log2(self.height)) - 2  # 5
         assert self.height == self.width
 
         self.sample_num = sample_num
