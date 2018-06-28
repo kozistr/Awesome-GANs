@@ -214,6 +214,23 @@ def sub_pixel_conv2d(x, f, s=2):
     return tf.reshape(x_r, (bsize, s * a, s * b, f))
 
 
+def deconv2d_alt(x, f=64, k=3, s=1, use_bias=True, sn=False, name='deconv2d'):
+    with tf.variable_scope(name):
+        if sn:
+            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f],
+                                initializer=w_init, regularizer=w_reg)
+            x = tf.nn.conv2d_transpose(x, filters=spectral_norm(w), strides=[1, s, s, 1], padding='SAME',
+                                       output_shape=[x.get_shape()[0], x.get_shape()[1] * s, x.get_shape()[2] * s, f])
+
+            if use_bias:
+                b = tf.get_variable('bias', shape=[f], initializer=b_init)
+                x = tf.nn.bias_add(x, b)
+        else:
+            x = deconv2d(x, f, k, s, name=name)
+
+        return x
+
+
 def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='deconv2d'):
     """
     :param x: input
