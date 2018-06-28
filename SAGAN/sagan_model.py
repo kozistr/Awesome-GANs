@@ -73,10 +73,10 @@ class SAGAN:
         self.g_loss = 0.
         self.d_loss = 0.
         self.c_loss = 0.
-        
+
         self.g = None
         self.g_test = None
-        
+
         self.d_op = None
         self.g_op = None
 
@@ -94,8 +94,8 @@ class SAGAN:
         self.build_sagan()  # build SAGAN model
 
     @staticmethod
-    def attention(x, f_, reuse=None, name=""):
-        with tf.variable_scope("%s-attention" % name, reuse=reuse):
+    def attention(x, f_, reuse=None):
+        with tf.variable_scope("attention", reuse=reuse):
             f = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-f')
             g = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-g')
             h = t.conv2d_alt(x, f_, 1, 1, sn=True, name='attention-conv2d-h')
@@ -131,7 +131,7 @@ class SAGAN:
                 f *= 2
 
             # Self-Attention Layer
-            x = self.attention(x, f, reuse=reuse, name='disc')
+            x = self.attention(x, f, reuse=reuse)
 
             for i in range(self.n_layer // 2, self.n_layer):
                 x = t.conv2d_alt(x, f * 2, 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
@@ -172,7 +172,7 @@ class SAGAN:
                 f //= 2
 
             # Self-Attention Layer
-            x = self.attention(x, f, reuse=reuse, name='gen')
+            x = self.attention(x, f, reuse=reuse)
 
             for i in range(self.n_layer // 2, self.n_layer):
                 if self.up_sampling:

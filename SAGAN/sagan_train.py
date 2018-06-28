@@ -23,9 +23,9 @@ results = {
 }
 
 train_step = {
-    'epochs': 101,
+    'epochs': 11,
     'batch_size': 64,
-    'global_step': 100001,
+    'global_step': 10001,
     'logging_interval': 500,
 }
 
@@ -100,7 +100,7 @@ def main():
                                       model.z: batch_z,
                                   })
 
-                # Update G/C networks
+                # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
                                   feed_dict={
                                       model.x: batch_x,
