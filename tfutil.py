@@ -271,7 +271,7 @@ def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
 
-def spectral_norm(x, iters=1, reuse=None, name=""):
+def spectral_norm(x, n_iter=1):
     x_shape = x.get_shape()
 
     x = tf.reshape(x, (-1, x_shape[-1]))  # (n * h * w, c)
@@ -279,10 +279,20 @@ def spectral_norm(x, iters=1, reuse=None, name=""):
     u = tf.get_variable('u', shape=(1, x_shape[-1]), initializer=tf.truncated_normal_initializer(), trainable=False)
 
     u_hat = u
-    v_hat = None  # derivation
-    for i in range(iters):
+    v_hat = None
+    for _ in range(n_iter):
         v_ = tf.matmul(u_hat, x, transpose_b=True)
         v_hat = l2_norm(v_)
+
+        u_ = tf.matmul(v_hat, x)
+        u_hat = l2_norm(u_)
+
+    sigma = tf.matmul(tf.matmul(v_hat, x), u_hat, transpose_b=True)
+    norm = x / sigma
+
+    u.assign(u_hat)  # tf.assign
+
+    return tf.reshape(norm, x_shape)
 
 # Activations
 
