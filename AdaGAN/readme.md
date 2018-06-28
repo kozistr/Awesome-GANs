@@ -26,4 +26,4 @@
 **AdaGAN**     | ![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png)
 
 ## To-Do
-* 
+* Hard to understand boosting meta-algorithm ;) as undergraduate
