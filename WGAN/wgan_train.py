@@ -80,7 +80,7 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (len(ds.train_images) // model.batch_size)  # recover n_epoch
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
         ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
             for _ in range(ds_iter.num_batches):
@@ -118,13 +118,11 @@ def main():
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %04d Step %08d => " % (epoch, global_step),

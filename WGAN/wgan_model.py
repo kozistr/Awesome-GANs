@@ -62,8 +62,8 @@ class WGAN:
                                 name='z-noise')
 
         # Training Options - based on the WGAN paper
-        self.beta1 = 0.   # 0.5
-        self.beta2 = 0.9  # 0.999
+        self.beta1 = 0.  # 0.5
+        self.beta2 = .9  # 0.999
         self.lr = 1e-4
         self.critic = 5
         self.clip = .01
@@ -160,7 +160,7 @@ class WGAN:
 
             x = tf.nn.relu(x)
 
-            x = tf.reduce_mean(x, axis=[1, 2])
+            x = t.global_avg_pooling(x)
 
             x = t.dense(x, 1, name='disc-fc-1')
             return x
