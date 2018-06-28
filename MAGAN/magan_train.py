@@ -113,8 +113,8 @@ def main():
         s_g_0 = np.inf  # Sg_0 = infinite
 
         global_step = saved_global_step
-        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
-        ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
+        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
             s_d, s_g = 0., 0.
             for batch_x in ds_iter.iterate():
