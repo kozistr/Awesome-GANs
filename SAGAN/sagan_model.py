@@ -193,7 +193,7 @@ class SAGAN:
     def build_sagan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z_test, reuse=True, is_train=False)
+        self.g_test = self.generator(self.z_test, reuse=True)
 
         # Discriminator
         d_real = self.discriminator(self.x)
