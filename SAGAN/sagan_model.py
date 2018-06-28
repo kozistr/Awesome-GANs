@@ -105,7 +105,7 @@ class SAGAN:
             s = tf.matmul(g, f, transpose_b=True)
             attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
 
-            o = tf.matmul(attention_map, h)  # (N, C)
+            o = tf.reshape(tf.matmul(attention_map, h), shape=x.get_shape())  # (N, C)
             gamma = tf.get_variable('gamma', shape=[1], initializer=tf.zeros_initializer())
 
             return gamma * o + x
