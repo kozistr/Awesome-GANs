@@ -130,8 +130,28 @@ eps = 1e-5
 
 # Layers
 
-def conv2d_alt(x, f=64, k=3, s=1, pad='SAME', reuse=True, is_train=True, name='conv2d'):
-    pass
+
+def conv2d_alt(x, f=64, k=3, s=1, pad=0, pad_type='zero', use_bias=True, sn=False, name='conv2d'):
+    with tf.variable_scope(name):
+        if pad_type == 'zero':
+            x = tf.pad(x, [[0, 0], [pad, pad], [pad, pad], [0, 0]])
+        elif pad_type == 'reflect':
+            x = tf.pad(x, [[0, 0], [pad, pad], [pad, pad], [0, 0]], mode='REFLECT')
+        else:
+            raise NotImplementedError("[-] Only 'zero' & 'reflect' are supported :(")
+
+        if sn:
+            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f],
+                                initializer=w_init, regularizer=w_reg)
+            x = tf.nn.conv2d(x, filters=spectral_norm(w), strides=[1, s, s, 1], padding='VALID')
+
+            if use_bias:
+                b = tf.get_variable('bias', shape=[f], initializer=b_init)
+                x = tf.nn.bias_add(x, b)
+        else:
+            x = conv2d(x, f, k, s, name=name)
+
+        return x
 
 
 def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv2d'):
