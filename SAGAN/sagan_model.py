@@ -153,11 +153,12 @@ class SAGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            x = t.dense_alt(z, 4 * 4 * self.gf_dim * 8, sn=True, name='gen-fc-1')
-
-            x = tf.reshape(x, (-1, 4, 4, self.gf_dim * 8))
-
             f = self.gf_dim * 8
+
+            x = t.dense_alt(z, 4 * 4 * f, sn=True, name='gen-fc-1')
+
+            x = tf.reshape(x, (-1, 4, 4, f))
+
             for i in range(self.n_layer // 2):
                 if self.up_sampling:
                     x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
@@ -176,9 +177,9 @@ class SAGAN:
             for i in range(self.n_layer // 2, self.n_layer):
                 if self.up_sampling:
                     x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-                    x = t.conv2d_alt(x, f // 2, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))  # SN
+                    x = t.conv2d_alt(x, f // 2, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))
                 else:
-                    x = t.deconv2d_alt(x, f // 2, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))  # SN
+                    x = t.deconv2d_alt(x, f // 2, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))
 
                 x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
                 x = tf.nn.relu(x)
