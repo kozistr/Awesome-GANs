@@ -52,6 +52,9 @@ def main():
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
+        # Initializing
+        s.run(tf.global_variables_initializer())
+
         # Load model & Graph & Weights
         ckpt = tf.train.get_checkpoint_state('./model/')
         if ckpt and ckpt.model_checkpoint_path:
@@ -65,9 +68,6 @@ def main():
             print('[-] No checkpoint file found')
 
         start_epoch = global_step // (ds.n_images // train_step['batch_size'])
-
-        # Initializing
-        s.run(tf.global_variables_initializer())
 
         rnd = np.random.randint(0, ds.n_images_val)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]

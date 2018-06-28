@@ -155,7 +155,7 @@ class SRGAN:
 
             x = tf.add(x_, x)
 
-            # subpixel conv blocks
+            # sub-pixel conv2d blocks
             for i in range(1, 3):
                 x = t.conv2d(x, self.gf_dim * 4, 3, 1, name='n256s1-%d' % (i + 2))
                 x = t.sub_pixel_conv2d(x, f=None, s=2)
@@ -163,7 +163,6 @@ class SRGAN:
 
             x = t.conv2d(x, self.channel, 1, 1, name='n3s1')  # (-1, 384, 384, 3)
             x = tf.nn.tanh(x)
-
             return x
 
     def build_vgg19(self, x, reuse=None):
