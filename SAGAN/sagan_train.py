@@ -49,9 +49,9 @@ def main():
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:4], inv_type='127'), (4, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
     iu.save_images(test_images,
-                   size=[2, 2],
+                   size=[4, 4],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
 
@@ -108,13 +108,11 @@ def main():
                                   })
 
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
