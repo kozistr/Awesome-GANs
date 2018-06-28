@@ -71,7 +71,7 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        print(" [*] Reading checkpoints...")
+        print("[*] Reading checkpoints...")
 
         saved_global_step = 0
         ckpt = tf.train.get_checkpoint_state('./model/')
