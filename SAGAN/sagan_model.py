@@ -96,25 +96,19 @@ class SAGAN:
     @staticmethod
     def attention(x, f_, reuse=None, name=""):
         with tf.variable_scope("%s-attention" % name, reuse=reuse):
-            print(x.get_shape())
-            x_shape = x.get_shape()
-
             f = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-f')
             g = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-g')
             h = t.conv2d_alt(x, f_, 1, 1, sn=True, name='attention-conv2d-h')
-            print(h.get_shape())
+
             f, g, h = t.hw_flatten(f), t.hw_flatten(g), t.hw_flatten(h)
 
             s = tf.matmul(g, f, transpose_b=True)
             attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
 
-            o = tf.matmul(attention_map, h)  # (N, h, w, c)
+            o = tf.reshape(tf.matmul(attention_map, h), shape=x.get_shape())
             gamma = tf.get_variable('gamma', shape=[1], initializer=tf.zeros_initializer())
-            print(x.get_shape(), o.get_shape(), gamma.get_shape())
 
-            o = tf.reshape(o, shape=x_shape)
             x = gamma * o + x
-
             return x
 
     def discriminator(self, x, reuse=None):
@@ -137,7 +131,7 @@ class SAGAN:
                 f *= 2
 
             # Self-Attention Layer
-            x = self.attention(x, self.df_dim * 1, reuse=reuse, name='disc')
+            x = self.attention(x, f, reuse=reuse, name='disc')
 
             for i in range(self.n_layer // 2, self.n_layer):
                 x = t.conv2d_alt(x, f * 2, 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
