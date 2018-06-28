@@ -130,6 +130,9 @@ eps = 1e-5
 
 # Layers
 
+def conv2d_alt(x, f=64, k=3, s=1, pad='SAME', reuse=True, is_train=True, name='conv2d'):
+    pass
+
 
 def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv2d'):
     """
