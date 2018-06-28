@@ -2,23 +2,28 @@
 
 ## Loss Function
 
-* using ```l1 loss```. You can see the details in ```began_model.py line 233~236```.
+* used ```l1 loss```.
 
 ## Architecture Networks
 
-* Maybe, same as in the *BEGAN paper*. But *different *hyper-parameters* :).
+* Same with the BEGAN paper.
 
+*DIFFS* | *BEGAN Paper* | *ME*  |
+ :---:  |     :---:      | :---: |
+ **image size** | ``128`` | ``64`` |
+ **skip connection** | ``suggested but not used`` | ``used`` |
+ 
 ## Tensorboard
 
-![result](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/began_tb.png)
+![result](./began_tb.png)
+
+> Elapsed time : 28800s with ``GTX 1080 8GB x 1``
 
 ## Result
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 300k*
 :---: | :---: | :---: | :---:
-**BEGAN**     | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_50000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_100000.png) | ![Generated Image](https://github.com/kozistr/Awesome-GANs/blob/master/BEGAN/gen_img/train_300000.png)
-
-> ```Took about 28800 seconds on GTX 1080.```
+**BEGAN**     | ![img](./gen_img/train_50000.png) | ![img](./gen_img/train_100000.png) | ![img](./gen_img/train_300000.png)
 
 ## To-Do
-* Add Loss Function & Explains
+* 
