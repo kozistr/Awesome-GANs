@@ -197,7 +197,6 @@ def main():
             e_d = s_d / n_steps
             e_g = s_g / n_steps
             l_ = e_d + np.abs(e_d - e_g)
-            s.run(l_)
 
             print("[+] Epoch %03d " % epoch, " L : {:.8f}".format(l_))
 

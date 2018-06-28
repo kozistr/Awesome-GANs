@@ -82,8 +82,6 @@ class MAGAN:
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
         self.m = tf.placeholder(tf.float32, name='margin')
 
-        self.l_ = tf.placeholder(tf.float32, name='L')
-
         self.build_magan()  # build MAGAN model
 
     def encoder(self, x, reuse=None):
@@ -172,7 +170,6 @@ class MAGAN:
         tf.summary.scalar("loss/d_real_loss", self.d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", self.d_fake_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("misc/L", self.l_)
 
         # Optimizer
         t_vars = tf.trainable_variables()
