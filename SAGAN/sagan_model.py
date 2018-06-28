@@ -92,7 +92,8 @@ class SAGAN:
 
         self.build_sagan()  # build SAGAN model
 
-    def attention(self, x, f_, reuse=None, name=""):
+    @staticmethod
+    def attention(x, f_, reuse=None, name=""):
         with tf.variable_scope("%s-attention" % name, reuse=reuse):
             f = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-f')
             g = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-g')
@@ -151,7 +152,7 @@ class SAGAN:
             for i in range(self.n_layer // 2):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
                 if self.up_sampling:
-                    x = t.up_sampling(x, interp='tf.image.ResizeMethod.NEAREST_NEIGHBOR')
+                    x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
                     x = t.conv2d_alt(x, f, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))
                 else:
                     x = t.deconv2d_alt(x, f, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))
@@ -165,7 +166,7 @@ class SAGAN:
             for i in range(self.n_layer // 2, self.n_layer):
                 f = self.gf_dim * 8 // (2 ** (i + 1))
                 if self.up_sampling:
-                    x = t.up_sampling(x, interp='tf.image.ResizeMethod.NEAREST_NEIGHBOR')
+                    x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
                     x = t.conv2d_alt(x, f, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))  # SN
                 else:
                     x = t.deconv2d_alt(x, f, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))  # SN
