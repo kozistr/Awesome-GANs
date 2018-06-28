@@ -9,7 +9,7 @@
 * Same with the SAGAN paper.
 
 *DIFFS* | *SAGAN Paper* | *ME*  |
- :---:  |     :---:      | :---: |
+ :---:  |     :---:     | :---: |
  **image size** | ``128`` | ``64`` |
 
 > I just reduce image size from 128 to 64 because of my gpu memory... <br/>
