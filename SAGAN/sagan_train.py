@@ -84,10 +84,6 @@ def main():
         else:
             print('[-] No checkpoint file found')
 
-        sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
-        for i in range(10):
-            sample_y[10 * i:10 * (i + 1), i] = 1
-
         global_step = saved_global_step
         start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
         ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
