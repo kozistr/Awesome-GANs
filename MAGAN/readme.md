@@ -2,7 +2,7 @@
 
 ## Loss Function
 
-* used ``sce loss`` at D/G nets.
+* used ``mse loss`` at D/G nets.
 
 ## Architecture Networks
 
