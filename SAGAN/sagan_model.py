@@ -228,7 +228,7 @@ class SAGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.lr * 4,
+        self.d_op = tf.train.AdamOptimizer(self.lr * 2,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(self.lr * 1,
                                            beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
