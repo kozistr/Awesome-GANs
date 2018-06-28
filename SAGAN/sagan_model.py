@@ -15,7 +15,8 @@ class SAGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4):
+                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4,
+                 use_gp=False, use_hinge_loss=True):
 
         """
         # General Settings
@@ -36,8 +37,10 @@ class SAGAN:
         :param fc_unit: the number of fully connected layer units, default 512
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 100
-        :param lr: learning rate, default 2e-4
+        :param z_dim: z dimension (kinda noise), default 128
+        :param lr: learning rate, default 1e-4
+        :param use_gp: using gradient penalty, default False
+        :param use_hinge_loss: using hinge loss, default True
         """
 
         self.s = s
@@ -83,6 +86,9 @@ class SAGAN:
         self.merged = None
         self.writer = None
         self.saver = None
+
+        self.use_gp = use_gp
+        self.use_hinge_loss = use_hinge_loss
 
         # Placeholders
         self.x = tf.placeholder(tf.float32,
@@ -199,29 +205,37 @@ class SAGAN:
         d_real = self.discriminator(self.x)
         d_fake = self.discriminator(self.g, reuse=True)
 
-        # sigmoid ce loss
-        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+        # Losses
+        if self.use_hinge_loss:
+            d_real_loss = tf.reduce_mean(tf.nn.relu(1. - d_real))
+            d_fake_loss = tf.reduce_mean(tf.nn.relu(1. + d_fake))
+            self.d_loss = d_real_loss + d_fake_loss
+            self.g_loss = -tf.reduce_mean(d_fake)
+        else:
+            d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+            d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+            self.d_loss = d_real_loss + d_fake_loss
+            self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # gradient-penalty
-        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
-        interp = alpha * self.x + (1. - alpha) * self.g
-        d_interp = self.discriminator(interp, reuse=True)
-        gradients = tf.gradients(d_interp, interp)[0]
-        slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=1))
-        self.gp = tf.reduce_mean(tf.square(slopes - 1.))
+        if self.use_gp:
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
+            interp = alpha * self.x + (1. - alpha) * self.g
+            d_interp = self.discriminator(interp, reuse=True)
+            gradients = tf.gradients(d_interp, interp)[0]
+            slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=1))
+            self.gp = tf.reduce_mean(tf.square(slopes - 1.))
 
-        # Update D loss
-        self.d_loss += self.lambda_ * self.gp
+            # Update D loss
+            self.d_loss += self.lambda_ * self.gp
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("misc/gp", self.gp)
+        if self.use_gp:
+            tf.summary.scalar("misc/gp", self.gp)
 
         # Optimizer
         t_vars = tf.trainable_variables()

@@ -5,7 +5,6 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
-import os
 import sys
 import time
 
@@ -66,7 +65,8 @@ def main():
 
     with tf.Session(config=config) as s:
         # SAGAN Model
-        model = sagan.SAGAN(s, batch_size=train_step['batch_size'])
+        model = sagan.SAGAN(s, batch_size=train_step['batch_size'],
+                            use_gp=False, use_hinge_loss=True)
 
         # Initializing
         s.run(tf.global_variables_initializer())
