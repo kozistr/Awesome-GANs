@@ -1,4 +1,8 @@
 import tensorflow as tf
+
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -7,8 +11,9 @@ tf.set_random_seed(777)  # reproducibility
 
 class AnoGAN:
 
-    def __init__(self, s, batch_size=16, height=64, width=64, channel=3, n_classes=41, sample_num=1, sample_size=1,
-                 df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9,
+    def __init__(self, s, batch_size=16, height=64, width=64, channel=3, n_classes=41,
+                 sample_num=1, sample_size=1,
+                 df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4,
                  detect=False, use_label=False):
 
         """
@@ -35,7 +40,6 @@ class AnoGAN:
         :param z_dim: z dimension (kinda noise), default 128
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-9
         :param detect: anomalies detection if True, just training a model, default False
         """
 
@@ -62,7 +66,6 @@ class AnoGAN:
         self.beta2 = .9
         self.d_lr = d_lr
         self.g_lr = g_lr
-        self.eps = epsilon
 
         self.detect = detect
         self.use_label = use_label
@@ -104,25 +107,25 @@ class AnoGAN:
         :param y: labels
         :param reuse: re-usable
         :param is_train: en/disable batch_norm, default True
-        :return: logits
+        :return: fm, logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
             if y:
                 raise NotImplemented("[-] Not Implemented Yet...")
 
-            x = t.conv2d(x, f=self.gf_dim * 1, name="disc-conv2d-0")
+            x = t.conv2d(x, f=self.gf_dim * 1, name="disc-conv2d-1")
             x = tf.nn.leaky_relu(x)
 
             for i in range(1, 4):
-                x = t.conv2d(x, f=self.gf_dim * (2 ** i), name="disc-conv2d-%d" % i)
-                x = t.batch_norm(x, is_train=is_train)
+                x = t.conv2d(x, f=self.gf_dim * (2 ** i), name="disc-conv2d-%d" % (i _ 1))
+                x = t.batch_norm(x, is_train=is_train, name='disc-bn-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
             feature_match = x   # (-1, 8, 8, 512)
 
-            x = tf.layers.flatten(x)
+            x = t.flatten(x)
 
-            x = t.dense(x, 1, name='disc-fc-0')
+            x = t.dense(x, 1, name='disc-fc-1')
 
             return feature_match, x
 
@@ -138,19 +141,18 @@ class AnoGAN:
             if y:
                 raise NotImplemented("[-] Not Implemented Yet...")
 
-            x = t.dense(z, f=self.fc_unit, name='gen-fc-0')
+            x = t.dense(z, f=self.fc_unit, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
 
             x = tf.reshape(x, [-1, 8, 8, self.fc_unit // (8 * 8)])
 
             for i in range(1, 4):
                 x = t.deconv2d(x, f=self.gf_dim * (2 ** i), name="gen-conv2d-%d" % i)
-                x = t.batch_norm(x, is_train=is_train)
+                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
                 x = tf.nn.leaky_relu(x)
 
             x = t.deconv2d(x, f=3, s=1, name="gen-conv2d-4")  # (-1, 64, 64, 3)
             x = tf.sigmoid(x)  # [0, 1]
-
             return x
 
     def build_anogan(self):

@@ -47,7 +47,38 @@ def main():
         model = anogan.AnoGAN(detect=detect,
                               use_label=False)  # AnoGAN
 
-        global_step = 0
+        # Initializing
+        s.run(tf.global_variables_initializer())
+
+        # loading CelebA DataSet
+        ds = DataSet(height=64,
+                     width=64,
+                     channel=3,
+                     ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
+                     ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                     # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                     ds_type="CelebA",
+                     use_save=False,
+                     save_file_name="D:\\DataSet/CelebA/CelebA-128.h5",
+                     save_type="to_h5",
+                     use_img_scale=False,
+                     # img_scale="-1,1"
+                     )
+
+        # saving sample images
+        test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+        iu.save_images(test_images,
+                       size=[4, 4],
+                       image_path=results['output'] + 'sample.png',
+                       inv_type='127')
+
+        ds_iter = DataIterator(x=ds.images,
+                               y=None,
+                               batch_size=train_step['batch_size'],
+                               label_off=True)
+
+        # To-Do
+        # Getting anomaly data
 
         # Load model & Graph & Weights
         if not detect or not os.path.exists("./ano-model/"):
@@ -55,29 +86,20 @@ def main():
         else:
             ckpt = tf.train.get_checkpoint_state('./ano-model/')
 
+        saved_global_step = 0
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
             model.saver.restore(s, ckpt.model_checkpoint_path)
-            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-            print("[+] global step : %s" % global_step, " successfully loaded")
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
         else:
             print('[-] No checkpoint file found')
 
-        # Initializing
-        s.run(tf.global_variables_initializer())
-
-        # Celeb-A DataSet images
-        ds = DataSet(height=64,
-                     width=64,
-                     channel=3,
-                     ds_path="/home/zero/hdd/DataSet/CelebA/",
-                     ds_type="CelebA").images
-        # To-Do
-        # Getting anomaly data
-
-        ds_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
-
-        for epoch in range(train_step['epoch']):
+        global_step = saved_global_step
+        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epoch']):
             for batch_images in ds_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
