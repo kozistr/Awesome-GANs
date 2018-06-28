@@ -234,6 +234,14 @@ def dense(x, f=1024, reuse=None, is_train=True, name='fc'):
                            name=name)
 
 
+def flatten(x):
+    return tf.layers.flatten(x)
+
+
+def hw_flatten(x):
+    return tf.reshape(x, shape=(x.shape[0], -1, x.shape[-1]))
+
+
 # Normalize
 
 
@@ -312,6 +320,13 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
                                  dtype=x.dtype)
 
         return tf.maximum(_alpha * x, x)
+
+
+# Pooling
+
+
+def global_avg_pooling(x):
+    return tf.reduce_mean(x, axis=[1, 2])
 
 
 # Losses
