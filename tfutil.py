@@ -253,6 +253,24 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='dec
                                       name=name)
 
 
+def dense_alt(x, f=1024, sn=False, use_bias=True, name='fc'):
+    with tf.variable_scope(name):
+        x = flatten(x)
+
+        if sn:
+            w = tf.get_variable('kernel', shape=[x.get_shape()[-1], f],
+                                initializer=w_init, regularizer=w_reg, dtype=tf.float32)
+            x = tf.matmul(x, spectral_norm(w))
+
+            if use_bias:
+                b = tf.get_variable('bias', shape=[f], initializer=b_init)
+                x = tf.nn.bias_add(x, b)
+        else:
+            x = dense(x, f, name=name)
+
+        return x
+
+
 def dense(x, f=1024, reuse=None, is_train=True, name='fc'):
     """
     :param x: input
