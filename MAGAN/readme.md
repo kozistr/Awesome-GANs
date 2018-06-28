@@ -13,7 +13,7 @@
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z noise (MNIST)** | ``50`` | `` `` |
  **z noise (cifar-10)** | ``320`` | `` `` |
-
+  
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard

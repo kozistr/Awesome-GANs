@@ -47,9 +47,9 @@ def main():
                  img_scale="-1,1")
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:100], inv_type='127'), (100, 64, 64, 3))
     iu.save_images(test_images,
-                   size=[4, 4],
+                   size=[10, 10],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
 
@@ -118,8 +118,8 @@ def main():
         for epoch in range(start_epoch, train_step['epochs']):
             s_d, s_g = 0., 0.
             for batch_x in ds_iter.iterate():
-                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
-                                     (model.batch_size, model.height, model.width, model.channel))
+                batch_x = iu.transform(batch_x, inv_type='127')
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -146,14 +146,12 @@ def main():
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                        model.m: margin,
-                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                        model.m: margin,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %03d Global Step %05d => " % (epoch, global_step),
@@ -196,9 +194,12 @@ def main():
             s_g_0 = s_g
 
             # Convergence Measure
-            # e_d = s_d / N
-            # e_g = s_g / N
-            # L = e_d + np.abs(e_d - e_g)
+            e_d = s_d / n_steps
+            e_g = s_g / n_steps
+            l_ = e_d + np.abs(e_d - e_g)
+            s.run(l_)
+
+            print("[+] Epoch %03d " % epoch, " L : {:.8f}".format(l_))
 
     end_time = time.time() - start_time  # Clocking end
 

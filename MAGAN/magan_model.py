@@ -36,7 +36,7 @@ class MAGAN:
         :param fc_unit: the number of fully connected filters, default 512
 
         # Training Option
-        :param z_dim: z dimension (kinda noise), default 350 (CelebA)
+        :param z_dim: z dimension (kinda noise), default 350
         :param lr: generator learning rate, default 5e-4
         """
 
@@ -82,6 +82,8 @@ class MAGAN:
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
         self.m = tf.placeholder(tf.float32, name='margin')
 
+        self.l_ = tf.placeholder(tf.float32, name='L')
+
         self.build_magan()  # build MAGAN model
 
     def encoder(self, x, reuse=None):
@@ -96,6 +98,7 @@ class MAGAN:
                 if i > 1:
                     x = t.batch_norm(x, name='enc-bn-%d' % (i - 1))
                 x = tf.nn.leaky_relu(x)
+
             return x
 
     def decoder(self, z, reuse=None):
@@ -110,14 +113,13 @@ class MAGAN:
                 x = t.deconv2d(x, self.df_dim * 8 // (2 ** i), 4, 2, name='dec-deconv2d-%d' % i)
                 x = t.batch_norm(x, name='dec-bn-%d' % i)
                 x = tf.nn.leaky_relu(x)
+
             x = t.deconv2d(x, self.channel, 4, 2, name='enc-deconv2d-4')
             x = tf.nn.tanh(x)
             return x
 
     def discriminator(self, x, reuse=None):
         """
-        # referred architecture in the paper
-        MNIST  : Input - FC(256) - FC(256) - FC(784)
         :param x: images
         :param reuse: re-usable
         :return: prob, embeddings, gen-ed_image
@@ -130,8 +132,6 @@ class MAGAN:
 
     def generator(self, z, reuse=None, is_train=True):
         """
-        # referred architecture in the paper
-        MNIST  : Input - DC(128, 7c1s) - DC(64, 4c2s) - DC(1, 4c2s)
         :param z: embeddings
         :param reuse: re-usable
         :param is_train: trainable
@@ -172,6 +172,7 @@ class MAGAN:
         tf.summary.scalar("loss/d_real_loss", self.d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", self.d_fake_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("misc/L", self.l_)
 
         # Optimizer
         t_vars = tf.trainable_variables()
