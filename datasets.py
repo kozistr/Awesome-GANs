@@ -76,7 +76,7 @@ class DataSetLoader:
 
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
                  buffer_size=4096, n_threads=8,
-                 use_image_scaling=True, image_scale='0,1', debug=True):
+                 use_image_scaling=True, image_scale='0,1', img_save_method=cv2.INTER_LINEAR, debug=True):
 
         self.op = name.split('_')
         self.debug = debug
@@ -139,6 +139,8 @@ class DataSetLoader:
         except AssertionError:
             raise AssertionError("[-] Invalid Operation Types (%s, %s) :(" % (self.op_src, self.op_dst))
 
+        self.img_save_method = img_save_method
+
         if self.op_src == self.types[0]:
             self.load_img()
         elif self.op_src == self.types[1]:
@@ -181,17 +183,17 @@ class DataSetLoader:
                 raise NotImplementedError("[-] Not Supported Type :(")
 
         self.use_image_scaling = use_image_scaling
-        self.image_scale = image_scale
+        self.img_scale = image_scale
 
         if self.use_image_scaling:
-            self.raw_data = self.img_scaling(self.raw_data, self.image_scale)
+            self.raw_data = self.img_scaling(self.raw_data, self.img_scale)
 
     def load_img(self):
         self.raw_data = np.zeros((len(self.file_list), self.height * self.width * self.channel),
                                  dtype=np.uint8)
 
         for i, fn in tqdm(enumerate(self.file_names)):
-            self.raw_data[i] = self.get_img(fn, (self.height, self.width)).flatten()
+            self.raw_data[i] = self.get_img(fn, (self.height, self.width), self.img_save_method).flatten()
             if self.debug:  # just once
                 print("[*] Image Shape   : ", self.raw_data[i].shape)
                 print("[*] Image Size    : ", self.raw_data[i].size)
@@ -748,7 +750,8 @@ class Div2KDataSet:
 
     def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
                  use_split=False, split_rate=0.1, random_state=42, n_threads=8,
-                 ds_path=None, ds_name=None, use_save=False, save_type='to_h5', save_file_name=None):
+                 ds_path=None, ds_name=None,  use_img_scale=True, img_scale="-1,1",
+                 use_save=False, save_type='to_h5', save_file_name=None):
 
         """
         # General Settings
@@ -767,6 +770,8 @@ class Div2KDataSet:
         # DataSet Option
         :param ds_path: DataSet's Path, default None
         :param ds_name: DataSet's Name, default None
+        :param use_img_scale: using img scaling?
+        :param img_scale: img normalize
         :param use_save: saving into another file format
         :param save_type: file format to save
         :param save_file_name: file name to save
@@ -812,21 +817,26 @@ class Div2KDataSet:
         self.n_images = 800
         self.n_images_val = 100
 
+        self.use_img_scaling = use_img_scale
+        self.img_scale = img_scale
+
         self.hr_images = DataSetLoader(path=self.ds_hr_path,
                                        size=self.hr_shape,
                                        use_save=self.use_save,
                                        name=self.save_type,
                                        save_file_name=self.save_file_name,
-                                       use_image_scaling=True,
-                                       image_scale='-1,1').raw_data  # numpy arrays
+                                       use_image_scaling=self.use_img_scaling,
+                                       image_scale=self.img_scale,
+                                       img_save_method=cv2.INTER_LINEAR).raw_data  # numpy arrays
 
         self.lr_images = DataSetLoader(path=self.ds_lr_path,
                                        size=self.lr_shape,
                                        use_save=self.use_save,
                                        name=self.save_type,
                                        save_file_name=self.save_file_name,
-                                       use_image_scaling=True,
-                                       image_scale='-1,1').raw_data  # numpy arrays
+                                       use_image_scaling=self.use_img_scaling,
+                                       image_scale=self.img_scale,
+                                       img_save_method=cv2.INTER_CUBIC).raw_data  # numpy arrays
 
 
 class UrbanSoundDataSet:
