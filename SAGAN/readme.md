@@ -12,9 +12,7 @@
 *DIFFS* | *SAGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **image size** | ``128`` | ``64`` |
-
-> Isotropic Gaussian parameters : (µ = 0, σ = 0.02) <br/>
-> HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
+ **loss** | ``hinge loss`` | ``GAN loss`` |
 
 ## Tensorboard
 

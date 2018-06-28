@@ -5,6 +5,7 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 
+import os
 import sys
 import time
 
@@ -70,12 +71,27 @@ def main():
         # Initializing
         s.run(tf.global_variables_initializer())
 
+        print(" [*] Reading checkpoints...")
+
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
-        global_step = 0
-        for epoch in range(train_step['epochs']):
+        global_step = saved_global_step
+        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epochs']):
             for batch_x, batch_y in ds_iter.iterate():
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
@@ -83,39 +99,34 @@ def main():
                 _, d_loss = s.run([model.d_op, model.d_loss],
                                   feed_dict={
                                       model.x: batch_x,
-                                      model.y: batch_y,
                                       model.z: batch_z,
                                   })
 
                 # Update G/C networks
-                _, g_loss, _, c_loss = s.run([model.g_op, model.g_loss, model.c_op, model.c_loss],
-                                             feed_dict={
-                                                 model.x: batch_x,
-                                                 model.y: batch_y,
-                                                 model.z: batch_z,
-                                             })
+                _, g_loss = s.run([model.g_op, model.g_loss],
+                                  feed_dict={
+                                      model.x: batch_x,
+                                      model.z: batch_z,
+                                  })
 
                 if global_step % train_step['logging_interval'] == 0:
                     batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
-                    d_loss, g_loss, c_loss, summary = s.run([model.d_loss, model.g_loss, model.c_loss, model.merged],
-                                                            feed_dict={
-                                                                model.x: batch_x,
-                                                                model.y: batch_y,
-                                                                model.z: batch_z,
-                                                            })
+                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
+                                                    feed_dict={
+                                                        model.x: batch_x,
+                                                        model.z: batch_z,
+                                                    })
 
                     # Print loss
                     print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss),
-                          " C loss : {:.8f}".format(c_loss))
+                          " G loss : {:.8f}".format(g_loss))
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g,
+                    samples = s.run(model.g_test,
                                     feed_dict={
-                                        model.y: sample_y,
                                         model.z: sample_z,
                                     })
 

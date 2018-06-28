@@ -13,16 +13,16 @@ tf.set_random_seed(777)  # reproducibility
 
 class SAGAN:
 
-    def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
+    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4):
 
         """
         # General Settings
         :param s: TF Session
-        :param batch_size: training batch size, default 100
-        :param height: image height, default 32
-        :param width: image width, default 32
+        :param batch_size: training batch size, default 64
+        :param height: image height, default 64
+        :param width: image width, default 64
         :param channel: image channel, default 3
         :param n_classes: DataSet's classes, default 10
 
@@ -180,6 +180,7 @@ class SAGAN:
     def build_sagan(self):
         # Generator
         self.g = self.generator(self.z)
+        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         d_real = self.discriminator(self.x)
