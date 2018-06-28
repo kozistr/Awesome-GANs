@@ -295,9 +295,9 @@ def flatten(x):
 
 def hw_flatten(x):
     if is_tf_expression(x):
-        return tf.reshape(x, shape=(x.get_shape()[0], -1, x.get_shape()[-1]))
+        return tf.reshape(x, shape=[x.get_shape()[0], -1, x.get_shape()[-1]])
     else:
-        return np.reshape(x, (x.shape[0], -1, x.shape[-1]))
+        return np.reshape(x, [x.shape[0], -1, x.shape[-1]])
 
 
 # Normalize
