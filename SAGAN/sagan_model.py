@@ -66,6 +66,7 @@ class SAGAN:
         self.beta2 = .9
         self.lr = lr
 
+        self.gp = 0.
         self.lambda_ = 10.  # for gradient penalty
 
         # pre-defined
@@ -192,13 +193,21 @@ class SAGAN:
 
         # gradient-penalty
         alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
+        interp = alpha * self.x + (1. - alpha) * self.g
+        d_interp = self.discriminator(interp, reuse=True)
+        gradients = tf.gradients(d_interp, interp)[0]
+        slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=1))
+        self.gp = tf.reduce_mean(tf.square(slopes - 1.))
 
+        # Update D loss
+        self.d_loss += self.lambda_ * self.gp
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("misc/gp", self.gp)
 
         # Optimizer
         t_vars = tf.trainable_variables()
