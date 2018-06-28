@@ -1,5 +1,8 @@
 import tensorflow as tf
 import numpy as np
+import sys
+
+sys.path.append('../')
 import tfutil as t
 
 
@@ -10,7 +13,7 @@ class BEGAN:
 
     def __init__(self, s, batch_size=16, height=64, width=64, channel=3,
                  sample_num=8 * 8, sample_size=8,
-                 df_dim=64, gf_dim=64, gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+                 df_dim=64, gf_dim=64, gamma=0.5, lambda_k=1e-3, z_dim=256, g_lr=2e-4, d_lr=2e-4):
 
         """
         # General Settings
@@ -35,7 +38,6 @@ class BEGAN:
         :param z_dim: z dimension (kinda noise), default 256
         :param g_lr: generator learning rate, default 1e-4
         :param d_lr: discriminator learning rate, default 1e-4
-        :param epsilon: epsilon, default 1e-9
         """
 
         self.s = s
@@ -61,7 +63,6 @@ class BEGAN:
         self.g_lr = tf.Variable(g_lr, name='g_lr')
         self.lr_decay_rate = .5
         self.lr_low_boundary = 1e-5
-        self.eps = epsilon
 
         # pre-defined
         self.d_real = 0.
@@ -85,16 +86,14 @@ class BEGAN:
         # LR/k update
         self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
 
-        self.lr_update_step = 100000
+        self.lr_update_step = 1e5
         self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
         self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
                                 name="x-image")  # (-1, 32 or 64, 32 or 64, 3)
-        self.z = tf.placeholder(tf.float32,
-                                shape=[None, self.z_dim],
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
                                 name='z-noise')  # (-1, 128)
 
         self.build_began()  # build BEGAN model
@@ -108,15 +107,15 @@ class BEGAN:
         with tf.variable_scope('encoder', reuse=reuse):
             repeat = int(np.log2(self.height)) - 2
 
-            x = t.conv2d(x, f=self.df_dim, name="enc-conv-0")
+            x = t.conv2d(x, f=self.df_dim, name="enc-conv2d-1")
             x = tf.nn.elu(x)
 
             for i in range(1, repeat + 1):
                 f = self.df_dim * i
 
-                x = t.conv2d(x, f=f, name="enc-conv-%d" % (i * 2 - 1))
+                x = t.conv2d(x, f, 3, 1, name="enc-conv2d-%d" % (i * 2))
                 x = tf.nn.elu(x)
-                x = t.conv2d(x, f=f, name="enc-conv-%d" % (i * 2))
+                x = t.conv2d(x, f, 3, 1, name="enc-conv2d-%d" % (i * 2 + 1))
                 x = tf.nn.elu(x)
 
                 if i < repeat:
@@ -124,16 +123,13 @@ class BEGAN:
                         You can choose one of them. max-pool or avg-pool or conv-pool.
                         Speed Order : conv-pool > avg-pool > max-pool. i guess :)
                     """
-                    # x = tf.layers.max_pooling2d(x, 2, 2)
-                    x = t.conv2d(x, f=f, s=2, name='enc-conv-pool-%d' % i)  # conv pooling
+                    x = t.conv2d(x, f, 3, 2, name='enc-conv2d-pool-%d' % i)  # conv pooling
                     x = tf.nn.elu(x)
-                    # x = tf.layers.average_pooling2d(x, 2, 2, padding='SAME', name="enc-subsample-%d" % i)
 
-            x = tf.layers.flatten(x)
+            x = t.flatten(x)
 
-            z = t.dense(x, self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
-
-            return z
+            x = t.dense(x, self.z_dim, name='enc-fc-1')  # normally, (-1, 128)
+            return x
 
     def decoder(self, z, reuse=None):
         """
@@ -147,17 +143,21 @@ class BEGAN:
             x = t.dense(z, self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
+            shortcut = tf.identity(x, name='shortcut')
+
             for i in range(1, repeat + 1):
-                x = t.conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2 - 1))
+                x = t.conv2d(x, self.gf_dim, 3, 1, name="dec-conv2d-%d" % (i * 2 - 1))
                 x = tf.nn.elu(x)
-                x = t.conv2d(x, f=self.gf_dim, name="dec-conv-%d" % (i * 2))
+                x = t.conv2d(x, self.gf_dim, 3, 1, name="dec-conv2d-%d" % (i * 2))
                 x = tf.nn.elu(x)
+
+                if i < 3:
+                    x = tf.add(x, shortcut)
 
                 if i < repeat:
-                    x = t.resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
+                    x = t.up_sampling(x, tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # NN up-sampling
 
             x = t.conv2d(x, f=self.channel)
-
             return x
 
     def discriminator(self, x, reuse=None):
@@ -169,7 +169,6 @@ class BEGAN:
         with tf.variable_scope("discriminator", reuse=reuse):
             z = self.encoder(x, reuse=reuse)
             x = self.decoder(z, reuse=reuse)
-
             return x
 
     def generator(self, z, reuse=None):
@@ -181,22 +180,22 @@ class BEGAN:
         with tf.variable_scope("generator", reuse=reuse):
             repeat = int(np.log2(self.height)) - 2
 
-            x = t.dense(z, self.z_dim * 8 * 8, name='g-fc-1')
+            x = t.dense(z, self.z_dim * 8 * 8, name='gen-fc-1')
             x = tf.nn.elu(x)
 
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
             for i in range(1, repeat + 1):
-                x = t.conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2 - 1))
+                x = t.conv2d(x, f=self.gf_dim, name="gen-conv2d-%d" % (i * 2 - 1))
                 x = tf.nn.elu(x)
-                x = t.conv2d(x, f=self.gf_dim, name="g-conv-%d" % (i * 2))
+                x = t.conv2d(x, f=self.gf_dim, name="gen-conv2d-%d" % (i * 2))
                 x = tf.nn.elu(x)
 
                 if i < repeat:
-                    x = t.resize_nn(x, x.get_shape().as_list()[1] * 2)  # NN up-sampling
+                    x = t.up_sampling(x, tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # NN up-sampling
 
-            x = t.conv2d(x, f=self.channel)
-
+            x = t.conv2d(x, f=self.channel, name='gen-conv2d-%d' % (2 * repeat + 1))
+            x = tf.nn.tanh(x)
             return x
 
     def build_began(self):

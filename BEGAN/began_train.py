@@ -24,12 +24,39 @@ results = {
 train_step = {
     'epoch': 25,
     'batch_size': 16,
-    'logging_step': 2000,
+    'logging_step': 1000,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
+
+    # loading CelebA DataSet
+    ds = DataSet(height=64,
+                 width=64,
+                 channel=3,
+                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 ds_type="CelebA",
+                 use_save=False,
+                 save_file_name="D:\\DataSet/CelebA/CelebA-128.h5",
+                 save_type="to_h5",
+                 use_img_scale=False,
+                 # img_scale="-1,1"
+                 )
+
+    # saving sample images
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    iu.save_images(test_images,
+                   size=[4, 4],
+                   image_path=results['output'] + 'sample.png',
+                   inv_type='127')
+
+    ds_iter = DataIterator(x=ds.images,
+                           y=None,
+                           batch_size=train_step['batch_size'],
+                           label_off=True)
 
     # GPU configure
     gpu_config = tf.GPUOptions(allow_growth=True)
@@ -37,24 +64,31 @@ def main():
 
     with tf.Session(config=config) as s:
         # BEGAN Model
-        model = began.BEGAN(s)  # BEGAN
+        model = began.BEGAN(s, gamma=0.5)  # BEGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
 
-        # Celeb-A DataSet images
-        ds = DataSet(height=64,
-                     width=64,
-                     channel=3,
-                     ds_path="/home/zero/hdd/DataSet/CelebA/",
-                     ds_type="CelebA").images
-        ds_iter = DataIterator(ds, None, train_step['batch_size'],
-                               label_off=True)
+        print("[*] Reading checkpoints...")
 
-        global_step = 0
-        for epoch in range(train_step['epoch']):
-            for batch_images in ds_iter.iterate():
-                batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
+        saved_global_step = 0
+        ckpt = tf.train.get_checkpoint_state('./model/')
+        if ckpt and ckpt.model_checkpoint_path:
+            # Restores from checkpoint
+            model.saver.restore(s, ckpt.model_checkpoint_path)
+
+            saved_global_step = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
+            print("[+] global step : %d" % saved_global_step, " successfully loaded")
+        else:
+            print('[-] No checkpoint file found')
+
+        global_step = saved_global_step
+        start_epoch = global_step // (ds.num_images // model.batch_size)  # recover n_epoch
+        ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
+        for epoch in range(start_epoch, train_step['epoch']):
+            for batch_x in ds_iter.iterate():
+                batch_x = iu.transform(batch_x, inv_type='127')
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
@@ -78,12 +112,11 @@ def main():
                                        })
 
                 if global_step % train_step['logging_step'] == 0:
-                    _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                     model.d_loss, model.g_loss, model.merged],
-                                                                    feed_dict={
-                                                                        model.x: batch_x,
-                                                                        model.z: batch_z,
-                                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %03d Step %07d =>" % (epoch, global_step),
