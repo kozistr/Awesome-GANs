@@ -14,6 +14,10 @@
  **image size** | ``128`` | ``64`` |
  **loss** | ``hinge loss`` | ``GAN loss`` |
 
+> I just reduce image size from 128 to 64 because of my gpu memory... <br/>
+> you can just change image size back to 128. <br/>
+> (even using image size 64, additional memory is needed :(. Over GTX 1080 is recommended!)
+
 ## Tensorboard
 
 ![result](./sagan_tb.png)
