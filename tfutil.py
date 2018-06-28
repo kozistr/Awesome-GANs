@@ -70,10 +70,6 @@ def up_sampling(img, interp=tf.image.ResizeMethod.BILINEAR):
     return tf.image.resize_images(img, [h2, w2], interp)
 
 
-def resize_nn(x, size):
-    return tf.image.resize_nearest_neighbor(x, size=(int(size), int(size)))
-
-
 # ---------------------------------------------------------------------------------------------
 # Optimizer
 
