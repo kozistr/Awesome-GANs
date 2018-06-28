@@ -92,7 +92,8 @@ def main():
         start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
         ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
-            for batch_x, batch_y in ds_iter.iterate():
+            for batch_x in ds_iter.iterate():
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
