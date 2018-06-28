@@ -13,7 +13,6 @@
  :---:  |     :---:      | :---: |
  **image size** | ``128`` | ``64`` |
  **loss** | ``hinge loss`` | ``GAN loss`` |
- **Disc LR** | ``4e-4`` | ``2e-2`` |
 
 > I just reduce image size from 128 to 64 because of my gpu memory... <br/>
 > you can just change image size back to 128. <br/>
