@@ -36,18 +36,18 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Div2K - Track 1: Bicubic downscaling - x4 DataSet load
-    with tf.device('/cpu:0'):
-        ds = DataSet(ds_path="/home/zero/hdd/DataSet/DIV2K/",
-                     ds_name="X4",
-                     use_save=True,
-                     save_type="to_h5",
-                     save_file_name="/home/zero/hdd/DataSet/DIV2K",
-                     use_img_scale=False)
-        """
-        ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
-                     ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5")
-        """
-        hr, lr = ds.hr_images, ds.lr_images
+    """
+    ds = DataSet(ds_path="/home/zero/hdd/DataSet/DIV2K/",
+                 ds_name="X4",
+                 use_save=True,
+                 save_type="to_h5",
+                 save_file_name="/home/zero/hdd/DataSet/DIV2K/DIV2K",
+                 use_img_scale=False)
+    """
+    ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
+                 ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5")
+
+    hr, lr = ds.hr_images, ds.lr_images
 
     print("[+] Loaded HR image ", hr.shape)
     print("[+] Loaded LR image ", lr.shape)
