@@ -86,8 +86,8 @@ def main():
         ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
             for batch_x in ds_iter.iterate():
-                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
-                                     (model.batch_size, model.height, model.width, model.channel))
+                batch_x = iu.transform(batch_x, inv_type='127')
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 _, d_loss = s.run([model.d_op, model.d_loss],
@@ -104,13 +104,11 @@ def main():
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
