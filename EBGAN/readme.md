@@ -21,6 +21,8 @@
 
 ![result](./ebgan_tb.png)
 
+> Elapsed time : s with ``GTX 1080 8GB x 1``
+
 ## Result
 
 *Name* | *Global Step 50k* | *Global Step 100k* | *Global Step 200k*
