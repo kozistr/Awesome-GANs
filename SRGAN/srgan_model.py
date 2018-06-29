@@ -77,7 +77,7 @@ class SRGAN:
         self.vgg19 = None
 
         self.g = None
-        self.g_test = None
+
         self.adv_scaling = 1e-3
         self.vgg_scaling = 1. / 12.75  # 6e-3
 
@@ -185,7 +185,6 @@ class SRGAN:
     def build_srgan(self):
         # Generator
         self.g = self.generator(self.x_lr)
-        self.g_test = self.generator(self.x_lr, reuse=True, is_train=False)
 
         # Discriminator
         d_real, d_real_prob = self.discriminator(self.x_hr)

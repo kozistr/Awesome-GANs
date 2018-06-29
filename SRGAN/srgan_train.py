@@ -88,8 +88,14 @@ def main():
 
         # Generated image save
         with tf.device("/cpu:0"):
-            iu.img_save(sample_x_hr, sample_hr_dir, inv_type='127')
-            iu.img_save(sample_x_lr, sample_lr_dir, inv_type='255')
+            iu.save_images(sample_x_hr,
+                           size=[1, 1],
+                           image_path=sample_hr_dir,
+                           inv_type='127')
+            iu.save_images(sample_x_lr,
+                           size=[1, 1],
+                           image_path=sample_lr_dir,
+                           inv_type='255')
 
         for epoch in range(start_epoch, train_step['train_epochs']):
 
@@ -166,13 +172,10 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
-
-                    samples = s.run(model.g_test,
+                    samples = s.run(model.g,
                                     feed_dict={
                                         model.x_lr: sample_x_lr,
                                     })
-
-                    samples = np.reshape(samples, model.hr_image_shape[1:])
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
@@ -184,7 +187,10 @@ def main():
 
                     # Generated image save
                     with tf.device("/cpu:0"):
-                        iu.img_save(samples, sample_dir, inv_type='127')
+                        iu.save_images(samples,
+                                       size=[1, 1],
+                                       image_path=sample_dir,
+                                       inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
