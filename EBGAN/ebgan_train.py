@@ -24,7 +24,7 @@ results = {
 train_step = {
     'epochs': 25,
     'batch_size': 64,
-    'global_step': 200001,
+    'global_step': 300001,
     'logging_interval': 1000,
 }
 
@@ -36,12 +36,12 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
-                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 ds_image_path="/home/zero/hdd/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="/home/zero/hdd/DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 # ds_image_path="/home/zero/hdd/DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
                  use_save=False,
-                 save_file_name="D:\\DataSet/CelebA/CelebA-64.h5",
+                 save_file_name="/home/zero/hdd/DataSet/CelebA/CelebA-64.h5",
                  save_type="to_h5",
                  use_img_scale=False,
                  # img_scale="-1,1"
