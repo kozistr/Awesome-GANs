@@ -68,7 +68,6 @@ class MAGAN:
         self.d_fake_loss = 0.
 
         self.g = None
-        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -154,7 +153,6 @@ class MAGAN:
     def build_magan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         _, d_real = self.discriminator(self.x)

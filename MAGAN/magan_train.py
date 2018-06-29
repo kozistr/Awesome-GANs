@@ -85,7 +85,7 @@ def main():
         # Pre-Train
         print("[*] pre-training - getting proper Margin")
 
-        margin = 3.0585415484215974
+        margin = 0  # 3.0585415484215974
         if margin == 0:
             sum_d_loss = 0.
             for i in range(2):
@@ -109,7 +109,7 @@ def main():
 
         print("[+] Margin : {0}".format(margin))
 
-        old_margin = 0.
+        old_margin = margin
         s_g_0 = np.inf  # Sg_0 = infinite
 
         global_step = saved_global_step
