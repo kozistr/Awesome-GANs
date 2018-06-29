@@ -2,8 +2,8 @@
 
 ## Loss Function
 
-* used ``mse loss`` at D net
-* used ``mse_loss / pt_loss`` at G net
+* used ``mse loss`` at D/G nets.
+* used ``pt_loss``
 
 ## Architecture Networks
 
@@ -13,7 +13,6 @@
 *DIFFS* | *EBGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **weight initializer**  | ``N(0, 2e-3)`` | ``HE initializer`` |
- **score function**      | ``modified inception score`` | ``just sce``
 
 > Gaussian Normal dist parameters : D(µ = 0, σ = 0.002), G(µ = 0, σ = 0.0002) <br/>
 > HE Initializer parameters     : (factor = 1, FAN_AVG, uniform)
@@ -30,4 +29,3 @@
 
 ## To-Do
 *  Concat noise into every layer of the generator
-
