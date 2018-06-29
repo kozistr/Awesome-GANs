@@ -20,7 +20,7 @@
 
 ![result](./magan_tb.png)
 
-> Elapsed Time : 5 hour 45 minute 51s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 5h 45m 51s with ``GTX 1060 6GB x 1``
 
 ## Result
 

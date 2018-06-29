@@ -20,7 +20,7 @@
 
 ![result](./dcgan_tb.png)
 
-> Elapsed Time : 3 hour 5 minute 32s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 3h 5m 32s with ``GTX 1060 6GB x 1``
 
 ## Result
 

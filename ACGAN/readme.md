@@ -22,7 +22,7 @@
 
 ![result](./acgan_tb.png)
 
-> Elapsed Time : 1 hour 17 minute 56s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 1h 17m 56s with ``GTX 1060 6GB x 1``
 
 ## Result
 
