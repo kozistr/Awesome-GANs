@@ -120,8 +120,8 @@ class DataSetLoader:
         self.raw_data = np.ndarray([], dtype=np.uint8)  # (N, H * W * C)
 
         if self.debug:
-            print("[*[ Detected Path            is [%s]" % self.path)
-            print("[*[ Detected File Extension  is [%s]" % self.file_ext)
+            print("[*] Detected Path            is [%s]" % self.path)
+            print("[*] Detected File Extension  is [%s]" % self.file_ext)
             print("[*] Detected First File Name is [%s] (%d File(s))" % (self.file_names[0], len(self.file_names)))
 
         self.types = ('img', 'tfr', 'h5', 'npy')  # Supporting Data Types
