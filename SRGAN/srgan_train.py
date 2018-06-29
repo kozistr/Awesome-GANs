@@ -46,7 +46,7 @@ def main():
     """
     ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
                  ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5",
-                 use_img_scale=False)
+                 use_img_scale=True)
 
     hr, lr = ds.hr_images, ds.lr_images
 
@@ -81,12 +81,6 @@ def main():
 
         rnd = np.random.randint(0, ds.n_images)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
-
-        print()
-
-        # norm
-        sample_x_hr = iu.transform(sample_x_hr, inv_type='127')
-        sample_x_lr = iu.transform(sample_x_lr, inv_type='255')
 
         sample_x_hr, sample_x_lr = \
             np.reshape(sample_x_hr, [1] + model.hr_image_shape[1:]), \
@@ -133,10 +127,6 @@ def main():
                 end = pointer
 
                 batch_x_hr, batch_x_lr = hr[start:end], lr[start:end]
-
-                # norm
-                batch_x_hr = iu.transform(batch_x_hr, inv_type='127')
-                batch_x_lr = iu.transform(batch_x_lr, inv_type='255')
 
                 # reshape
                 batch_x_hr = np.reshape(batch_x_hr, [train_step['batch_size']] + model.hr_image_shape[1:])
