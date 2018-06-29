@@ -17,7 +17,7 @@
 
 ![result](./began_tb.png)
 
-> Elapsed time : 28800s with ``GTX 1080 8GB x 1``
+> Elapsed time : 8h 18m 32s with ``GTX 1080 8GB x 1``
 
 ## Result
 
