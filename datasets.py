@@ -750,7 +750,7 @@ class Div2KDataSet:
 
     def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
                  use_split=False, split_rate=0.1, random_state=42, n_threads=8,
-                 ds_path=None, ds_name=None, use_img_scale=True, img_scale="-1,1",
+                 ds_path=None, ds_name=None, use_img_scale=True,
                  ds_hr_path=None, ds_lr_path=None,
                  use_save=False, save_type='to_h5', save_file_name=None):
 
@@ -772,7 +772,6 @@ class Div2KDataSet:
         :param ds_path: DataSet's Path, default None
         :param ds_name: DataSet's Name, default None
         :param use_img_scale: using img scaling?
-        :param img_scale: img normalize
         :param ds_hr_path: DataSet High Resolution path
         :param ds_lr_path: DataSet Low Resolution path
         :param use_save: saving into another file format
@@ -826,7 +825,6 @@ class Div2KDataSet:
         self.n_images_val = 100
 
         self.use_img_scaling = use_img_scale
-        self.img_scale = img_scale
 
         if self.ds_path:  # like .h5 or .tfr
             self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
@@ -838,7 +836,7 @@ class Div2KDataSet:
                                        name=self.save_type,
                                        save_file_name=self.save_file_name + "-hr.h5",
                                        use_image_scaling=self.use_img_scaling,
-                                       image_scale=self.img_scale,
+                                       image_scale="-1.1",
                                        img_save_method=cv2.INTER_LINEAR).raw_data  # numpy arrays
 
         self.lr_images = DataSetLoader(path=self.ds_lr_path,
@@ -847,7 +845,7 @@ class Div2KDataSet:
                                        name=self.save_type,
                                        save_file_name=self.save_file_name + "-lr.h5",
                                        use_image_scaling=self.use_img_scaling,
-                                       image_scale=self.img_scale,
+                                       image_scale="0,1",
                                        img_save_method=cv2.INTER_CUBIC).raw_data  # numpy arrays
 
 
