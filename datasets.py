@@ -67,11 +67,18 @@ class DataSetLoader:
     @staticmethod
     def img_scaling(img, scale='0,1'):
         if scale == '0,1':
-            img /= 255.
+            try:
+                img /= 255.
+            except TypeError:  # ufunc 'true divide' output ~
+                img = np.true_divide(img, 255.0, casting='unsafe')
         elif scale == '-1,1':
-            img = (img / 127.5) - 1.
+            try:
+                img = (img / 127.5) - 1.
+            except TypeError:
+                img = np.true_divide(img, 127.5, casting='unsafe') - 1.
         else:
             raise ValueError("[-] Only '0,1' or '-1,1' please - (%s)" % scale)
+
         return img
 
     def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
