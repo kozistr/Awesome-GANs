@@ -836,7 +836,7 @@ class Div2KDataSet:
                                        name=self.save_type,
                                        save_file_name=self.save_file_name + "-hr.h5",
                                        use_image_scaling=self.use_img_scaling,
-                                       image_scale="-1.1",
+                                       image_scale='-1,1',
                                        img_save_method=cv2.INTER_LINEAR).raw_data  # numpy arrays
 
         self.lr_images = DataSetLoader(path=self.ds_lr_path,
@@ -845,7 +845,7 @@ class Div2KDataSet:
                                        name=self.save_type,
                                        save_file_name=self.save_file_name + "-lr.h5",
                                        use_image_scaling=self.use_img_scaling,
-                                       image_scale="0,1",
+                                       image_scale='0,1',
                                        img_save_method=cv2.INTER_CUBIC).raw_data  # numpy arrays
 
 
