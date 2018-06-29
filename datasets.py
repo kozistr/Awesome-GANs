@@ -751,6 +751,7 @@ class Div2KDataSet:
     def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
                  use_split=False, split_rate=0.1, random_state=42, n_threads=8,
                  ds_path=None, ds_name=None, use_img_scale=True, img_scale="-1,1",
+                 ds_hr_path=None, ds_lr_path=None,
                  use_save=False, save_type='to_h5', save_file_name=None):
 
         """
@@ -772,6 +773,8 @@ class Div2KDataSet:
         :param ds_name: DataSet's Name, default None
         :param use_img_scale: using img scaling?
         :param img_scale: img normalize
+        :param ds_hr_path: DataSet High Resolution path
+        :param ds_lr_path: DataSet Low Resolution path
         :param use_save: saving into another file format
         :param save_type: file format to save
         :param save_file_name: file name to save
@@ -796,13 +799,14 @@ class Div2KDataSet:
         """
         self.ds_path = ds_path
         self.ds_name = ds_name
-        self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
-        self.ds_lr_path = self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
         try:
             assert self.ds_path
         except AssertionError:
-            raise AssertionError("[-] DIV2K DataSet Path is required!")
+            try:
+                assert self.ds_hr_path and self.ds_lr_path
+            except AssertionError:
+                raise AssertionError("[-] DataSet's path is required!")
 
         self.use_save = use_save
         self.save_type = save_type
@@ -819,6 +823,13 @@ class Div2KDataSet:
 
         self.use_img_scaling = use_img_scale
         self.img_scale = img_scale
+
+        if self.ds_path is None:  # like .h5 or .tfr
+            self.ds_hr_path = ds_hr_path
+            self.ds_lr_path = ds_lr_path
+        else:
+            self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
+            self.ds_lr_path = self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
         self.hr_images = DataSetLoader(path=self.ds_hr_path,
                                        size=self.hr_shape,
