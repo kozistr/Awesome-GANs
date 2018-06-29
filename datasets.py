@@ -750,7 +750,7 @@ class Div2KDataSet:
 
     def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
                  use_split=False, split_rate=0.1, random_state=42, n_threads=8,
-                 ds_path=None, ds_name=None,  use_img_scale=True, img_scale="-1,1",
+                 ds_path=None, ds_name=None, use_img_scale=True, img_scale="-1,1",
                  use_save=False, save_type='to_h5', save_file_name=None):
 
         """
