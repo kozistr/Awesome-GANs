@@ -80,7 +80,6 @@ def main():
 
         rnd = np.random.randint(0, ds.n_images)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
-        print(sample_x_hr, sample_x_lr)
 
         # norm
         sample_x_hr = iu.transform(sample_x_hr, inv_type='127')
