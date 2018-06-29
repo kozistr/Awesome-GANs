@@ -37,8 +37,16 @@ def main():
 
     # Div2K - Track 1: Bicubic downscaling - x4 DataSet load
     with tf.device('/cpu:0'):
-        ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5",
-                     ds_lr_path="/home/zero/hdd/DataSet/DIV2K/div2k-lr.h5")
+        ds = DataSet(ds_path="/home/zero/hdd/DataSet/DIV2K/",
+                     ds_name="X4",
+                     use_save=True,
+                     save_type="to_h5",
+                     save_file_name="/home/zero/hdd/DataSet/DIV2K",
+                     use_img_scale=False)
+        """
+        ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
+                     ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5")
+        """
         hr, lr = ds.hr_images, ds.lr_images
 
     print("[+] Loaded HR image ", hr.shape)
@@ -70,16 +78,17 @@ def main():
 
         start_epoch = global_step // (ds.n_images // train_step['batch_size'])
 
-        rnd = np.random.randint(0, ds.n_images_val)
+        rnd = np.random.randint(0, ds.n_images)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
+        print(sample_x_hr, sample_x_lr)
 
         # norm
         sample_x_hr = iu.transform(sample_x_hr, inv_type='127')
         sample_x_lr = iu.transform(sample_x_lr, inv_type='255')
 
         sample_x_hr, sample_x_lr = \
-            np.reshape(sample_x_hr, model.hr_image_shape[1:]), \
-            np.reshape(sample_x_lr, model.lr_image_shape[1:])
+            np.reshape(sample_x_hr, [1] + model.hr_image_shape[1:]), \
+            np.reshape(sample_x_lr, [1] + model.lr_image_shape[1:])
 
         # Export real image
         # valid_image_height = model.sample_size
@@ -87,15 +96,14 @@ def main():
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
-        with tf.device("/cpu:0"):
-            iu.save_images(sample_x_hr,
-                           size=[1, 1],
-                           image_path=sample_hr_dir,
-                           inv_type='127')
-            iu.save_images(sample_x_lr,
-                           size=[1, 1],
-                           image_path=sample_lr_dir,
-                           inv_type='255')
+        iu.save_images(sample_x_hr,
+                       size=[1, 1],
+                       image_path=sample_hr_dir,
+                       inv_type='127')
+        iu.save_images(sample_x_lr,
+                       size=[1, 1],
+                       image_path=sample_lr_dir,
+                       inv_type='255')
 
         for epoch in range(start_epoch, train_step['train_epochs']):
 
@@ -186,11 +194,10 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    with tf.device("/cpu:0"):
-                        iu.save_images(samples,
-                                       size=[1, 1],
-                                       image_path=sample_dir,
-                                       inv_type='127')
+                    iu.save_images(samples,
+                                   size=[1, 1],
+                                   image_path=sample_dir,
+                                   inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
