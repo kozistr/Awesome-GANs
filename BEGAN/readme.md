@@ -11,7 +11,7 @@
 *DIFFS* | *BEGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **image size** | ``128`` | ``64`` |
- **skip connection** | ``suggested but not used`` | ``used`` |
+ **skip connection** | ``suggested but not used`` | ``implemented but not used`` |
  
 ## Tensorboard
 

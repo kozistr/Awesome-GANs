@@ -142,7 +142,7 @@ class BEGAN:
             x = t.dense(z, self.z_dim * 8 * 8, name='dec-fc-1')
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
-            shortcut = tf.identity(x, name='shortcut')
+            # shortcut = tf.identity(x, name='shortcut')
 
             for i in range(1, repeat + 1):
                 x = t.conv2d(x, self.gf_dim, 3, 1, name="dec-conv2d-%d" % (i * 2 - 1))
@@ -150,8 +150,8 @@ class BEGAN:
                 x = t.conv2d(x, self.gf_dim, 3, 1, name="dec-conv2d-%d" % (i * 2))
                 x = tf.nn.elu(x)
 
-                if i < 3:
-                    x = tf.add(x, shortcut)
+                # if i < 3:
+                #     x = tf.add(x, shortcut)
 
                 if i < repeat:
                     x = t.up_sampling(x, tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # NN up-sampling
@@ -185,7 +185,7 @@ class BEGAN:
 
             x = tf.reshape(x, [-1, 8, 8, self.z_dim])
 
-            shortcut = tf.identity(x, name='shortcut')
+            # shortcut = tf.identity(x, name='shortcut')
 
             for i in range(1, repeat + 1):
                 x = t.conv2d(x, f=self.gf_dim, name="gen-conv2d-%d" % (i * 2 - 1))
@@ -193,8 +193,8 @@ class BEGAN:
                 x = t.conv2d(x, f=self.gf_dim, name="gen-conv2d-%d" % (i * 2))
                 x = tf.nn.elu(x)
 
-                if i < 3:
-                    x = tf.add(x, shortcut)
+                # if i < 3:
+                #     x = tf.add(x, shortcut)
 
                 if i < repeat:
                     x = t.up_sampling(x, tf.image.ResizeMethod.NEAREST_NEIGHBOR)  # NN up-sampling
