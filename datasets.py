@@ -799,6 +799,8 @@ class Div2KDataSet:
         """
         self.ds_path = ds_path
         self.ds_name = ds_name
+        self.ds_hr_path = ds_hr_path
+        self.ds_lr_path = ds_lr_path
 
         try:
             assert self.ds_path
@@ -824,10 +826,7 @@ class Div2KDataSet:
         self.use_img_scaling = use_img_scale
         self.img_scale = img_scale
 
-        if self.ds_path is None:  # like .h5 or .tfr
-            self.ds_hr_path = ds_hr_path
-            self.ds_lr_path = ds_lr_path
-        else:
+        if self.ds_path:  # like .h5 or .tfr
             self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
             self.ds_lr_path = self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
