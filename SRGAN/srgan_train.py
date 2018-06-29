@@ -37,7 +37,8 @@ def main():
 
     # Div2K - Track 1: Bicubic downscaling - x4 DataSet load
     with tf.device('/cpu:0'):
-        ds = DataSet(ds_path="D:\\DataSet/DIV2K/", ds_name="X4")
+        ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/div2k-hr.h5",
+                     ds_lr_path="/home/zero/hdd/DataSet/DIV2K/div2k-lr.h5")
         hr, lr = ds.hr_images, ds.lr_images
 
     print("[+] Loaded HR image ", hr.shape)
