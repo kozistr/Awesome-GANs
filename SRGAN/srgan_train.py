@@ -45,7 +45,8 @@ def main():
                  use_img_scale=False)
     """
     ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
-                 ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5")
+                 ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5",
+                 use_img_scale=False)
 
     hr, lr = ds.hr_images, ds.lr_images
 
@@ -80,6 +81,8 @@ def main():
 
         rnd = np.random.randint(0, ds.n_images)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
+
+        print()
 
         # norm
         sample_x_hr = iu.transform(sample_x_hr, inv_type='127')
