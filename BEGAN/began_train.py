@@ -35,21 +35,21 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
-                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 ds_image_path="/home/zero/hdd/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="/home/zero/hdd/DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 # ds_image_path="/home/zero/hdd/DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
                  use_save=False,
-                 save_file_name="D:\\DataSet/CelebA/CelebA-128.h5",
+                 save_file_name="/home/zero/hdd/DataSet/CelebA/CelebA-64.h5",
                  save_type="to_h5",
                  use_img_scale=False,
                  # img_scale="-1,1"
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:100], inv_type='127'), (100, 64, 64, 3))
     iu.save_images(test_images,
-                   size=[4, 4],
+                   size=[10, 10],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
 
@@ -64,7 +64,7 @@ def main():
 
     with tf.Session(config=config) as s:
         # BEGAN Model
-        model = began.BEGAN(s, gamma=0.5)  # BEGAN
+        model = began.BEGAN(s, batch_size=train_step['batch_size'], gamma=0.5)  # BEGAN
 
         # Initializing
         s.run(tf.global_variables_initializer())
@@ -83,7 +83,7 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (ds.num_images // model.batch_size)  # recover n_epoch
+        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
         ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
