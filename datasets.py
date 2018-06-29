@@ -817,6 +817,8 @@ class Div2KDataSet:
         try:
             if self.use_save:
                 assert self.save_file_name
+            else:
+                self.save_file_name = ""
         except AssertionError:
             raise AssertionError("[-] save-file/folder-name is required!")
 
