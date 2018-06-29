@@ -101,30 +101,44 @@ class DeblurGAN:
 
             return prob, logits
 
-    def generator(self, z, reuse=None, is_train=True):
+    def generator(self, x, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
+            def residual_block(x, f, name=""):
+                with tf.variable_scope(name, reuse=reuse):
+                    skip_connection = tf.identity(x, name='gen-skip_connection-1')
 
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
+                    x = t.conv2d(x, f, 7, 1, name='gen-conv2d-1')
+                    x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-1')
+                    x = tf.nn.relu(x)
+
+                    x = t.conv2d(x, f, 3, 1, name='gen-conv2d-2')
+                    x = tf.nn.relu(x)
+
+                    return skip_connection + x
+
+            shortcut = tf.identity(x, name='shortcut-init')
+
+            x = t.conv2d(x, self.gf_dim * 1, 7, 1, name='gen-conv2d-1')
+            x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-1')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.gf_dim * 4, 5, 2, name='gen-deconv2d-1')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
-            x = tf.nn.relu(x)
+            for i in range(1, 3):
+                x = t.conv2d(x, self.gf_dim * (2 ** i), 3, 2, name='gen-conv2d-%d' % (i + 1))
+                x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-%d' % (i + 1))
+                x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-2')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
-            x = tf.nn.relu(x)
+            # 9 Residual Blocks
+            for i in range(9):
+                x = residual_block(x, self.gf_dim * 4, name='gen-residual_block-%d' % (i + 1))
 
-            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-3')
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-4')
-            x = tf.nn.relu(x)
+            for i in range(1, 3):
+                x = t.deconv2d(x, self.gf_dim * (2 ** i), 3, 2, name='gen-deconv2d-%d' % i)
+                x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-%d' % (i + 3))
+                x = tf.nn.relu(x)
 
-            x = t.deconv2d(x, self.channel, 5, 2, name='gen-deconv2d-4')
+            x = t.conv2d(x, self.gf_dim * 1, 7, 1, name='gen-conv2d-4')
             x = tf.nn.tanh(x)
-
-            return x
+            return shortcut + x
 
     def bulid_deblurgan(self):
         # Generator
