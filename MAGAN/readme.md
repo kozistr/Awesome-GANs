@@ -26,7 +26,7 @@
 
 *Name* | *Global Step 25k* | *Global Step 50k* | *Global Step 75k*
 :---: | :---: | :---: | :---:
-**MAGAN**      | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00750000.png)
+**MAGAN**      | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00075000.png)
 
 > Initial pre-trained margin value : about 3.0585415484215974
 
