@@ -2,7 +2,7 @@
 
 ## Loss Function
 
-* used ``sce loss`` at D/G nets.
+* used ``GAN loss`` at D/G nets.
 
 ## Architecture Networks
 
@@ -16,7 +16,7 @@
 
 ![result](./infogan_tb.png)
 
-> Elapsed time : s with ``GTX 1060 6GB x 1``
+> Elapsed time : s with ``GTX 1080 8GB x 1``
 
 ## Result
 
@@ -26,4 +26,3 @@
 
 ## To-Do
 * MemoryError... I dunno why :(
-

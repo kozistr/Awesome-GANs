@@ -52,8 +52,8 @@ def main():
     ds = DataSet(height=64,
                  width=64,
                  channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
-                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
+                 ds_image_path="/home/zero/hdd/DataSet/CelebA/CelebA-64.h5",
+                 ds_label_path="/home/zero/hdd/DataSet/CelebA/Anno/list_attr_celeba.txt",
                  attr_labels=labels,
                  # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
@@ -137,18 +137,12 @@ def main():
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                    batch_z_con = gen_continuous(model.batch_size, model.n_continous_factor)
-                    batch_z_cat = gen_category(model.batch_size, model.n_categories)
-                    batch_c = np.concatenate((batch_z_con, batch_z_cat), axis=1)
-
-                    d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                    feed_dict={
-                                                        model.c: batch_c,
-                                                        model.x: batch_x,
-                                                        model.z: batch_z,
-                                                    })
+                    summary = s.run(model.merged,
+                                    feed_dict={
+                                        model.c: batch_c,
+                                        model.x: batch_x,
+                                        model.z: batch_z,
+                                    })
 
                     # Print loss
                     print("[+] Epoch %02d Step %08d => " % (epoch, global_step),
