@@ -61,11 +61,9 @@ class SRGAN:
         self.beta1 = 0.9
         self.beta2 = 0.999
 
-        self.lr = tf.Variable(lr, name='lr')
         self.lr_decay_rate = 1e-1
         self.lr_low_boundary = 1e-5
         self.lr_update_step = 1e5
-        self.lr_op = tf.assign(self.lr, tf.maximum(self.lr * self.lr_decay_rate, self.lr_low_boundary))
 
         self.vgg_mean = [103.939, 116.779, 123.68]
 
@@ -96,6 +94,8 @@ class SRGAN:
         # Placeholders
         self.x_hr = tf.placeholder(tf.float32, shape=self.hr_image_shape, name="x-image-hr")  # (-1, 384, 384, 3)
         self.x_lr = tf.placeholder(tf.float32, shape=self.lr_image_shape, name="x-image-lr")  # (-1, 96, 96, 3)
+
+        self.lr = tf.placeholder(tf.float32, name='lr')
 
         self.build_srgan()  # build SRGAN model
 
@@ -244,15 +244,15 @@ class SRGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                         var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
                                                                                         var_list=g_params)
 
         # pre-train
-        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
+        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                                 beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_cnt_loss,
                                                                                              var_list=g_params)
 
