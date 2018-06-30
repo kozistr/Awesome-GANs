@@ -24,6 +24,7 @@ train_step = {
     'batch_size': 16,
     'init_epochs': 100,
     'train_epochs': 1000,
+    'global_step': 200001,
     'logging_interval': 100,
 }
 
@@ -60,7 +61,8 @@ def main():
     with tf.Session(config=config) as s:
         with tf.device("/gpu:1"):  # Change
             # SRGAN Model
-            model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
+            model = srgan.SRGAN(s, batch_size=train_step['batch_size'],
+                                use_vgg19=False)
 
         # Initializing
         s.run(tf.global_variables_initializer())
@@ -193,6 +195,10 @@ def main():
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)
+
+                # Learning Rate update
+                if global_step and global_step % model.lr_update_step == 0:
+                    s.run(model.lr_op)
 
                 global_step += 1
 

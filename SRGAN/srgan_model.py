@@ -15,7 +15,8 @@ class SRGAN:
 
     def __init__(self, s, batch_size=16, height=384, width=384, channel=3,
                  sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=64, lr=1e-4):
+                 df_dim=64, gf_dim=64, lr=1e-4,
+                 use_vgg19=False):
 
         """ Super-Resolution GAN Class
         # General Settings
@@ -36,6 +37,7 @@ class SRGAN:
 
         # Training Option
         :param lr: learning rate, default 1e-4
+        :param use_vgg19: using pre-trained vgg19 bottle-neck features, default False
         """
 
         self.s = s
@@ -61,7 +63,9 @@ class SRGAN:
 
         self.lr = lr
         self.lr_decay_rate = 1e-1
-        self.lr_decay_epoch = 100
+        self.lr_low_boundary = 1e-5
+        self.lr_update_step = 1e5
+        self.lr_op = tf.assign(self.lr, tf.maximum(self.lr * self.lr_decay_rate, self.lr_low_boundary))
 
         self.vgg_mean = [103.939, 116.779, 123.68]
 
@@ -73,8 +77,10 @@ class SRGAN:
         self.g_cnt_loss = 0.
         self.g_mse_loss = 0.
         self.g_loss = 0.
+        self.psnr = 0.
 
         self.vgg19 = None
+        self.use_vgg19 = use_vgg19
 
         self.g = None
 
@@ -118,10 +124,9 @@ class SRGAN:
             x = t.dense(x, 1024, name='disc-fc-1')
             x = tf.nn.leaky_relu(x)
 
-            logits = t.dense(x, 1, name='disc-fc-2')
-            prob = tf.nn.sigmoid(logits)
-
-            return logits, prob
+            x = t.dense(x, 1, name='disc-fc-2')
+            prob = tf.nn.sigmoid(x)
+            return prob
 
     def generator(self, x, reuse=None, is_train=True):
         """
@@ -191,27 +196,29 @@ class SRGAN:
         self.g = self.generator(self.x_lr)
 
         # Discriminator
-        d_real, d_real_prob = self.discriminator(self.x_hr)
-        d_fake, d_fake_prob = self.discriminator(self.g, reuse=True)
-
-        # VGG19
-        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])
-        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
-
-        vgg_bottle_real = self.build_vgg19(x_vgg_real)
-        vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
+        d_real = self.discriminator(self.x_hr)
+        d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+        d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
+        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
 
-        self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
-        self.g_mse_loss = t.mse_loss(self.g, self.x_hr, self.batch_size)
-        # tf.losses.mean_squared_error(self.g, self.x_hr, reduction=tf.losses.Reduction.MEAN)
-        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_real, vgg_bottle_fake, self.batch_size)
-        # tf.losses.mean_squared_error(vgg_bottle_fake, vgg_bottle_real, reduction=tf.losses.Reduction.MEAN)
-        self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
+        if self.use_vgg19:  # VGG19
+            x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2])
+            x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2])
+
+            vgg_bottle_real = self.build_vgg19(x_vgg_real)
+            vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
+
+            self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size)
+        else:
+            self.g_cnt_loss = t.mse_loss(self.g, self.x_hr, self.batch_size)
+
+        self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
+        self.g_loss = self.g_adv_loss + self.g_cnt_loss
+
+        self.psnr = t.psnr_loss(self.g, self.x_hr, self.batch_size)
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
@@ -221,27 +228,28 @@ class SRGAN:
         tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("loss/psnr", self.psnr)
 
         # Optimizer
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                         var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
                                            beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
                                                                                         var_list=g_params)
 
         # pre-train
-        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_mse_loss,
+        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr_op,
+                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_cnt_loss,
                                                                                              var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()
 
         # Model saver
-        self.saver = tf.train.Saver(max_to_keep=1)
+        self.saver = tf.train.Saver(max_to_keep=3)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
