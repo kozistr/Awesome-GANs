@@ -212,12 +212,10 @@ class SRGAN:
         vgg_bottle_real = self.build_vgg19(x_vgg_real)
         vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
 
-        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size)
-
-        self.g_mse_loss = t.mse_loss(self.g, self.x_hr, self.batch_size)
-
         # self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
         self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
+        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size, is_mean=True)
+        self.g_mse_loss = t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
         self.g_loss = self.g_adv_loss + self.g_cnt_loss + self.g_mse_loss
 
         def inverse_transform(img):
