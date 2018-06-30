@@ -82,11 +82,12 @@ class SRGAN:
         self.g = None
 
         self.adv_scaling = 1e-3
-        self.vgg_scaling = 3e-6  # 1. / 12.75  # 6e-3
+        self.vgg_scaling = 2e-6  # 1. / 12.75  # 6e-3
 
         self.d_op = None
         self.g_op = None
         self.g_init_op = None
+
         self.merged = None
         self.writer = None
         self.saver = None
@@ -217,7 +218,7 @@ class SRGAN:
 
         # self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
         self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
-        self.g_loss = self.g_adv_loss + self.g_mse_loss + self.g_cnt_loss
+        self.g_loss = self.g_adv_loss + self.g_cnt_loss + self.g_mse_loss
 
         def inverse_transform(img):
             return (img + 1.) * 127.5
