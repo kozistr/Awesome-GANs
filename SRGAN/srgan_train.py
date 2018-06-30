@@ -42,7 +42,7 @@ def main():
                  use_save=True,
                  save_type="to_h5",
                  save_file_name="/home/zero/hdd/DataSet/DIV2K/DIV2K",
-                 use_img_scale=False)
+                 use_img_scale=True)
     """
     ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
                  ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5",
@@ -100,7 +100,7 @@ def main():
         iu.save_images(sample_x_lr,
                        size=[1, 1],
                        image_path=sample_lr_dir,
-                       inv_type='255')
+                       inv_type='127')
 
         learning_rate = 1e-4
         for epoch in range(start_epoch, train_step['train_epochs']):
