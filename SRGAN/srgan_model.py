@@ -225,9 +225,10 @@ class SRGAN:
 
         # calculate PSNR
         g, x_hr = inverse_transform(self.g), inverse_transform(self.x_hr)
+
         g = tf.image.convert_image_dtype(g, dtype=tf.uint8, saturate=True)
         x_hr = tf.image.convert_image_dtype(x_hr, dtype=tf.uint8, saturate=True)
-        self.psnr = tf.reduce_mean(tf.image.psnr(g, x_hr, max_val=255))
+        self.psnr = t.psnr_loss(g, x_hr, self.batch_size)
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
