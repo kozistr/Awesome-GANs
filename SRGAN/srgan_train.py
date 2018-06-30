@@ -58,7 +58,7 @@ def main():
         with tf.device("/gpu:1"):  # Change
             # SRGAN Model
             model = srgan.SRGAN(s, batch_size=train_step['batch_size'],
-                                use_vgg19=False)
+                                use_vgg19=True)
 
         # Initializing
         s.run(tf.global_variables_initializer())
