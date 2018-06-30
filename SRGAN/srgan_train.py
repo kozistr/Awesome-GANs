@@ -15,6 +15,9 @@ import image_utils as iu
 from datasets import Div2KDataSet as DataSet
 
 
+np.random.seed(1337)
+
+
 results = {
     'output': './gen_img/',
     'model': './model/SRGAN-model.ckpt'
@@ -23,7 +26,7 @@ results = {
 train_step = {
     'batch_size': 16,
     'init_epochs': -1,
-    'train_epochs': 1000,
+    'train_epochs': 2000,
     'global_step': 200001,
     'logging_interval': 100,
 }
@@ -94,6 +97,7 @@ def main():
                        size=[1, 1],
                        image_path=sample_hr_dir,
                        inv_type='127')
+
         iu.save_images(sample_x_lr,
                        size=[1, 1],
                        image_path=sample_lr_dir,
@@ -138,12 +142,12 @@ def main():
                                           model.x_hr: batch_x_hr,
                                           model.x_lr: batch_x_lr,
                                       })
-                    _, g_loss, _, _, = s.run([model.g_op,
-                                              model.g_loss, model.g_adv_loss, model.g_cnt_loss],
-                                             feed_dict={
-                                                 model.x_hr: batch_x_hr,
-                                                 model.x_lr: batch_x_lr,
-                                            })
+
+                    _, g_loss = s.run([model.g_op, model.g_loss],
+                                      feed_dict={
+                                          model.x_hr: batch_x_hr,
+                                          model.x_lr: batch_x_lr,
+                                      })
 
                 if i % train_step['logging_interval'] == 0:
                     summary = s.run(model.merged,
@@ -186,7 +190,7 @@ def main():
                     model.saver.save(s, results['model'], global_step)
 
                 # Learning Rate update
-                if global_step and global_step % model.lr_update_step == 0:
+                if global_step > model.lr_image_shape and global_step % model.lr_update_step == 0:
                     s.run(model.lr_op)
 
                 global_step += 1
