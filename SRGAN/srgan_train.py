@@ -100,13 +100,6 @@ def main():
                        inv_type='255')
 
         for epoch in range(start_epoch, train_step['train_epochs']):
-
-            if epoch >= train_step['init_epochs'] and epoch % model.lr_decay_epoch == 0:
-                lr_decay_rate = model.lr_decay_rate ** (epoch // model.lr_decay_epoch)
-
-                # Update learning rate
-                model.lr *= lr_decay_rate
-
             pointer = 0
             for i in range(ds.n_images // train_step['batch_size']):
                 start = pointer

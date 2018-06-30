@@ -124,8 +124,8 @@ class SRGAN:
             x = tf.nn.leaky_relu(x)
 
             x = t.dense(x, 1, name='disc-fc-2')
-            prob = tf.nn.sigmoid(x)
-            return prob
+            # x = tf.nn.sigmoid(x)
+            return x
 
     def generator(self, x, reuse=None, is_train=True):
         """
@@ -199,8 +199,10 @@ class SRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
-        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
+        # d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
+        # d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
+        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
 
         if self.use_vgg19:  # VGG19
@@ -217,7 +219,14 @@ class SRGAN:
         self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
         self.g_loss = self.g_adv_loss + self.g_cnt_loss
 
-        self.psnr = t.psnr_loss(self.g, self.x_hr, self.batch_size)
+        def inverse_transform(img):
+            return (img + 1.) * 127.5
+
+        # calculate PSNR
+        g, x_hr = inverse_transform(self.g), inverse_transform(self.x_hr)
+        g = tf.image.convert_image_dtype(g, dtype=tf.uint8, saturate=True)
+        x_hr = tf.image.convert_image_dtype(x_hr, dtype=tf.uint8, saturate=True)
+        self.psnr = t.psnr_loss(g, x_hr, self.batch_size)
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
@@ -226,7 +235,8 @@ class SRGAN:
         tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        tf.summary.scalar("loss/psnr", self.psnr)
+        tf.summary.scalar("misc/psnr", self.psnr)
+        tf.summary.scalar("misc/lr", self.lr)
 
         # Optimizer
         t_vars = tf.trainable_variables()
@@ -249,5 +259,5 @@ class SRGAN:
         self.merged = tf.summary.merge_all()
 
         # Model saver
-        self.saver = tf.train.Saver(max_to_keep=3)
+        self.saver = tf.train.Saver(max_to_keep=2)
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)
