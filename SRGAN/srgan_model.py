@@ -75,7 +75,6 @@ class SRGAN:
         self.d_loss = 0.
         self.g_adv_loss = 0.
         self.g_cnt_loss = 0.
-        self.g_mse_loss = 0.
         self.g_loss = 0.
         self.psnr = 0.
 
@@ -225,7 +224,6 @@ class SRGAN:
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
-        tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
         tf.summary.scalar("loss/psnr", self.psnr)
