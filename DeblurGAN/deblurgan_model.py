@@ -2,6 +2,8 @@ import tensorflow as tf
 
 import sys
 
+import vgg19
+
 sys.path.append('../')
 import tfutil as t
 
@@ -53,6 +55,10 @@ class DeblurGAN:
         self.gf_dim = gf_dim
         self.df_dim = df_dim
 
+        self.vgg19 = None
+        self.vgg_image_shape = [224, 224, 3]
+        self.vgg_mean = [103.939, 116.779, 123.68]
+
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
@@ -79,27 +85,21 @@ class DeblurGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            x = t.conv2d(x, self.df_dim * 1, 5, 2, name='disc-conv2d-1')
+            x = t.conv2d(x, self.df_dim * 1, 4, 2, name='disc-conv2d-1')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 2, 5, 2, name='disc-conv2d-2')
-            x = t.batch_norm(x, name='disc-bn-1')
+            for i in range(1, 3):
+                x = t.conv2d(x, self.df_dim * (2 ** i), 4, 2, name='disc-conv2d-%d' % (i + 1))
+                x = t.instance_norm(x, reuse=reuse, name='disc-inst_norm-%d' % i)
+                x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 8, 4, 1, name='disc-conv2d-4')
+            x = t.instance_norm(x, reuse=reuse, name='disc-inst_norm-3')
             x = tf.nn.leaky_relu(x)
 
-            x = t.conv2d(x, self.df_dim * 4, 5, 2, name='disc-conv2d-3')
-            x = t.batch_norm(x, name='disc-bn-2')
-            x = tf.nn.leaky_relu(x)
+            x = t.conv2d(x, 1, 4, 1, name='disc-conv2d-5')
 
-            x = t.conv2d(x, self.df_dim * 8, 5, 2, name='disc-conv2d-4')
-            x = t.batch_norm(x, name='disc-bn-3')
-            x = tf.nn.leaky_relu(x)
-
-            x = tf.layers.flatten(x)
-
-            logits = t.dense(x, 1, name='disc-fc-1')
-            prob = tf.nn.sigmoid(logits)
-
-            return prob, logits
+            return x
 
     def generator(self, x, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
@@ -107,10 +107,9 @@ class DeblurGAN:
                 with tf.variable_scope(name, reuse=reuse):
                     skip_connection = tf.identity(x, name='gen-skip_connection-1')
 
-                    x = t.conv2d(x, f, 7, 1, name='gen-conv2d-1')
+                    x = t.conv2d(x, f, 3, 1, name='gen-conv2d-1')
                     x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-1')
                     x = tf.nn.relu(x)
-
                     x = t.conv2d(x, f, 3, 1, name='gen-conv2d-2')
                     x = tf.nn.relu(x)
 
@@ -119,12 +118,12 @@ class DeblurGAN:
             shortcut = tf.identity(x, name='shortcut-init')
 
             x = t.conv2d(x, self.gf_dim * 1, 7, 1, name='gen-conv2d-1')
-            x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-1')
+            x = t.instance_norm(x, affine=False, reuse=reuse, name='gen-inst_norm-1')
             x = tf.nn.relu(x)
 
             for i in range(1, 3):
                 x = t.conv2d(x, self.gf_dim * (2 ** i), 3, 2, name='gen-conv2d-%d' % (i + 1))
-                x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-%d' % (i + 1))
+                x = t.instance_norm(x, affine=False, reuse=reuse, name='gen-inst_norm-%d' % (i + 1))
                 x = tf.nn.relu(x)
 
             # 9 Residual Blocks
@@ -133,17 +132,32 @@ class DeblurGAN:
 
             for i in range(1, 3):
                 x = t.deconv2d(x, self.gf_dim * (2 ** i), 3, 2, name='gen-deconv2d-%d' % i)
-                x = t.instance_norm(x, reuse=reuse, name='gen-inst_norm-%d' % (i + 3))
+                x = t.instance_norm(x, affine=False, reuse=reuse, name='gen-inst_norm-%d' % (i + 3))
                 x = tf.nn.relu(x)
 
             x = t.conv2d(x, self.gf_dim * 1, 7, 1, name='gen-conv2d-4')
             x = tf.nn.tanh(x)
             return shortcut + x
 
+    def build_vgg19(self, x, reuse=None):
+        with tf.variable_scope("vgg19", reuse=reuse):
+            # image re-scaling
+            x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
+            x = tf.cast(x * 255., dtype=tf.float32)     # [0, 1]  to [0, 255]
+
+            r, g, b = tf.split(x, 3, 3)
+            bgr = tf.concat([b - self.vgg_mean[0],
+                             g - self.vgg_mean[1],
+                             r - self.vgg_mean[2]], axis=3)
+
+            self.vgg19 = vgg19.VGG19(bgr)
+
+            net = self.vgg19.vgg19_net['conv3_3']
+            return net
+
     def bulid_deblurgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
 
         # Discriminator
         _, d_real = self.discriminator(self.x)
