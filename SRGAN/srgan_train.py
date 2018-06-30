@@ -190,7 +190,7 @@ def main():
                     model.saver.save(s, results['model'], global_step)
 
                 # Learning Rate update
-                if global_step > model.lr_image_shape and global_step % model.lr_update_step == 0:
+                if global_step > model.lr_update_step and global_step % model.lr_update_step == 0:
                     s.run(model.lr_op)
 
                 global_step += 1
