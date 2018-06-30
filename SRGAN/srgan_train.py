@@ -103,7 +103,7 @@ def main():
                        image_path=sample_lr_dir,
                        inv_type='255')
 
-        lr = 1e-4
+        learning_rate = 1e-4
         for epoch in range(start_epoch, train_step['train_epochs']):
             pointer = 0
             for i in range(ds.n_images // train_step['batch_size']):
@@ -135,7 +135,7 @@ def main():
                                            feed_dict={
                                                model.x_hr: batch_x_hr,
                                                model.x_lr: batch_x_lr,
-                                               model.lr: lr,
+                                               model.lr: learning_rate,
                                            })
                 # Update G/D network
                 else:
@@ -143,14 +143,14 @@ def main():
                                       feed_dict={
                                           model.x_hr: batch_x_hr,
                                           model.x_lr: batch_x_lr,
-                                          model.lr: lr,
+                                          model.lr: learning_rate,
                                       })
 
                     _, g_loss = s.run([model.g_op, model.g_loss],
                                       feed_dict={
                                           model.x_hr: batch_x_hr,
                                           model.x_lr: batch_x_lr,
-                                          model.lr: lr,
+                                          model.lr: learning_rate,
                                       })
 
                 if i % train_step['logging_interval'] == 0:
@@ -158,7 +158,7 @@ def main():
                                     feed_dict={
                                         model.x_hr: batch_x_hr,
                                         model.x_lr: batch_x_lr,
-                                        model.lr: lr,
+                                        model.lr: learning_rate,
                                     })
 
                     # Print loss
@@ -175,7 +175,7 @@ def main():
                     samples = s.run(model.g,
                                     feed_dict={
                                         model.x_lr: sample_x_lr,
-                                        model.lr: lr,
+                                        model.lr: learning_rate,
                                     })
 
                     # Summary saver
@@ -197,8 +197,8 @@ def main():
 
                 # Learning Rate update
                 if global_step and global_step % model.lr_update_step == 0:
-                    lr *= model.lr_decay_rate
-                    lr = max(lr, model.lr_low_boundary)
+                    learning_rate *= model.lr_decay_rate
+                    learning_rate = max(learning_rate, model.lr_low_boundary)
 
                 global_step += 1
 
