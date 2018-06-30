@@ -22,7 +22,7 @@ results = {
 
 train_step = {
     'batch_size': 16,
-    'init_epochs': 100,
+    'init_epochs': 0,
     'train_epochs': 1000,
     'global_step': 200001,
     'logging_interval': 100,
