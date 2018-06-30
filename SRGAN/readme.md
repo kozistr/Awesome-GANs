@@ -20,6 +20,7 @@
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **image scaling** | ``LR[0,1] HR[-1,1]`` | ``L/HR[-1,1]`` |
+ **global steps** | ``2e5`` | ``1e5`` |
 
 ## Tensorboard
 
@@ -29,9 +30,13 @@
 
 ## Result
 
-*Name* | *Valid HR image* | *Global Step 1k* | *Global Step 40k*
-:---: | :---: | :---: | :---:
-**SRGAN**  | ![img](./gen_img/valid_hr.png) | ![img](./gen_img/train_00001000.png) | ![img](./gen_img/train_00040000.png)
+*VALID HR image* | *VALID LR image* |
+:---: | :---: |
+![img](./gen_img/valid_hr.png) | ![img](./gen_img/valid_lr.png) |
+
+*Global Step 10k* | *Global Step 50k* | *Global Step 100k*
+:---: | :---: | :---:
+![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
 
 ## To-Do
 * 
