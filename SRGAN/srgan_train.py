@@ -29,10 +29,6 @@ train_step = {
 }
 
 
-def save_images(images, size, image_path):
-    return iu.save_image(images, size, image_path)
-
-
 def main():
     start_time = time.time()  # Clocking start
 
@@ -137,7 +133,7 @@ def main():
                 # Update Only G network
                 d_loss, g_loss, g_init_loss = 0., 0., 0.
                 if epoch <= train_step['init_epochs']:
-                    _, g_init_loss = s.run([model.g_init_op, model.g_mse_loss],
+                    _, g_init_loss = s.run([model.g_init_op, model.g_cnt_loss],
                                            feed_dict={
                                                model.x_hr: batch_x_hr,
                                                model.x_lr: batch_x_lr,
@@ -150,7 +146,7 @@ def main():
                                           model.x_lr: batch_x_lr,
                                       })
                     _, g_loss, _, _, = s.run([model.g_op,
-                                              model.g_loss, model.g_adv_loss, model.g_mse_loss],
+                                              model.g_loss, model.g_adv_loss, model.g_cnt_loss],
                                              feed_dict={
                                                  model.x_hr: batch_x_hr,
                                                  model.x_lr: batch_x_lr,
