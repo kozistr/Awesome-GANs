@@ -170,7 +170,6 @@ class SRGAN:
                 x = t.prelu(x, name='n256s1-prelu-%d' % i)
 
             x = t.conv2d(x, self.channel, 9, 1, name='n3s1')  # (-1, 384, 384, 3)
-            x = tf.nn.tanh(x)
             return x
 
     def build_vgg19(self, x, reuse=None):
