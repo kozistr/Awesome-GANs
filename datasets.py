@@ -835,7 +835,7 @@ class Div2KDataSet:
 
         if self.ds_path:  # like .h5 or .tfr
             self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
-            self.ds_lr_path = self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
+            self.ds_lr_path = self.ds_hr_path  # self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
         self.hr_images = DataSetLoader(path=self.ds_hr_path,
                                        size=self.hr_shape,
