@@ -61,7 +61,7 @@ class SRGAN:
         self.beta1 = 0.9
         self.beta2 = 0.999
 
-        self.lr = lr
+        self.lr = tf.Variable(lr, name='lr')
         self.lr_decay_rate = 1e-1
         self.lr_low_boundary = 1e-5
         self.lr_update_step = 1e5
