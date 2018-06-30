@@ -25,7 +25,7 @@ results = {
 
 train_step = {
     'batch_size': 16,
-    'init_epochs': -1,
+    'init_epochs': 100,
     'train_epochs': 2000,
     'global_step': 200001,
     'logging_interval': 100,
@@ -60,8 +60,7 @@ def main():
     with tf.Session(config=config) as s:
         with tf.device("/gpu:1"):  # Change
             # SRGAN Model
-            model = srgan.SRGAN(s, batch_size=train_step['batch_size'],
-                                use_vgg19=True)
+            model = srgan.SRGAN(s, batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
@@ -131,7 +130,7 @@ def main():
                 # Update Only G network
                 d_loss, g_loss, g_init_loss = 0., 0., 0.
                 if epoch <= train_step['init_epochs']:
-                    _, g_init_loss = s.run([model.g_init_op, model.g_cnt_loss],
+                    _, g_init_loss = s.run([model.g_init_op, model.g_mse_loss],
                                            feed_dict={
                                                model.x_hr: batch_x_hr,
                                                model.x_lr: batch_x_lr,
@@ -196,7 +195,7 @@ def main():
                     model.saver.save(s, results['model'], global_step)
 
                 # Learning Rate update
-                if global_step and global_step % model.lr_update_step == 0:
+                if epoch and epoch % model.lr_update_epoch == 0:
                     learning_rate *= model.lr_decay_rate
                     learning_rate = max(learning_rate, model.lr_low_boundary)
 

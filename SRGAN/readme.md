@@ -4,12 +4,13 @@
 
 * For ``Gen loss``
 
-1. VGG19 BottleNeck feature loss or MSE loss (content loss)
-2. Adversarial GAN loss
+1. VGG19 BottleNeck feature loss (content loss)
+2. [optional] MSE loss (content loss)
+3. Adversarial GAN loss with sigmoid
 
 * For ``Disc loss``
 
-1. Adversarial GAN loss
+1. Adversarial GAN loss with sigmoid
 
 ## Architecture Networks
 
@@ -18,6 +19,8 @@
 *DIFFS* | *SRGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **content loss scaling** | ``1 / 12.75`` | ``3e-6`` |
+ **image scaling** | ``lr[0,1] hr[-1,1]`` | ``[-1,1]`` |
 
 ## Tensorboard
 
