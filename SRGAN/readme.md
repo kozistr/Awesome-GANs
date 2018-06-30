@@ -4,9 +4,8 @@
 
 * For ``Gen loss``
 
-1. [optinal] VGG19 BottleNeck feature loss (content loss)
-2. MSE loss (content loss)
-3. Adversarial GAN loss
+1. VGG19 BottleNeck feature loss or MSE loss (content loss)
+2. Adversarial GAN loss
 
 * For ``Disc loss``
 
