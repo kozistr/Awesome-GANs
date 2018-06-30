@@ -216,7 +216,8 @@ class SRGAN:
         else:
             self.g_cnt_loss = t.mse_loss(self.g, self.x_hr, self.batch_size)
 
-        self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
+        # self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
+        self.g_adv_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
         self.g_loss = self.g_adv_loss + self.g_cnt_loss
 
         def inverse_transform(img):
