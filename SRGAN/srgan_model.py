@@ -132,36 +132,40 @@ class SRGAN:
         """
 
         with tf.variable_scope("generator", reuse=reuse):
-            def residual_block(x, name="", _is_train=True):
+            def residual_block(x, f, name="", _is_train=True):
                 with tf.variable_scope(name):
-                    x = t.conv2d(x, self.gf_dim, 3, 1, name="n64s1-2")
-                    x = t.batch_norm(x, is_train=_is_train, name="n64s1-bn-2")
+                    shortcut = tf.identity(x, name='n64s1-shortcut')
+
+                    x = t.conv2d(x, f, 3, 1, name="n64s1-1")
+                    x = t.batch_norm(x, is_train=_is_train, name="n64s1-bn-1")
                     x = t.prelu(x, reuse=reuse, name='n64s1-prelu-1')
+                    x = t.conv2d(x, f, 3, 1, name="n64s1-2")
+                    x = t.batch_norm(x, is_train=_is_train, name="n64s1-bn-2")
+                    x = tf.add(x, shortcut)
+
                     return x
 
-            x = t.conv2d(x, self.gf_dim, 3, 1, name='n64s1-1')
-            x = tf.nn.relu(x)
-            x_ = x  # for later, used at layer concat
+            x = t.conv2d(x, self.gf_dim, 9, 1, name='n64s1-1')
+            x = t.prelu(x, name='n64s1-prelu-1')
+
+            skip_conn = tf.identity(x, name='skip_connection')
 
             # B residual blocks
             for i in range(1, 17):  # (1, 9)
-                xx = residual_block(x, name='b-residual_block_%d' % (i * 2 - 1), _is_train=is_train)
-                xx = residual_block(xx, name='b-residual_block_%d' % (i * 2), _is_train=is_train)
-                xx = tf.add(x, xx)
-                x = xx
+                x = residual_block(x, self.gf_dim, name='b-residual_block_%d' % i, _is_train=is_train)
 
             x = t.conv2d(x, self.gf_dim, 3, 1, name='n64s1-3')
             x = t.batch_norm(x, is_train=is_train, name='n64s1-bn-3')
 
-            x = tf.add(x_, x)
+            x = tf.add(x, skip_conn)
 
             # sub-pixel conv2d blocks
             for i in range(1, 3):
                 x = t.conv2d(x, self.gf_dim * 4, 3, 1, name='n256s1-%d' % (i + 2))
                 x = t.sub_pixel_conv2d(x, f=None, s=2)
-                x = tf.nn.relu(x)
+                x = t.prelu(x, name='n256s1-prelu-%d' % i)
 
-            x = t.conv2d(x, self.channel, 1, 1, name='n3s1')  # (-1, 384, 384, 3)
+            x = t.conv2d(x, self.channel, 9, 1, name='n3s1')  # (-1, 384, 384, 3)
             x = tf.nn.tanh(x)
             return x
 
