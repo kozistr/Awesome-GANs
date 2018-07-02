@@ -26,7 +26,7 @@
 
 ![result](./srgan_tb.png)
 
-> Elapsed time : s with ``GTX Titan X 12GB x 1 (maxwell)``
+> Elapsed time : 1d 9h 30m 52s with ``GTX Titan X 12GB x 1 (maxwell)``
 
 ## Result
 
@@ -34,9 +34,9 @@
 :---: | :---: |
 ![img](./gen_img/valid_hr.png) | ![img](./gen_img/valid_lr.png) |
 
-*Global Step 10k* | *Global Step 50k* | *Global Step 100k*
+*Global Step 10k* | *Global Step 25k* | *Global Step 55k*
 :---: | :---: | :---:
-![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png)
+![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00025000.png) | ![img](./gen_img/train_00055000.png)
 
 ## To-Do
-* 
+* Not good performance...
