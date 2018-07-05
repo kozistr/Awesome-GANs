@@ -192,7 +192,7 @@ class SAGAN:
 
                 f //= 2
 
-            x = t.conv2d_alt(x, self.channel, 5, 1, pad=2, sn=True, name='gen-conv2d-5')
+            x = t.conv2d_alt(x, self.channel, 5, 1, pad=2, sn=True, name='gen-conv2d-%d' % (self.n_layer + 1))
             x = tf.nn.tanh(x)
             return x
 

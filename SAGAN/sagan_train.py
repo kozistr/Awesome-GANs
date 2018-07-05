@@ -32,15 +32,17 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
+    height, width, channel = 128, 128, 3
+
     # loading CelebA DataSet
-    ds = DataSet(height=64,
-                 width=64,
-                 channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
+    ds = DataSet(height=height,
+                 width=height,
+                 channel=channel,
+                 # ds_image_path="D:\\DataSet/CelebA/CelebA-128.h5",
                  ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
+                 ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
                  ds_type="CelebA",
-                 use_save=False,
+                 use_save=True,
                  save_file_name="D:\\DataSet/CelebA/CelebA-128.h5",
                  save_type="to_h5",
                  use_img_scale=False,
@@ -48,7 +50,7 @@ def main():
                  )
 
     # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, height, width, channel))
     iu.save_images(test_images,
                    size=[4, 4],
                    image_path=results['output'] + 'sample.png',
@@ -65,7 +67,8 @@ def main():
 
     with tf.Session(config=config) as s:
         # SAGAN Model
-        model = sagan.SAGAN(s, batch_size=train_step['batch_size'],
+        model = sagan.SAGAN(s, height=height, width=width, channel=channel,
+                            batch_size=train_step['batch_size'],
                             use_gp=False, use_hinge_loss=True)
 
         # Initializing
