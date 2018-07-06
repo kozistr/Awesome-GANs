@@ -8,25 +8,24 @@
 
 * Same with the SAGAN paper.
 
-*DIFFS* | *SAGAN Paper* | *ME*  |
- :---:  |     :---:     | :---: |
- **image size** | ``128`` | ``64`` |
-
-> I just reduce image size from 128 to 64 because of my gpu memory... <br/>
-> you can just change image size back to 128. <br/>
 > (even using image size 64, additional memory is needed :(. Over GTX 1080 is recommended!)
 
 ## Tensorboard
 
-![result](./sagan_tb.png)
+![result](./sagan_64_tb.png)
 
-> Elapsed Time : 3h 42m 18s with ``GTX 1060 6GB x 1``
+> Elapsed Time (64x64) : 3h 42m 18s with ``GTX 1060 6GB x 1``
+
+![result](./sagan_128_tb.png)
+
+> Elapsed Time (128x128) : 7h 55m 40s with ``GTX 1080 8GB x 1``
 
 ## Result
 
 *Name* | *Global Step 10k* | *Global Step 20k* | *Global Step 30k*
 :---: | :---: | :---: | :---:
-**SAGAN**     | ![img](./gen_img/train_00010000.png) | ![img](./gen_img/train_00020000.png) | ![img](./gen_img/train_00030000.png)
+**SAGAN (64x64)**     | ![img](./gen_img/64/train_00010000.png) | ![img](./gen_img/64/train_00020000.png) | ![img](./gen_img/64/train_00030000.png)
+**SAGAN (128x128)**   | ![img](./gen_img/128/train_00010000.png) | ![img](./gen_img/128/train_00020000.png) | ![img](./gen_img/128/train_00030000.png)
 
 ## To-Do
 * 
