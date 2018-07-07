@@ -13,7 +13,7 @@ class FGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=1e-2):
+                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
 
         """
         # General Settings
@@ -33,7 +33,7 @@ class FGAN:
         :param df_dim: the number of discriminator filters, default 64
 
         # Training Settings
-        :param lr: learning rate, default 1e-2
+        :param lr: learning rate, default 2e-4
         """
 
         self.s = s
@@ -79,25 +79,26 @@ class FGAN:
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
             for i in range(1, 4):
-                x = t.conv2d(x, self.gf_dim * (2 ** (i - 1)), 3, 2, name='disc-conv2d-%d' % i)
-                x = t.batch_norm(x, name='disc-bn-%d' % i)
-                x = tf.nn.leaky_relu(x, alpha=0.3)
+                x = t.dense(x, self.gf_dim * (2 ** (i - 1)), name='disc-fc-%d' % i)
+                x = tf.nn.elu(x)
 
             x = tf.layers.flatten(x)
 
             x = t.dense(x, 1, name='disc-fc-1')
             return x
 
-    def generator(self, z, reuse=None):
+    def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
             x = t.dense(z, self.gf_dim, name='gen-fc-1')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
             x = t.dense(x, self.gf_dim, name='gen-fc-2')
+            x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
             x = t.dense(x, self.n_input, name='gen-fc-3')
-            x = tf.nn.tanh(x)
+            x = tf.nn.sigmoid(x)
             return x
 
     def bulid_fgan(self):

@@ -11,8 +11,9 @@
 *DIFFS* | *FGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
-
-> Normal Distribution Initializer : (µ = 0, σ = 0.5) <br/>
+ **z dim** | ``100`` | ``128`` |
+ 
+> Normal Distribution Initializer : (µ = 0, σ = 0.91) <br/>
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
@@ -33,4 +34,6 @@
   * Reverse-KL
   * JS
   * Squared-Hellinger
-  * Pearson x^2
+  * Pearson χ^2
+  * Neyman χ^2
+  * Jeffrey
