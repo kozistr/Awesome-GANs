@@ -13,7 +13,7 @@ import ugan_model as ugan
 sys.path.append('../')
 import image_utils as iu
 from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
+from datasets import CiFarDataSet as DataSet
 
 
 results = {
@@ -31,33 +31,24 @@ train_step = {
 def main():
     start_time = time.time()  # Clocking start
 
-    # Training, Test data set
-    # loading CelebA DataSet
-    ds = DataSet(height=64,
-                 width=64,
+    # Loading Cifar-10 DataSet
+    ds = DataSet(height=32,
+                 width=32,
                  channel=3,
-                 ds_image_path="D:\\DataSet/CelebA/CelebA-64.h5",
-                 ds_label_path="D:\\DataSet/CelebA/Anno/list_attr_celeba.txt",
-                 # ds_image_path="D:\\DataSet/CelebA/Img/img_align_celeba/",
-                 ds_type="CelebA",
-                 use_save=False,
-                 save_file_name="D:\\DataSet/CelebA/CelebA-64.h5",
-                 save_type="to_h5",
-                 use_img_scale=False,
-                 # img_scale="-1,1"
-                 )
+                 ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
+                 ds_name='cifar-10')
 
-    # saving sample images
-    test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, 64, 64, 3))
+    ds_iter = DataIterator(x=iu.transform(ds.train_images, '127'),
+                           y=ds.train_labels,
+                           batch_size=train_step['batch_size'],
+                           label_off=True)  # using label # maybe someday, i'll change this param's name
+
+    # Generated image save
+    test_images = iu.transform(ds.test_images[:100], inv_type='127')
     iu.save_images(test_images,
-                   size=[4, 4],
+                   size=[10, 10],
                    image_path=results['output'] + 'sample.png',
                    inv_type='127')
-
-    ds_iter = DataIterator(x=ds.images,
-                           y=None,
-                           batch_size=train_step['batch_size'],
-                           label_off=True)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -83,12 +74,11 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (len(ds.train_images) // model.batch_size)           # recover n_epoch
+        start_epoch = global_step // (len(ds.train_images) // model.batch_size)  # recover n_epoch
         ds_iter.pointer = saved_global_step % (len(ds.train_images) // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
-                batch_x = np.reshape(iu.transform(batch_x, inv_type='127'),
-                                     (model.batch_size, model.height, model.width, model.channel))
+                batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
