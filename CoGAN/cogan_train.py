@@ -22,7 +22,7 @@ results = {
 
 train_step = {
     'batch_size': 128,
-    'global_step': 12500,
+    'global_step': 12501,
     'logging_interval': 250,
 }
 
