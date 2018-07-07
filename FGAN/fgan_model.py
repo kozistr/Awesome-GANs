@@ -11,30 +11,29 @@ tf.set_random_seed(777)
 
 class FGAN:
 
-    def __init__(self, s, batch_size=64, height=32, width=32, channel=3,
+    def __init__(self, s, batch_size=64, height=28, width=28, channel=1,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=256, gf_dim=64, df_dim=64, d_lr=2e-4, g_lr=1e-4):
+                 z_dim=128, gf_dim=64, df_dim=64, lr=1e-2):
 
         """
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: input image height, default 32
-        :param width: input image width, default 32
-        :param channel: input image channel, default 3 (RGB)
+        :param height: input image height, default 28
+        :param width: input image width, default 28
+        :param channel: input image channel, default 1
 
         # Output Settings
         :param sample_num: the number of sample images, default 64
         :param sample_size: sample image size, default 8
 
         # Model Settings
-        :param z_dim: z noise dimension, default 256
+        :param z_dim: z noise dimension, default 128
         :param gf_dim: the number of generator filters, default 64
         :param df_dim: the number of discriminator filters, default 64
 
         # Training Settings
-        :param d_lr: learning rate, default 2e-4
-        :param g_lr: learning rate, default 1e-4
+        :param lr: learning rate, default 1e-2
         """
 
         self.s = s
@@ -47,6 +46,7 @@ class FGAN:
         self.sample_num = sample_num
 
         self.image_shape = [self.height, self.width, self.channel]
+        self.n_input = self.height * self.width * self.channel
 
         self.z_dim = z_dim
 
@@ -67,13 +67,12 @@ class FGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='x-images')
+        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name='x-images')
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
         self.beta1 = 0.5
-        self.d_lr = d_lr
-        self.g_lr = g_lr
+        self.lr = lr
 
         self.bulid_fgan()  # build FGAN model
 
@@ -89,21 +88,16 @@ class FGAN:
             x = t.dense(x, 1, name='disc-fc-1')
             return x
 
-    def generator(self, z, reuse=None, is_train=True):
+    def generator(self, z, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim * 8 * 4 * 4, name='gen-fc-1')
-
-            x = tf.reshape(x, [-1, 4, 4, self.gf_dim * 8])
-            x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
+            x = t.dense(z, self.gf_dim, name='gen-fc-1')
             x = tf.nn.relu(x)
 
-            for i in range(1, 4):
-                x = t.deconv2d(x, self.gf_dim * 4, 3, 2, name='gen-deconv2d-%d' % i)
-                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % (i + 1))
-                x = tf.nn.relu(x)
+            x = t.dense(x, self.gf_dim, name='gen-fc-2')
+            x = tf.nn.relu(x)
 
-            x = t.conv2d(x, self.channel, 3, name='gen-conv2d-1')
-            x = tf.nn.sigmoid(x)
+            x = t.dense(x, self.n_input, name='gen-fc-3')
+            x = tf.nn.tanh(x)
             return x
 
     def bulid_fgan(self):

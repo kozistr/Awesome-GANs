@@ -28,4 +28,9 @@
 **FGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
 
 ## To-Do
-* 
+* Add f-divergences
+  * KL
+  * Reverse-KL
+  * JS
+  * Squared-Hellinger
+  * Pearson x^2
