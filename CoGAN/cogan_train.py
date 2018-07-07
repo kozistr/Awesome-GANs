@@ -56,20 +56,34 @@ def main():
         else:
             print('[-] No checkpoint file found')
 
+        sample_x, _ = mnist.test.next_batch(model.sample_num)
+        sample_x = np.reshape(sample_x, newshape=[model.sample_num] + model.image_shape[1:])
+
+        sample_rot_x = np.rot90(sample_x[:], 1, axes=(-3, -2))
+
+        # Generated image save
+        iu.save_images(sample_x,
+                       size=[model.sample_size, model.sample_size],
+                       image_path='./gen_img/sample_1.png')
+        iu.save_images(sample_rot_x,
+                       size=[model.sample_size, model.sample_size],
+                       image_path='./gen_img/sample_2.png')
+
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
             sample_y[10 * i:10 * (i + 1), i] = 1
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))
+            batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1, axes=(-3, -2)),
+                                     (-1, model.n_input))
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
             _, d_loss = s.run([model.d_op, model.d_loss],
                               feed_dict={
                                   model.x_1: batch_x,
-                                  model.x_2: batch_x,  # batch_rot_x
+                                  model.x_2: batch_rot_x,  # batch_x
                                   # model.y: batch_y,
                                   model.z: batch_z,
                               })
@@ -78,23 +92,19 @@ def main():
             _, g_loss = s.run([model.g_op, model.g_loss],
                               feed_dict={
                                   model.x_1: batch_x,
-                                  model.x_2: batch_x,
+                                  model.x_2: batch_rot_x,
                                   # model.y: batch_y,
                                   model.z: batch_z,
                               })
 
             if global_step % train_step['logging_interval'] == 0:
-                batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-                # batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1), (-1, 784))
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
-
-                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                feed_dict={
-                                                    model.x_1: batch_x,
-                                                    model.x_2: batch_x,
-                                                    # model.y: batch_y,
-                                                    model.z: batch_z,
-                                                })
+                summary = s.run(model.merged,
+                                feed_dict={
+                                    model.x_1: batch_x,
+                                    model.x_2: batch_rot_x,
+                                    # model.y: batch_y,
+                                    model.z: batch_z,
+                                })
 
                 # Print loss
                 print("[+] Step %08d => " % global_step,
