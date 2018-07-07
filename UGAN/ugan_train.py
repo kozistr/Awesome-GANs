@@ -23,8 +23,9 @@ results = {
 
 train_step = {
     'epoch': 25,
-    'batch_size': 128,
-    'logging_interval': 400,
+    'batch_size': 64,
+    'global_steps': 100001,
+    'logging_interval': 500,
 }
 
 
@@ -38,17 +39,17 @@ def main():
                  ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
                  ds_name='cifar-10')
 
-    ds_iter = DataIterator(x=iu.transform(ds.train_images, '127'),
+    ds_iter = DataIterator(x=iu.transform(ds.train_images, '255'),
                            y=ds.train_labels,
                            batch_size=train_step['batch_size'],
                            label_off=True)  # using label # maybe someday, i'll change this param's name
 
     # Generated image save
-    test_images = iu.transform(ds.test_images[:100], inv_type='127')
+    test_images = iu.transform(ds.test_images[:100], inv_type='255')
     iu.save_images(test_images,
                    size=[10, 10],
                    image_path=results['output'] + 'sample.png',
-                   inv_type='127')
+                   inv_type='255')
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -126,7 +127,7 @@ def main():
                     iu.save_images(samples,
                                    size=[sample_image_height, sample_image_width],
                                    image_path=sample_dir,
-                                   inv_type='127')
+                                   inv_type='255')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

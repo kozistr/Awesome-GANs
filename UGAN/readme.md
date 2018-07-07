@@ -12,7 +12,7 @@
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
 
-> Normal Distribution Initializer : (µ = 0, σ = 0.02) <br/>
+> Normal Distribution Initializer : (µ = 0, σ = 0.5) <br/>
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
