@@ -27,8 +27,8 @@
 
 *Name* | *Global Step 2.5k* | *Global Step 5k* | *Global Step 12.5k*
 :---: | :---: | :---: | :---:
-**Gen 1**      | ![img](./gen_img/train_1_00002500.png) | ![img](./gen_img/train_1_00005000.png) | ![img](./gen_img/train_1_00012500.png)
-**Gen 2**      | ![img](./gen_img/train_2_00002500.png) | ![img](./gen_img/train_2_00005000.png) | ![img](./gen_img/train_2_00012500.png)
+**Gen 1 (original)**      | ![img](./gen_img/train_1_00002500.png) | ![img](./gen_img/train_1_00005000.png) | ![img](./gen_img/train_1_00012500.png)
+**Gen 2 (90° rotated)**    | ![img](./gen_img/train_2_00002500.png) | ![img](./gen_img/train_2_00005000.png) | ![img](./gen_img/train_2_00012500.png)
 
 ## To-Do
 * 
