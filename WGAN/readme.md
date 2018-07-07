@@ -17,7 +17,7 @@
 
 ![result](./wgan_tb.png)
 
-> Elapsed time : s with ``GTX 1060 6GB x 1``
+> Elapsed time : 1h 7m 7s with ``GTX 1060 6GB x 1``
 
 ## Result
 
