@@ -13,8 +13,8 @@ class WGAN:
 
     def __init__(self, s, batch_size=32, height=32, width=32, channel=3, n_classes=10,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=32, df_dim=32, fc_unit=512,
-                 enable_adam=False, enable_gp=False):
+                 z_dim=128, gf_dim=64, df_dim=64, fc_unit=512,
+                 enable_gp=True):
 
         """
         # General Settings
@@ -31,11 +31,10 @@ class WGAN:
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
-        :param gf_dim: the number of generator filters, default 32
-        :param df_dim: the number of discriminator filters, default 32
+        :param gf_dim: the number of generator filters, default 64
+        :param df_dim: the number of discriminator filters, default 64
         :param fc_unit: the number of fc units, default 512
-        :param enable_adam: enabling adam optimizer, default False
-        :param enable_gp: enabling gradient penalty, default False
+        :param enable_gp: enabling gradient penalty, default True
         """
 
         self.s = s
@@ -55,12 +54,6 @@ class WGAN:
         self.df_dim = df_dim
         self.fc_unit = fc_unit
 
-        # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                name='x-images')
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
-                                name='z-noise')
-
         # Training Options - based on the WGAN paper
         self.beta1 = 0.  # 0.5
         self.beta2 = .9  # 0.999
@@ -71,7 +64,6 @@ class WGAN:
         self.d_lambda = 10.
         self.decay = .9
 
-        self.EnableAdam = enable_adam
         self.EnableGP = enable_gp
 
         # pre-defined
@@ -88,8 +80,15 @@ class WGAN:
         self.writer = None
         self.saver = None
 
+        # Placeholders
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
+                                name='x-images')
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
+                                name='z-noise')
+
         self.build_wgan()  # build WGAN model
 
+    """ResNet like model for Cifar-10 DataSet
     def mean_pool_conv(self, x, f, reuse=None, name=""):
         with tf.variable_scope(name, reuse=reuse):
             x = tf.add_n([x[:, ::2, ::2, :], x[:, 1::2, ::2, :], x[:, ::2, 1::2, :], x[:, 1::2, 1::2, :]]) / 4.
@@ -113,7 +112,9 @@ class WGAN:
         with tf.variable_scope(name, reuse=reuse):
             shortcut = tf.identity(x, name=(name + "-" + sampling + "-identity"))
 
-            if name.startswith('gen'):
+            is_gen = name.startswith('gen')
+
+            if is_gen:
                 x = t.batch_norm(x, name='%s-bn-1' % (name + "-" + sampling))
             x = tf.nn.relu(x)
 
@@ -122,7 +123,7 @@ class WGAN:
             elif sampling == 'down' or sampling == 'none':
                 x = t.conv2d(x, f, name='%s-conv2d-1' % (name + "-" + sampling))
 
-            if name.startswith('gen'):
+            if is_gen:
                 x = t.batch_norm(x, name='%s-bn-2' % (name + "-" + sampling))
             x = tf.nn.relu(x)
 
@@ -179,6 +180,41 @@ class WGAN:
             x = t.conv2d(x, 3, 3, 1, name="gen-conv2d-1")
             x = tf.nn.tanh(x)
             return x
+    """
+
+    def generator(self, z, reuse=None):
+        with tf.variable_scope('generator', reuse=reuse):
+            x = t.dense(z, self.gf_dim * 4 * 4 * 4, name='gen-fc-1')
+            x = t.batch_norm(x, reuse=reuse, name='gen-bn-1')
+            x = tf.nn.relu(x)
+
+            x = tf.reshape(x, (-1, 4, 4, self.gf_dim * 4))
+
+            for i in range(1, 4):
+                x = t.deconv2d(x, self.gf_dim * 4 // (2 ** (i - 1)), 5, 2, name='gen-deconv2d-%d' % i)
+                x = t.batch_norm(x, reuse=reuse, name='gen-bn-%d' % (i + 1))
+                x = tf.nn.relu(x)
+
+            x = t.deconv2d(x, self.channel, 5, 1, name='gen-deconv2d-5')
+            x = tf.nn.tanh(x)
+            return x
+
+    def discriminator(self, x, reuse=None):
+        with tf.variable_scope('discriminator', reuse=reuse):
+            x = tf.reshape(x, (-1, self.height, self.width, self.channel))
+
+            x = t.conv2d(x, self.df_dim, 5, 2, name='disc-conv2d-1')
+            x = tf.nn.leaky_relu(x)
+
+            for i in range(1, 3):
+                x = t.conv2d(x, self.df_dim, 5, 2, name='disc-conv2d-%d' % (i + 1))
+                x = t.batch_norm(x, reuse=reuse, name='disc-bn-%d' % i)
+                x = tf.nn.leaky_relu(x)
+
+            x = t.flatten(x)
+
+            x = t.dense(x, 1, name='disc-fc-1')
+            return x
 
     def build_wgan(self):
         # Generator
@@ -224,7 +260,7 @@ class WGAN:
             self.d_clip = [v.assign(tf.clip_by_value(v, -self.clip, self.clip)) for v in d_params]
 
         # Optimizer
-        if self.EnableAdam:
+        if self.EnableGP:
             self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr * 2,
                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
                                                                                             var_list=d_params)

@@ -62,8 +62,7 @@ def main():
                           height=32,
                           width=32,
                           channel=3,
-                          enable_adam=False,
-                          enable_gp=False)  # WGAN
+                          enable_gp=True)  # WGAN-GP
 
         # Initializing
         s.run(tf.global_variables_initializer())
