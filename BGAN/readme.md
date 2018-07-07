@@ -23,9 +23,10 @@
 **BGAN**      | ![img](./gen_img/train_00050000.png) | ![img](./gen_img/train_00100000.png) | ![img](./gen_img/train_00200000.png)
 
 ## To-Do
-* Add KL/Reverse-KL divergence
-* Add JS divergence
-* Add f-divergence
-* Add Reinforce-based BGAN
-* Add Squared-Hellinger
-
+* Add f-divergences
+  * KL
+  * Reverse-KL
+  * JS
+  * Squared-Hellinger
+  * Pearson x^2
+* Add Reinforce-based BGAN 
