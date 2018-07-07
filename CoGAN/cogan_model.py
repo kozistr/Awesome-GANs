@@ -103,7 +103,7 @@ class CoGAN:
             #                             name='disc-' + name + '-max_pool2d-1')
 
             x = t.conv2d(x, f=self.df_dim * 2, k=5, s=2, reuse=False, name='disc-' + name + '-conv2d-2')
-            x = t.batch_norm(x, reuse=reuse, name='disc-' + name + '-bn-1')
+            x = t.batch_norm(x, reuse=False, name='disc-' + name + '-bn-1')
             x = t.prelu(x, reuse=False, name='disc-' + name + '-prelu-2')
             # x = tf.layers.max_pooling2d(x, pool_size=2, strides=2, padding='SAME',
             #                             name='disc-' + name + '-max_pool2d-2')
