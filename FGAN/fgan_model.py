@@ -127,9 +127,9 @@ class FGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
