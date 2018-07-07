@@ -216,7 +216,7 @@ class SRGAN:
             self.g_cnt_loss = self.cnt_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size,
                                                             is_mean=True)
         else:
-            self.g_cnt_loss = self.cnt_scaling * t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
+            self.g_cnt_loss = t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
 
         # self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
         self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
