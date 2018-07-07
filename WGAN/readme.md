@@ -10,8 +10,8 @@
 * Same with the WGAN paper.
 
 *DIFFS* | *WGAN Paper* | *ME*  |
- :---:  |     :---:      | :---: |
- **Dim** | ``NCHW`` | ``NHWC`` |
+ :---:  |     :---:    | :---: |
+ **Networks** | ``Resnet like`` | ``simple 4 conv nets`` |
 
 ## Tensorboard
 
