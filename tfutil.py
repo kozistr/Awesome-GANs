@@ -195,9 +195,8 @@ def conv1d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv1
 
 
 def sub_pixel_conv2d(x, f, s=2):
-    """
-    # ref : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py
-    """
+    """reference : https://github.com/tensorlayer/SRGAN/blob/master/tensorlayer/layers.py"""
+
     if f is None:
         f = int(int(x.get_shape()[-1]) / (s ** 2))
 
@@ -313,7 +312,7 @@ def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="b
                                          name=name)
 
 
-def instance_norm(x, affine=True, reuse=None, name=""):
+def instance_norm(x, std=2e-2, affine=True, reuse=None, name=""):
     with tf.variable_scope('instance_normalize-%s' % name, reuse=reuse):
         mean, variance = tf.nn.moments(x, [1, 2], keepdims=True)
 
@@ -325,7 +324,7 @@ def instance_norm(x, affine=True, reuse=None, name=""):
             depth = x.get_shape()[3]  # input channel
 
             scale = tf.get_variable('scale', [depth],
-                                    initializer=tf.random_normal_initializer(mean=1., stddev=.02, dtype=tf.float32))
+                                    initializer=tf.random_normal_initializer(mean=1., stddev=std, dtype=tf.float32))
             offset = tf.get_variable('offset', [depth],
                                      initializer=tf.zeros_initializer())
 
