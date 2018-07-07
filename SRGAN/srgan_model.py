@@ -15,7 +15,7 @@ class SRGAN:
 
     def __init__(self, s, batch_size=16, height=384, width=384, channel=3,
                  sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=64, lr=1e-4):
+                 df_dim=64, gf_dim=64, lr=1e-4, use_vgg19=True):
 
         """ Super-Resolution GAN Class
         # General Settings
@@ -72,17 +72,17 @@ class SRGAN:
         self.d_fake = 0.
         self.d_loss = 0.
         self.g_adv_loss = 0.
-        self.g_mse_loss = 0.
         self.g_cnt_loss = 0.
         self.g_loss = 0.
         self.psnr = 0.
 
+        self.use_vgg19 = use_vgg19
         self.vgg19 = None
 
         self.g = None
 
         self.adv_scaling = 1e-3
-        self.vgg_scaling = 2e-6  # 1. / 12.75  # 6e-3
+        self.cnt_scaling = 1. / 12.75  # 6e-3
 
         self.d_op = None
         self.g_op = None
@@ -206,17 +206,21 @@ class SRGAN:
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss
 
-        x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2], align_corners=False)
-        x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2], align_corners=False)
+        if self.use_vgg19:
+            x_vgg_real = tf.image.resize_images(self.x_hr, size=self.vgg_image_shape[:2], align_corners=False)
+            x_vgg_fake = tf.image.resize_images(self.g, size=self.vgg_image_shape[:2], align_corners=False)
 
-        vgg_bottle_real = self.build_vgg19(x_vgg_real)
-        vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
+            vgg_bottle_real = self.build_vgg19(x_vgg_real)
+            vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
+
+            self.g_cnt_loss = self.cnt_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size,
+                                                            is_mean=True)
+        else:
+            self.g_cnt_loss = self.cnt_scaling * t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
 
         # self.g_adv_loss = self.adv_scaling * tf.reduce_mean(-1. * t.safe_log(d_fake))
         self.g_adv_loss = self.adv_scaling * t.sce_loss(d_fake, tf.ones_like(d_fake))
-        self.g_cnt_loss = self.vgg_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size, is_mean=True)
-        self.g_mse_loss = t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
-        self.g_loss = self.g_adv_loss + self.g_cnt_loss + self.g_mse_loss
+        self.g_loss = self.g_adv_loss + self.g_cnt_loss
 
         def inverse_transform(img):
             return (img + 1.) * 127.5
@@ -230,7 +234,6 @@ class SRGAN:
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_cnt_loss", self.g_cnt_loss)
-        tf.summary.scalar("loss/g_mse_loss", self.g_mse_loss)
         tf.summary.scalar("loss/g_adv_loss", self.g_adv_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
         tf.summary.scalar("misc/psnr", self.psnr)
@@ -250,7 +253,7 @@ class SRGAN:
 
         # pre-train
         self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_mse_loss,
+                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_cnt_loss,
                                                                                              var_list=g_params)
 
         # Merge summary
