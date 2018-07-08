@@ -12,8 +12,9 @@
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z dim** | ``100`` | ``128`` |
+ **fc unit** | ``D/G[240,1200]`` | ``D/G[256,1024]`` |
  
-> Normal Distribution Initializer : (µ = 0, σ = 0.91) <br/>
+> Normal Distribution Initializer : (µ = 0, σ = D/G(0.005,0.05)) <br/>
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
 ## Tensorboard
@@ -30,10 +31,12 @@
 
 ## To-Do
 * Add f-divergences
-  * KL
-  * Reverse-KL
-  * JS
-  * Squared-Hellinger
-  * Pearson χ^2
-  * Neyman χ^2
-  * Jeffrey
+  * KL - done
+  * Reverse-KL - done
+  * JS - done
+  * JS-Weighted - done
+  * Squared-Hellinger - done
+  * Pearson χ^2 - done
+  * Neyman χ^2 - done
+  * Jeffrey - done
+* Add α-divergences

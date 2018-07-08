@@ -13,7 +13,7 @@ class FGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4,
+                 z_dim=128, dfc_unit=256, gfc_unit=1024, lr=2e-4,
                  divergence_method='KL'):
 
         """
@@ -30,8 +30,8 @@ class FGAN:
 
         # Model Settings
         :param z_dim: z noise dimension, default 128
-        :param gf_dim: the number of generator filters, default 64
-        :param df_dim: the number of discriminator filters, default 64
+        :param dfc_unit: the number of fully connected units used at disc, default 256
+        :param gfc_unit: the number of fully connected units used at gen, default 1024
 
         # Training Settings
         :param lr: learning rate, default 2e-4
@@ -52,8 +52,8 @@ class FGAN:
 
         self.z_dim = z_dim
 
-        self.gf_dim = gf_dim
-        self.df_dim = df_dim
+        self.dfc_unit = dfc_unit
+        self.gfc_unit = gfc_unit
 
         # pre-defined
         self.d_loss = 0.
@@ -82,22 +82,24 @@ class FGAN:
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
-            for i in range(1, 4):
-                x = t.dense(x, self.gf_dim * (2 ** (i - 1)), name='disc-fc-%d' % i)
-                x = tf.nn.elu(x)
+            x = t.dense(x, self.dfc_unit, name='disc-fc-1')
+            x = tf.nn.elu(x)
+
+            x = t.dense(x, self.dfc_unit, name='disc-fc-2')
+            x = tf.nn.elu(x)
 
             x = tf.layers.flatten(x)
 
-            x = t.dense(x, 1, name='disc-fc-4')
+            x = t.dense(x, 1, name='disc-fc-3')
             return x
 
     def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
-            x = t.dense(z, self.gf_dim, name='gen-fc-1')
+            x = t.dense(z, self.gfc_unit, name='gen-fc-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = t.dense(x, self.gf_dim, name='gen-fc-2')
+            x = t.dense(x, self.gfc_unit, name='gen-fc-2')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
@@ -115,35 +117,47 @@ class FGAN:
 
         # Losses
         if self.divergence == 'GAN':
-            self.d_loss = -(tf.reduce_mean(-t.safe_log(1. + tf.exp(-d_real))) - -t.safe_log(1. - tf.exp(d_fake)))
-            self.g_loss = -t.safe_log(1. - tf.exp(d_fake))
+            d_real_loss = tf.reduce_mean(-tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = tf.reduce_mean(-tf.log(1. - tf.exp(d_fake)))
         elif self.divergence == 'KL':  # tf.distribution.kl_divergence
-            self.d_loss = -(tf.reduce_mean(d_real) - tf.reduce_mean(tf.exp(d_fake - 1.)))
-            self.g_loss = -tf.reduce_mean(tf.exp(d_fake - 1.))
+            d_real_loss = tf.reduce_mean(d_real)
+            d_fake_loss = tf.reduce_mean(tf.exp(d_fake - 1.))
         elif self.divergence == 'Reverse-KL':
-            self.d_loss = -(tf.reduce_mean(-tf.exp(-d_real)) - tf.reduce_mean(-1. - t.safe_log(-d_fake)))
-            self.g_loss = -tf.reduce_mean(-1. - d_fake)
+            d_real_loss = tf.reduce_mean(-tf.exp(d_real))
+            d_fake_loss = tf.reduce_mean(-1. - tf.log(-d_fake))
         elif self.divergence == 'JS':
-            self.d_loss = -(tf.reduce_mean(tf.log(2) - t.safe_log(1. + tf.exp(- d_real))) -
-                            tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake))))
-            self.g_loss = -tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake)))
+            d_real_loss = tf.reduce_mean(tf.log(2) - tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = tf.reduce_mean(-tf.log(2. - tf.exp(d_fake)))
+        elif self.divergence == 'JS-Weighted':
+            import math as m
+            d_real_loss = tf.reduce_mean(-m.pi * m.log(m.pi) - tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = tf.reduce_mean((1. - m.pi) * tf.log((1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi))))
         elif self.divergence == 'Squared-Hellinger':
-            self.d_loss = -(tf.reduce_mean(1. - tf.exp(-d_real)) - tf.reduce_mean(d_fake / (1. - d_fake)))
-            self.g_loss = - tf.reduce_mean(d_fake / (1. - d_fake))
+            d_real_loss = tf.reduce_mean(1. - tf.exp(d_real))
+            d_fake_loss = tf.reduce_mean(d_fake / (1. - d_fake))
         elif self.divergence == 'Pearson':
-            self.d_loss = -(tf.reduce_mean(d_real) - tf.reduce_mean(tf.square(d_fake) / 4. + d_fake))
-            self.g_loss = -tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
+            d_real_loss = tf.reduce_mean(d_real)
+            d_fake_loss = tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
         elif self.divergence == 'Neyman':
-            pass
+            d_real_loss = tf.reduce_mean(1. - tf.exp(d_real))
+            d_fake_loss = tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))
         elif self.divergence == 'Jeffrey':
-            pass
+            from scipy.special import lambertw
+            d_real_loss = tf.reduce_mean(d_real)
+            lambert_w = lambertw(tf.exp(1. - d_fake))  # type problem
+            d_fake_loss = tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
         elif self.divergence == 'Total-Variation':
-            self.d_loss = -(tf.reduce_mean(tf.nn.tanh(d_real) / 2.) - tf.reduce_mean(tf.nn.tanh(d_fake) / 2.))
-            self.g_loss = - tf.reduce_mean(tf.nn.tanh(d_fake) / 2.)
+            d_real_loss = tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
+            d_fake_loss = tf.reduce_mean(d_fake)
         else:
             raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
+        self.d_loss = d_real_loss - d_fake_loss
+        self.g_loss = d_fake_loss
+
         # Summary
+        tf.summary.scalar("loss/d_real_loss", d_real_loss)
+        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
