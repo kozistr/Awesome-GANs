@@ -144,7 +144,7 @@ class FGAN:
         elif self.divergence == 'Jeffrey':
             from scipy.special import lambertw
             d_real_loss = -tf.reduce_mean(d_real)
-            lambert_w = lambertw(tf.exp(1. - d_fake))  # type problem
+            lambert_w = lambertw(self.s.run(tf.exp(1. - d_fake)))
             d_fake_loss = -tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
         elif self.divergence == 'Total-Variation':
             d_real_loss = -tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
