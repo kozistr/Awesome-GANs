@@ -88,7 +88,7 @@ class FGAN:
 
             x = tf.layers.flatten(x)
 
-            x = t.dense(x, 1, name='disc-fc-1')
+            x = t.dense(x, 1, name='disc-fc-4')
             return x
 
     def generator(self, z, reuse=None, is_train=True):
