@@ -117,38 +117,38 @@ class FGAN:
 
         # Losses
         if self.divergence == 'GAN':
-            d_real_loss = tf.reduce_mean(-tf.log(1. + tf.exp(-d_real)))
-            d_fake_loss = tf.reduce_mean(-tf.log(1. - tf.exp(d_fake)))
+            d_real_loss = -tf.reduce_mean(-tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = -tf.reduce_mean(-tf.log(1. - tf.exp(d_fake)))
         elif self.divergence == 'KL':  # tf.distribution.kl_divergence
-            d_real_loss = tf.reduce_mean(d_real)
-            d_fake_loss = tf.reduce_mean(tf.exp(d_fake - 1.))
+            d_real_loss = -tf.reduce_mean(d_real)
+            d_fake_loss = -tf.reduce_mean(tf.exp(d_fake - 1.))
         elif self.divergence == 'Reverse-KL':
-            d_real_loss = tf.reduce_mean(-tf.exp(d_real))
-            d_fake_loss = tf.reduce_mean(-1. - tf.log(-d_fake))
+            d_real_loss = -tf.reduce_mean(-tf.exp(d_real))
+            d_fake_loss = -tf.reduce_mean(-1. - tf.log(-d_fake))
         elif self.divergence == 'JS':
-            d_real_loss = tf.reduce_mean(tf.log(2) - tf.log(1. + tf.exp(-d_real)))
-            d_fake_loss = tf.reduce_mean(-tf.log(2. - tf.exp(d_fake)))
+            d_real_loss = -tf.reduce_mean(tf.log(2) - tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = -tf.reduce_mean(-tf.log(2. - tf.exp(d_fake)))
         elif self.divergence == 'JS-Weighted':
             import math as m
-            d_real_loss = tf.reduce_mean(-m.pi * m.log(m.pi) - tf.log(1. + tf.exp(-d_real)))
-            d_fake_loss = tf.reduce_mean((1. - m.pi) * tf.log((1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi))))
+            d_real_loss = -tf.reduce_mean(-m.pi * m.log(m.pi) - tf.log(1. + tf.exp(-d_real)))
+            d_fake_loss = -tf.reduce_mean((1. - m.pi) * tf.log((1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi))))
         elif self.divergence == 'Squared-Hellinger':
-            d_real_loss = tf.reduce_mean(1. - tf.exp(d_real))
-            d_fake_loss = tf.reduce_mean(d_fake / (1. - d_fake))
+            d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
+            d_fake_loss = -tf.reduce_mean(d_fake / (1. - d_fake))
         elif self.divergence == 'Pearson':
-            d_real_loss = tf.reduce_mean(d_real)
-            d_fake_loss = tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
+            d_real_loss = -tf.reduce_mean(d_real)
+            d_fake_loss = -tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
         elif self.divergence == 'Neyman':
-            d_real_loss = tf.reduce_mean(1. - tf.exp(d_real))
-            d_fake_loss = tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))
+            d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
+            d_fake_loss = -tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))
         elif self.divergence == 'Jeffrey':
             from scipy.special import lambertw
-            d_real_loss = tf.reduce_mean(d_real)
+            d_real_loss = -tf.reduce_mean(d_real)
             lambert_w = lambertw(tf.exp(1. - d_fake))  # type problem
-            d_fake_loss = tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
+            d_fake_loss = -tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
         elif self.divergence == 'Total-Variation':
-            d_real_loss = tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
-            d_fake_loss = tf.reduce_mean(d_fake)
+            d_real_loss = -tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
+            d_fake_loss = -tf.reduce_mean(d_fake)
         else:
             raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
