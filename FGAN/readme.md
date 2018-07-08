@@ -23,7 +23,7 @@
 *Name* | *graph* | *time*
 :---: | :---: | :---:
 **KL** | ![result](./tb/kl_tb.png) | 19m 47s
-**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m s
+**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m 56s
 **JS** | ![result](./tb/js_tb.png) | 19m s
 **JS-Weighted** | ![result](./tb/js-weighted_tb.png) | 19m s
 **Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) | 19m s
