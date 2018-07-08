@@ -36,7 +36,7 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
-    idx = 6  # Pearson
+    idx = 1  # Pearson
     divergences = ['GAN', 'KL', 'Reverse-KL', 'JS',
                    'JS-Weighted', 'Squared-Hellinger', 'Pearson', 'Neyman',
                    'Jeffrey', 'Total-Variation']
