@@ -2,13 +2,13 @@
 
 ## Loss Function
 
-* used ``sce loss`` at D/G nets.
+* used ``f-divergences familiy`` at D/G nets.
 
 ## Architecture Networks
 
-* Same as FGAN paper.
+* Same as f-GAN paper.
 
-*DIFFS* | *FGAN Paper* | *ME*  |
+*DIFFS* | *f-GAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
  **z dim** | ``100`` | ``128`` |
@@ -26,7 +26,7 @@
 
 *Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 20k*
 :---: | :---: | :---: | :---:
-**FGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
+**f-GAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
 
 ## To-Do
 * Add f-divergences

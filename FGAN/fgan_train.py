@@ -23,22 +23,28 @@ results = {
 train_step = {
     'batch_size': 4096,
     'global_steps': 100001,
-    'logging_interval': 500,
+    'logging_interval': 1000,
 }
 
 
 def main():
     start_time = time.time()  # Clocking start
 
-    # Loading Cifar-10 DataSet
+    # Loading MNIST DataSet
     mnist = DataSet(ds_path="D:\\DataSet/mnist/").data
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
+    idx = 4  # Squared-Hellinger
+    divergences = ['GAN', 'KL', 'Reverse-KL', 'JS', 'Squared-Hellinger', 'Pearson', 'Neyman', 'Jeffrey',
+                   'Total-Variation']
+    assert (0 <= idx < len(divergences))
+
     with tf.Session(config=config) as s:
-        # FGAN model
-        model = fgan.FGAN(s, batch_size=train_step['batch_size'])
+        # f-GAN model
+        model = fgan.FGAN(s, batch_size=train_step['batch_size'],
+                          divergence_method=divergences[idx])
 
         # Initializing variables
         s.run(tf.global_variables_initializer())
@@ -46,7 +52,7 @@ def main():
         # Load model & Graph & Weights
         saved_global_step = 0
 
-        ckpt = tf.train.get_checkpoint_state('./model/')
+        ckpt = tf.train.get_checkpoint_state('./model/%s/' % divergences[idx])
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
             model.saver.restore(s, ckpt.model_checkpoint_path)

@@ -13,7 +13,8 @@ class FGAN:
 
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
+                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4,
+                 divergence_method='KL'):
 
         """
         # General Settings
@@ -34,6 +35,7 @@ class FGAN:
 
         # Training Settings
         :param lr: learning rate, default 2e-4
+        :param divergence_method: the method of f-divergences, default 'KL'
         """
 
         self.s = s
@@ -74,7 +76,9 @@ class FGAN:
         self.beta1 = 0.5
         self.lr = lr
 
-        self.bulid_fgan()  # build FGAN model
+        self.divergence = divergence_method
+
+        self.bulid_fgan()  # build f-GAN model
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
@@ -110,14 +114,36 @@ class FGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+        if self.divergence == 'GAN':
+            self.d_loss = -(tf.reduce_mean(-t.safe_log(1. + tf.exp(-d_real))) - -t.safe_log(1. - tf.exp(d_fake)))
+            self.g_loss = -t.safe_log(1. - tf.exp(d_fake))
+        elif self.divergence == 'KL':  # tf.distribution.kl_divergence
+            self.d_loss = -(tf.reduce_mean(d_real) - tf.reduce_mean(tf.exp(d_fake - 1.)))
+            self.g_loss = -tf.reduce_mean(tf.exp(d_fake - 1.))
+        elif self.divergence == 'Reverse-KL':
+            self.d_loss = -(tf.reduce_mean(-tf.exp(-d_real)) - tf.reduce_mean(-1. - t.safe_log(-d_fake)))
+            self.g_loss = -tf.reduce_mean(-1. - d_fake)
+        elif self.divergence == 'JS':
+            self.d_loss = -(tf.reduce_mean(tf.log(2) - t.safe_log(1. + tf.exp(- d_real))) -
+                            tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake))))
+            self.g_loss = -tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake)))
+        elif self.divergence == 'Squared-Hellinger':
+            self.d_loss = -(tf.reduce_mean(1. - tf.exp(-d_real)) - tf.reduce_mean(d_fake / (1. - d_fake)))
+            self.g_loss = - tf.reduce_mean(d_fake / (1. - d_fake))
+        elif self.divergence == 'Pearson':
+            self.d_loss = -(tf.reduce_mean(d_real) - tf.reduce_mean(tf.square(d_fake) / 4. + d_fake))
+            self.g_loss = -tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
+        elif self.divergence == 'Neyman':
+            pass
+        elif self.divergence == 'Jeffrey':
+            pass
+        elif self.divergence == 'Total-Variation':
+            self.d_loss = -(tf.reduce_mean(tf.nn.tanh(d_real) / 2.) - tf.reduce_mean(tf.nn.tanh(d_fake) / 2.))
+            self.g_loss = - tf.reduce_mean(tf.nn.tanh(d_fake) / 2.)
+        else:
+            raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
         # Summary
-        tf.summary.scalar("loss/d_real_loss", d_real_loss)
-        tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
@@ -137,4 +163,4 @@ class FGAN:
 
         # Model Saver
         self.saver = tf.train.Saver(max_to_keep=1)
-        self.writer = tf.summary.FileWriter('./model/', self.s.graph)
+        self.writer = tf.summary.FileWriter('./model/%s/' % self.divergence, self.s.graph)
