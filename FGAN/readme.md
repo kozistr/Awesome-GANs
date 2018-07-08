@@ -20,9 +20,17 @@
 
 ## Tensorboard
 
-![result](./tb/pearson_tb.png)
-
-> Elapsed Time : 19m 53s with ``GTX 1060 6GB x 1``
+*Name* | *graph* | *time*
+:---: | :---: | :---:
+**KL** | ![result](./tb/kl_tb.png) |
+**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) |
+**JS** | ![result](./tb/js_tb.png) |
+**JS-Weighted** | ![result](./tb/js-weighted_tb.png) |
+**squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) |
+**Pearson** | ![result](./tb/pearson_tb.png) | 19m 53s
+**Neyman** | ![result](./tb/neyman_tb.png) |
+**Jeffrey** | ![result](./tb/jeffrey_tb.png) |
+**Total-Variation** | ![result](./tb/total-variation_tb.png) |
 
 ## Result
 
