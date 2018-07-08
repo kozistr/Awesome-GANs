@@ -17,7 +17,7 @@ from datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
-    'model': './model/'
+    'model': './model/',
 }
 
 train_step = {
@@ -36,9 +36,10 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
-    idx = 5  # Squared-Hellinger
-    divergences = ['GAN', 'KL', 'Reverse-KL', 'JS', 'JS-Weighted', 'Squared-Hellinger', 'Pearson', 'Neyman', 'Jeffrey',
-                   'Total-Variation']
+    idx = 6  # Pearson
+    divergences = ['GAN', 'KL', 'Reverse-KL', 'JS',
+                   'JS-Weighted', 'Squared-Hellinger', 'Pearson', 'Neyman',
+                   'Jeffrey', 'Total-Variation']
     assert (0 <= idx < len(divergences))
 
     results['output'] += '%s/' % divergences[idx]
@@ -65,12 +66,8 @@ def main():
         else:
             print('[-] No checkpoint file found')
 
-        def image_rescale(x):
-            return (x / 127.5) - 1.
-
         for global_step in range(saved_global_step, train_step['global_steps']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_x = image_rescale(batch_x)
             batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
