@@ -26,7 +26,7 @@
 **Reverse-KL** | ![result](./tb/reverse-kl_tb.png) |
 **JS** | ![result](./tb/js_tb.png) |
 **JS-Weighted** | ![result](./tb/js-weighted_tb.png) |
-**squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) |
+**Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) |
 **Pearson** | ![result](./tb/pearson_tb.png) | 19m 53s
 **Neyman** | ![result](./tb/neyman_tb.png) |
 **Jeffrey** | ![result](./tb/jeffrey_tb.png) |
