@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 import sys
 
@@ -126,12 +127,12 @@ class FGAN:
             d_real_loss = -tf.reduce_mean(-tf.exp(d_real))
             d_fake_loss = -tf.reduce_mean(-1. - d_fake)  # remove log
         elif self.divergence == 'JS':
-            d_real_loss = -tf.reduce_mean(tf.log(2) - t.safe_log(1. + tf.exp(-d_real)))
+            d_real_loss = -tf.reduce_mean(t.safe_log(2. / (1. + tf.exp(-d_real))))
             d_fake_loss = -tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake)))
         elif self.divergence == 'JS-Weighted':
             import math as m
-            d_real_loss = -tf.reduce_mean(-m.pi * m.log(m.pi) - tf.log(1. + tf.exp(-d_real)))
-            d_fake_loss = -tf.reduce_mean((1. - m.pi) * t.safe_log((1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi))))
+            d_real_loss = -tf.reduce_mean(-m.pi * m.log(m.pi) - (1. + tf.exp(-d_real)))  # remove log
+            d_fake_loss = -tf.reduce_mean((1. - m.pi) * (1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi)))  # remove log
         elif self.divergence == 'Squared-Hellinger':
             d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
             d_fake_loss = -tf.reduce_mean(d_fake / (1. - d_fake))
