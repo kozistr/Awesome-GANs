@@ -63,3 +63,5 @@
   * Jeffrey - **done**
   * Total-Variation - **done**
 * Add α-divergences
+  * α-divergence (α < 0, α is not 0)
+  * α-divergence (α > 1)
