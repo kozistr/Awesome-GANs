@@ -130,9 +130,9 @@ class FGAN:
             d_real_loss = -tf.reduce_mean(t.safe_log(2. / (1. + tf.exp(-d_real))))
             d_fake_loss = -tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake)))
         elif self.divergence == 'JS-Weighted':
-            import math as m
-            d_real_loss = -tf.reduce_mean(-m.pi * m.log(m.pi) - (1. + tf.exp(-d_real)))  # remove log
-            d_fake_loss = -tf.reduce_mean((1. - m.pi) * (1. - m.pi) / (1. - m.pi * tf.exp(d_fake / m.pi)))  # remove log
+            d_real_loss = -tf.reduce_mean(-np.pi * np.log(np.pi) - (1. + tf.exp(-d_real)))  # remove log
+            d_fake_loss = -tf.reduce_mean((1. - np.pi) *
+                                          t.safe_log((1. - np.pi) / (1. - np.pi * tf.exp(d_fake / np.pi))))
         elif self.divergence == 'Squared-Hellinger':
             d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
             d_fake_loss = -tf.reduce_mean(d_fake / (1. - d_fake))
@@ -141,15 +141,15 @@ class FGAN:
             d_fake_loss = -tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
         elif self.divergence == 'Neyman':
             d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
-            d_fake_loss = -tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))
+            d_fake_loss = -tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))  # d_fake < 1
         elif self.divergence == 'Jeffrey':
             from scipy.special import lambertw
             d_real_loss = -tf.reduce_mean(d_real)
-            lambert_w = lambertw(self.s.run(tf.exp(1. - d_fake)))
+            lambert_w = lambertw(self.s.run(tf.exp(1. - d_fake)))  # need to be replaced with another tensor func
             d_fake_loss = -tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
         elif self.divergence == 'Total-Variation':
             d_real_loss = -tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
-            d_fake_loss = -tf.reduce_mean(d_fake)
+            d_fake_loss = -tf.reduce_mean(d_fake)  # |d_fake| < 0.5
         else:
             raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
