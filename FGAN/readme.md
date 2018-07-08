@@ -22,15 +22,17 @@
 
 *Name* | *graph* | *time*
 :---: | :---: | :---:
-**KL** | ![result](./tb/kl_tb.png) |
-**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) |
-**JS** | ![result](./tb/js_tb.png) |
-**JS-Weighted** | ![result](./tb/js-weighted_tb.png) |
-**Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) |
+**KL** | ![result](./tb/kl_tb.png) | 19m 47s
+**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m s
+**JS** | ![result](./tb/js_tb.png) | 19m s
+**JS-Weighted** | ![result](./tb/js-weighted_tb.png) | 19m s
+**Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) | 19m s
 **Pearson** | ![result](./tb/pearson_tb.png) | 19m 53s
-**Neyman** | ![result](./tb/neyman_tb.png) |
-**Jeffrey** | ![result](./tb/jeffrey_tb.png) |
-**Total-Variation** | ![result](./tb/total-variation_tb.png) |
+**Neyman** | ![result](./tb/neyman_tb.png) | 19m s
+**Jeffrey** | ![result](./tb/jeffrey_tb.png) | 19m s
+**Total-Variation** | ![result](./tb/total-variation_tb.png) | 19m s
+
+> with ``GTX 1060 6GB x 1``
 
 ## Result
 
