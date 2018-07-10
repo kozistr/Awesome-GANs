@@ -12,6 +12,7 @@
 *DIFFS* | *MRGAN Paper* | *ME*  |
  :---:  |     :---:      | :---: |
  **Weight initializer** | ``normal dist`` | ``HE initializer`` |
+ **z dim** | ``100`` | ``128`` |
   
 > HE Initializer parameters       : (factor = 1, FAN_AVG, uniform)
 
