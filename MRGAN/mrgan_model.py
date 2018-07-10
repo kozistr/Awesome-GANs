@@ -13,7 +13,7 @@ class MRGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
                  sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
+                 z_dim=128, gf_dim=64, df_dim=64, lr=1e-4):
 
         """
         # General Settings
@@ -34,7 +34,7 @@ class MRGAN:
         :param df_dim: the number of discriminator filters, default 64
 
         # Training Settings
-        :param lr: learning rate, default 2e-4
+        :param lr: learning rate, default 1e-4
         """
 
         self.s = s
@@ -53,12 +53,15 @@ class MRGAN:
         self.gf_dim = gf_dim
         self.df_dim = df_dim
 
+        self.lambda_1 = 0.2
+        self.lambda_2 = 0.4
+
         # pre-defined
         self.d_loss = 0.
         self.g_loss = 0.
 
         self.g = None
-        self.g_test = None
+        self.g_reg = None
 
         self.d_op = None
         self.g_op = None
@@ -76,6 +79,28 @@ class MRGAN:
         self.lr = lr
 
         self.bulid_mrgan()  # build MRGAN model
+
+    def encoder(self, x, reuse=None):
+        with tf.variable_scope('encoder', reuse=reuse):
+            x = t.conv2d(x, self.df_dim * 1, 5, 2, name='enc-conv2d-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 2, 5, 2, name='enc-conv2d-2')
+            x = t.batch_norm(x, name='enc-bn-1')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 4, 5, 2, name='enc-conv2d-3')
+            x = t.batch_norm(x, name='enc-bn-2')
+            x = tf.nn.leaky_relu(x)
+
+            x = t.conv2d(x, self.df_dim * 8, 5, 2, name='enc-conv2d-4')
+            x = t.batch_norm(x, name='enc-bn-3')
+            x = tf.nn.leaky_relu(x)
+
+            x = tf.layers.flatten(x)
+
+            x = t.dense(x, 1, name='enc-fc-1')
+            return x
 
     def discriminator(self, x, reuse=None):
         with tf.variable_scope('discriminator', reuse=reuse):
@@ -129,19 +154,14 @@ class MRGAN:
     def bulid_mrgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z, reuse=True, is_train=False)
+        self.g_reg = self.generator(self.encoder(self.x))
 
         # Discriminator
-        _, d_real = self.discriminator(self.x)
-        _, d_fake = self.discriminator(self.g, reuse=True)
+        d_real = self.discriminator(self.x)
+        d_real_reg = self.discriminator(self.g_reg, reuse=True)
+        d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        """
-        d_real_loss = -tf.reduce_mean(log(d_real))
-        d_fake_loss = -tf.reduce_mean(log(1. - d_fake))
-        self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = -tf.reduce_mean(log(d_fake))
-        """
         d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
         d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
         self.d_loss = d_real_loss + d_fake_loss

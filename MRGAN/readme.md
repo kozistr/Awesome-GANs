@@ -2,7 +2,8 @@
 
 ## Loss Function
 
-* used `` loss`` at D/G nets.
+* used ``GAN loss`` at D/G nets.
+* used ``MSE loss`` at Encoder.
 
 ## Architecture Networks
 
