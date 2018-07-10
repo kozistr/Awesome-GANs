@@ -174,7 +174,7 @@ class MRGAN:
         d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
         d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        e_mse_loss = self.lambda_1 * t.mse_loss(self.x, self.g_reg, self.batch_size)
+        e_mse_loss = self.lambda_1 * t.mse_loss(self.x, self.g_reg, self.batch_size, is_mean=True)
         e_adv_loss = self.lambda_2 * tf.reduce_mean(t.safe_log(d_real_reg))
         self.e_loss = e_adv_loss + e_mse_loss
         self.g_loss = -tf.reduce_mean(t.safe_log(d_fake)) + self.e_loss
