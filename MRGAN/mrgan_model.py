@@ -58,6 +58,7 @@ class MRGAN:
 
         # pre-defined
         self.d_loss = 0.
+        self.e_loss = 0.
         self.g_loss = 0.
 
         self.g = None
@@ -65,6 +66,7 @@ class MRGAN:
 
         self.d_op = None
         self.g_op = None
+        self.e_op = None
 
         self.merged = None
         self.writer = None
@@ -121,10 +123,9 @@ class MRGAN:
 
             x = tf.layers.flatten(x)
 
-            logits = t.dense(x, 1, name='disc-fc-1')
-            prob = tf.nn.sigmoid(logits)
-
-            return prob, logits
+            x = t.dense(x, 1, name='disc-fc-1')
+            x = tf.nn.sigmoid(x)
+            return x
 
     def generator(self, z, reuse=None, is_train=True):
         with tf.variable_scope('generator', reuse=reuse):
@@ -154,7 +155,7 @@ class MRGAN:
     def bulid_mrgan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_reg = self.generator(self.encoder(self.x))
+        self.g_reg = self.generator(self.encoder(self.x), reuse=True)
 
         # Discriminator
         d_real = self.discriminator(self.x)
@@ -162,27 +163,44 @@ class MRGAN:
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+        # Manifold Step
+        # d_loss_1 = tf.reduce_mean(t.safe_log(d_real) + t.safe_log(1. - d_real_reg))
+        # g_loss_1 = tf.reduce_mean(self.lambda_1 * t.safe_log(d_real_reg)) - \
+        #            t.mse_loss(self.x, self.g_reg, self.batch_size)
+        # Diffusion Step
+        # d_loss_2 = tf.reduce_mean(t.safe_log(d_real_reg) + t.safe_log(1. - d_fake))
+        # g_loss_2 = tf.reduce_mean(t.safe_log(d_fake))
+
+        d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
+        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
-        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
+        e_mse_loss = self.lambda_1 * t.mse_loss(self.x, self.g_reg, self.batch_size)
+        e_adv_loss = self.lambda_2 * tf.reduce_mean(t.safe_log(d_real_reg))
+        self.e_loss = e_adv_loss - e_mse_loss
+        self.g_loss = -tf.reduce_mean(t.safe_log(d_fake)) + self.e_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
+        tf.summary.scalar("loss/e_adv_loss", e_adv_loss)
+        tf.summary.scalar("loss/e_mse_loss", e_mse_loss)
+        tf.summary.scalar("loss/e_loss", self.e_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
 
         # Collect trainer values
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
+        e_params = [v for v in t_vars if v.name.startswith('e')]
 
         # Optimizer
         self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
         self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
                                            beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.e_op = tf.train.AdamOptimizer(learning_rate=self.lr,
+                                           beta1=self.beta1).minimize(self.e_loss, var_list=e_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()

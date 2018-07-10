@@ -73,6 +73,13 @@ def main():
                                   model.z: batch_z,
                               })
 
+            # Update E network
+            _, e_loss = s.run([model.e_op, model.e_loss],
+                              feed_dict={
+                                  model.x: batch_x,
+                                  model.z: batch_z,
+                              })
+
             if global_step % train_step['logging_interval'] == 0:
                 summary = s.run(model.merged,
                                 feed_dict={
@@ -83,7 +90,8 @@ def main():
                 # Print loss
                 print("[+] Global Step %05d => " % global_step,
                       " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                      " G loss : {:.8f}".format(g_loss),
+                      " E loss : {:.8f}".format(e_loss),)
 
                 # Training G model with sample image and noise
                 sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])

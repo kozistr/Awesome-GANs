@@ -2,8 +2,8 @@
 
 ## Loss Function
 
-* used ``GAN loss`` at D/G nets.
-* used ``MSE loss`` at Encoder.
+* used ``GAN + (Enc) loss`` at D/G nets.
+* used ``Adv + MSE loss`` at Encoder.
 
 ## Architecture Networks
 
@@ -19,7 +19,7 @@
 
 ![result](./mrgan_tb.png)
 
-> Elapsed Time : 5h 45m 51s with ``GTX 1060 6GB x 1``
+> Elapsed Time : h m s with ``GTX 1060 6GB x 1``
 
 ## Result
 
