@@ -20,13 +20,13 @@
 
 ![result](./mrgan_tb.png)
 
-> Elapsed Time : 2h 18m s with ``GTX 1060 6GB x 1``
+> Elapsed Time : 5h 18m s with ``GTX 1060 6GB x 1``
 
 ## Result
 
-*Name* | *Global Step 4k* | *Global Step 8k* | *Global Step 16k*
+*Name* | *Global Step 8k* | *Global Step 16k* | *Global Step 32k*
 :---: | :---: | :---: | :---:
-**MRGAN**      | ![img](./gen_img/train_4000.png) | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png)
+**MRGAN**      | ![img](./gen_img/train_8000.png) | ![img](./gen_img/train_16000.png) | ![img](./gen_img/train_32000.png)
 
 ## To-Do
 * 
