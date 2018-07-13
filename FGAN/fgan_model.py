@@ -118,43 +118,57 @@ class FGAN:
 
         # Losses
         if self.divergence == 'GAN':
-            d_real_loss = -tf.reduce_mean(-t.safe_log(1. + tf.exp(-d_real)))
-            d_fake_loss = -tf.reduce_mean(-t.safe_log(1. - tf.exp(d_fake)))
+            def activation(x): return -tf.reduce_mean(-t.safe_log(1. + tf.exp(-x)))
+
+            def conjugate(x): return -tf.reduce_mean(-t.safe_log(1. - tf.exp(x)))
         elif self.divergence == 'KL':  # tf.distribution.kl_divergence
-            d_real_loss = -tf.reduce_mean(d_real)
-            d_fake_loss = -tf.reduce_mean(tf.exp(d_fake - 1.))
+            def activation(x): return -tf.reduce_mean(x)
+
+            def conjugate(x): return -tf.reduce_mean(tf.exp(x - 1.))
         elif self.divergence == 'Reverse-KL':
-            d_real_loss = -tf.reduce_mean(-tf.exp(d_real))
-            d_fake_loss = -tf.reduce_mean(-1. - d_fake)  # remove log
+            def activation(x): return -tf.reduce_mean(-tf.exp(x))
+
+            def conjugate(x): return -tf.reduce_mean(-1. - t.safe_log(-x))
         elif self.divergence == 'JS':
-            d_real_loss = -tf.reduce_mean(t.safe_log(2. / (1. + tf.exp(-d_real))))
-            d_fake_loss = -tf.reduce_mean(-t.safe_log(2. - tf.exp(d_fake)))
+            def activation(x): return -tf.reduce_mean(tf.log(2.) - t.safe_log(1. + tf.exp(-x)))
+
+            def conjugate(x): return -tf.reduce_mean(-t.safe_log(2. - tf.exp(x)))
         elif self.divergence == 'JS-Weighted':
-            d_real_loss = -tf.reduce_mean(-np.pi * np.log(np.pi) - (1. + tf.exp(-d_real)))  # remove log
-            d_fake_loss = -tf.reduce_mean((1. - np.pi) *
-                                          t.safe_log((1. - np.pi) / (1. - np.pi * tf.exp(d_fake / np.pi))))
+            def activation(x): return -tf.reduce_mean(-np.pi * np.log(np.pi) - t.safe_log(1. + tf.exp(-x)))
+
+            def conjugate(x): return -tf.reduce_mean((1. - np.pi) *
+                                                     t.safe_log((1. - np.pi) / (1. - np.pi * tf.exp(x / np.pi))))
         elif self.divergence == 'Squared-Hellinger':
-            d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
-            d_fake_loss = -tf.reduce_mean(d_fake / (1. - d_fake))
+            def activation(x): return -tf.reduce_mean(1. - tf.exp(x))
+
+            def conjugate(x): return -tf.reduce_mean(x / (1. - x))
         elif self.divergence == 'Pearson':
-            d_real_loss = -tf.reduce_mean(d_real)
-            d_fake_loss = -tf.reduce_mean(tf.square(d_fake) / 4. + d_fake)
+            def activation(x): return -tf.reduce_mean(x)
+
+            def conjugate(x): return -tf.reduce_mean(tf.square(x) / 4. + x)
         elif self.divergence == 'Neyman':
-            d_real_loss = -tf.reduce_mean(1. - tf.exp(d_real))
-            d_fake_loss = -tf.reduce_mean(2. - 2. * tf.sqrt(1. - d_fake))  # d_fake < 1
+            def activation(x): return -tf.reduce_mean(1. - tf.exp(x))
+
+            def conjugate(x): return -tf.reduce_mean(2. - 2. * tf.sqrt(1. - x))
         elif self.divergence == 'Jeffrey':
             from scipy.special import lambertw
-            d_real_loss = -tf.reduce_mean(d_real)
-            lambert_w = lambertw(self.s.run(tf.exp(1. - d_fake)))  # need to be replaced with another tensor func
-            d_fake_loss = -tf.reduce_mean(lambert_w + 1. / lambert_w + d_fake - 2.)
+
+            def activation(x): return -tf.reduce_mean(x)
+
+            def conjugate(x):
+                lambert_w = lambertw(self.s.run(tf.exp(1. - x)))  # need to be replaced with another tensor func
+                return -tf.reduce_mean(lambert_w + 1. / lambert_w + x - 2.)
         elif self.divergence == 'Total-Variation':
-            d_real_loss = -tf.reduce_mean(tf.nn.tanh(d_real) / 2.)
-            d_fake_loss = -tf.reduce_mean(d_fake)  # |d_fake| < 0.5
+            def activation(x): return -tf.reduce_mean(tf.nn.tanh(x) / 2.)
+
+            def conjugate(x): return -tf.reduce_mean(x)
         else:
             raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
+        d_real_loss = activation(d_real)
+        d_fake_loss = conjugate(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
-        self.g_loss = d_fake_loss
+        self.g_loss = activation(d_fake)
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
