@@ -23,8 +23,8 @@
 *Name* | *graph* | *time*
 :---: | :---: | :---:
 **GAN** | ![result](./tb/gan_tb.png) | 19m s
-**KL** | ![result](./tb/kl_tb.png) | 19m 45s
-**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m 56s
+**KL** | ![result](./tb/kl_tb.png) | 19m 40s
+**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m 53s
 **JS** | ![result](./tb/js_tb.png) | 19m s
 **JS-Weighted** | ![result](./tb/js-weighted_tb.png) | 19m s
 **Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) | 19m s
@@ -39,7 +39,7 @@
 
 *Name* | *Global Step 5k* | *Global Step 10k* | *Global Step 20k*
 :---: | :---: | :---: | :---:
-**f-GAN (GAN)**                 | ![img](./gen_img/GAN/train_5000.png) | ![img](./gen_img/GAN/train_10000.png) | ![img](./gen_img/GAN/train_20000.png)
+**f-GAN (GAN)**                | ![img](./gen_img/GAN/train_5000.png) | ![img](./gen_img/GAN/train_10000.png) | ![img](./gen_img/GAN/train_20000.png)
 **f-GAN (KL)**                 | ![img](./gen_img/KL/train_5000.png) | ![img](./gen_img/KL/train_10000.png) | ![img](./gen_img/KL/train_20000.png)
 **f-GAN (Reverse-KL)**         | ![img](./gen_img/Reverse-KL/train_5000.png) | ![img](./gen_img/Reverse-KL/train_10000.png) | ![img](./gen_img/Reverse-KL/train_20000.png)
 **f-GAN (JS)**                 | ![img](./gen_img/JS/train_5000.png) | ![img](./gen_img/JS/train_10000.png) | ![img](./gen_img/JS/train_20000.png)
@@ -50,7 +50,7 @@
 **f-GAN (Jeffrey)**            | ![img](./gen_img/Jeffrey/train_5000.png) | ![img](./gen_img/Jeffrey/train_10000.png) | ![img](./gen_img/Jeffrey/train_20000.png)
 **f-GAN (Total-Variation)**    | ![img](./gen_img/Total-Variation/train_5000.png) | ![img](./gen_img/Total-Variation/train_10000.png) | ![img](./gen_img/Total-Variation/train_20000.png)
 
-> I just skipped vanilla GAN loss.
+> GAN with ``Reverse-KL divergence`` seems like *model-collapsed*. But after `10k steps`, it just works well.
 
 ## To-Do
 * Add f-divergences
