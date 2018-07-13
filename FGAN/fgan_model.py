@@ -128,7 +128,7 @@ class FGAN:
         elif self.divergence == 'Reverse-KL':
             def activation(x): return -tf.reduce_mean(-tf.exp(x))
 
-            def conjugate(x): return -tf.reduce_mean(-1. - -x)  # remove log
+            def conjugate(x): return -tf.reduce_mean(-1. - x)  # remove log
         elif self.divergence == 'JS':
             def activation(x): return -tf.reduce_mean(tf.log(2.) - t.safe_log(1. + tf.exp(-x)))
 
