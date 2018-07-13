@@ -20,20 +20,20 @@
 
 ## Tensorboard
 
-*Name* | *graph* | *time*
-:---: | :---: | :---:
-**GAN** | ![result](./tb/gan_tb.png) | 19m s
-**KL** | ![result](./tb/kl_tb.png) | 19m 40s
-**Reverse-KL** | ![result](./tb/reverse-kl_tb.png) | 19m 53s
-**JS** | ![result](./tb/js_tb.png) | 19m s
-**JS-Weighted** | ![result](./tb/js-weighted_tb.png) | 19m s
-**Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png) | 19m s
-**Pearson** | ![result](./tb/pearson_tb.png) | 19m 53s
-**Neyman** | ![result](./tb/neyman_tb.png) | 19m s
-**Jeffrey** | ![result](./tb/jeffrey_tb.png) | 19m s
-**Total-Variation** | ![result](./tb/total-variation_tb.png) | 19m s
+*Name* | *graph*
+:---: | :---:
+**GAN** | ![result](./tb/gan_tb.png)
+**KL** | ![result](./tb/kl_tb.png)
+**Reverse-KL** | ![result](./tb/reverse-kl_tb.png)
+**JS** | ![result](./tb/js_tb.png)
+**JS-Weighted** | ![result](./tb/js-weighted_tb.png)
+**Squared-hellinger** | ![result](./tb/squared-hellinger_tb.png)
+**Pearson** | ![result](./tb/pearson_tb.png)
+**Neyman** | ![result](./tb/neyman_tb.png)
+**Jeffrey** | ![result](./tb/jeffrey_tb.png)
+**Total-Variation** | ![result](./tb/total-variation_tb.png)
 
-> with ``GTX 1060 6GB x 1``
+> Elapsed time : about 20m with ``GTX 1060 6GB x 1``
 
 ## Result
 
