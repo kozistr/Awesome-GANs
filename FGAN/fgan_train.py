@@ -36,7 +36,7 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
-    idx = 6  # Pearson
+    idx = 1
     divergences = ['GAN', 'KL', 'Reverse-KL', 'JS',
                    'JS-Weighted', 'Squared-Hellinger', 'Pearson', 'Neyman',
                    'Jeffrey', 'Total-Variation']
@@ -48,7 +48,8 @@ def main():
     with tf.Session(config=config) as s:
         # f-GAN model
         model = fgan.FGAN(s, batch_size=train_step['batch_size'],
-                          divergence_method=divergences[idx])
+                          divergence_method=divergences[idx],
+                          use_tricky_g_loss=True)
 
         # Initializing variables
         s.run(tf.global_variables_initializer())

@@ -15,7 +15,7 @@ class FGAN:
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1,
                  sample_num=8 * 8, sample_size=8,
                  z_dim=128, dfc_unit=256, gfc_unit=1024, lr=2e-4,
-                 divergence_method='KL'):
+                 divergence_method='KL', use_tricky_g_loss=False):
 
         """
         # General Settings
@@ -37,6 +37,7 @@ class FGAN:
         # Training Settings
         :param lr: learning rate, default 2e-4
         :param divergence_method: the method of f-divergences, default 'KL'
+        :param use_tricky_g_loss: use g_loss referred in f-GAN Section 3.2, default False
         """
 
         self.s = s
@@ -78,6 +79,7 @@ class FGAN:
         self.lr = lr
 
         self.divergence = divergence_method
+        self.use_tricky_g_loss = use_tricky_g_loss
 
         self.bulid_fgan()  # build f-GAN model
 
@@ -168,7 +170,10 @@ class FGAN:
         d_real_loss = activation(d_real)
         d_fake_loss = conjugate(d_fake)
         self.d_loss = d_real_loss - d_fake_loss
-        self.g_loss = activation(d_fake)
+        if self.use_tricky_g_loss:
+            self.g_loss = activation(d_fake)
+        else:
+            self.g_loss = d_fake_loss
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
