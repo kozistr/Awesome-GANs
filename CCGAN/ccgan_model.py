@@ -97,6 +97,13 @@ class CCGAN:
         with tf.variable_scope("generator", reuse=reuse):
             x = z  # tile # reshape into (64, 64)
 
+            x = t.conv2d(x, self.gf_dim * 8, 1, 1, name='gen-coord-conv2d-1')
+            x = tf.nn.relu(x)
+
+            for i in range(6):
+                pass
+
+            x = tf.nn.tanh(x)
             return x
 
     def build_ccgan(self):

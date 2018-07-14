@@ -105,7 +105,7 @@ def main():
                 iu.save_images(samples,
                                size=[sample_image_height, sample_image_width],
                                image_path=sample_dir,
-                               inv_type='255')
+                               inv_type='127')
 
                 # Model save
                 model.saver.save(s, results['model'], global_step)
