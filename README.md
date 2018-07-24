@@ -126,12 +126,11 @@ Here's a **google drive link**. You can download pre-trained models from [here](
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
-1. Fix WGAN
-2. Implement DeblurGAN
-3. ~~Implement 3DGAN~~ - later when DataSet is ready.
-4. ~~Implement BeatGAN~~ - later when DataSet is ready.
-5. ~~Implement TempoGAN~~ - later when DataSet is ready. 
-6. Fix PGGAN, SGAN, SGAN++
+1. Implement DeblurGAN
+2. ~~Implement 3DGAN~~ - later when DataSet is ready.
+3. ~~Implement BeatGAN~~ - later when DataSet is ready.
+4. ~~Implement TempoGAN~~ - later when DataSet is ready. 
+5. Fix PGGAN, SGAN, SGAN++
 
 ## ETC
 
