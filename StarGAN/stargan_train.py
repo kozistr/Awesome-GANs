@@ -9,7 +9,6 @@ import sys
 import time
 
 import stargan_model as stargan
-from dataset import DataIterator
 from dataset import CelebADataSet as DataSet
 
 sys.path.append('../')

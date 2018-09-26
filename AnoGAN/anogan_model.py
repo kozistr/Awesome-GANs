@@ -117,7 +117,7 @@ class AnoGAN:
             x = tf.nn.leaky_relu(x)
 
             for i in range(1, 4):
-                x = t.conv2d(x, f=self.gf_dim * (2 ** i), name="disc-conv2d-%d" % (i _ 1))
+                x = t.conv2d(x, f=self.gf_dim * (2 ** i), name="disc-conv2d-%d" % (i + 1))
                 x = t.batch_norm(x, is_train=is_train, name='disc-bn-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 

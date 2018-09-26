@@ -36,8 +36,8 @@ class DiscoGAN:
 
         self.build_discogan()
 
-    def discriminator(self, x, reuse=None):
-        with tf.variable_scope("discriminator", reuse=reuse):
+    def discriminator(self, x, scope_name, reuse=None):
+        with tf.variable_scope("%s" % scope_name, reuse=reuse):
             x = t.conv2d(x, f=self.df_dim, k=4, s=1)  # 64 x 64 x 3
             x = tf.nn.leaky_relu(x)
 
@@ -57,8 +57,8 @@ class DiscoGAN:
 
             return x
 
-    def generator(self, z, reuse=None, is_train=True):
-        with tf.variable_scope("generator", reuse=reuse):
+    def generator(self, z, scope_name, reuse=None, is_train=True):
+        with tf.variable_scope("%s" % scope_name, reuse=reuse):
             x = t.dense(z, 4 * 4 * 8 * self.gf_dim)
             x = tf.nn.leaky_relu(x)
 
@@ -137,7 +137,7 @@ class DiscoGAN:
         self.d_loss = self.d_s_loss + self.d_b_loss
 
         # collect trainer values
-        vars = tf.trainable_variables()
+        # vars = tf.trainable_variables()
         self.d_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "discriminator_*")
         self.g_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "generator_*")
 
