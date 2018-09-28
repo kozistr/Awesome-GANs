@@ -12,7 +12,8 @@ import segan_model as segan
 
 sys.path.append('../')
 import image_utils as iu
-from datasets import UrbanSoundDataSet as DataSet
+# from datasets import UrbanSoundDataSet as DataSet
+from datasets import MNISTDataSet
 
 
 results = {
@@ -31,7 +32,7 @@ def main():
     start_time = time.time()  # Clocking start
 
     # UrbanSound8K Dataset load
-    # mnist = DataSet().data
+    mnist = MNISTDataSet().data
 
     # GPU configure
     config = tf.ConfigProto()

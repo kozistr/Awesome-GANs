@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 
 import os
+import sys
 import cv2
 import h5py
 import numpy as np
@@ -336,11 +337,13 @@ class CiFarDataSet:
 
     @staticmethod
     def unpickle(file):
-        import pickle as p
+        import pickle
 
         # WARN: Only for python3, NOT FOR python2
+        assert sys.version_info >= (3, 0)
+
         with open(file, 'rb') as f:
-            return p.load(f, encoding='bytes')
+            return pickle.load(f, encoding='bytes')
 
     def __init__(self, height=32, width=32, channel=3,
                  use_split=False, split_rate=0.2, random_state=42, ds_name="cifar-10", ds_path=None):

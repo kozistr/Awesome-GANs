@@ -111,7 +111,7 @@ class AnoGAN:
         """
         with tf.variable_scope("discriminator", reuse=reuse):
             if y:
-                raise NotImplemented("[-] Not Implemented Yet...")
+                raise NotImplementedError("[-] Not Implemented Yet...")
 
             x = t.conv2d(x, f=self.gf_dim * 1, name="disc-conv2d-1")
             x = tf.nn.leaky_relu(x)
@@ -139,7 +139,7 @@ class AnoGAN:
         """
         with tf.variable_scope("generator", reuse=reuse):
             if y:
-                raise NotImplemented("[-] Not Implemented Yet...")
+                raise NotImplementedError("[-] Not Implemented Yet...")
 
             x = t.dense(z, f=self.fc_unit, name='gen-fc-1')
             x = tf.nn.leaky_relu(x)
