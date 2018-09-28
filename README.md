@@ -3,6 +3,7 @@ Tensorflow implementation of GANs(Generative Adversarial Networks)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome) 
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/context:python)
 
 ## Environments
