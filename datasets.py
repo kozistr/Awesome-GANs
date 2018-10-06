@@ -598,7 +598,7 @@ class CelebADataSet:
                                         "[-] plz, use original PGGAN repo or"
                                         " this repo https://github.com/nperraud/download-celebA-HQ")
         else:
-            raise NotImplemented("[-] 'ds_type' muse be 'CelebA' or 'CelebA-HQ'")
+            raise NotImplementedError("[-] 'ds_type' muse be 'CelebA' or 'CelebA-HQ'")
 
         self.use_save = use_save
         self.save_type = save_type
