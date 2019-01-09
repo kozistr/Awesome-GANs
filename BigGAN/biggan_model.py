@@ -6,17 +6,15 @@ import sys
 sys.path.append('../')
 import tfutil as t
 
-
 np.random.seed(777)
 tf.set_random_seed(777)  # reproducibility
 
 
 class BigGAN:
 
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
+    def __init__(self, s, batch_size=64, height=128, width=128, channel=3,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4,
-                 use_gp=False, use_hinge_loss=True):
+                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4):
 
         """
         # General Settings
@@ -25,7 +23,6 @@ class BigGAN:
         :param height: image height, default 64
         :param width: image width, default 64
         :param channel: image channel, default 3
-        :param n_classes: DataSet's classes, default 10
 
         # Output Settings
         :param sample_num: the number of output images, default 100
@@ -39,8 +36,6 @@ class BigGAN:
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
         :param lr: learning rate, default 1e-4
-        :param use_gp: using gradient penalty, default False
-        :param use_hinge_loss: using hinge loss, default True
         """
 
         self.s = s
@@ -50,7 +45,6 @@ class BigGAN:
         self.width = width
         self.channel = channel
         self.image_shape = [self.batch_size, self.height, self.width, self.channel]
-        self.n_classes = n_classes
 
         self.n_layer = int(np.log2(self.height)) - 2  # 5
         assert self.height == self.width
@@ -87,35 +81,29 @@ class BigGAN:
         self.writer = None
         self.saver = None
 
-        self.use_gp = use_gp
-        self.use_hinge_loss = use_hinge_loss
-
         # Placeholders
         self.x = tf.placeholder(tf.float32,
-                                shape=[self.batch_size, self.height, self.width, self.channel],
-                                name="x-image")                                                       # (64, 64, 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")            # (-1, 128)
-        self.z_test = tf.placeholder(tf.float32, shape=[self.sample_num, self.z_dim], name="z-test-noise")  # (-1, 128)
+                                shape=[None, self.height, self.width, self.channel],
+                                name="x-image")  # (64, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 128)
 
         self.build_sagan()  # build SAGAN model
 
     @staticmethod
-    def attention(x, f_, reuse=None):
-        with tf.variable_scope("attention", reuse=reuse):
-            f = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-f')
-            g = t.conv2d_alt(x, f_ // 8, 1, 1, sn=True, name='attention-conv2d-g')
-            h = t.conv2d_alt(x, f_, 1, 1, sn=True, name='attention-conv2d-h')
+    def res_block_up(x, f, name):
+        with tf.variable_scope("res_block_up-%s" % name):
+            ssc = x
+            x = t.batch_norm(x, name="bn-1")  # <- noise
+            x = tf.nn.relu(x)
+            x = t.conv2d(x, f, name="conv2d-1")
 
-            f, g, h = t.hw_flatten(f), t.hw_flatten(g), t.hw_flatten(h)
+            x = t.batch_norm(x, name="bn-2")  # <- noise
+            x = tf.nn.relu(x)
+            x = t.conv2d(x, f, name="conv2d-2")
+            return x + ssc
 
-            s = tf.matmul(g, f, transpose_b=True)
-            attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
-
-            o = tf.reshape(tf.matmul(attention_map, h), shape=x.get_shape())
-            gamma = tf.get_variable('gamma', shape=[1], initializer=tf.zeros_initializer())
-
-            x = gamma * o + x
-            return x
+    def res_block_down(self):
+        pass
 
     def discriminator(self, x, reuse=None):
         """
@@ -159,84 +147,44 @@ class BigGAN:
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            f = self.gf_dim * 8
+            # split?
+            x = t.dense(z, f=4 * 4 * 16 * self.channel, name="disc-dense-1")
+            x = tf.nn.relu(x)
 
-            x = t.dense_alt(z, 4 * 4 * f, sn=True, name='gen-fc-1')
+            for i in range(4):
+                res = self.res_block_up(x, f=(16 // (2 ** i)) * self.channel, name="res%d" % (i + 1))
+                res = tf.concat([res, z], axis=-1)
 
-            x = tf.reshape(x, (-1, 4, 4, f))
+            x = res  # To-Do : non-local block
 
-            for i in range(self.n_layer // 2):
-                if self.up_sampling:
-                    x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-                    x = t.conv2d_alt(x, f // 2, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))
-                else:
-                    x = t.deconv2d_alt(x, f // 2, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))
+            x = self.res_block_up(x, f=self.channel, name="res4")
 
-                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
-                x = tf.nn.relu(x)
+            x = t.batch_norm(x, name="bn-last")  # <- noise
+            x = tf.nn.relu(x)
+            x = t.conv2d(x, f=3, k=3, name="conv2d-last")
 
-                f //= 2
-
-            # Self-Attention Layer
-            x = self.attention(x, f, reuse=reuse)
-
-            for i in range(self.n_layer // 2, self.n_layer):
-                if self.up_sampling:
-                    x = t.up_sampling(x, interp=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-                    x = t.conv2d_alt(x, f // 2, 5, 1, pad=2, sn=True, use_bias=False, name='gen-conv2d-%d' % (i + 1))
-                else:
-                    x = t.deconv2d_alt(x, f // 2, 4, 2, sn=True, use_bias=False, name='gen-deconv2d-%d' % (i + 1))
-
-                x = t.batch_norm(x, is_train=is_train, name='gen-bn-%d' % i)
-                x = tf.nn.relu(x)
-
-                f //= 2
-
-            x = t.conv2d_alt(x, self.channel, 5, 1, pad=2, sn=True, name='gen-conv2d-%d' % (self.n_layer + 1))
             x = tf.nn.tanh(x)
             return x
 
     def build_sagan(self):
         # Generator
         self.g = self.generator(self.z)
-        self.g_test = self.generator(self.z_test, reuse=True)
 
         # Discriminator
         d_real = self.discriminator(self.x)
         d_fake = self.discriminator(self.g, reuse=True)
 
         # Losses
-        if self.use_hinge_loss:
-            d_real_loss = tf.reduce_mean(tf.nn.relu(1. - d_real))
-            d_fake_loss = tf.reduce_mean(tf.nn.relu(1. + d_fake))
-            self.d_loss = d_real_loss + d_fake_loss
-            self.g_loss = -tf.reduce_mean(d_fake)
-        else:
-            d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
-            d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
-            self.d_loss = d_real_loss + d_fake_loss
-            self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
-
-        # gradient-penalty
-        if self.use_gp:
-            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
-            interp = alpha * self.x + (1. - alpha) * self.g
-            d_interp = self.discriminator(interp, reuse=True)
-            gradients = tf.gradients(d_interp, interp)[0]
-            slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=1))
-            self.gp = tf.reduce_mean(tf.square(slopes - 1.))
-
-            # Update D loss
-            self.d_loss += self.lambda_ * self.gp
+        d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
+        d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
+        self.d_loss = d_real_loss + d_fake_loss
+        self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
-        if self.use_gp:
-            tf.summary.scalar("misc/gp", self.gp)
-
         # Optimizer
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
