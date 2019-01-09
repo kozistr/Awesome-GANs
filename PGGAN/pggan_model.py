@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+import tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 np.random.seed(777)      # reproducibility
@@ -8,56 +9,6 @@ np.random.seed(777)      # reproducibility
 
 he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
 l2_reg = tf.contrib.layers.l2_regularizer
-
-
-def conv2d(x, f=64, k=4, s=1, reg=5e-4, pad='SAME', name='conv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 4
-    :param s: strides, default 1
-    :param reg: weight regularizer, default 5e-4
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default conv2d
-    :return: conv2d net
-    """
-
-    if pad == 'other':
-        pad = 'VALID'
-        x = tf.pad(x, [[0, 0], [3, 3], [0, 3], [3, 3]], "CONSTANT")
-
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=he_normal,
-                            kernel_regularizer=l2_reg(reg),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad,
-                            name=name)
-
-
-def deconv2d(x, f=64, k=4, s=1, reg=5e-4, pad='SAME', name='deconv2d'):
-    """
-    :param x: input
-    :param f: filters, default 64
-    :param k: kernel size, default 4
-    :param s: strides, default 1
-    :param reg: weight regularizer, default 5e-4
-    :param pad: padding (valid or same), default same
-    :param name: scope name, default deconv2d
-    :return: deconv2d net
-    """
-
-    if pad == 'other':
-        pad = 'VALID'
-        x = tf.pad(x, [[0, 0], [3, 3], [0, 3], [3, 3]], "CONSTANT")
-
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=he_normal,
-                                      kernel_regularizer=l2_reg(reg),
-                                      bias_initializer=tf.zeros_initializer(),
-                                      padding=pad,
-                                      name=name)
 
 
 def pixel_norm(x, eps=1e-8):
@@ -181,17 +132,17 @@ class PGGAN:
         with tf.variable_scope("disc", reuse=reuse):
             if pg_t:
                 x_out = tf.layers.average_pooling2d(x, pool_size=2, strides=2)
-                x_out = conv2d(x_out, nf(pg - 2), k=1, s=1, name='disc_out_conv2d-%d' % x_out.get_shape()[1])
+                x_out = t.conv2d(x_out, nf(pg - 2), k=1, s=1, name='disc_out_conv2d-%d' % x_out.get_shape()[1])
                 x_out = tf.nn.leaky_relu(x_out)
 
-            x = conv2d(x, nf(pg - 1), k=1, s=1, name='disc_out_conv2d-%d' % x.get_shape()[1])
+            x = t.conv2d(x, nf(pg - 1), k=1, s=1, name='disc_out_conv2d-%d' % x.get_shape()[1])
             x = tf.nn.leaky_relu(x)
 
             for i in range(pg - 1):
-                x = conv2d(x, nf(pg - 1 - i), k=1, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
+                x = t.conv2d(x, nf(pg - 1 - i), k=1, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
                 x = tf.nn.leaky_relu(x)
 
-                x = conv2d(x, nf(pg - 2 - i), k=1, s=1, name='disc_n_2_conv2d-%d' % x.get_shape()[1])
+                x = t.conv2d(x, nf(pg - 2 - i), k=1, s=1, name='disc_n_2_conv2d-%d' % x.get_shape()[1])
                 x = tf.nn.leaky_relu(x)
 
                 x = tf.layers.average_pooling2d(x, pool_size=2, strides=2)
@@ -201,10 +152,10 @@ class PGGAN:
 
             x = bacth_concat(x)
 
-            x = conv2d(x, nf(1), k=3, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
+            x = t.conv2d(x, nf(1), k=3, s=1, name='disc_n_1_conv2d-%d' % x.get_shape()[1])
             x = tf.nn.leaky_relu(x)
 
-            x = conv2d(x, nf(1), k=4, s=1, pad='VALID', name='disc_n_2_conv2d-%d' % x.get_shape()[1])
+            x = t.conv2d(x, nf(1), k=4, s=1, pad='VALID', name='disc_n_2_conv2d-%d' % x.get_shape()[1])
             x = tf.nn.leaky_relu(x)
 
             x = tf.layers.flatten(x)
@@ -219,32 +170,32 @@ class PGGAN:
 
         def block(x, fs, name="0"):
             x = resize_nn(x, x.get_shape()[1] * 2)
-            x = conv2d(x, fs, k=3, s=1, name='gen_n_%s_conv2d-%d' % (name, x.get_shape()[1]))
+            x = t.conv2d(x, fs, k=3, s=1, name='gen_n_%s_conv2d-%d' % (name, x.get_shape()[1]))
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
             return x
 
         with tf.variable_scope("gen", reuse=reuse):
             x = tf.reshape(z, [-1, 1, 1, nf(1)])
-            x = conv2d(x, nf(1), k=4, s=1, name='gen_n_1_conv2d')
+            x = t.conv2d(x, nf(1), k=4, s=1, name='gen_n_1_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
             x = tf.reshape(x, [-1, 4, 4, nf(1)])
-            x = conv2d(x, nf(1), k=3, s=1, name='gen_n_2_conv2d')
+            x = t.conv2d(x, nf(1), k=3, s=1, name='gen_n_2_conv2d')
             x = tf.nn.leaky_relu(x)
             x = pixel_norm(x)
 
             x_out = None
             for i in range(pg - 1):
                 if i == pg - 2 and pg_t:
-                    x_out = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
+                    x_out = t.conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
                     x_out = resize_nn(x_out, x_out.get_shape()[1] * 2)                           # up-sampling
 
                 x = block(x, nf(i + 1), name="1")
                 x = block(x, nf(i + 1), name="2")
 
-            x = conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
+            x = t.conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
 
             if pg == 1:
                 return x
