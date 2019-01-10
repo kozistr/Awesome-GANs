@@ -120,26 +120,30 @@ class BigGAN:
     def non_local_block(x, f, sub_sampling=False, name="nonlocal"):
         """ non-local block, https://arxiv.org/pdf/1711.07971.pdf """
         with tf.variable_scope("non_local_block-%s" % name):
-            theta = t.conv2d(x, f=f, k=1, s=1, name="theta")
-            if sub_sampling:
-                theta = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-theta")
-            theta = tf.reshape(theta, (-1, theta.get_shape().as_list()[-1]))
+            with tf.name_scope("theta"):
+                theta = t.conv2d(x, f=f, k=1, s=1, name="theta")
+                if sub_sampling:
+                    theta = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-theta")
+                theta = tf.reshape(theta, (-1, theta.get_shape().as_list()[-1]))
 
-            phi = t.conv2d(x, f=f, k=1, s=1, name="phi")
-            if sub_sampling:
-                phi = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-phi")
-            phi = tf.reshape(phi, (-1, phi.get_shape().as_list()[-1]))
-            phi = tf.transpose(phi, [1, 0])
+            with tf.name_scope("phi"):
+                phi = t.conv2d(x, f=f, k=1, s=1, name="phi")
+                if sub_sampling:
+                    phi = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-phi")
+                phi = tf.reshape(phi, (-1, phi.get_shape().as_list()[-1]))
+                phi = tf.transpose(phi, [1, 0])
 
-            g = t.conv2d(x, f=f, k=1, s=1, name="g")
-            if sub_sampling:
-                g = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-g")
-            g = tf.reshape(g, (-1, g.get_shape().as_list()[-1]))
+            with tf.name_scope("g"):
+                g = t.conv2d(x, f=f, k=1, s=1, name="g")
+                if sub_sampling:
+                    g = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-g")
+                g = tf.reshape(g, (-1, g.get_shape().as_list()[-1]))
 
-            theta_phi = tf.multiply(theta, phi)
-            theta_phi = tf.nn.softmax(theta_phi)
+            with tf.name_scope("self-attention"):
+                theta_phi = tf.tensordot(theta, phi, axis=-1)
+                theta_phi = tf.nn.softmax(theta_phi)
 
-            theta_phi_g = tf.multiply(theta_phi, g)
+                theta_phi_g = tf.tensordot(theta_phi, g, axis=-1)
 
             theta_phi_g = t.conv2d(theta_phi_g, f=f, k=1, s=1, name="theta_phi_g")
             return x + theta_phi_g
