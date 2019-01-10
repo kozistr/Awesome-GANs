@@ -37,7 +37,7 @@ def main():
     height, width, channel = 128, 128, 3
 
     # loading CelebA DataSet # from 'raw images' or 'h5'
-    use_h5 = False
+    use_h5 = True
     if not use_h5:
         ds = DataSet(height=height,
                      width=height,
@@ -143,15 +143,15 @@ def main():
                                         model.z_test: sample_z,
                                     })
 
-                    inception_score = t.inception_score(iu.inverse_transform(samples, inv_type='127'))
-                    fid_score = t.fid_score(real_img=batch_x[:model.sample_num],
-                                            fake_img=samples)
+                    is_mean, is_std = t.inception_score(iu.inverse_transform(samples, inv_type='127'))
+                    fid_score = t.fid_score(real_img=batch_x,
+                                            fake_img=samples[:model.batch_size])
 
                     # Print loss
                     print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss),
-                          " Inception Score : {:.2f}".format(inception_score),
+                          " Inception Score : {:.2f} (±{:.2f})".format(is_mean, is_std),
                           " FID Score : {:.2f}".format(fid_score))
 
                     # Summary saver
