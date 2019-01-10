@@ -440,7 +440,7 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
     images = np.clip(images, 0., 255.)  # clipped into [0, 255]
 
     def inception_feat(img, n_splits=1):
-        img = tf.transpose(img, [0, 2, 3, 1])
+        # img = tf.transpose(img, [0, 2, 3, 1])
         img = tf.image.resize_bilinear(img, img_size)
 
         generated_images_list = array_ops.split(img, num_or_size_splits=n_splits)
@@ -451,12 +451,12 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
             parallel_iterations=1,
             back_prop=False,
             swap_memory=True,
-            name="Inception"
+            name="RunClassifier"
         )
         logits = array_ops.concat(array_ops.unstack(logits), axis=0)
         return logits
 
-    inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
+    inception_images = tf.placeholder(tf.float32, [None, None, None, 3], name="inception-images")
     logits = inception_feat(inception_images)
 
     def get_inception_probs(x, n_classes=1000):
@@ -492,12 +492,12 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
     real_img = np.clip(real_img, 0., 255.)  # clipped into [0, 255]
     fake_img = np.clip(fake_img, 0., 255.)  # clipped into [0, 255]
 
-    inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
+    inception_images = tf.placeholder(tf.float32, [None, None, None, 3], name="inception-images")
     real_acts = tf.placeholder(tf.float32, [None, None], name="real_activations")
     fake_acts = tf.placeholder(tf.float32, [None, None], name="fake_activations")
 
     def inception_activation(images, n_splits=1):
-        images = tf.transpose(images, [0, 2, 3, 1])
+        # images = tf.transpose(images, [0, 2, 3, 1])
         images = tf.image.resize_bilinear(images, img_size)
 
         generated_images_list = array_ops.split(images, num_or_size_splits=n_splits)
@@ -508,7 +508,7 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
             parallel_iterations=1,
             back_prop=False,
             swap_memory=True,
-            name="Inception"
+            name="RunClassifier"
         )
         acts = array_ops.concat(array_ops.unstack(acts), axis=0)
         return acts
