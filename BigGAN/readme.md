@@ -2,11 +2,11 @@
 
 ## Loss Function
 
-* used ``sce loss`` with D/G nets.
+* used ``* loss`` with D/G nets.
 
 ## Architecture Networks
 
-* Same with the BigGAN paper.
+* Similar with the BigGAN paper.
 
 ## Tensorboard
 
