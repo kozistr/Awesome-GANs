@@ -46,8 +46,8 @@ class BigGAN:
         self.channel = channel
         self.image_shape = [self.batch_size, self.height, self.width, self.channel]
 
-        self.n_layer = int(np.log2(self.height)) - 2  # 5
         assert self.height == self.width
+        assert self.height in [128, 256, 512]
 
         self.sample_num = sample_num
         self.sample_size = sample_size
@@ -59,12 +59,23 @@ class BigGAN:
         self.up_sampling = True
 
         self.z_dim = z_dim
-        self.beta1 = 0.
-        self.beta2 = .9
+        self.beta1 = 0.9
+        self.beta2 = .999
         self.lr = lr
 
-        self.gp = 0.
-        self.lambda_ = 10.  # for gradient penalty
+        self.res_block_disc = None
+        self.res_block_gen = None
+        if self.height == 128:
+            self.res_block_disc = ([16, 8, 4, 2], [1])
+            self.res_block_gen = ([1], [2, 4, 8, 16, 16])
+        elif self.height == 256:
+            self.res_block_disc = ([16, 8, 8, 4, 2], [1])
+            self.res_block_gen = ([1, 2], [4, 8, 8, 16, 16])
+        elif self.height == 512:
+            self.res_block_disc = ([16, 8, 8, 4], [2, 1, 1])
+            self.res_block_gen = ([1, 1, 2], [4, 8, 8, 16, 16])
+        else:
+            raise NotImplementedError
 
         # pre-defined
         self.g_loss = 0.
@@ -72,7 +83,6 @@ class BigGAN:
         self.c_loss = 0.
 
         self.g = None
-        self.g_test = None
 
         self.d_op = None
         self.g_op = None
@@ -90,9 +100,10 @@ class BigGAN:
         self.build_sagan()  # build SAGAN model
 
     @staticmethod
-    def res_block_up(x, f, name):
+    def res_block_up(x, c, f, name):
         with tf.variable_scope("res_block_up-%s" % name):
             ssc = x
+
             x = t.batch_norm(x, name="bn-1")  # <- noise
             x = tf.nn.relu(x)
             x = t.conv2d(x, f, name="conv2d-1")
@@ -102,8 +113,36 @@ class BigGAN:
             x = t.conv2d(x, f, name="conv2d-2")
             return x + ssc
 
-    def res_block_down(self):
+    def res_block_down(self, x, c, f, name):
         pass
+
+    @staticmethod
+    def non_local_block(x, f, sub_sampling=False, name="nonlocal"):
+        """ non-local block, https://arxiv.org/pdf/1711.07971.pdf """
+        with tf.variable_scope("non_local_block-%s" % name):
+            theta = t.conv2d(x, f=f, k=1, s=1, name="theta")
+            if sub_sampling:
+                theta = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-theta")
+            theta = tf.reshape(theta, (-1, theta.get_shape().as_list()[-1]))
+
+            phi = t.conv2d(x, f=f, k=1, s=1, name="phi")
+            if sub_sampling:
+                phi = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-phi")
+            phi = tf.reshape(phi, (-1, phi.get_shape().as_list()[-1]))
+            phi = tf.transpose(phi, [1, 0])
+
+            g = t.conv2d(x, f=f, k=1, s=1, name="g")
+            if sub_sampling:
+                g = tf.layers.max_pooling2d(theta, pool_size=(2, 2), name="max_pool-g")
+            g = tf.reshape(g, (-1, g.get_shape().as_list()[-1]))
+
+            theta_phi = tf.multiply(theta, phi)
+            theta_phi = tf.nn.softmax(theta_phi)
+
+            theta_phi_g = tf.multiply(theta_phi, g)
+
+            theta_phi_g = t.conv2d(theta_phi_g, f=f, k=1, s=1, name="theta_phi_g")
+            return x + theta_phi_g
 
     def discriminator(self, x, reuse=None):
         """
@@ -138,21 +177,24 @@ class BigGAN:
             x = t.dense_alt(x, 1, sn=True, name='disc-fc-1')
             return x
 
-    def generator(self, z, reuse=None, is_train=True):
+    def generator(self, z, c, reuse=None):
         """
         :param z: noise
-        :param y: image label
+        :param c: image label
         :param reuse: re-usable
-        :param is_train: trainable
         :return: prob
         """
         with tf.variable_scope("generator", reuse=reuse):
-            # split?
+            # split
+            z = tf.split(z, num_or_size_splits=4, axis=-1)  # expected [None, 32] * 4
+
+            # linear projection
             x = t.dense(z, f=4 * 4 * 16 * self.channel, name="disc-dense-1")
             x = tf.nn.relu(x)
 
+            res = x
             for i in range(4):
-                res = self.res_block_up(x, f=(16 // (2 ** i)) * self.channel, name="res%d" % (i + 1))
+                res = self.res_block_up(res, f=(16 // (2 ** i)) * self.channel, name="res%d" % (i + 1))
                 res = tf.concat([res, z], axis=-1)
 
             x = res  # To-Do : non-local block
@@ -185,6 +227,7 @@ class BigGAN:
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+
         # Optimizer
         t_vars = tf.trainable_variables()
         d_params = [v for v in t_vars if v.name.startswith('d')]
