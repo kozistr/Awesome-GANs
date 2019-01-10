@@ -36,19 +36,34 @@ def main():
 
     height, width, channel = 128, 128, 3
 
-    # loading CelebA DataSet
-    ds = DataSet(height=height,
-                 width=height,
-                 channel=channel,
-                 # ds_image_path="D:\\DataSet/CelebA/CelebA-%d.h5" % height,
-                 ds_label_path=os.path.join(cfg.celeba, "Anno/list_attr_celeba.txt"),
-                 ds_image_path=os.path.join(cfg.celeba, "Img/img_align_celeba/"),
-                 ds_type="CelebA",
-                 use_save=True,
-                 save_file_name=os.path.join(cfg.celeba, "CelebA-%d.h5" % height),
-                 save_type="to_h5",
-                 use_img_scale=False,
-                 )
+    # loading CelebA DataSet # from 'raw images' or 'h5'
+    use_h5 = False
+    if not use_h5:
+        ds = DataSet(height=height,
+                     width=height,
+                     channel=channel,
+                     # ds_image_path="D:\\DataSet/CelebA/CelebA-%d.h5" % height,
+                     ds_label_path=os.path.join(cfg.celeba, "Anno/list_attr_celeba.txt"),
+                     ds_image_path=os.path.join(cfg.celeba, "Img/img_align_celeba/"),
+                     ds_type="CelebA",
+                     use_save=True,
+                     save_file_name=os.path.join(cfg.celeba, "CelebA-%d.h5" % height),
+                     save_type="to_h5",
+                     use_img_scale=False,
+                     )
+    else:
+        ds = DataSet(height=height,
+                     width=height,
+                     channel=channel,
+                     ds_image_path=os.path.join(cfg.celeba, "CelebA-%d.h5" % height),
+                     ds_label_path=os.path.join(cfg.celeba, "Anno/list_attr_celeba.txt"),
+                     # ds_image_path=os.path.join(cfg.celeba, "Img/img_align_celeba/"),
+                     ds_type="CelebA",
+                     use_save=False,
+                     # save_file_name=os.path.join(cfg.celeba, "CelebA-%d.h5" % height),
+                     # save_type="to_h5",
+                     use_img_scale=False,
+                     )
 
     # saving sample images
     test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, height, width, channel))
