@@ -438,21 +438,26 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
     assert images.shape[-1] == 3
 
     images = np.clip(images, 0., 255.)  # clipped into [0, 255]
-    images = tf.image.resize_bilinear(images, img_size)
 
-    generated_images_list = array_ops.split(images, num_or_size_splits=n_splits)
+    def inception_feat(img, n_splits=1):
+        img = tf.transpose(img, [0, 2, 3, 1])
+        img = tf.image.resize_bilinear(img, img_size)
 
-    logits = functional_ops.map_fn(
-        fn=functools.partial(tf.contrib.gan.eval.run_inception, output_tensor="logits:0"),
-        elems=array_ops.stack(generated_images_list),
-        parallel_iterations=1,
-        back_prop=False,
-        swap_memory=True,
-        name="Inception"
-    )
-    logits = array_ops.concat(array_ops.unstack(logits), axis=0)
+        generated_images_list = array_ops.split(img, num_or_size_splits=n_splits)
+
+        logits = functional_ops.map_fn(
+            fn=functools.partial(tf.contrib.gan.eval.run_inception, output_tensor="logits:0"),
+            elems=array_ops.stack(generated_images_list),
+            parallel_iterations=1,
+            back_prop=False,
+            swap_memory=True,
+            name="Inception"
+        )
+        logits = array_ops.concat(array_ops.unstack(logits), axis=0)
+        return logits
 
     inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
+    logits = inception_feat(inception_images)
 
     def get_inception_probs(x, n_classes=1000):
         n_batches = len(x) // batch_size
@@ -485,15 +490,16 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
     assert real_img.shape == fake_img.shape
 
     real_img = np.clip(real_img, 0., 255.)  # clipped into [0, 255]
-    real_img = tf.image.resize_bilinear(real_img, img_size)
     fake_img = np.clip(fake_img, 0., 255.)  # clipped into [0, 255]
-    fake_img = tf.image.resize_bilinear(fake_img, img_size)
 
     inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
     real_acts = tf.placeholder(tf.float32, [None, None], name="real_activations")
     fake_acts = tf.placeholder(tf.float32, [None, None], name="fake_activations")
 
-    def inception_activation(images, n_splits=10):
+    def inception_activation(images, n_splits=1):
+        images = tf.transpose(images, [0, 2, 3, 1])
+        images = tf.image.resize_bilinear(images, img_size)
+
         generated_images_list = array_ops.split(images, num_or_size_splits=n_splits)
 
         acts = functional_ops.map_fn(
@@ -507,7 +513,7 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
         acts = array_ops.concat(array_ops.unstack(acts), axis=0)
         return acts
 
-    activations = inception_activation(inception_images, n_splits=n_splits)
+    activations = inception_activation(inception_images)
 
     def get_inception_activations(x, feats=2048):
         n_batches = len(x) // batch_size
