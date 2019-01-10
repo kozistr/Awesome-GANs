@@ -335,7 +335,7 @@ def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
 
-def spectral_norm(x, gain=2 ** 0.5, n_iter=1):
+def spectral_norm(x, gain=1., n_iter=1):
     x_shape = x.get_shape()
 
     x = tf.reshape(x, (-1, x_shape[-1]))  # (n * h * w, c)
