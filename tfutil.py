@@ -226,7 +226,7 @@ def deconv2d_alt(x, f=64, k=3, s=1, use_bias=True, sn=False, name='deconv2d'):
         return x
 
 
-def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='deconv2d'):
+def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
     """
     :param x: input
     :param f: filters
@@ -266,7 +266,7 @@ def dense_alt(x, f=1024, sn=False, use_bias=True, name='fc'):
         return x
 
 
-def dense(x, f=1024, reuse=None, is_train=True, name='fc'):
+def dense(x, f=1024, reuse=None, name='fc'):
     """
     :param x: input
     :param f: fully connected units
@@ -335,12 +335,15 @@ def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
 
-def spectral_norm(x, n_iter=1):
+def spectral_norm(x, gain=2 ** 0.5, n_iter=1):
     x_shape = x.get_shape()
 
     x = tf.reshape(x, (-1, x_shape[-1]))  # (n * h * w, c)
 
-    u = tf.get_variable('u', shape=(1, x_shape[-1]), initializer=tf.truncated_normal_initializer(), trainable=False)
+    u = tf.get_variable('u',
+                        shape=(1, x_shape[-1]),
+                        initializer=tf.truncated_normal_initializer(stddev=gain),
+                        trainable=False)
 
     u_hat = u
     v_hat = None
