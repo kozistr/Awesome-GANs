@@ -12,7 +12,7 @@ tf.set_random_seed(777)  # reproducibility
 
 class BigGAN:
 
-    def __init__(self, s, batch_size=64, height=128, width=128, channel=3,
+    def __init__(self, s, batch_size=64, height=128, width=128, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4):
 
@@ -20,9 +20,10 @@ class BigGAN:
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 64
-        :param height: image height, default 64
-        :param width: image width, default 64
+        :param height: image height, default 128
+        :param width: image width, default 128
         :param channel: image channel, default 3
+        :param n_classes: number of classes, default 10
 
         # Output Settings
         :param sample_num: the number of output images, default 100
@@ -45,6 +46,7 @@ class BigGAN:
         self.width = width
         self.channel = channel
         self.image_shape = [self.batch_size, self.height, self.width, self.channel]
+        self.n_classes = n_classes
 
         assert self.height == self.width
         assert self.height in [128, 256, 512]
@@ -58,9 +60,11 @@ class BigGAN:
 
         self.up_sampling = True
 
+        self.gain = 2 ** 0.5
+
         self.z_dim = z_dim
-        self.beta1 = 0.9
-        self.beta2 = .999
+        self.beta1 = 0.
+        self.beta2 = .9
         self.lr = lr
 
         self.res_block_disc = None
@@ -95,6 +99,9 @@ class BigGAN:
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
                                 name="x-image")  # (64, 64, 64, 3)
+        self.y = tf.placeholder(tf.float32,
+                                shape=[None, self.n_classes],
+                                name="y-label")  # (64, n_classes)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 128)
 
         self.build_sagan()  # build SAGAN model
@@ -110,14 +117,32 @@ class BigGAN:
 
             x = t.batch_norm(tf.concat([x, cz], axis=-1), name="bn-1")
             x = tf.nn.relu(x)
-            x = t.conv2d_alt(x, f, k=4, s=2, sn=True, name="conv2d-1") if not scale_up \
-                else t.deconv2d_alt(x, f, k=4, s=2, sn=True, name="deconv2d-1")
+            x = t.conv2d_alt(x, f, s=2, sn=True, name="conv2d-1") if not scale_up \
+                else t.deconv2d_alt(x, f, s=2, sn=True, name="deconv2d-1")
 
             x = t.batch_norm(tf.concat([x, cz], axis=-1), name="bn-2")
             x = tf.nn.relu(x)
-            x = t.conv2d_alt(x, f, k=4, s=2, sn=True, name="conv2d-2") if not scale_up \
-                else t.deconv2d_alt(x, f, k=4, s=2, sn=True, name="deconv2d-2")
+            x = t.conv2d_alt(x, f, s=2, sn=True, name="conv2d-2") if not scale_up \
+                else t.deconv2d_alt(x, f, s=2, sn=True, name="deconv2d-2")
             return x + ssc
+
+    @staticmethod
+    def self_attention(x, f_, reuse=None):
+        with tf.variable_scope("attention", reuse=reuse):
+            f = t.conv2d_alt(x, f_ // 8, k=1, s=1, sn=True, name='attention-conv2d-f')
+            g = t.conv2d_alt(x, f_ // 8, k=1, s=1, sn=True, name='attention-conv2d-g')
+            h = t.conv2d_alt(x, f_, k=1, s=1, sn=True, name='attention-conv2d-h')
+
+            f, g, h = t.hw_flatten(f), t.hw_flatten(g), t.hw_flatten(h)
+
+            s = tf.matmul(g, f, transpose_b=True)
+            attention_map = tf.nn.softmax(s, axis=-1, name='attention_map')
+
+            o = tf.reshape(tf.matmul(attention_map, h), shape=x.get_shape())
+            gamma = tf.get_variable('gamma', shape=[1], initializer=tf.zeros_initializer())
+
+            x = gamma * o + x
+            return x
 
     @staticmethod
     def non_local_block(x, f, sub_sampling=False, name="nonlocal"):
@@ -196,7 +221,7 @@ class BigGAN:
             z = tf.split(z, num_or_size_splits=4, axis=-1)  # expected [None, 32] * 4
 
             # linear projection
-            x = t.dense(z, f=4 * 4 * 16 * self.channel, name="disc-dense-1")
+            x = t.dense_alt(z, f=4 * 4 * 16 * self.channel, sn=True, use_bias=False, name="disc-dense-1")
             x = tf.nn.relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, 16 * self.channel))
@@ -209,13 +234,13 @@ class BigGAN:
                                      scale_type="up",
                                      name="res%d" % (i + 1))
 
-            x = self.non_local_block(res, f=f, name="disc-non_local_block")
+            x = self.self_attention(res, f_=f)
 
             x = self.res_block(x, c=None, z=z[-1], f=self.channel, scale_type="up", name="res4")
 
             x = t.batch_norm(x, name="bn-last")  # <- noise
             x = tf.nn.relu(x)
-            x = t.conv2d(x, f=3, k=3, name="conv2d-last")
+            x = t.conv2d_alt(x, f=self.channel, k=3, sn=True, name="conv2d-last")
 
             x = tf.nn.tanh(x)
             return x
