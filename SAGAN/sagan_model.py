@@ -6,17 +6,21 @@ import sys
 sys.path.append('../')
 import tfutil as t
 
+from config import get_config
 
-np.random.seed(777)
-tf.set_random_seed(777)  # reproducibility
+cfg, _ = get_config()
+
+np.random.seed(cfg.seed)
+tf.set_random_seed(cfg.seed)  # reproducibility
 
 
 class SAGAN:
 
     def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=128, lr=1e-4,
-                 use_gp=False, use_hinge_loss=True):
+                 df_dim=64, gf_dim=64, z_dim=128, lr=1e-4,
+                 use_gp=False, use_hinge_loss=True,
+                 graph_path="./model"):
 
         """
         # General Settings
@@ -34,13 +38,15 @@ class SAGAN:
         # For Model
         :param df_dim: discriminator conv filter, default 64
         :param gf_dim: generator conv filter, default 64
-        :param fc_unit: the number of fully connected layer units, default 512
 
         # Training Option
         :param z_dim: z dimension (kinda noise), default 128
         :param lr: learning rate, default 1e-4
         :param use_gp: using gradient penalty, default False
         :param use_hinge_loss: using hinge loss, default True
+
+        # Etc
+        :param graph_path: path to save graph file, default "./model"
         """
 
         self.s = s
@@ -60,7 +66,6 @@ class SAGAN:
 
         self.df_dim = df_dim
         self.gf_dim = gf_dim
-        self.fc_unit = fc_unit
 
         self.up_sampling = True
 
@@ -71,6 +76,8 @@ class SAGAN:
 
         self.gp = 0.
         self.lambda_ = 10.  # for gradient penalty
+
+        self.graph_path = graph_path
 
         # pre-defined
         self.g_loss = 0.
@@ -93,8 +100,8 @@ class SAGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[self.batch_size, self.height, self.width, self.channel],
-                                name="x-image")                                                       # (64, 64, 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")            # (-1, 128)
+                                name="x-image")  # (64, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")  # (-1, 128)
         self.z_test = tf.placeholder(tf.float32, shape=[self.sample_num, self.z_dim], name="z-test-noise")  # (-1, 128)
 
         self.build_sagan()  # build SAGAN model
@@ -252,4 +259,4 @@ class SAGAN:
 
         # Model saver
         self.saver = tf.train.Saver(max_to_keep=1)
-        self.writer = tf.summary.FileWriter('./model/', self.s.graph)
+        self.writer = tf.summary.FileWriter(self.graph_path, self.s.graph)
