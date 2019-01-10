@@ -166,7 +166,10 @@ class DataSetLoader:
         self.raw_data = self.raw_data[order]
 
         # Clip [0, 255]
-        self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
+        try:
+            self.raw_data = np.rint(self.raw_data).clip(0, 255).astype(np.uint8)
+        except MemoryError:
+            pass
 
         self.use_save = use_save
         self.save_file_name = save_file_name
