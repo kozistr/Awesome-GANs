@@ -25,7 +25,7 @@ def get_config():
 # Model
 model_arg = add_arg_group('Model')
 model_arg.add_argument('--model_path', type=str, default="./model/")
-model_arg.add_argument('--output', type=str, default="./output/")
+model_arg.add_argument('--output', type=str, default="./gen_img/")
 
 # DataSet
 data_arg = add_arg_group('DataSet')
@@ -33,7 +33,7 @@ data_arg.add_argument('--mnist', type=str, default="./mnist/")
 data_arg.add_argument('--fashion_mnist', type=str, default="./fashion-mnist/")
 data_arg.add_argument('--cifar10', type=str, default="./cifar10/")
 data_arg.add_argument('--cifar100', type=str, default="./cifar100/")
-data_arg.add_argument('--celeba', type=str, default="./CelebA/")
+data_arg.add_argument('--celeba', type=str, default="/media/zero/data/CelebA/")
 data_arg.add_argument('--celeba-hq', type=str, default="./CelebA-HQ/")
 data_arg.add_argument('--div2k', type=str, default="./DIV2K/")
 data_arg.add_argument('--pix2pix', type=str, default="./pix2pix/")
