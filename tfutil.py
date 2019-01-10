@@ -2,13 +2,18 @@
 Inspired by https://github.com/tkarras/progressive_growing_of_gans/blob/master/tfutil.py
 """
 
-import tensorflow as tf
+import functools
 import numpy as np
+import tensorflow as tf
 
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import functional_ops
 
 seed = 1337
 np.random.seed(seed)
 tf.set_random_seed(seed)
+
+batch_size = 64
 
 
 # ---------------------------------------------------------------------------------------------
@@ -87,7 +92,6 @@ class Optimizer(object):
                  use_grad_scaling=False,
                  grad_scaling=7.,
                  **kwargs):
-
         self.name = name
         self.optimizer = optimizer
         self.learning_rate = learning_rate
@@ -423,3 +427,52 @@ def softce_loss(data, label):
 
 def ssoftce_loss(data, label):
     return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=data, labels=label))
+
+
+# metrics
+
+def inception_score(images, img_size=(299, 299), n_splits=10):
+    """ referenced from https://github.com/tsc2017/Inception-Score/blob/master/inception_score.py """
+    assert type(images) == np.ndarray
+    assert len(images.shape) == 4
+    assert images.shape[-1] == 3
+
+    images = np.clip(images, 0., 255.)  # clipped into [0, 255]
+    images = tf.image.resize_bilinear(images, img_size)
+
+    generated_images_list = array_ops.split(images, num_or_size_splits=n_splits)
+
+    logits = functional_ops.map_fn(
+        fn=functools.partial(tf.contrib.gan.eval.run_inception, output_tensor="logits:0"),
+        elems=array_ops.stack(generated_images_list),
+        parallel_iterations=1,
+        back_prop=False,
+        swap_memory=True,
+        name="Inception"
+    )
+    logits = array_ops.concat(array_ops.unstack(logits), axis=0)
+
+    inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
+
+    def get_inception_probs(x, n_classes=1000):
+        n_batches = len(x) // batch_size
+
+        preds = np.zeros([len(x), n_classes], dtype=np.float32)
+        for i in range(n_batches):
+            inp = x[i * batch_size:(i + 1) * batch_size] / 255. * 2 - 1.  # scaled into [-1, 1]
+            preds[i * batch_size:(i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
+        preds = np.exp(preds) / np.sum(np.exp(preds), 1, keepdims=True)
+        return preds
+
+    def preds2score(preds, splits=10):
+        scores = []
+        for i in range(splits):
+            part = preds[(i * preds.shape[0] // splits):((i + 1) * preds.shape[0] // splits), :]
+            kl = part * (np.log(part) - np.log(np.expand_dims(np.mean(part, axis=0), axis=0)))
+            kl = np.mean(np.sum(kl, axis=1))
+            scores.append(np.exp(kl))
+        return np.mean(scores), np.std(scores)
+
+    preds = get_inception_probs(images)
+    mean, std = preds2score(preds, splits=n_splits)
+    return mean, std
