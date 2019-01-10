@@ -476,3 +476,59 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
     preds = get_inception_probs(images)
     mean, std = preds2score(preds, splits=n_splits)
     return mean, std
+
+
+def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
+    assert type(real_img) == np.ndarray and type(fake_img) == np.ndarray
+    assert len(real_img.shape) == 4 and len(fake_img.shape) == 4
+    assert real_img.shape[-1] == 3 and fake_img.shape[-1] == 3
+    assert real_img.shape == fake_img.shape
+
+    real_img = np.clip(real_img, 0., 255.)  # clipped into [0, 255]
+    real_img = tf.image.resize_bilinear(real_img, img_size)
+    fake_img = np.clip(fake_img, 0., 255.)  # clipped into [0, 255]
+    fake_img = tf.image.resize_bilinear(fake_img, img_size)
+
+    inception_images = tf.placeholder(tf.float32, [None, img_size[0], img_size[1], 3], name="inception-images")
+    real_acts = tf.placeholder(tf.float32, [None, None], name="real_activations")
+    fake_acts = tf.placeholder(tf.float32, [None, None], name="fake_activations")
+
+    def inception_activation(images, n_splits=10):
+        generated_images_list = array_ops.split(images, num_or_size_splits=n_splits)
+
+        acts = functional_ops.map_fn(
+            fn=functools.partial(tf.contrib.gan.eval.run_inception, output_tensor="pool_3:0"),
+            elems=array_ops.stack(generated_images_list),
+            parallel_iterations=1,
+            back_prop=False,
+            swap_memory=True,
+            name="Inception"
+        )
+        acts = array_ops.concat(array_ops.unstack(acts), axis=0)
+        return acts
+
+    activations = inception_activation(inception_images, n_splits=n_splits)
+
+    def get_inception_activations(x, feats=2048):
+        n_batches = len(x) // batch_size
+
+        acts = np.zeros([len(x), feats], dtype=np.float32)
+        for i in range(n_batches):
+            inp = x[i * batch_size:(i + 1) * batch_size] / 255. * 2 - 1.  # scaled into [-1, 1]
+            acts[i * batch_size:(i + 1) * batch_size] = activations.eval({inception_images: inp})
+        acts = np.exp(acts) / np.sum(np.exp(acts), 1, keepdims=True)
+        return acts
+
+    def get_fid(real, fake):
+        return tf.contrib.gan.eval.frechet_classifier_distance_from_activations(real_acts, fake_acts).eval(
+            feed_dict={
+                real_acts: real,
+                fake_acts: fake,
+            }
+        )
+
+    real_img_acts = get_inception_activations(real_img)
+    fake_img_acts = get_inception_activations(fake_img)
+
+    fid = get_fid(real_img_acts, fake_img_acts)
+    return fid
