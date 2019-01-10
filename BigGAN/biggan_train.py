@@ -66,9 +66,9 @@ def main():
 
     with tf.Session(config=config) as s:
         # BigGAN Model
-        model = biggan.BigGAN(s, height=height, width=width, channel=channel,
-                              batch_size=train_step['batch_size'],
-                              use_gp=False, use_hinge_loss=True)
+        model = biggan.BigGAN(s,
+                              height=height, width=width, channel=channel,
+                              batch_size=train_step['batch_size'])
 
         # Initializing
         s.run(tf.global_variables_initializer())
