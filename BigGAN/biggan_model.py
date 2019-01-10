@@ -100,21 +100,24 @@ class BigGAN:
         self.build_sagan()  # build SAGAN model
 
     @staticmethod
-    def res_block_up(x, c, f, name):
+    def res_block(x, c, z, f, scale_type, name):
         with tf.variable_scope("res_block_up-%s" % name):
+            assert scale_type in ["up", "down"]
+            scale_up = False if scale_type == "down" else True
+
             ssc = x
+            cz = tf.concat([c, z], axis=-1)
 
-            x = t.batch_norm(x, name="bn-1")  # <- noise
+            x = t.batch_norm(tf.concat([x, cz], axis=-1), name="bn-1")
             x = tf.nn.relu(x)
-            x = t.conv2d(x, f, name="conv2d-1")
+            x = t.conv2d_alt(x, f, k=4, s=2, sn=True, name="conv2d-1") if not scale_up \
+                else t.deconv2d_alt(x, f, k=4, s=2, sn=True, name="deconv2d-1")
 
-            x = t.batch_norm(x, name="bn-2")  # <- noise
+            x = t.batch_norm(tf.concat([x, cz], axis=-1), name="bn-2")
             x = tf.nn.relu(x)
-            x = t.conv2d(x, f, name="conv2d-2")
+            x = t.conv2d_alt(x, f, k=4, s=2, sn=True, name="conv2d-2") if not scale_up \
+                else t.deconv2d_alt(x, f, k=4, s=2, sn=True, name="deconv2d-2")
             return x + ssc
-
-    def res_block_down(self, x, c, f, name):
-        pass
 
     @staticmethod
     def non_local_block(x, f, sub_sampling=False, name="nonlocal"):
@@ -181,7 +184,7 @@ class BigGAN:
             x = t.dense_alt(x, 1, sn=True, name='disc-fc-1')
             return x
 
-    def generator(self, z, c, reuse=None):
+    def generator(self, z, c=None, reuse=None):
         """
         :param z: noise
         :param c: image label
@@ -196,14 +199,19 @@ class BigGAN:
             x = t.dense(z, f=4 * 4 * 16 * self.channel, name="disc-dense-1")
             x = tf.nn.relu(x)
 
+            x = tf.reshape(x, (-1, 4, 4, 16 * self.channel))
+
             res = x
             for i in range(4):
-                res = self.res_block_up(res, f=(16 // (2 ** i)) * self.channel, name="res%d" % (i + 1))
-                res = tf.concat([res, z], axis=-1)
+                res = self.res_block(res,
+                                     c=None, z=z[i],
+                                     f=(16 // (2 ** i)) * self.channel,
+                                     scale_type="up",
+                                     name="res%d" % (i + 1))
 
-            x = res  # To-Do : non-local block
+            x = self.non_local_block(res, f=f, name="disc-non_local_block")
 
-            x = self.res_block_up(x, f=self.channel, name="res4")
+            x = self.res_block(x, c=None, z=z[-1], f=self.channel, scale_type="up", name="res4")
 
             x = t.batch_norm(x, name="bn-last")  # <- noise
             x = tf.nn.relu(x)
@@ -214,7 +222,7 @@ class BigGAN:
 
     def build_sagan(self):
         # Generator
-        self.g = self.generator(self.z)
+        self.g = self.generator(self.z, c=None)
 
         # Discriminator
         d_real = self.discriminator(self.x)
