@@ -77,6 +77,8 @@ def main():
                            batch_size=train_step['batch_size'],
                            label_off=True)
 
+    del ds
+
     # GPU configure
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
