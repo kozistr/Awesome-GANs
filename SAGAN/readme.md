@@ -6,7 +6,9 @@
 
 ## Architecture Networks
 
-* Same with the SAGAN paper.
+* similar with the SAGAN paper.
+
+* use *batch norm* instead of *conditional batch norm* referred in SAGAN paper.
 
 > (even using image size 64, additional memory is needed :(. Over GTX 1080 is recommended!)
 
