@@ -306,10 +306,11 @@ def l2_norm(x, eps=1e-12):
     return x / (tf.sqrt(tf.reduce_sum(tf.square(x))) + eps)
 
 
-def batch_norm(x, momentum=0.9, scaling=True, is_train=True, reuse=None, name="bn"):
+def batch_norm(x, momentum=0.9, center=True, scaling=True, is_train=True, reuse=None, name="bn"):
     return tf.layers.batch_normalization(inputs=x,
                                          momentum=momentum,
                                          epsilon=eps,
+                                         center=center,
                                          scale=scaling,
                                          training=is_train,
                                          reuse=reuse,
