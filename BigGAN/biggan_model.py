@@ -86,6 +86,9 @@ class BigGAN:
         self.d_loss = 0.
         self.c_loss = 0.
 
+        self.inception_score = None
+        self.fid_score = None
+
         self.g = None
 
         self.d_op = None
@@ -107,18 +110,18 @@ class BigGAN:
         self.build_sagan()  # build BigGAN model
 
     @staticmethod
-    def res_block(x, f, scale_type, name):
-        with tf.variable_scope("res_block_up-%s" % name):
+    def res_block(x, f, scale_type, use_bn=True, name=""):
+        with tf.variable_scope("res_block-%s" % name):
             assert scale_type in ["up", "down"]
             scale_up = False if scale_type == "down" else True
 
             ssc = x
 
-            x = t.batch_norm(x, name="bn-1")
+            x = t.batch_norm(x, name="bn-1") if use_bn else x
             x = tf.nn.relu(x)
             x = t.conv2d_alt(x, f, sn=True, name="conv2d-1")
 
-            x = t.batch_norm(x, name="bn-2")
+            x = t.batch_norm(x, name="bn-2") if use_bn else x
             x = tf.nn.relu(x)
 
             if not scale_up:
@@ -182,40 +185,33 @@ class BigGAN:
     def discriminator(self, x, reuse=None):
         """
         :param x: images
-        :param y: labels
         :param reuse: re-usable
         :return: classification, probability (fake or real), network
         """
         with tf.variable_scope("discriminator", reuse=reuse):
-            f = self.gf_dim
+            f = 1 * self.channel
 
-            x = t.conv2d_alt(x, f, 4, 2, pad=1, sn=True, name='disc-conv2d-1')
-            x = tf.nn.leaky_relu(x, alpha=0.1)
+            x = self.res_block(x, f=f, scale_type="down", name="disc-res1")
 
-            for i in range(self.n_layer // 2):
-                x = t.conv2d_alt(x, f * 2, 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
-                x = tf.nn.leaky_relu(x, alpha=0.1)
+            x = self.self_attention(x, f_=f)
 
+            for i in range(4):
                 f *= 2
+                x = self.res_block(x, f=f, scale_type="down", name="disc-res%d" % (i + 1))
 
-            # Self-Attention Layer
-            x = self.attention(x, f, reuse=reuse)
+            x = self.res_block(x, f=f, scale_type="down", use_bn=False, name="disc-res5")
+            x = tf.nn.relu(x)
 
-            for i in range(self.n_layer // 2, self.n_layer):
-                x = t.conv2d_alt(x, f * 2, 4, 2, pad=1, sn=True, name='disc-conv2d-%d' % (i + 2))
-                x = tf.nn.leaky_relu(x, alpha=0.1)
+            with tf.name_scope("global_sum_pooling"):
+                x_shape = x.get_shape().as_list()
+                x = tf.reduce_mean(x, axis=-1) * (x_shape[1] * x_shape[2])
 
-                f *= 2
-
-            x = t.flatten(x)
-
-            x = t.dense_alt(x, 1, sn=True, name='disc-fc-1')
+            x = t.dense_alt(x, 1, sn=True, name='disc-dense-last')
             return x
 
-    def generator(self, z, c=None, reuse=None):
+    def generator(self, z, reuse=None):
         """
         :param z: noise
-        :param c: image label
         :param reuse: re-usable
         :return: prob
         """
@@ -224,32 +220,35 @@ class BigGAN:
             z = tf.split(z, num_or_size_splits=4, axis=-1)  # expected [None, 32] * 4
 
             # linear projection
-            x = t.dense_alt(z, f=4 * 4 * 16 * self.channel, sn=True, use_bias=False, name="disc-dense-1")
+            x = t.dense_alt(z, f=4 * 4 * 16 * self.channel, sn=True, use_bias=False, name="gen-dense-1")
             x = tf.nn.relu(x)
 
             x = tf.reshape(x, (-1, 4, 4, 16 * self.channel))
 
             res = x
+
+            f = 16 * self.channel
             for i in range(4):
                 res = self.res_block(res,
-                                     f=(16 // (2 ** i)) * self.channel,
+                                     f=f,
                                      scale_type="up",
-                                     name="res%d" % (i + 1))
+                                     name="gen-res%d" % (i + 1))
+                f //= 2
 
-            x = self.self_attention(res, f_=f)
+            x = self.self_attention(res, f_=f * 2)
 
-            x = self.res_block(x, c=None, z=z[-1], f=self.channel, scale_type="up", name="res4")
+            x = self.res_block(x, f=1 * self.channel, scale_type="up", name="gen-res4")
 
-            x = t.batch_norm(x, name="bn-last")  # <- noise
+            x = t.batch_norm(x, name="gen-bn-last")  # <- noise
             x = tf.nn.relu(x)
-            x = t.conv2d_alt(x, f=self.channel, k=3, sn=True, name="conv2d-last")
+            x = t.conv2d_alt(x, f=self.channel, k=3, sn=True, name="gen-conv2d-last")
 
             x = tf.nn.tanh(x)
             return x
 
     def build_sagan(self):
         # Generator
-        self.g = self.generator(self.z, c=None)
+        self.g = self.generator(self.z)
 
         # Discriminator
         d_real = self.discriminator(self.x)
@@ -261,11 +260,15 @@ class BigGAN:
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
+        self.inception_score = t.inception_score(self.g)
+
         # Summary
         tf.summary.scalar("loss/d_real_loss", d_real_loss)
         tf.summary.scalar("loss/d_fake_loss", d_fake_loss)
         tf.summary.scalar("loss/d_loss", self.d_loss)
         tf.summary.scalar("loss/g_loss", self.g_loss)
+        tf.summary.scalar("metric/inception_score", self.inception_score)
+        tf.summary.scalar("metric/fid_score", self.fid_score)
 
         # Optimizer
         t_vars = tf.trainable_variables()
