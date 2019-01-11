@@ -143,16 +143,16 @@ def main():
                                         model.z_test: sample_z,
                                     })
 
-                    is_mean, is_std = t.inception_score(iu.inverse_transform(samples, inv_type='127'))
-                    fid_score = t.fid_score(real_img=batch_x,
-                                            fake_img=samples[:model.batch_size])
+                    # is_mean, is_std = t.inception_score(iu.inverse_transform(samples, inv_type='127'))
+                    # fid_score = t.fid_score(real_img=batch_x, fake_img=samples[:model.batch_size])
 
                     # Print loss
                     print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
                           " D loss : {:.8f}".format(d_loss),
                           " G loss : {:.8f}".format(g_loss),
-                          " Inception Score : {:.2f} (±{:.2f})".format(is_mean, is_std),
-                          " FID Score : {:.2f}".format(fid_score))
+                          # " Inception Score : {:.2f} (±{:.2f})".format(is_mean, is_std),
+                          # " FID Score : {:.2f}".format(fid_score)
+                          )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
