@@ -65,6 +65,8 @@ def main():
                      use_img_scale=False,
                      )
 
+    num_images = ds.num_images
+
     # saving sample images
     test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, height, width, channel))
     iu.save_images(test_images,
@@ -109,8 +111,8 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
-        ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
+        start_epoch = global_step // (num_images // model.batch_size)           # recover n_epoch
+        ds_iter.pointer = saved_global_step % (num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
             for batch_x in ds_iter.iterate():
                 batch_x = iu.transform(batch_x, inv_type='127')
