@@ -119,9 +119,13 @@ Here's a **google drive link**. You can download pre-trained models from [here](
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
 **SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN)
 **SGAN++**       | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1710.10916) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN)
+**SinGAN**       | *Learning a Generative Model from a Single Natural Image* | [[arXiv]](https://arxiv.org/abs/1905.01164) | [[~~code~~]]()
 **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./SRGAN)
 **StableGAN**    | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | 
 **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./StarGAN)
+**StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() |
+**StyleGAN**     | *A Style-Based Generator Architecture for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1812.04948) | [[~~code~~]]() |
+**StyleGAN V2**  | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() |
 **TAC-GAN**      | *Text Conditioned Auxiliary Classifier Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.06412.pdf) |
 **TempoGAN**     | *A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow* | [[arXiv]](https://arxiv.org/abs/1801.09710) | 
 **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | 
@@ -130,7 +134,7 @@ Here's a **google drive link**. You can download pre-trained models from [here](
 **UGAN**         | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) |
 **WaveGAN**      | *Synthesizing Audio with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.04208) | 
 **WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](./WGAN)
-**ImprovedWGAN** | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](./WGAN)
+**WGAN-GP**      | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](./WGAN)
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
