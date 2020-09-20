@@ -177,7 +177,7 @@ like wave generation, wave to wave translation, etc.
 
 | *Name* | *Summary* | *Paper* | *Code* |
 | :---: | :---: | :---: | :---: |
-| *AAS*                | *Adversarial Audio Synthesis* | [[arXiv]](https://arxiv.org/abs/1802.04208) | [[~~code~~]]() |
+| **AAS**              | *Adversarial Audio Synthesis* | [[arXiv]](https://arxiv.org/abs/1802.04208) | [[~~code~~]]() |
 | **BeatGAN**          | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | [[~~code~~]]() |
 | **GANSynth**         | *Adversarial Neural Audio Synthesis* | [[arXiv]](https://arxiv.org/abs/1902.08710) | [[~~code~~]]() |
 | **MuseGAN**          | *Multi-track Sequential GANs for Symbolic Music Generation and Accompaniment* | [[arXiv]](https://arxiv.org/abs/1709.06298) | [[~~code~~]]() |
