@@ -1,12 +1,16 @@
 # Awesome-GANs with Tensorflow
-Tensorflow implementation of GANs(Generative Adversarial Networks)
+
+Tensorflow implementation of GANs (Generative Adversarial Networks)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome) 
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/context:python)
 
+**WIP** : this repo is about to be refactored & supporting `tf 2.x`.
+
 ## Environments
+
 ### Preferred Environment
 * OS  : Windows 10 / Linux Ubuntu x86-64 ~
 * CPU : any (quad core ~)
@@ -22,6 +26,7 @@ But, of course, the most of the implementations use MNIST or CiFar-10, 100 DataS
 Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
+
 * python 3.x
 * tensorflow 1.x
 * numpy
@@ -34,14 +39,17 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 * Internet :)
 
 ## Usage
+
 ### Dependency Install
     $ sudo python3 -m pip install -r requirements.txt
+
 ### Training GAN
     (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in xxx_train.py)
     just after it, RUN train.py
     $ python3 xxx_train.py
 
 ## DataSets
+
 Now supporting(?) DataSets are... (code is in /datasets.py)
 * MNIST / ~~Fashion MNIST~~
 * CiFar-10 / 100
@@ -54,6 +62,7 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 * (more DataSets will be added soon!)
 
 ## Repo Tree
+
 ```
 │
 ├── xxGAN
@@ -73,7 +82,8 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ## Pre-Trained Models
 
-Here's a **google drive link**. You can download pre-trained models from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA) !
+Here's a **google drive link**. 
+You can download pre-trained models from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA) !
 
 ## Papers & Codes
 
@@ -138,15 +148,15 @@ Here's a **google drive link**. You can download pre-trained models from [here](
 **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) |
 
 ## To-Do
-1. Implement DeblurGAN
-2. ~~Implement 3DGAN~~ - later when DataSet is ready.
-3. ~~Implement BeatGAN~~ - later when DataSet is ready.
-4. ~~Implement TempoGAN~~ - later when DataSet is ready. 
-5. Fix PGGAN, SGAN, SGAN++
+
+1. updating `worth a try` GAN papers
+2. refactoring the whole codes
+3. supporting tensorflow 2.x
 
 ## ETC
 
-**Any suggestions and PRs and issues are WELCONE :)**
+**Any suggestions and PRs and issues are WELCOME :)**
 
 ## Author
+
 HyeongChan Kim / [@kozistr](http://kozistr.tech)
