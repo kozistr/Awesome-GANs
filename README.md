@@ -170,10 +170,11 @@ like wave generation, wave to wave translation, etc.
 
 | *Name* | *Summary* | *Paper* | *Code* |
 | :---: | :---: | :---: | :---: |
-| **BeatGAN**      | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | [[~~code~~]]() |
-| **SEGAN**        | *Speech Enhancement Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.09452) | [[~~code~~]]() |
-| **TempoGAN**     | *A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow* | [[arXiv]](https://arxiv.org/abs/1801.09710) | [[~~code~~]]() |
-| **WaveGAN**      | *Synthesizing Audio with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.04208) | [[~~code~~]]() |
+| **BeatGAN**          | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | [[~~code~~]]() |
+| **SEGAN**            | *Speech Enhancement Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.09452) | [[~~code~~]]() |
+| **TempoGAN**         | *A Temporally Coherent, Volumetric GAN for Super-resolution Fluid Flow* | [[arXiv]](https://arxiv.org/abs/1801.09710) | [[~~code~~]]() |
+| **Parallel WaveGAN** | *A fast waveform generation model based on GAN with multi-resolution spectrogram* | [[arXiv]](https://arxiv.org/abs/1910.11480) | [[~~code~~]]() |
+| **WaveGAN**          | *Synthesizing Audio with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.04208) | [[~~code~~]]() |
 
 ## Applied Others
 
