@@ -124,6 +124,7 @@ You can download pre-trained models from [here](https://drive.google.com/open?id
 **PGGAN**        | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) |
 **SeAtGAN**      | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN)
 **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) |
+**SphereGAN**    | *Sphere Generative Adversarial Network Based on Geometric Moment Matching* | [[CVPR2019]](http://cau.ac.kr/~jskwon/paper/SphereGAN_CVPR2019.pdf) | [[~~code~~]]()
 **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) |
 **SEGAN**        | *Speech Enhancement Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.09452) |
 **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) |
