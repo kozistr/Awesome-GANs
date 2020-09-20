@@ -152,7 +152,9 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
 | **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]()
 | **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
+| **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() |
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
+| **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() |
 | **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
 | **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
 | **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./SRGAN) |
@@ -160,7 +162,9 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() |
 | **TecoGAN**      | *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation* | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() |
 | **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | [[~~code~~]]() |
+| **TUNIT**        | *Rethinking the Truly Unsupervised Image-to-Image Translation* | [[arXiv]]() | [[~~code~~]](https://arxiv.org/abs/2006.06500) |
 | **TwinGAN**      | *Cross-Domain Translation fo Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) | [[~~code~~]]() |
+| **UNIT**        | *Unsupervised Image-to-Image Translation Networks* | [[arXiv]](https://arxiv.org/abs/1703.00848) | [[~~code~~]]() |
 | **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) | [[~~code~~]]() |
 
 ### Applied Audio
