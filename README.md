@@ -123,6 +123,7 @@ You can download pre-trained models from [here](https://drive.google.com/open?id
 **MSGGAN**       | *Multi-Scale Gradients for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/pdf/1903.06048.pdf) | [[~~code~~]]()
 **PassGAN**      | *A Deep Learning Approach for Password Guessing* | [[arXiv]](https://arxiv.org/abs/1709.00440) |
 **PGGAN**        | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) |
+**RaGAN**        | *The relativistic discriminator: a key element missing from standard GAN* | [[arXiv]](https://arxiv.org/pdf/1807.00734v3.pdf) | [[~~code~~]]()
 **SeAtGAN**      | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN)
 **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) |
 **SphereGAN**    | *Sphere Generative Adversarial Network Based on Geometric Moment Matching* | [[CVPR2019]](http://cau.ac.kr/~jskwon/paper/SphereGAN_CVPR2019.pdf) | [[~~code~~]]()
