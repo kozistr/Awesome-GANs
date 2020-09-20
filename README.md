@@ -118,6 +118,7 @@ Here for the theories & concepts of the GAN.
 | **Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/abs/1704.06191) | [[code]](./GAN) |
 | **GAP**          | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) | [[~~code~~]]() |
 | **GEGAN**        | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) | [[~~code~~]]() |
+| **G-GAN**        | *Geometric GAN* | [[arXiv]](https://arxiv.org/abs/1705.02894) | [[~~code~~]]() | 
 | **InfoGAN**      | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657) | [[code]](./InfoGAN) |
 | **LAPGAN**       | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) | [[code]](./LAPGAN) |
 | **LSGAN**        | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) | [[code]](./LSGAN) |
