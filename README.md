@@ -83,38 +83,75 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 ## Pre-Trained Models
 
 Here's a **google drive link**. 
-You can download pre-trained models from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA) !
+You can download pre-trained models from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA)
 
 ## Papers & Codes
 
-*Name* | *Summary* | *Paper* | *Code*
-:---: | :---: | :---: | :---:
-**3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) |
-**ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN)
-**AdaGAN**       | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) |
-**AnoGAN**       | *Unsupervised Anomaly Detection with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05921) | [[~~code~~]](./AnoGAN)
-**BeatGAN**      | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | 
-**BEGAN**        | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](./BEGAN)
-**BGAN**         | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) | [[code]](./BGAN)
-**BigGAN**       | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) |
-**CGAN**         | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](./CGAN)
-**CipherGAN**    | *Unsupervised Cipher Cracking Using Discrete GANs* | [[github]](https://arxiv.org/abs/1801.04883) |
-**CoGAN**        | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) | [[code]](./CoGAN)
-**CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./CycleGAN)
-**DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) |
-**DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](./DCGAN)
-**DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) |
-**DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | 
-**DRAGAN**       | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](./DRAGAN)
-**DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) |
-**eCommerceGAN** | *A Generative Adversarial Network for E-commerce* | [[arXiv]](https://arxiv.org/abs/1801.03244) | 
-**EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](./EBGAN)
-**f-GAN**        | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) | [[code]](./FGAN)
-**GAN**          | *Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1406.2661) | [[code]](./GAN)
-**GP-GAN**       | *Towards Realistic High-Resolution Image Blending* | [[arXiv]](https://arxiv.org/abs/1703.07195) | 
-**Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/abs/1704.06191) | [[code]](./GAN)
-**GAP**          | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) |
-**GEGAN**        | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) |
+Here's the list-up for tons of GAN papers. all papers are sorted by alphabetic order.
+
+### Start
+
+Here's the beginning of the **GAN**.
+
+| *Name* | *Summary* | *Paper* | *Code* |
+| :---: | :---: | :---: | :---: |
+| **GAN** | *Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1406.2661) | [[code]](./GAN)
+
+### Theory & Concept
+
+Here for the theories & concepts of the GAN.
+
+| *Name* | *Summary* | *Paper* | *Code* |
+| :---: | :---: | :---: | :---: |
+| **ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN) |
+| **AdaGAN**       | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) | [[~~code~~]]() |
+| **BEGAN**        | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](./BEGAN) |
+| **BGAN**         | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) | [[code]](./BGAN) |
+| **BigGAN**       | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) | [[~~code~~]]() |
+| **CGAN**         | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](./CGAN) |
+| **CoGAN**        | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) | [[code]](./CoGAN) |
+| **DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](./DCGAN) |
+| **DRAGAN**       | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](./DRAGAN) |
+| **EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](./EBGAN) |
+| **f-GAN**        | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) | [[code]](./FGAN) |
+| **GP-GAN**       | *Towards Realistic High-Resolution Image Blending* | [[arXiv]](https://arxiv.org/abs/1703.07195) | [[~~code~~]]() |
+| **Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/abs/1704.06191) | [[code]](./GAN) |
+| **GAP**          | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) | [[~~code~~]]() |
+| **GEGAN**        | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) | [[~~code~~]]() |
+
+### Applied Vision
+
+Here for the GAN applications on Vision domain, 
+like image-to-image translation, image in-painting, single image super resolution , etc.
+
+| *Name* | *Summary* | *Paper* | *Code* |
+| :---: | :---: | :---: | :---: |
+| **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
+| **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./CycleGAN) |
+| **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
+| **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
+| **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]()
+
+### Applied Audio
+
+Here for the GAN applications on Audio domain, 
+like wave generation, wave to wave translation, etc.
+
+| *Name* | *Summary* | *Paper* | *Code* |
+| :---: | :---: | :---: | :---: |
+| **BeatGAN**      | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | [[~~code~~]]() |
+
+## Applied Others
+
+Here for the GAN applications on other domains, 
+like nlp, tabular, etc.
+
+| *Name* | *Summary* | *Paper* | *Code* |
+| :---: | :---: | :---: | :---: |
+| **AnoGAN**       | *Unsupervised Anomaly Detection with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05921) | [[~~code~~]](./AnoGAN)
+| **CipherGAN**    | *Unsupervised Cipher Cracking Using Discrete GANs* | [[github]](https://arxiv.org/abs/1801.04883) | [[~~code~~]]() |
+| **DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | [[~~code~~]]() |
+| **eCommerceGAN** | *A Generative Adversarial Network for E-commerce* | [[arXiv]](https://arxiv.org/abs/1801.03244) | 
 **InfoGAN**      | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657) | [[code]](./InfoGAN)
 **LAPGAN**       | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) | [[code]](./LAPGAN)
 **LSGAN**        | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) | [[code]](./LSGAN)
