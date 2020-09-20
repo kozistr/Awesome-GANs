@@ -151,9 +151,11 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./CycleGAN) |
 | **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
 | **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
-| **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]()
+| **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]() |
+| **EdgeConnect**  | *Generative Image Inpainting with Adversarial Edge Learning* | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() |
 | **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
 | **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() |
+| **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() |
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
 | **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() |
 | **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
