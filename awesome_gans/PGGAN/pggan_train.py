@@ -1,23 +1,15 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
+import random
+import time
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from scipy.ndimage import zoom
 from skimage.transform import resize
 
-import sys
-import time
-import random
-
-import pggan_model as pggan
-
-sys.path.append('../')
-import image_utils as iu
-from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.pggan.pggan_model as pggan
+from awesome_gans.datasets import CelebADataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 results = {
     'output': './gen_img/',

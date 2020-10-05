@@ -1,11 +1,10 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-import tfutil as t
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
-np.random.seed(777)      # reproducibility
-
+np.random.seed(777)  # reproducibility
 
 he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
 l2_reg = tf.contrib.layers.l2_regularizer
@@ -190,7 +189,7 @@ class PGGAN:
             for i in range(pg - 1):
                 if i == pg - 2 and pg_t:
                     x_out = t.conv2d(x, 3, k=1, s=1, name='gen_out_conv2d-%d' % x.get_shape()[1])  # to RGB images
-                    x_out = resize_nn(x_out, x_out.get_shape()[1] * 2)                           # up-sampling
+                    x_out = resize_nn(x_out, x_out.get_shape()[1] * 2)  # up-sampling
 
                 x = block(x, nf(i + 1), name="1")
                 x = block(x, nf(i + 1), name="2")
@@ -231,7 +230,7 @@ class PGGAN:
         self.gp = tf.reduce_mean(tf.square(slopes - self.gp_target))
 
         self.d_loss += (self.gp_lambda / (self.gp_target ** 2)) * self.gp + \
-            self.gp_w * tf.reduce_mean(tf.square(d_real - 0.))
+                       self.gp_w * tf.reduce_mean(tf.square(d_real - 0.))
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
