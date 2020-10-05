@@ -1,22 +1,13 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import srgan_model as srgan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import Div2KDataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.srgan.srgan_model as srgan
+from awesome_gans.datasets import Div2KDataSet as DataSet
 
 np.random.seed(1337)
-
 
 results = {
     'output': './gen_img/',
