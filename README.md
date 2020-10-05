@@ -7,27 +7,19 @@ Tensorflow implementation of GANs (Generative Adversarial Networks)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/context:python)
 
-**WIP** : this repo is about to be refactored & supporting `tf 2.x`.
+## **WIP** : This repo is about to be refactored & supporting `tf 2.x`.
 
 ## Environments
 
-### Preferred Environment
-* OS  : Windows 10 / Linux Ubuntu x86-64 ~
-* CPU : any (quad core ~)
-* GPU : GTX 1060 6GB ~
-* RAM : 16GB ~
-* Library : TF 1.x with CUDA 9.0~ + cuDNN 7.0~
-* Python 3.x
-
 Because of the image and model size, (especially **BEGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
-if you want to train them comfortably, you need a GPU which has more than 8GB.
+if you want to train them comfortably, you need a GPU which has more than `8GB`.
 
-But, of course, the most of the implementations use MNIST or CiFar-10, 100 DataSets.
+But, of course, the most of the implementations use `MNIST` or `CIFAR-10, 100` DataSets.
 Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Prerequisites
 
-* python 3.x
+* **python 3.x**
 * tensorflow 1.x
 * numpy
 * scipy (some features are about to **deprecated**, it'll be replaced to OpenCV SOON!)
@@ -40,17 +32,19 @@ Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
 ## Usage
 
+Now on refactoring... All GAN training script can be run module-wisely like below. (**WIP**)
+
 ### Dependency Install
-    $ sudo python3 -m pip install -r requirements.txt
+    $ python3 -m pip install -r requirements.txt
 
 ### Training GAN
     (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in xxx_train.py)
-    just after it, RUN train.py
-    $ python3 xxx_train.py
+    $ python3 -m awesome_gans.gan
 
 ## DataSets
 
-Now supporting(?) DataSets are... (code is in /datasets.py)
+Supporting datasets are... (code is in `/awesome_gans/datasets.py`)
+
 * MNIST / ~~Fashion MNIST~~
 * CiFar-10 / 100
 * CelebA/CelebA-HQ
@@ -215,7 +209,7 @@ like nlp, tabular, etc.
 2. supporting **tensorflow 2.x**
 3. linking to the official implementations, if not, unofficial implementations
 
-## ETC
+## Note
 
 **Any suggestions and PRs and issues are WELCOME :)**
 
