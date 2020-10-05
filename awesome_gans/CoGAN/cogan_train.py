@@ -1,4 +1,3 @@
-import sys
 import time
 
 import numpy as np
@@ -7,8 +6,6 @@ import tensorflow as tf
 import awesome_gans.cogan.cogan_model as cogan
 import awesome_gans.image_utils as iu
 from awesome_gans.datasets import MNISTDataSet as DataSet
-
-sys.path.append('../')
 
 results = {
     'output': './gen_img/',
