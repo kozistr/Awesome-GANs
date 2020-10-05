@@ -59,23 +59,27 @@ Supporting datasets are ... (code is in `/awesome_gans/datasets.py`)
 │
 ├── awesome_gans (source codes & eplainations & results & models) 
 │        │
-│        ├── xxGAN
-│        │    ├──gan_img (generated images)
+│        ├── acgan
+│        │    ├──gen_img (generated images)
 │        │    │     ├── train_xxx.png
 │        │    │     └── train_xxx.png
-│        │    ├── model  (model)
-│        │    │     └── model.txt (google-drive link for pre-trained model)
-│        │    ├── gan_model.py (gan model)
-│        │    ├── gan_train.py (gan trainer)
-│        │    ├── gan_tb.png   (Tensor-Board result)
-│        │    └── readme.md    (results & explains)
-│        ├── tfutil.py         (useful TF util)
+│        │    ├── model  (pre-trained model file)
+│        │    │     └── model.txt (google-drive link)
+│        │    ├── __init__.py
+│        │    ├── __main__.py
+│        │    ├── model.py (gan model)
+│        │    ├── train.py (gan trainer)
+│        │    ├── gan_tb.png   (tensorboard loss plot)
+│        │    └── readme.md    (results & explainations)
+│        ├── config.py         (configurations)
+│        ├── modules.py        (networks & operations)
+│        ├── utils.py          (auxiliary utils)
 │        ├── image_utils.py    (image processing)
-│        └── datasets.py       (DataSet loader)
+│        └── datasets.py       (dataset loader)
 ├── CONTRIBUTING.md
-├── Makefile (for code linting)
+├── Makefile   (for linting the codes)
 ├── LICENSE
-├── README.md
+├── README.md  (Usage & GAN paper list-up)
 └── requirements.txt
 ```
 
