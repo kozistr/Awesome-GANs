@@ -6,11 +6,11 @@ import tensorflow as tf
 
 import awesome_gans.biggan.biggan_model as biggan
 import awesome_gans.image_utils as iu
-from awesome_gans.config import get_config
+from awesome_gans.config import parse_args
 from awesome_gans.datasets import CelebADataSet as DataSet
 from awesome_gans.datasets import DataIterator
 
-cfg, _ = get_config()
+cfg = parse_args()
 
 train_step = {
     'batch_size': 64,
@@ -30,18 +30,18 @@ def main():
         width=height,
         channel=channel,
         # ds_image_path="D:\\DataSet/CelebA/CelebA-%d.h5" % height,
-        ds_label_path=os.path.join(cfg.celeba, "Anno/list_attr_celeba.txt"),
-        ds_image_path=os.path.join(cfg.celeba, "Img/img_align_celeba/"),
+        ds_label_path=os.path.join(cfg.celeba_path, "Anno/list_attr_celeba.txt"),
+        ds_image_path=os.path.join(cfg.celeba_path, "Img/img_align_celeba/"),
         ds_type="CelebA",
         use_save=True,
-        save_file_name=os.path.join(cfg.celeba, "CelebA-%d.h5" % height),
+        save_file_name=os.path.join(cfg.celeba_path, "CelebA-%d.h5" % height),
         save_type="to_h5",
         use_img_scale=False,
     )
 
     # saving sample images
     test_images = np.reshape(iu.transform(ds.images[:16], inv_type='127'), (16, height, width, channel))
-    iu.save_images(test_images, size=[4, 4], image_path=os.path.join(cfg.output, "sample.png"), inv_type='127')
+    iu.save_images(test_images, size=[4, 4], image_path=os.path.join(cfg.output_path, "sample.png"), inv_type='127')
 
     ds_iter = DataIterator(x=ds.images, y=None, batch_size=train_step['batch_size'], label_off=True)
 
@@ -79,13 +79,13 @@ def main():
                 batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
+                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z, })
 
                 # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
+                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x, model.z: batch_z, })
 
                 if global_step % train_step['logging_interval'] == 0:
-                    summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z,})
+                    summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z, })
 
                     # Print loss
                     print(
@@ -96,7 +96,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g_test, feed_dict={model.z: sample_z,})
+                    samples = s.run(model.g_test, feed_dict={model.z: sample_z, })
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
