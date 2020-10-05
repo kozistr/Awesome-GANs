@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -61,10 +57,10 @@ class ACGAN:
         self.g_loss = 0.
         self.d_loss = 0.
         self.c_loss = 0.
-        
+
         self.g = None
         self.g_test = None
-        
+
         self.d_op = None
         self.g_op = None
         self.c_op = None
@@ -76,10 +72,10 @@ class ACGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                                    # (-1, 32, 32, 3)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")          # (-1, 10)
+                                name="x-image")  # (-1, 32, 32, 3)
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
         self.y_rnd = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-rnd-label")  # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")              # (-1, 100)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 100)
 
         self.build_acgan()  # build ACGAN model
 
