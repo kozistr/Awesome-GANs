@@ -1,19 +1,11 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import dragan_model as dragan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import MNISTDataSet as DataSet
-
+import awesome_gans.dragan.dragan_model as dragan
+import awesome_gans.image_utils as iu
+from awesome_gans.datasets import MNISTDataSet as DataSet
 
 results = {
     'output': './gen_img/',
@@ -25,7 +17,6 @@ train_step = {
     'global_step': 200001,
     'logging_interval': 2000,
 }
-
 
 np.random.seed(777)
 
