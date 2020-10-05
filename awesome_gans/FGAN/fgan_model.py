@@ -1,11 +1,7 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)
 
@@ -120,50 +116,69 @@ class FGAN:
 
         # Losses
         if self.divergence == 'GAN':
-            def activation(x): return -tf.reduce_mean(-t.safe_log(1. + tf.exp(-x)))
+            def activation(x):
+                return -tf.reduce_mean(-t.safe_log(1. + tf.exp(-x)))
 
-            def conjugate(x): return -tf.reduce_mean(-t.safe_log(1. - tf.exp(x)))
+            def conjugate(x):
+                return -tf.reduce_mean(-t.safe_log(1. - tf.exp(x)))
         elif self.divergence == 'KL':  # tf.distribution.kl_divergence
-            def activation(x): return -tf.reduce_mean(x)
+            def activation(x):
+                return -tf.reduce_mean(x)
 
-            def conjugate(x): return -tf.reduce_mean(tf.exp(x - 1.))
+            def conjugate(x):
+                return -tf.reduce_mean(tf.exp(x - 1.))
         elif self.divergence == 'Reverse-KL':
-            def activation(x): return -tf.reduce_mean(-tf.exp(x))
+            def activation(x):
+                return -tf.reduce_mean(-tf.exp(x))
 
-            def conjugate(x): return -tf.reduce_mean(-1. - x)  # remove log
+            def conjugate(x):
+                return -tf.reduce_mean(-1. - x)  # remove log
         elif self.divergence == 'JS':
-            def activation(x): return -tf.reduce_mean(tf.log(2.) - t.safe_log(1. + tf.exp(-x)))
+            def activation(x):
+                return -tf.reduce_mean(tf.log(2.) - t.safe_log(1. + tf.exp(-x)))
 
-            def conjugate(x): return -tf.reduce_mean(-t.safe_log(2. - tf.exp(x)))
+            def conjugate(x):
+                return -tf.reduce_mean(-t.safe_log(2. - tf.exp(x)))
         elif self.divergence == 'JS-Weighted':
-            def activation(x): return -tf.reduce_mean(-np.pi * np.log(np.pi) - t.safe_log(1. + tf.exp(-x)))
+            def activation(x):
+                return -tf.reduce_mean(-np.pi * np.log(np.pi) - t.safe_log(1. + tf.exp(-x)))
 
-            def conjugate(x): return -tf.reduce_mean((1. - np.pi) *
-                                                     t.safe_log((1. - np.pi) / (1. - np.pi * tf.exp(x / np.pi))))
+            def conjugate(x):
+                return -tf.reduce_mean((1. - np.pi) *
+                                       t.safe_log((1. - np.pi) / (1. - np.pi * tf.exp(x / np.pi))))
         elif self.divergence == 'Squared-Hellinger':
-            def activation(x): return -tf.reduce_mean(1. - tf.exp(x))
+            def activation(x):
+                return -tf.reduce_mean(1. - tf.exp(x))
 
-            def conjugate(x): return -tf.reduce_mean(x / (1. - x))
+            def conjugate(x):
+                return -tf.reduce_mean(x / (1. - x))
         elif self.divergence == 'Pearson':
-            def activation(x): return -tf.reduce_mean(x)
+            def activation(x):
+                return -tf.reduce_mean(x)
 
-            def conjugate(x): return -tf.reduce_mean(tf.square(x) / 4. + x)
+            def conjugate(x):
+                return -tf.reduce_mean(tf.square(x) / 4. + x)
         elif self.divergence == 'Neyman':
-            def activation(x): return -tf.reduce_mean(1. - tf.exp(x))
+            def activation(x):
+                return -tf.reduce_mean(1. - tf.exp(x))
 
-            def conjugate(x): return -tf.reduce_mean(2. - 2. * tf.sqrt(1. - x))
+            def conjugate(x):
+                return -tf.reduce_mean(2. - 2. * tf.sqrt(1. - x))
         elif self.divergence == 'Jeffrey':
             from scipy.special import lambertw
 
-            def activation(x): return -tf.reduce_mean(x)
+            def activation(x):
+                return -tf.reduce_mean(x)
 
             def conjugate(x):
                 lambert_w = lambertw(self.s.run(tf.exp(1. - x)))  # need to be replaced with another tensor func
                 return -tf.reduce_mean(lambert_w + 1. / lambert_w + x - 2.)
         elif self.divergence == 'Total-Variation':
-            def activation(x): return -tf.reduce_mean(tf.nn.tanh(x) / 2.)
+            def activation(x):
+                return -tf.reduce_mean(tf.nn.tanh(x) / 2.)
 
-            def conjugate(x): return -tf.reduce_mean(x)
+            def conjugate(x):
+                return -tf.reduce_mean(x)
         else:
             raise NotImplementedError("[-] Not Implemented f-divergence %s" % self.divergence)
 
