@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)
 
@@ -96,12 +92,12 @@ class LAPGAN:
 
         self.do_rate = tf.placeholder(tf.float32, None, name='do-rate')
 
-        self.g = []       # generators
+        self.g = []  # generators
         self.g_loss = []  # generator losses
 
-        self.d_reals = []       # discriminator_real logits
-        self.d_fakes = []       # discriminator_fake logits
-        self.d_loss = []        # discriminator_real losses
+        self.d_reals = []  # discriminator_real logits
+        self.d_fakes = []  # discriminator_fake logits
+        self.d_loss = []  # discriminator_real losses
 
         # Training Options
         self.d_op = []

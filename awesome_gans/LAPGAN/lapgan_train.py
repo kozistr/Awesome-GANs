@@ -1,23 +1,14 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import lapgan_model as lapgan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import DataIterator
-from datasets import CiFarDataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.lapgan.lapgan_model as lapgan
+from awesome_gans.datasets import CiFarDataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 np.random.seed(1337)
-
 
 results = {
     'output': './gen_img/',
@@ -95,7 +86,7 @@ def main():
                 ],
                     feed_dict={
                         model.x1_fine: batch_x,  # images
-                        model.y: batch_labels,   # classes
+                        model.y: batch_labels,  # classes
                         model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
                         model.do_rate: 0.5,
                     })
@@ -126,7 +117,7 @@ def main():
                     ],
                         feed_dict={
                             model.x1_fine: batch_x,  # images
-                            model.y: sample_y,       # classes
+                            model.y: sample_y,  # classes
                             model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
                             model.do_rate: 0.,
                         })
