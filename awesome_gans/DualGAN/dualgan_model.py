@@ -1,6 +1,6 @@
 import tensorflow as tf
-import tfutil as t
 
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -11,7 +11,6 @@ class DualGAN:
                  sample_num=16 * 16, sample_size=16,
                  df_dim=64, gf_dim=64,
                  lambda_a=20., lambda_b=20., z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
-
         """
         # General Settings
         :param s: TF Session
@@ -113,7 +112,6 @@ class DualGAN:
         :return: logits
         """
         with tf.variable_scope("generator", reuse=reuse):
-
             return z
 
     def build_dualgan(self):
