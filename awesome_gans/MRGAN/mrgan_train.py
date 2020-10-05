@@ -1,20 +1,12 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import mrgan_model as mrgan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.mrgan.mrgan_model as mrgan
+from awesome_gans.datasets import CelebADataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 results = {
     'output': './gen_img/',
@@ -85,7 +77,7 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (ds.num_images // model.batch_size)           # recover n_epoch
+        start_epoch = global_step // (ds.num_images // model.batch_size)  # recover n_epoch
         ds_iter.pointer = saved_global_step % (ds.num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
