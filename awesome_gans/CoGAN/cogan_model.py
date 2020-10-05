@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -14,7 +10,6 @@ class CoGAN:
     def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
                  sample_num=8 * 8, sample_size=8,
                  n_input=784, fc_d_unit=512, fc_g_unit=1024, df_dim=32, gf_dim=64, z_dim=128, lr=2e-4):
-
         """
         # General Settings
         :param s: TF Session
@@ -88,8 +83,8 @@ class CoGAN:
         # Placeholder
         self.x_1 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image1")  # (-1, 784)
         self.x_2 = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image2")  # (-1, 784)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")   # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')       # (-1, 128)
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_cogan()  # build CoGAN model
 
