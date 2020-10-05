@@ -65,19 +65,25 @@ Now supporting(?) DataSets are... (code is in /datasets.py)
 
 ```
 │
-├── xxGAN
-│    ├──gan_img (generated images)
-│    │     ├── train_xxx.png
-│    │     └── train_xxx.png
-│    ├── model  (model)
-│    │     └── model.txt (google-drive link for pre-trained model)
-│    ├── gan_model.py (gan model)
-│    ├── gan_train.py (gan trainer)
-│    ├── gan_tb.png   (Tensor-Board result)
-│    └── readme.md    (results & explains)
-├── tfutil.py         (useful TF util)
-├── image_utils.py    (image processing)
-└── datasets.py       (DataSet loader)
+├── awesome_gans (source codes & eplainations & results & models) 
+│        │
+│        ├── xxGAN
+│        │    ├──gan_img (generated images)
+│        │    │     ├── train_xxx.png
+│        │    │     └── train_xxx.png
+│        │    ├── model  (model)
+│        │    │     └── model.txt (google-drive link for pre-trained model)
+│        │    ├── gan_model.py (gan model)
+│        │    ├── gan_train.py (gan trainer)
+│        │    ├── gan_tb.png   (Tensor-Board result)
+│        │    └── readme.md    (results & explains)
+│        ├── tfutil.py         (useful TF util)
+│        ├── image_utils.py    (image processing)
+│        └── datasets.py       (DataSet loader)
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+└── requirements.txt
 ```
 
 ## Pre-Trained Models
@@ -204,10 +210,10 @@ like nlp, tabular, etc.
 
 ## To-Do
 
-1. updating `worth a try` GAN papers
-2. refactoring the whole codes
-3. supporting tensorflow 2.x
-4. linking to the official implementations, if not, unofficial implementations
+0. updating `worth a try` GAN papers
+1. refactoring the whole codes
+2. supporting **tensorflow 2.x**
+3. linking to the official implementations, if not, unofficial implementations
 
 ## ETC
 
