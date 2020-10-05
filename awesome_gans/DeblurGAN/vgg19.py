@@ -1,10 +1,9 @@
+import os
 from urllib.request import urlretrieve
 
-import tensorflow as tf
 import numpy as np
 import scipy.io
-import os
-
+import tensorflow as tf
 
 vgg19_download_link = 'http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-19.mat'
 vgg19_file_name = 'imagenet-vgg-verydeep-19.mat'

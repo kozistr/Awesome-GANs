@@ -1,12 +1,7 @@
 import tensorflow as tf
 
-import sys
-
-import vgg19
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.deblurgan.vgg19 as vgg19
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)
 
@@ -79,7 +74,7 @@ class DeblurGAN:
 
         # Training Options
         self.beta1 = 0.5  # 0.9 is not good at oscillation & instability
-        self.lr = lr      # 1e-3 is too high...
+        self.lr = lr  # 1e-3 is too high...
 
         self.bulid_deblurgan()  # build DeblurGAN model
 
@@ -143,7 +138,7 @@ class DeblurGAN:
         with tf.variable_scope("vgg19", reuse=reuse):
             # image re-scaling
             x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
-            x = tf.cast(x * 255., dtype=tf.float32)     # [0, 1]  to [0, 255]
+            x = tf.cast(x * 255., dtype=tf.float32)  # [0, 1]  to [0, 255]
 
             r, g, b = tf.split(x, 3, 3)
             bgr = tf.concat([b - self.vgg_mean[0],
