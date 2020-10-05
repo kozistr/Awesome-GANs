@@ -38,7 +38,6 @@ data_arg.add_argument('--pix2pix', type=str, default="./pix2pix/")
 # Misc
 misc_arg = add_arg_group('Misc')
 misc_arg.add_argument('--device', type=str, default='gpu')
-misc_arg.add_argument('--n_threads', type=int, default=8,
-                      help='the number of workers for speeding up')
+misc_arg.add_argument('--n_threads', type=int, default=8, help='the number of workers for speeding up')
 misc_arg.add_argument('--seed', type=int, default=1337)
 misc_arg.add_argument('--verbose', type=bool, default=True)

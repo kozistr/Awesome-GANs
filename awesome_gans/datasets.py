@@ -22,7 +22,6 @@ def one_hot(labels_dense, num_classes: int = 10):
 
 
 class DataSetLoader:
-
     @staticmethod
     def get_extension(ext):
         if ext in ['jpg', 'png']:
@@ -46,9 +45,9 @@ class DataSetLoader:
 
     @staticmethod
     def parse_tfr_tf(record):
-        features = tf.parse_single_example(record, features={
-            'shape': tf.FixedLenFeature([3], tf.int64),
-            'data': tf.FixedLenFeature([], tf.string)})
+        features = tf.parse_single_example(
+            record, features={'shape': tf.FixedLenFeature([3], tf.int64), 'data': tf.FixedLenFeature([], tf.string)}
+        )
         data = tf.decode_raw(features['data'], tf.uint8)
         return tf.reshape(data, features['shape'])
 
@@ -64,22 +63,33 @@ class DataSetLoader:
     def img_scaling(img, scale='0,1'):
         if scale == '0,1':
             try:
-                img /= 255.
+                img /= 255.0
             except TypeError:  # ufunc 'true divide' output ~
                 img = np.true_divide(img, 255.0, casting='unsafe')
         elif scale == '-1,1':
             try:
-                img = (img / 127.5) - 1.
+                img = (img / 127.5) - 1.0
             except TypeError:
-                img = np.true_divide(img, 127.5, casting='unsafe') - 1.
+                img = np.true_divide(img, 127.5, casting='unsafe') - 1.0
         else:
             raise ValueError("[-] Only '0,1' or '-1,1' please - (%s)" % scale)
 
         return img
 
-    def __init__(self, path, size=None, name='to_tfr', use_save=False, save_file_name='',
-                 buffer_size=4096, n_threads=8,
-                 use_image_scaling=True, image_scale='0,1', img_save_method=cv2.INTER_LINEAR, debug=True):
+    def __init__(
+        self,
+        path,
+        size=None,
+        name='to_tfr',
+        use_save=False,
+        save_file_name='',
+        buffer_size=4096,
+        n_threads=8,
+        use_image_scaling=True,
+        image_scale='0,1',
+        img_save_method=cv2.INTER_LINEAR,
+        debug=True,
+    ):
 
         self.op = name.split('_')
         self.debug = debug
@@ -195,8 +205,7 @@ class DataSetLoader:
             self.raw_data = self.img_scaling(self.raw_data, self.img_scale)
 
     def load_img(self):
-        self.raw_data = np.zeros((len(self.file_list), self.height * self.width * self.channel),
-                                 dtype=np.uint8)
+        self.raw_data = np.zeros((len(self.file_list), self.height * self.width * self.channel), dtype=np.uint8)
 
         for i, fn in tqdm(enumerate(self.file_names)):
             self.raw_data[i] = self.get_img(fn, (self.height, self.width), self.img_save_method).flatten()
@@ -227,9 +236,9 @@ class DataSetLoader:
                     offset %= n_chunks
                 if offset == n_chunks - 1:
                     print("[-] Not enough data available, clipping to end.")
-                    data = data[offset * size:]
+                    data = data[offset * size :]
                 else:
-                    data = data[offset * size:(offset + 1) * size]
+                    data = data[offset * size : (offset + 1) * size]
 
                 data = np.array(data, dtype=np.uint8)
                 print("[+] ", fl, " => Image size : ", data.shape)
@@ -278,10 +287,14 @@ class DataSetLoader:
 
     def convert_to_tfr(self):
         for data in self.raw_data:
-            ex = tf.train.Example(features=tf.train.Features(feature={
-                'shape': tf.train.Feature(int64_list=tf.train.Int64List(value=data.shape)),
-                'data': tf.train.Feature(bytes_list=tf.train.BytesList(value=[data.tostring()]))
-            }))
+            ex = tf.train.Example(
+                features=tf.train.Features(
+                    feature={
+                        'shape': tf.train.Feature(int64_list=tf.train.Int64List(value=data.shape)),
+                        'data': tf.train.Feature(bytes_list=tf.train.BytesList(value=[data.tostring()])),
+                    }
+                )
+            )
             self.tfr_writer.write(ex.SerializeToString())
 
     def convert_to_h5(self):
@@ -293,7 +306,6 @@ class DataSetLoader:
 
 
 class MNISTDataSet:
-
     def __init__(self, use_split=False, split_rate=0.15, random_state=42, ds_path=None):
         self.use_split = use_split
         self.split_rate = split_rate
@@ -307,6 +319,7 @@ class MNISTDataSet:
             raise AssertionError("[-] MNIST DataSet Path is required!")
 
         from tensorflow.examples.tutorials.mnist import input_data
+
         self.data = input_data.read_data_sets(self.ds_path, one_hot=True)  # download MNIST
 
         # training data
@@ -325,14 +338,12 @@ class MNISTDataSet:
 
         # split training data set into train, valid
         if self.use_split:
-            self.train_images, self.valid_images, self.train_labels, self.valid_labels = \
-                train_test_split(self.train_images, self.train_labels,
-                                 test_size=self.split_rate,
-                                 random_state=self.random_state)
+            self.train_images, self.valid_images, self.train_labels, self.valid_labels = train_test_split(
+                self.train_images, self.train_labels, test_size=self.split_rate, random_state=self.random_state
+            )
 
 
 class CiFarDataSet:
-
     @staticmethod
     def unpickle(file):
         import pickle
@@ -343,8 +354,17 @@ class CiFarDataSet:
         with open(file, 'rb') as f:
             return pickle.load(f, encoding='bytes')
 
-    def __init__(self, height=32, width=32, channel=3,
-                 use_split=False, split_rate=0.2, random_state=42, ds_name="cifar-10", ds_path=None):
+    def __init__(
+        self,
+        height=32,
+        width=32,
+        channel=3,
+        use_split=False,
+        split_rate=0.2,
+        random_state=42,
+        ds_name="cifar-10",
+        ds_path=None,
+    ):
 
         """
         # General Settings
@@ -405,27 +425,30 @@ class CiFarDataSet:
         train_batch_5 = self.unpickle("{0}/data_batch_5".format(self.ds_path))
 
         # training data & label
-        train_data = np.concatenate([
-            train_batch_1[b'data'],
-            train_batch_2[b'data'],
-            train_batch_3[b'data'],
-            train_batch_4[b'data'],
-            train_batch_5[b'data'],
-        ], axis=0)
+        train_data = np.concatenate(
+            [
+                train_batch_1[b'data'],
+                train_batch_2[b'data'],
+                train_batch_3[b'data'],
+                train_batch_4[b'data'],
+                train_batch_5[b'data'],
+            ],
+            axis=0,
+        )
 
-        train_labels = np.concatenate([
-            train_batch_1[b'labels'],
-            train_batch_2[b'labels'],
-            train_batch_3[b'labels'],
-            train_batch_4[b'labels'],
-            train_batch_5[b'labels'],
-        ], axis=0)
+        train_labels = np.concatenate(
+            [
+                train_batch_1[b'labels'],
+                train_batch_2[b'labels'],
+                train_batch_3[b'labels'],
+                train_batch_4[b'labels'],
+                train_batch_5[b'labels'],
+            ],
+            axis=0,
+        )
 
         # Image size : 32x32x3
-        train_images = np.swapaxes(train_data.reshape([-1,
-                                                       self.height,
-                                                       self.width,
-                                                       self.channel], order='F'), 1, 2)
+        train_images = np.swapaxes(train_data.reshape([-1, self.height, self.width, self.channel], order='F'), 1, 2)
 
         # test data & label
         test_batch = self.unpickle("{0}/test_batch".format(self.ds_path))
@@ -434,17 +457,13 @@ class CiFarDataSet:
         test_labels = np.array(test_batch[b'labels'])
 
         # image size : 32x32x3
-        test_images = np.swapaxes(test_data.reshape([-1,
-                                                     self.height,
-                                                     self.width,
-                                                     self.channel], order='F'), 1, 2)
+        test_images = np.swapaxes(test_data.reshape([-1, self.height, self.width, self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
         if self.use_split:
-            train_images, valid_images, train_labels, valid_labels = \
-                train_test_split(train_images, train_labels,
-                                 test_size=self.split_rate,
-                                 random_state=self.random_state)
+            train_images, valid_images, train_labels, valid_labels = train_test_split(
+                train_images, train_labels, test_size=self.split_rate, random_state=self.random_state
+            )
 
             self.valid_images = valid_images
             self.valid_labels = one_hot(valid_labels, self.n_classes)
@@ -463,27 +482,20 @@ class CiFarDataSet:
 
         train_data = np.concatenate([train_batch[b'data']], axis=0)
         train_labels = np.concatenate([train_batch[b'fine_labels']], axis=0)
-        train_images = np.swapaxes(train_data.reshape([-1,
-                                                       self.height,
-                                                       self.width,
-                                                       self.channel], order='F'), 1, 2)
+        train_images = np.swapaxes(train_data.reshape([-1, self.height, self.width, self.channel], order='F'), 1, 2)
 
         # test data & label
         test_batch = self.unpickle("{0}/test".format(self.ds_path))
 
         test_data = np.concatenate([test_batch[b'data']], axis=0)
         test_labels = np.concatenate([test_batch[b'fine_labels']], axis=0)
-        test_images = np.swapaxes(test_data.reshape([-1,
-                                                     self.height,
-                                                     self.width,
-                                                     self.channel], order='F'), 1, 2)
+        test_images = np.swapaxes(test_data.reshape([-1, self.height, self.width, self.channel], order='F'), 1, 2)
 
         # split training data set into train / val
         if self.use_split:
-            train_images, valid_images, train_labels, valid_labels = \
-                train_test_split(train_images, train_labels,
-                                 test_size=self.split_rate,
-                                 random_state=self.random_state)
+            train_images, valid_images, train_labels, valid_labels = train_test_split(
+                train_images, train_labels, test_size=self.split_rate, random_state=self.random_state
+            )
 
             self.valid_images = valid_images
             self.valid_labels = one_hot(valid_labels, self.n_classes)
@@ -503,12 +515,26 @@ class CelebADataSet:
             There're a few codes that download & decrypt CelebA-HQ DataSet.
     """
 
-    def __init__(self,
-                 height=64, width=64, channel=3, attr_labels=(),
-                 n_threads=30, use_split=False, split_rate=0.2, random_state=42,
-                 ds_image_path=None, ds_label_path=None, ds_type="CelebA", use_img_scale=True, img_scale="-1,1",
-                 use_save=False, save_type='to_h5', save_file_name=None,
-                 use_concat_data=False):
+    def __init__(
+        self,
+        height=64,
+        width=64,
+        channel=3,
+        attr_labels=(),
+        n_threads=30,
+        use_split=False,
+        split_rate=0.2,
+        random_state=42,
+        ds_image_path=None,
+        ds_label_path=None,
+        ds_type="CelebA",
+        use_img_scale=True,
+        img_scale="-1,1",
+        use_save=False,
+        save_type='to_h5',
+        save_file_name=None,
+        use_concat_data=False,
+    ):
 
         """
         # General Settings
@@ -591,9 +617,10 @@ class CelebADataSet:
 
             tmp_path = self.ds_image_path + "/imgHQ00000."
             if os.path.exists(tmp_path + "dat"):
-                raise FileNotFoundError("[-] You need to decrypt .dat file first!\n" +
-                                        "[-] plz, use original PGGAN repo or"
-                                        " this repo https://github.com/nperraud/download-celebA-HQ")
+                raise FileNotFoundError(
+                    "[-] You need to decrypt .dat file first!\n" + "[-] plz, use original PGGAN repo or"
+                    " this repo https://github.com/nperraud/download-celebA-HQ"
+                )
         else:
             raise NotImplementedError("[-] 'ds_type' muse be 'CelebA' or 'CelebA-HQ'")
 
@@ -609,13 +636,15 @@ class CelebADataSet:
         except AssertionError:
             raise AssertionError("[-] save-file/folder-name is required!")
 
-        self.images = DataSetLoader(path=self.ds_image_path,
-                                    size=self.image_shape,
-                                    use_save=self.use_save,
-                                    name=self.save_type,
-                                    save_file_name=self.save_file_name,
-                                    use_image_scaling=use_img_scale,
-                                    image_scale=self.img_scale).raw_data  # numpy arrays
+        self.images = DataSetLoader(
+            path=self.ds_image_path,
+            size=self.image_shape,
+            use_save=self.use_save,
+            name=self.save_type,
+            save_file_name=self.save_file_name,
+            use_image_scaling=use_img_scale,
+            image_scale=self.img_scale,
+        ).raw_data  # numpy arrays
         self.labels = self.load_attr(path=self.ds_label_path)
 
         if self.use_concat_data:
@@ -623,10 +652,9 @@ class CelebADataSet:
 
         # split training data set into train / val
         if self.use_split:
-            self.train_images, self.valid_images, self.train_labels, self.valid_labels = \
-                train_test_split(self.images, self.labels,
-                                 test_size=self.split_rate,
-                                 random_state=self.random_state)
+            self.train_images, self.valid_images, self.train_labels, self.valid_labels = train_test_split(
+                self.images, self.labels, test_size=self.split_rate, random_state=self.random_state
+            )
 
     def load_attr(self, path):
         with open(path, 'r') as f:
@@ -644,7 +672,7 @@ class CelebADataSet:
                 attr = [int(x) for x in row[1:]]
 
                 tmp = [attr[self.attr.index(x)] for x in self.attr_labels]
-                tmp = [1. if x == 1 else 0. for x in tmp]  # one-hot labeling
+                tmp = [1.0 if x == 1 else 0.0 for x in tmp]  # one-hot labeling
 
                 img_attr.append(tmp)
 
@@ -656,10 +684,21 @@ class CelebADataSet:
 
 
 class Pix2PixDataSet:
-
-    def __init__(self, height=64, width=64, channel=3,
-                 use_split=False, split_rate=0.15, random_state=42, n_threads=8,
-                 ds_path=None, ds_name=None, use_save=False, save_type='to_h5', save_file_name=None):
+    def __init__(
+        self,
+        height=64,
+        width=64,
+        channel=3,
+        use_split=False,
+        split_rate=0.15,
+        random_state=42,
+        n_threads=8,
+        ds_path=None,
+        ds_name=None,
+        use_save=False,
+        save_type='to_h5',
+        save_file_name=None,
+    ):
 
         """
         # General Settings
@@ -699,8 +738,17 @@ class Pix2PixDataSet:
         self.ds_name = ds_name
         # single grid : testA, testB, (trainA, trainB)
         # double grid : train, val, (test, sample)
-        self.ds_single_grid = ['apple2orange', 'horse2zebra', 'monet2photo', 'summer2winter_yosemite', 'vangogh2photo',
-                               'ae_photos', 'cezanne2photo', 'ukivoe2photo', 'iphone2dslr_flower']
+        self.ds_single_grid = [
+            'apple2orange',
+            'horse2zebra',
+            'monet2photo',
+            'summer2winter_yosemite',
+            'vangogh2photo',
+            'ae_photos',
+            'cezanne2photo',
+            'ukivoe2photo',
+            'iphone2dslr_flower',
+        ]
         self.ds_double_grid = ['cityscapes', 'edges2handbags', 'edges2shoes', 'facades', 'maps']
 
         # Single Grid DatSet - the number of images
@@ -721,21 +769,25 @@ class Pix2PixDataSet:
             raise AssertionError("[-] save-file/folder-name is required!")
 
         if self.ds_name in self.ds_single_grid:
-            self.images_a = DataSetLoader(path=self.ds_path + "/" + self.ds_name + "/trainA/",
-                                          size=self.image_shape,
-                                          use_save=self.use_save,
-                                          name=self.save_type,
-                                          save_file_name=self.save_file_name,
-                                          use_image_scaling=True,
-                                          image_scale='0,1').raw_data  # numpy arrays
+            self.images_a = DataSetLoader(
+                path=self.ds_path + "/" + self.ds_name + "/trainA/",
+                size=self.image_shape,
+                use_save=self.use_save,
+                name=self.save_type,
+                save_file_name=self.save_file_name,
+                use_image_scaling=True,
+                image_scale='0,1',
+            ).raw_data  # numpy arrays
 
-            self.images_b = DataSetLoader(path=self.ds_path + "/" + self.ds_name + "/trainB/",
-                                          size=self.image_shape,
-                                          use_save=self.use_save,
-                                          name=self.save_type,
-                                          save_file_name=self.save_file_name,
-                                          use_image_scaling=True,
-                                          image_scale='0,1').raw_data  # numpy arrays
+            self.images_b = DataSetLoader(
+                path=self.ds_path + "/" + self.ds_name + "/trainB/",
+                size=self.image_shape,
+                use_save=self.use_save,
+                name=self.save_type,
+                save_file_name=self.save_file_name,
+                use_image_scaling=True,
+                image_scale='0,1',
+            ).raw_data  # numpy arrays
             self.n_images_a = self.n_sg_images_a
             self.n_images_b = self.n_sg_images_b
         elif self.ds_name in self.ds_double_grid:
@@ -748,18 +800,31 @@ class Pix2PixDataSet:
 
 
 class ImageNetDataSet:
-
     def __init__(self):
         pass
 
 
 class Div2KDataSet:
-
-    def __init__(self, hr_height=384, hr_width=384, lr_height=96, lr_width=96, channel=3,
-                 use_split=False, split_rate=0.1, random_state=42, n_threads=8,
-                 ds_path=None, ds_name=None, use_img_scale=True,
-                 ds_hr_path=None, ds_lr_path=None,
-                 use_save=False, save_type='to_h5', save_file_name=None):
+    def __init__(
+        self,
+        hr_height=384,
+        hr_width=384,
+        lr_height=96,
+        lr_width=96,
+        channel=3,
+        use_split=False,
+        split_rate=0.1,
+        random_state=42,
+        n_threads=8,
+        ds_path=None,
+        ds_name=None,
+        use_img_scale=True,
+        ds_hr_path=None,
+        ds_lr_path=None,
+        use_save=False,
+        save_type='to_h5',
+        save_file_name=None,
+    ):
 
         """
         # General Settings
@@ -837,33 +902,35 @@ class Div2KDataSet:
             self.ds_hr_path = self.ds_path + "/DIV2K_train_HR/"
             self.ds_lr_path = self.ds_hr_path  # self.ds_path + "/DIV2K_train_LR_bicubic/" + self.ds_name + "/"
 
-        self.hr_images = DataSetLoader(path=self.ds_hr_path,
-                                       size=self.hr_shape,
-                                       use_save=self.use_save,
-                                       name=self.save_type,
-                                       save_file_name=self.save_file_name + "-hr.h5",
-                                       use_image_scaling=self.use_img_scaling,
-                                       image_scale='-1,1',
-                                       img_save_method=cv2.INTER_LINEAR).raw_data  # numpy arrays
+        self.hr_images = DataSetLoader(
+            path=self.ds_hr_path,
+            size=self.hr_shape,
+            use_save=self.use_save,
+            name=self.save_type,
+            save_file_name=self.save_file_name + "-hr.h5",
+            use_image_scaling=self.use_img_scaling,
+            image_scale='-1,1',
+            img_save_method=cv2.INTER_LINEAR,
+        ).raw_data  # numpy arrays
 
-        self.lr_images = DataSetLoader(path=self.ds_lr_path,
-                                       size=self.lr_shape,
-                                       use_save=self.use_save,
-                                       name=self.save_type,
-                                       save_file_name=self.save_file_name + "-lr.h5",
-                                       use_image_scaling=self.use_img_scaling,
-                                       image_scale='-1,1',
-                                       img_save_method=cv2.INTER_CUBIC).raw_data  # numpy arrays
+        self.lr_images = DataSetLoader(
+            path=self.ds_lr_path,
+            size=self.lr_shape,
+            use_save=self.use_save,
+            name=self.save_type,
+            save_file_name=self.save_file_name + "-lr.h5",
+            use_image_scaling=self.use_img_scaling,
+            image_scale='-1,1',
+            img_save_method=cv2.INTER_CUBIC,
+        ).raw_data  # numpy arrays
 
 
 class UrbanSoundDataSet:
-
     def __init__(self):
         pass
 
 
 class DataIterator:
-
     def __init__(self, x, y, batch_size, label_off=False):
         self.x = x
         self.label_off = label_off
@@ -874,7 +941,7 @@ class DataIterator:
         self.num_batches = num_examples // batch_size
         self.pointer = 0
 
-        assert (self.batch_size <= self.num_examples)
+        assert self.batch_size <= self.num_examples
 
     def next_batch(self):
         start = self.pointer

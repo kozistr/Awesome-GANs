@@ -4,9 +4,9 @@ import scipy.misc
 
 def transform(images, inv_type='255'):
     if inv_type == '255':
-        images /= 255.
+        images /= 255.0
     elif inv_type == '127':
-        images = (images / 127.5) - 1.
+        images = (images / 127.5) - 1.0
     else:
         raise NotImplementedError("[-] Only 255 and 127")
 
@@ -14,10 +14,10 @@ def transform(images, inv_type='255'):
 
 
 def inverse_transform(images, inv_type='255'):
-    if inv_type == '255':    # [ 0  1]
+    if inv_type == '255':  # [ 0  1]
         images *= 255
     elif inv_type == '127':  # [-1, 1]
-        images = (images + 1) * (255 / 2.)
+        images = (images + 1) * (255 / 2.0)
     else:
         raise NotImplementedError("[-] Only 255 and 127")
 
@@ -35,7 +35,7 @@ def merge(images, size):
     for idx, image in enumerate(images):
         i = idx % size[1]
         j = idx // size[1]
-        img[j * h:j * h + h, i * w:i * w + w, :] = image
+        img[j * h : j * h + h, i * w : i * w + w, :] = image
 
     return img
 

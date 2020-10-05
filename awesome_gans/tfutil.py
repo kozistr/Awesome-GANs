@@ -34,7 +34,7 @@ def safe_log(x, eps=1e-12):
 
 def safe_log2(x, eps=1e-12):
     with tf.name_scope("safe_log2"):
-        return tf.log(x + eps) * np.float32(1. / np.log(2.))
+        return tf.log(x + eps) * np.float32(1.0 / np.log(2.0))
 
 
 def lerp(a, b, t):
@@ -44,11 +44,11 @@ def lerp(a, b, t):
 
 def lerp_clip(a, b, t):
     with tf.name_scope("lerp_clip"):
-        return a + (b - a) * tf.clip_by_value(t, 0., 1.)
+        return a + (b - a) * tf.clip_by_value(t, 0.0, 1.0)
 
 
 def gaussian_noise(x, std=5e-2):
-    noise = tf.random_normal(x.get_shape(), mean=0., stddev=std, dtype=tf.float32)
+    noise = tf.random_normal(x.get_shape(), mean=0.0, stddev=std, dtype=tf.float32)
     return x + noise
 
 
@@ -79,18 +79,19 @@ def up_sampling(img, interp=tf.image.ResizeMethod.BILINEAR):
 
 
 class Optimizer(object):
-
-    def __init__(self,
-                 name='train',
-                 optimizer='tf.train.AdamOptimizer',
-                 learning_rate=1e-3,
-                 use_loss_scaling=False,
-                 loss_scaling_init=64.,
-                 loss_scaling_inc=5e-4,
-                 loss_scaling_dec=1.,
-                 use_grad_scaling=False,
-                 grad_scaling=7.,
-                 **kwargs):
+    def __init__(
+        self,
+        name='train',
+        optimizer='tf.train.AdamOptimizer',
+        learning_rate=1e-3,
+        use_loss_scaling=False,
+        loss_scaling_init=64.0,
+        loss_scaling_inc=5e-4,
+        loss_scaling_dec=1.0,
+        use_grad_scaling=False,
+        grad_scaling=7.0,
+        **kwargs
+    ):
         self.name = name
         self.optimizer = optimizer
         self.learning_rate = learning_rate
@@ -109,7 +110,6 @@ class Optimizer(object):
 
 
 class Network:
-
     def __init__(self):
         pass
 
@@ -118,7 +118,7 @@ class Network:
 # Functions
 
 
-w_init = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
+w_init = tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True)
 b_init = tf.zeros_initializer()
 
 reg = 5e-4
@@ -140,8 +140,7 @@ def conv2d_alt(x, f=64, k=3, s=1, pad=0, pad_type='zero', use_bias=True, sn=Fals
             raise NotImplementedError("[-] Only 'zero' & 'reflect' are supported :(")
 
         if sn:
-            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f],
-                                initializer=w_init, regularizer=w_reg)
+            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f], initializer=w_init, regularizer=w_reg)
             x = tf.nn.conv2d(x, filter=spectral_norm(w), strides=[1, s, s, 1], padding='VALID')
 
             if use_bias:
@@ -165,14 +164,18 @@ def conv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv2
     :param name: scope name
     :return: net
     """
-    return tf.layers.conv2d(inputs=x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=w_init,
-                            kernel_regularizer=w_reg,
-                            bias_initializer=b_init,
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
+    return tf.layers.conv2d(
+        inputs=x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=w_init,
+        kernel_regularizer=w_reg,
+        bias_initializer=b_init,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def conv1d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv1d'):
@@ -187,14 +190,18 @@ def conv1d(x, f=64, k=3, s=1, pad='SAME', reuse=None, is_train=True, name='conv1
     :param name: scope name
     :return: net
     """
-    return tf.layers.conv1d(inputs=x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=w_init,
-                            kernel_regularizer=w_reg,
-                            bias_initializer=b_init,
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
+    return tf.layers.conv1d(
+        inputs=x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=w_init,
+        kernel_regularizer=w_reg,
+        bias_initializer=b_init,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def sub_pixel_conv2d(x, f, s=2):
@@ -215,10 +222,14 @@ def sub_pixel_conv2d(x, f, s=2):
 def deconv2d_alt(x, f=64, k=3, s=1, use_bias=True, sn=False, name='deconv2d'):
     with tf.variable_scope(name):
         if sn:
-            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f],
-                                initializer=w_init, regularizer=w_reg)
-            x = tf.nn.conv2d_transpose(x, filter=spectral_norm(w), strides=[1, s, s, 1], padding='SAME',
-                                       output_shape=[x.get_shape()[0], x.get_shape()[1] * s, x.get_shape()[2] * s, f])
+            w = tf.get_variable('kernel', shape=[k, k, x.get_shape()[-1], f], initializer=w_init, regularizer=w_reg)
+            x = tf.nn.conv2d_transpose(
+                x,
+                filter=spectral_norm(w),
+                strides=[1, s, s, 1],
+                padding='SAME',
+                output_shape=[x.get_shape()[0], x.get_shape()[1] * s, x.get_shape()[2] * s, f],
+            )
 
             if use_bias:
                 b = tf.get_variable('bias', shape=[f], initializer=b_init)
@@ -241,14 +252,18 @@ def deconv2d(x, f=64, k=3, s=1, pad='SAME', reuse=None, name='deconv2d'):
     :param name: scope name
     :return: net
     """
-    return tf.layers.conv2d_transpose(inputs=x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=w_init,
-                                      kernel_regularizer=w_reg,
-                                      bias_initializer=b_init,
-                                      padding=pad,
-                                      reuse=reuse,
-                                      name=name)
+    return tf.layers.conv2d_transpose(
+        inputs=x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=w_init,
+        kernel_regularizer=w_reg,
+        bias_initializer=b_init,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def dense_alt(x, f=1024, sn=False, use_bias=True, name='fc'):
@@ -256,8 +271,9 @@ def dense_alt(x, f=1024, sn=False, use_bias=True, name='fc'):
         x = flatten(x)
 
         if sn:
-            w = tf.get_variable('kernel', shape=[x.get_shape()[-1], f],
-                                initializer=w_init, regularizer=w_reg, dtype=tf.float32)
+            w = tf.get_variable(
+                'kernel', shape=[x.get_shape()[-1], f], initializer=w_init, regularizer=w_reg, dtype=tf.float32
+            )
             x = tf.matmul(x, spectral_norm(w))
 
             if use_bias:
@@ -278,13 +294,15 @@ def dense(x, f=1024, reuse=None, name='fc'):
     :param is_train: trainable
     :return: net
     """
-    return tf.layers.dense(inputs=x,
-                           units=f,
-                           kernel_initializer=w_init,
-                           kernel_regularizer=w_reg,
-                           bias_initializer=b_init,
-                           reuse=reuse,
-                           name=name)
+    return tf.layers.dense(
+        inputs=x,
+        units=f,
+        kernel_initializer=w_init,
+        kernel_regularizer=w_reg,
+        bias_initializer=b_init,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def flatten(x):
@@ -306,14 +324,16 @@ def l2_norm(x, eps=1e-12):
 
 
 def batch_norm(x, momentum=0.9, center=True, scaling=True, is_train=True, reuse=None, name="bn"):
-    return tf.layers.batch_normalization(inputs=x,
-                                         momentum=momentum,
-                                         epsilon=eps,
-                                         center=center,
-                                         scale=scaling,
-                                         training=is_train,
-                                         reuse=reuse,
-                                         name=name)
+    return tf.layers.batch_normalization(
+        inputs=x,
+        momentum=momentum,
+        epsilon=eps,
+        center=center,
+        scale=scaling,
+        training=is_train,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def instance_norm(x, std=2e-2, affine=True, reuse=None, name=""):
@@ -327,10 +347,10 @@ def instance_norm(x, std=2e-2, affine=True, reuse=None, name=""):
         else:
             depth = x.get_shape()[3]  # input channel
 
-            scale = tf.get_variable('scale', [depth],
-                                    initializer=tf.random_normal_initializer(mean=1., stddev=std, dtype=tf.float32))
-            offset = tf.get_variable('offset', [depth],
-                                     initializer=tf.zeros_initializer())
+            scale = tf.get_variable(
+                'scale', [depth], initializer=tf.random_normal_initializer(mean=1.0, stddev=std, dtype=tf.float32)
+            )
+            offset = tf.get_variable('offset', [depth], initializer=tf.zeros_initializer())
 
         return scale * normalized + offset
 
@@ -339,15 +359,14 @@ def pixel_norm(x):
     return x / tf.sqrt(tf.reduce_mean(tf.square(x), axis=[1, 2, 3]) + eps)
 
 
-def spectral_norm(x, gain=1., n_iter=1):
+def spectral_norm(x, gain=1.0, n_iter=1):
     x_shape = x.get_shape()
 
     x = tf.reshape(x, (-1, x_shape[-1]))  # (n * h * w, c)
 
-    u = tf.get_variable('u',
-                        shape=(1, x_shape[-1]),
-                        initializer=tf.truncated_normal_initializer(stddev=gain),
-                        trainable=False)
+    u = tf.get_variable(
+        'u', shape=(1, x_shape[-1]), initializer=tf.truncated_normal_initializer(stddev=gain), trainable=False
+    )
 
     u_hat = u
     v_hat = None
@@ -375,11 +394,13 @@ def prelu(x, stddev=1e-2, reuse=False, name='prelu'):
         if reuse:
             tf.get_variable_scope().reuse_variables()
 
-        _alpha = tf.get_variable('_alpha',
-                                 shape=[1],
-                                 initializer=tf.constant_initializer(stddev),
-                                 # initializer=tf.random_normal_initializer(stddev)
-                                 dtype=x.dtype)
+        _alpha = tf.get_variable(
+            '_alpha',
+            shape=[1],
+            initializer=tf.constant_initializer(stddev),
+            # initializer=tf.random_normal_initializer(stddev)
+            dtype=x.dtype,
+        )
 
         return tf.maximum(_alpha * x, x)
 
@@ -414,7 +435,7 @@ def rmse_loss(x, y, n):
 
 
 def psnr_loss(x, y, n):
-    return 20. * tf.log(tf.reduce_max(x) / mse_loss(x, y, n))
+    return 20.0 * tf.log(tf.reduce_max(x) / mse_loss(x, y, n))
 
 
 def sce_loss(data, label):
@@ -431,13 +452,14 @@ def ssoftce_loss(data, label):
 
 # metrics
 
+
 def inception_score(images, img_size=(299, 299), n_splits=10):
     """ referenced from https://github.com/tsc2017/Inception-Score/blob/master/inception_score.py """
     assert type(images) == np.ndarray
     assert len(images.shape) == 4
     assert images.shape[-1] == 3
 
-    images = np.clip(images, 0., 255.)  # clipped into [0, 255]
+    images = np.clip(images, 0.0, 255.0)  # clipped into [0, 255]
 
     def inception_feat(img, n_splits=1):
         # img = tf.transpose(img, [0, 2, 3, 1])
@@ -451,7 +473,7 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
             parallel_iterations=1,
             back_prop=False,
             swap_memory=True,
-            name="RunClassifier"
+            name="RunClassifier",
         )
         logits = array_ops.concat(array_ops.unstack(logits), axis=0)
         return logits
@@ -464,15 +486,15 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
 
         preds = np.zeros([len(x), n_classes], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size:(i + 1) * batch_size] / 255. * 2 - 1.  # scaled into [-1, 1]
-            preds[i * batch_size:(i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
+            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            preds[i * batch_size : (i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
         preds = np.exp(preds) / np.sum(np.exp(preds), 1, keepdims=True)
         return preds
 
     def preds2score(preds, splits=10):
         scores = []
         for i in range(splits):
-            part = preds[(i * preds.shape[0] // splits):((i + 1) * preds.shape[0] // splits), :]
+            part = preds[(i * preds.shape[0] // splits) : ((i + 1) * preds.shape[0] // splits), :]
             kl = part * (np.log(part) - np.log(np.expand_dims(np.mean(part, axis=0), axis=0)))
             kl = np.mean(np.sum(kl, axis=1))
             scores.append(np.exp(kl))
@@ -489,8 +511,8 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
     assert real_img.shape[-1] == 3 and fake_img.shape[-1] == 3
     assert real_img.shape == fake_img.shape
 
-    real_img = np.clip(real_img, 0., 255.)  # clipped into [0, 255]
-    fake_img = np.clip(fake_img, 0., 255.)  # clipped into [0, 255]
+    real_img = np.clip(real_img, 0.0, 255.0)  # clipped into [0, 255]
+    fake_img = np.clip(fake_img, 0.0, 255.0)  # clipped into [0, 255]
 
     inception_images = tf.placeholder(tf.float32, [None, None, None, 3], name="inception-images")
     real_acts = tf.placeholder(tf.float32, [None, None], name="real_activations")
@@ -508,7 +530,7 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
             parallel_iterations=1,
             back_prop=False,
             swap_memory=True,
-            name="RunClassifier"
+            name="RunClassifier",
         )
         acts = array_ops.concat(array_ops.unstack(acts), axis=0)
         return acts
@@ -520,17 +542,14 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
 
         acts = np.zeros([len(x), feats], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size:(i + 1) * batch_size] / 255. * 2 - 1.  # scaled into [-1, 1]
-            acts[i * batch_size:(i + 1) * batch_size] = activations.eval({inception_images: inp})
+            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            acts[i * batch_size : (i + 1) * batch_size] = activations.eval({inception_images: inp})
         acts = np.exp(acts) / np.sum(np.exp(acts), 1, keepdims=True)
         return acts
 
     def get_fid(real, fake):
         return tf.contrib.gan.eval.frechet_classifier_distance_from_activations(real_acts, fake_acts).eval(
-            feed_dict={
-                real_acts: real,
-                fake_acts: fake,
-            }
+            feed_dict={real_acts: real, fake_acts: fake,}
         )
 
     real_img_acts = get_inception_activations(real_img)
