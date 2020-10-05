@@ -1,12 +1,8 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
-from config import get_config
+import awesome_gans.tfutil as t
+from awesome_gans.config import get_config
 
 cfg, _ = get_config()
 

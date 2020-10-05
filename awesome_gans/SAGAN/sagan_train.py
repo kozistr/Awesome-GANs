@@ -1,27 +1,16 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
 import os
-import sys
 import time
 
-import sagan_model as sagan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import tfutil as t
-import image_utils as iu
-
-from config import get_config
-from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.sagan.sagan_model as sagan
+from awesome_gans.config import get_config
+from awesome_gans.datasets import CelebADataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 cfg, _ = get_config()
-
 
 train_step = {
     'epochs': 11,
@@ -111,7 +100,7 @@ def main():
             print('[-] No checkpoint file found')
 
         global_step = saved_global_step
-        start_epoch = global_step // (num_images // model.batch_size)           # recover n_epoch
+        start_epoch = global_step // (num_images // model.batch_size)  # recover n_epoch
         ds_iter.pointer = saved_global_step % (num_images // model.batch_size)  # recover n_iter
         for epoch in range(start_epoch, train_step['epochs']):
             for batch_x in ds_iter.iterate():
