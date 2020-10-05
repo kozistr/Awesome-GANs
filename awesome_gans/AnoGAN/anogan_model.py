@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -92,8 +88,8 @@ class AnoGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                                # (-1, 64, 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 128)
+                                name="x-image")  # (-1, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
         if self.use_label:
             self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label')  # (-1, 41)
         else:
@@ -121,7 +117,7 @@ class AnoGAN:
                 x = t.batch_norm(x, is_train=is_train, name='disc-bn-%d' % (i + 1))
                 x = tf.nn.leaky_relu(x)
 
-            feature_match = x   # (-1, 8, 8, 512)
+            feature_match = x  # (-1, 8, 8, 512)
 
             x = t.flatten(x)
 
@@ -174,7 +170,7 @@ class AnoGAN:
 
         if self.detect:
             self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)  # disc     loss
-            self.r_loss = t.l1_loss(self.x, self.g)        # residual loss
+            self.r_loss = t.l1_loss(self.x, self.g)  # residual loss
             self.ano_loss = (1. - self.lambda_) * self.r_loss + self.lambda_ * self.d_loss
 
             tf.summary.scalar("loss/d_loss", self.d_loss)
