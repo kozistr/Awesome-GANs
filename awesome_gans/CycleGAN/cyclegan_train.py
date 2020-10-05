@@ -1,20 +1,11 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import cyclegan_model as cyclegan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-
-import image_utils as iu
-from datasets import Pix2PixDataSet as DataSet
-
+import awesome_gans.cyclegan.cyclegan_model as cyclegan
+import awesome_gans.image_utils as iu
+from awesome_gans.datasets import Pix2PixDataSet as DataSet
 
 results = {
     'output': './gen_img/',

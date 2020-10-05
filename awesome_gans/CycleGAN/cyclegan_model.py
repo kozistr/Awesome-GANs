@@ -1,6 +1,6 @@
 import tensorflow as tf
-import tfutil as t
 
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -10,7 +10,6 @@ class CycleGAN:
     def __init__(self, s, batch_size=8, height=128, width=128, channel=3,
                  sample_num=1 * 1, sample_size=1,
                  df_dim=64, gf_dim=32, fd_unit=512, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
-
         """
         # General Settings
         :param s: TF Session
