@@ -1,9 +1,6 @@
 import tensorflow as tf
-import sys
 
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -13,7 +10,6 @@ class GAN:
     def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  n_input=784, fc_unit=128, z_dim=128, g_lr=8e-4, d_lr=8e-4):
-
         """
         # General Settings
         :param s: TF Session
@@ -72,7 +68,7 @@ class GAN:
 
         # Placeholder
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')    # (-1, 100)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 100)
 
         self.build_gan()  # build GAN model
 
