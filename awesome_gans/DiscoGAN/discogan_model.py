@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-import awesome_gans.tfutil as t
+import awesome_gans.modules as t
 
 tf.set_random_seed(777)
 np.random.seed(777)

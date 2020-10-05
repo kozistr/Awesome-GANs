@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 import awesome_gans.srgan.vgg19 as vgg19
-import awesome_gans.tfutil as t
+import awesome_gans.modules as t
 
 tf.set_random_seed(777)  # reproducibility
 

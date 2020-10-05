@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-import awesome_gans.tfutil as t
+import awesome_gans.modules as t
 from awesome_gans.config import get_config
 
 cfg, _ = get_config()
