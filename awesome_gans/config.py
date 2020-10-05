@@ -1,7 +1,4 @@
-# global configuration for GAN training
-
 import argparse
-
 
 args_list = []
 parser = argparse.ArgumentParser()

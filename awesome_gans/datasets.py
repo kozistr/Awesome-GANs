@@ -1,24 +1,19 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import os
 import sys
+from glob import glob
+from multiprocessing import Pool
+
 import cv2
 import h5py
 import numpy as np
 import tensorflow as tf
-
-from glob import glob
-from tqdm import tqdm
-from multiprocessing import Pool
 from sklearn.model_selection import train_test_split
-
+from tqdm import tqdm
 
 seed = 1337
 
 
-def one_hot(labels_dense, num_classes=10):
+def one_hot(labels_dense, num_classes: int = 10):
     num_labels = labels_dense.shape[0]
     index_offset = np.arange(num_labels) * num_classes
     labels_one_hot = np.zeros((num_labels, num_classes))
@@ -378,7 +373,7 @@ class CiFarDataSet:
 
         self.ds_name = ds_name
         self.ds_path = ds_path  # DataSet path
-        self.n_classes = 10     # DataSet the number of classes, default 10
+        self.n_classes = 10  # DataSet the number of classes, default 10
 
         self.train_images = None
         self.valid_images = None
@@ -394,7 +389,7 @@ class CiFarDataSet:
             raise AssertionError("[-] CIFAR10/100 DataSets' Path is required!")
 
         if self.ds_name == "cifar-10":
-            self.cifar_10()   # loading Cifar-10
+            self.cifar_10()  # loading Cifar-10
         elif self.ds_name == "cifar-100":
             self.cifar_100()  # loading Cifar-100
         else:
@@ -501,7 +496,6 @@ class CiFarDataSet:
 
 
 class CelebADataSet:
-
     """
     This Class for CelebA & CelebA-HQ DataSets.
         - saving images as .h5 file for more faster loading.
@@ -565,7 +559,7 @@ class CelebADataSet:
         self.split_rate = split_rate
         self.random_state = random_state
 
-        self.attr = []      # loaded labels
+        self.attr = []  # loaded labels
         self.images = []
         self.labels = {}
 
@@ -593,7 +587,7 @@ class CelebADataSet:
         if self.ds_type == "CelebA":
             self.num_images = 202599  # the number of CelebA    images
         elif self.ds_type == "CelebA-HQ":
-            self.num_images = 30000   # the number of CelebA-HQ images
+            self.num_images = 30000  # the number of CelebA-HQ images
 
             tmp_path = self.ds_image_path + "/imgHQ00000."
             if os.path.exists(tmp_path + "dat"):

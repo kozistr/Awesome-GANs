@@ -3,11 +3,10 @@ Inspired by https://github.com/tkarras/progressive_growing_of_gans/blob/master/t
 """
 
 import functools
+
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import functional_ops
+from tensorflow.python.ops import array_ops, functional_ops
 
 seed = 1337
 np.random.seed(seed)
