@@ -1,12 +1,11 @@
-import tensorflow as tf
-
 import sys
 
-from adamax import AdamaxOptimizer
+import tensorflow as tf
+
+import awesome_gans.tfutil as t
+from awesome_gans.magan.adamax import AdamaxOptimizer
 
 sys.path.append('../')
-import tfutil as t
-
 
 tf.set_random_seed(777)  # reproducibility
 
