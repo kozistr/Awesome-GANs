@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -15,7 +11,6 @@ class InfoGAN:
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=128, n_categories=10, n_continous_factor=1,
                  z_dim=128, g_lr=1e-3, d_lr=2e-4):
-
         """
         # General Settings
         :param s: TF Session
@@ -64,7 +59,7 @@ class InfoGAN:
         - Celeb-A
         n_cat : 10, n_cont : 10, z : 128 => embeddings : 100 + 128 = 228
         """
-        self.n_cat = n_categories         # category dist, label
+        self.n_cat = n_categories  # category dist, label
         self.n_cont = n_continous_factor  # gaussian dist, rotate, etc
         self.z_dim = z_dim
         self.lambda_ = 1.  # sufficient for discrete latent codes # less than 1
@@ -96,9 +91,9 @@ class InfoGAN:
         # Placeholders
         self.x = tf.placeholder(tf.float32,
                                 shape=[None, self.height, self.width, self.channel],
-                                name="x-image")                                                     # (-1, 32, 32, 3)
+                                name="x-image")  # (-1, 32, 32, 3)
         self.c = tf.placeholder(tf.float32, shape=[None, self.n_cont + self.n_cat], name='c-cond')  # (-1, 11)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')               # (-1, 128)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_infogan()  # build InfoGAN model
 
@@ -134,7 +129,7 @@ class InfoGAN:
             prob, cont, cat = x[:, 0], x[:, 1:1 + self.n_cont], x[:, 1 + self.n_cont:]  # logits
 
             prob = tf.nn.sigmoid(prob)  # probability
-            cat = tf.nn.softmax(cat)    # categories
+            cat = tf.nn.softmax(cat)  # categories
 
             return prob, cont, cat
 

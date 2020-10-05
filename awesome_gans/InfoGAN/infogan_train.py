@@ -1,23 +1,14 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import infogan_model as infogan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import DataIterator
-from datasets import CelebADataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.infogan.infogan_model as infogan
+from awesome_gans.datasets import CelebADataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 np.random.seed(1337)
-
 
 results = {
     'output': './gen_img/',
@@ -125,7 +116,7 @@ def main():
                                       model.c: batch_c,
                                       model.x: batch_x,
                                       model.z: batch_z,
-                                })
+                                  })
 
                 # Update G network
                 _, g_loss = s.run([model.g_op, model.g_loss],
