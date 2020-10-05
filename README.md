@@ -1,10 +1,9 @@
 # Awesome-GANs with Tensorflow
 
-Tensorflow implementation of GANs (Generative Adversarial Networks)
+Tensorflow implementation of GANs (**Generative Adversarial Networks**)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/sindresorhus/awesome) 
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/alerts/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/kozistr/Awesome-GANs.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kozistr/Awesome-GANs/context:python)
 
 ## **WIP** : This repo is about to be refactored & supporting `tf 2.x`.
@@ -19,42 +18,39 @@ if you want to train them comfortably, you need a GPU which has more than `8GB`.
 But, of course, the most of the implementations use `MNIST` or `CIFAR-10, 100` DataSets.
 Meaning that we can handle it with EVEN lower spec GPU than 'The Preferred' :).
 
-## Prerequisites
-
-* **python 3.x**
-* tensorflow 1.x
-* numpy
-* scipy (some features are about to **deprecated**, it'll be replaced to OpenCV SOON!)
-* scikit-image
-* opencv-python
-* pillow
-* h5py
-* tqdm
-* Internet :)
-
 ## Usage
 
-Now on refactoring... All GAN training script can be run module-wisely like below. (**WIP**)
+Now on **refactoring**... All GAN training script can be run module-wisely like below. (**WIP**)
 
-### Dependency Install
-    $ python3 -m pip install -r requirements.txt
+### Install dependencies
 
-### Training GAN
-    (Before running train.py, MAKE SURE run after downloading DataSet & changing DataSet's directory in xxx_train.py)
-    $ python3 -m awesome_gans.gan
+You can also use *conda*, *virtualenv* environments.
+
+```shell script
+$ python3 -m pip install -r requirements.txt
+```
+
+### Train GANs
+
+Before running the model, make sure that 
+
+1. downloading the dataset like *CelebA*, *MNIST*, etc what you want
+2. In `awesome_gans/config.py`, there are several configurations, customize with your flavor!
+3. running the model like below
+
+```shell script
+$ python3 -m awesome_gans.acgan
+```
 
 ## DataSets
 
-Supporting datasets are... (code is in `/awesome_gans/datasets.py`)
+Supporting datasets are ... (code is in `/awesome_gans/datasets.py`)
 
 * MNIST / ~~Fashion MNIST~~
-* CiFar-10 / 100
+* CIFAR10 / 100
 * CelebA/CelebA-HQ
-* pix2pix DataSets
-* DIV2K DataSets
-* ~~ImageNet DataSets~~
-* ~~UrbanSound8K~~
-* ~~3DShapeNet DataSet~~
+* Pix2Pix
+* DIV2K
 * (more DataSets will be added soon!)
 
 ## Repo Tree
