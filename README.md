@@ -205,6 +205,14 @@ like nlp, tabular, etc.
 | **SeqGAN**       | *Sequence Generative Adversarial Networks with Policy Gradient* | [[arXiv]](https://arxiv.org/abs/1609.05473) | [[~~code~~]]() |
 | **TAC-GAN**      | *Text Conditioned Auxiliary Classifier Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1703.06412.pdf) | [[~~code~~]]() |
 
+## Useful Resources
+
+Here for the useful resources when you try to train and stable a gan model.
+
+| *Name* | *Summary* | *Link* |
+| :---: | :---: | :---: |
+| GAN Hacks | a bunch of tips & tricks to train GAN stable | [github](https://github.com/soumith/ganhacks) |
+
 ## To-Do
 
 0. updating `worth a try` GAN papers
