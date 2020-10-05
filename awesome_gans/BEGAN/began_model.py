@@ -7,10 +7,23 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class BEGAN:
-
-    def __init__(self, s, batch_size=16, height=64, width=64, channel=3,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, gamma=0.5, lambda_k=1e-3, z_dim=128, g_lr=2e-4, d_lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        height=64,
+        width=64,
+        channel=3,
+        sample_num=10 * 10,
+        sample_size=10,
+        df_dim=64,
+        gf_dim=64,
+        gamma=0.5,
+        lambda_k=1e-3,
+        z_dim=128,
+        g_lr=2e-4,
+        d_lr=2e-4,
+    ):
 
         """
         # General Settings
@@ -54,20 +67,20 @@ class BEGAN:
         self.gamma = gamma  # 0.3 ~ 0.7
         self.lambda_k = lambda_k
         self.z_dim = z_dim
-        self.beta1 = .5
-        self.beta2 = .9
+        self.beta1 = 0.5
+        self.beta2 = 0.9
         self.d_lr = tf.Variable(d_lr, name='d_lr')
         self.g_lr = tf.Variable(g_lr, name='g_lr')
-        self.lr_decay_rate = .5
+        self.lr_decay_rate = 0.5
         self.lr_low_boundary = 1e-5
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.m_global = 0.
-        self.balance = 0.
+        self.d_real = 0.0
+        self.d_fake = 0.0
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.m_global = 0.0
+        self.balance = 0.0
 
         self.g = None
 
@@ -80,17 +93,17 @@ class BEGAN:
         self.saver = None
 
         # LR/k update
-        self.k = tf.Variable(0., trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
+        self.k = tf.Variable(0.0, trainable=False, name='k_t')  # 0 < k_t < 1, k_0 = 0
 
         self.lr_update_step = 1e5
         self.d_lr_update = tf.assign(self.d_lr, tf.maximum(self.d_lr * self.lr_decay_rate, self.lr_low_boundary))
         self.g_lr_update = tf.assign(self.g_lr, tf.maximum(self.g_lr * self.lr_decay_rate, self.lr_low_boundary))
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 64, 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
-                                name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
+        )  # (-1, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_began()  # build BEGAN model
 
@@ -237,10 +250,12 @@ class BEGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr_update, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr_update, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

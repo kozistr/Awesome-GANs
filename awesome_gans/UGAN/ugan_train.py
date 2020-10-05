@@ -8,10 +8,7 @@ import awesome_gans.ugan.ugan_model as ugan
 from awesome_gans.datasets import CiFarDataSet as DataSet
 from awesome_gans.datasets import DataIterator
 
-results = {
-    'output': './gen_img/',
-    'model': './model/UGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/UGAN-model.ckpt'}
 
 train_step = {
     'epoch': 25,
@@ -25,23 +22,15 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Loading Cifar-10 DataSet
-    ds = DataSet(height=32,
-                 width=32,
-                 channel=3,
-                 ds_path="D:/DataSet/cifar/cifar-10-batches-py/",
-                 ds_name='cifar-10')
+    ds = DataSet(height=32, width=32, channel=3, ds_path="D:/DataSet/cifar/cifar-10-batches-py/", ds_name='cifar-10')
 
-    ds_iter = DataIterator(x=iu.transform(ds.train_images, '255'),
-                           y=ds.train_labels,
-                           batch_size=train_step['batch_size'],
-                           label_off=True)  # using label # maybe someday, i'll change this param's name
+    ds_iter = DataIterator(
+        x=iu.transform(ds.train_images, '255'), y=ds.train_labels, batch_size=train_step['batch_size'], label_off=True
+    )  # using label # maybe someday, i'll change this param's name
 
     # Generated image save
     test_images = iu.transform(ds.test_images[:100], inv_type='255')
-    iu.save_images(test_images,
-                   size=[10, 10],
-                   image_path=results['output'] + 'sample.png',
-                   inv_type='255')
+    iu.save_images(test_images, size=[10, 10], image_path=results['output'] + 'sample.png', inv_type='255')
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -72,40 +61,27 @@ def main():
         for epoch in range(start_epoch, train_step['epoch']):
             for batch_x in ds_iter.iterate():
                 batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z
-                                  })
+                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z})
 
                 # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
                 if global_step % train_step['logging_interval'] == 0:
-                    summary = s.run(model.merged,
-                                    feed_dict={
-                                        model.x: batch_x,
-                                        model.z: batch_z,
-                                    })
+                    summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z,})
 
                     # Print loss
-                    print("[+] Epoch %03d Step %05d => " % (epoch, global_step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss))
+                    print(
+                        "[+] Epoch %03d Step %05d => " % (epoch, global_step),
+                        " D loss : {:.8f}".format(d_loss),
+                        " G loss : {:.8f}".format(g_loss),
+                    )
 
                     # Training G model with sample image and noise
-                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.z: sample_z,
-                                    })
+                    sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim])
+                    samples = s.run(model.g, feed_dict={model.z: sample_z,})
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
@@ -116,10 +92,9 @@ def main():
                     sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
 
                     # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir,
-                                   inv_type='255')
+                    iu.save_images(
+                        samples, size=[sample_image_height, sample_image_width], image_path=sample_dir, inv_type='255'
+                    )
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

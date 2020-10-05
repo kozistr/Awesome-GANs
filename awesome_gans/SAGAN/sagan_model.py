@@ -11,12 +11,24 @@ tf.set_random_seed(cfg.seed)  # reproducibility
 
 
 class SAGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, z_dim=128, lr=1e-4,
-                 use_gp=False, use_hinge_loss=True,
-                 graph_path="./model"):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        n_classes=10,
+        sample_num=10 * 10,
+        sample_size=10,
+        df_dim=64,
+        gf_dim=64,
+        z_dim=128,
+        lr=1e-4,
+        use_gp=False,
+        use_hinge_loss=True,
+        graph_path="./model",
+    ):
 
         """
         # General Settings
@@ -66,19 +78,19 @@ class SAGAN:
         self.up_sampling = True
 
         self.z_dim = z_dim
-        self.beta1 = 0.
-        self.beta2 = .9
+        self.beta1 = 0.0
+        self.beta2 = 0.9
         self.lr = lr
 
-        self.gp = 0.
-        self.lambda_ = 10.  # for gradient penalty
+        self.gp = 0.0
+        self.lambda_ = 10.0  # for gradient penalty
 
         self.graph_path = graph_path
 
         # pre-defined
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.c_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.c_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -94,9 +106,9 @@ class SAGAN:
         self.use_hinge_loss = use_hinge_loss
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[self.batch_size, self.height, self.width, self.channel],
-                                name="x-image")  # (64, 64, 64, 3)
+        self.x = tf.placeholder(
+            tf.float32, shape=[self.batch_size, self.height, self.width, self.channel], name="x-image"
+        )  # (64, 64, 64, 3)
         self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name="z-noise")  # (-1, 128)
         self.z_test = tf.placeholder(tf.float32, shape=[self.sample_num, self.z_dim], name="z-test-noise")  # (-1, 128)
 
@@ -210,8 +222,8 @@ class SAGAN:
 
         # Losses
         if self.use_hinge_loss:
-            d_real_loss = tf.reduce_mean(tf.nn.relu(1. - d_real))
-            d_fake_loss = tf.reduce_mean(tf.nn.relu(1. + d_fake))
+            d_real_loss = tf.reduce_mean(tf.nn.relu(1.0 - d_real))
+            d_fake_loss = tf.reduce_mean(tf.nn.relu(1.0 + d_fake))
             self.d_loss = d_real_loss + d_fake_loss
             self.g_loss = -tf.reduce_mean(d_fake)
         else:
@@ -222,12 +234,12 @@ class SAGAN:
 
         # gradient-penalty
         if self.use_gp:
-            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
-            interp = alpha * self.x + (1. - alpha) * self.g
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0, name='alpha')
+            interp = alpha * self.x + (1.0 - alpha) * self.g
             d_interp = self.discriminator(interp, reuse=True)
             gradients = tf.gradients(d_interp, interp)[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=1))
-            self.gp = tf.reduce_mean(tf.square(slopes - 1.))
+            self.gp = tf.reduce_mean(tf.square(slopes - 1.0))
 
             # Update D loss
             self.d_loss += self.lambda_ * self.gp
@@ -245,10 +257,12 @@ class SAGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.lr * 4,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.lr * 1,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(self.lr * 4, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(self.lr * 1, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

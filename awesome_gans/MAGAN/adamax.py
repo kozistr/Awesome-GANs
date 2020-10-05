@@ -44,7 +44,7 @@ class AdamaxOptimizer(optimizer.Optimizer):
             eps = 1e-8
 
         v = self.get_slot(var, "v")
-        v_t = v.assign(beta1_t * v + (1. - beta1_t) * grad)
+        v_t = v.assign(beta1_t * v + (1.0 - beta1_t) * grad)
         m = self.get_slot(var, "m")
         m_t = m.assign(tf.maximum(beta2_t * m + eps, tf.abs(grad)))
         g_t = v_t / m_t

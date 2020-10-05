@@ -33,10 +33,21 @@ DataSets = {
 
 
 class CelebADataSet:
-
-    def __init__(self, batch_size=128, input_height=64, input_width=64, input_channel=3, attr_labels=(),
-                 output_height=64, output_width=64, output_channel=3,
-                 split_rate=0.2, random_state=42, num_threads=8, mode='w'):
+    def __init__(
+        self,
+        batch_size=128,
+        input_height=64,
+        input_width=64,
+        input_channel=3,
+        attr_labels=(),
+        output_height=64,
+        output_width=64,
+        output_channel=3,
+        split_rate=0.2,
+        random_state=42,
+        num_threads=8,
+        mode='w',
+    ):
 
         """
         # General Settings
@@ -111,7 +122,7 @@ class CelebADataSet:
             img = imresize(img, (new_h, w))
             margin = int(round((new_h - h) / 2))
 
-            return img[margin:margin + h]
+            return img[margin : margin + h]
 
         if self.input_height == 32:
             self.ds_name = 'celeb-a-32x32-h5'
@@ -124,12 +135,13 @@ class CelebADataSet:
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))
             self.files = np.sort(self.files)
 
-            self.data = np.zeros((len(self.files), self.input_height * self.input_width * self.input_channel),
-                                 dtype=np.uint8)
+            self.data = np.zeros(
+                (len(self.files), self.input_height * self.input_width * self.input_channel), dtype=np.uint8
+            )
 
             print("[*] Image size : ", self.data.shape)
 
-            assert (len(self.files) == self.num_images)
+            assert len(self.files) == self.num_images
 
             for n, f_name in tqdm(enumerate(self.files)):
                 image = get_image(f_name, self.input_width, self.input_height)
@@ -160,15 +172,15 @@ class CelebADataSet:
 
             if offset == n_chunks - 1:
                 print("[-] Not enough data available, clipping to end.")
-                faces = faces[offset * size:]
+                faces = faces[offset * size :]
             else:
-                faces = faces[offset * size:(offset + 1) * size]
+                faces = faces[offset * size : (offset + 1) * size]
 
             faces = np.array(faces, dtype=np.float16)
 
         print("[+] Image size : ", faces.shape)
 
-        return faces / 255.
+        return faces / 255.0
 
     def load_attr(self):
         with open(DataSets['celeb-a-attr'], 'r') as f:
@@ -186,21 +198,21 @@ class CelebADataSet:
                 attr = [int(x) for x in row[1:]]
 
                 tmp = [attr[self.attr.index(x)] for x in self.attr_labels]
-                tmp = [1. if x == 1 else 0. for x in tmp]  # one-hot labeling
+                tmp = [1.0 if x == 1 else 0.0 for x in tmp]  # one-hot labeling
 
                 img_attr.append(tmp)
 
             return np.asarray(img_attr)
 
     def concat_data(self, img, label):
-        label = np.tile(np.reshape(label, [-1, 1, 1, len(self.attr_labels)]),
-                        [1, self.input_height, self.input_width, 1])
+        label = np.tile(
+            np.reshape(label, [-1, 1, 1, len(self.attr_labels)]), [1, self.input_height, self.input_width, 1]
+        )
 
         return np.concatenate([img, label], axis=3)
 
 
 class DataIterator:
-
     def __init__(self, x, y, batch_size, label_off=False):
         self.x = x
         self.label_off = label_off
@@ -211,7 +223,7 @@ class DataIterator:
         self.num_batches = num_examples // batch_size
         self.pointer = 0
 
-        assert (self.batch_size <= self.num_examples)
+        assert self.batch_size <= self.num_examples
 
     def next_batch(self):
         start = self.pointer

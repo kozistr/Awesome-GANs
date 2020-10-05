@@ -7,10 +7,7 @@ import awesome_gans.adagan.adagan_model as adagan
 import awesome_gans.image_utils as iu
 from awesome_gans.datasets import MNISTDataSet as DataSet
 
-results = {
-    'output': './gen_img/',
-    'model': './model/AdaGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/AdaGAN-model.ckpt'}
 
 train_step = {
     'batch_size': 128,
@@ -49,41 +46,28 @@ def main():
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                              })
+            _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
             # Update G network
             for _ in range(2):
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
             if global_step % train_step['logging_interval'] == 0:
-                summary = s.run(model.merged,
-                                feed_dict={
-                                    model.x: batch_x,
-                                    model.z: batch_z,
-                                })
+                summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z,})
 
                 # Print loss
-                print("[+] Step %08d => " % global_step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                print(
+                    "[+] Step %08d => " % global_step,
+                    " D loss : {:.8f}".format(d_loss),
+                    " G loss : {:.8f}".format(g_loss),
+                )
 
                 # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.z: sample_z,
-                                })
+                sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+                samples = s.run(model.g, feed_dict={model.z: sample_z,})
 
                 samples = np.reshape(samples, model.image_shape)
 
@@ -96,9 +80,7 @@ def main():
                 sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                 # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
+                iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
 
                 # Model save
                 model.saver.save(s, results['model'], global_step)

@@ -7,10 +7,7 @@ import awesome_gans.cyclegan.cyclegan_model as cyclegan
 import awesome_gans.image_utils as iu
 from awesome_gans.datasets import Pix2PixDataSet as DataSet
 
-results = {
-    'output': './gen_img/',
-    'model': './model/CycleGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/CycleGAN-model.ckpt'}
 
 train_step = {
     'epochs': 201,
@@ -28,18 +25,10 @@ def main():
 
     with tf.Session(config=config) as s:
         # CycleGAN Model
-        model = cyclegan.CycleGAN(s,
-                                  height=128,
-                                  width=128,
-                                  channel=3,
-                                  batch_size=train_step['batch_size'])
+        model = cyclegan.CycleGAN(s, height=128, width=128, channel=3, batch_size=train_step['batch_size'])
 
         # Celeb-A DataSet images
-        ds = DataSet(height=128,
-                     width=128,
-                     channel=3,
-                     ds_path="D:/DataSet/pix2pix/",
-                     ds_name='vangogh2photo')
+        ds = DataSet(height=128, width=128, channel=3, ds_path="D:/DataSet/pix2pix/", ds_name='vangogh2photo')
 
         img_a = ds.images_a
         img_b = ds.images_b
@@ -70,9 +59,9 @@ def main():
         global_step = 0
         for epoch in range(train_step['epochs']):
             # learning rate decay
-            lr_decay = 1.
+            lr_decay = 1.0
             if epoch >= 100 and epoch % 10 == 0:
-                lr_decay = (train_step['epochs'] - epoch) / (train_step['epochs'] / 2.)
+                lr_decay = (train_step['epochs'] - epoch) / (train_step['epochs'] / 2.0)
 
             # re-implement DataIterator for multi-input
             pointer = 0
@@ -99,52 +88,38 @@ def main():
                 batch_b = np.reshape(img_a[start:end], model.image_shape)
 
                 for _ in range(model.n_train_critic):
-                    s.run(model.d_op,
-                          feed_dict={
-                              model.a: batch_a,
-                              model.b: batch_b,
-                              model.lr_decay: lr_decay,
-                          })
+                    s.run(model.d_op, feed_dict={model.a: batch_a, model.b: batch_b, model.lr_decay: lr_decay,})
 
-                w, gp, g_loss, cycle_loss, _ = s.run([model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op],
-                                                     feed_dict={
-                                                         model.a: batch_a,
-                                                         model.b: batch_b,
-                                                         model.lr_decay: lr_decay,
-                                                     })
+                w, gp, g_loss, cycle_loss, _ = s.run(
+                    [model.w, model.gp, model.g_loss, model.cycle_loss, model.g_op],
+                    feed_dict={model.a: batch_a, model.b: batch_b, model.lr_decay: lr_decay,},
+                )
 
                 if global_step % train_step['logging_step'] == 0:
                     # Summary
-                    summary = s.run(model.merged,
-                                    feed_dict={
-                                        model.a: batch_a,
-                                        model.b: batch_b,
-                                        model.lr_decay: lr_decay,
-                                    })
+                    summary = s.run(
+                        model.merged, feed_dict={model.a: batch_a, model.b: batch_b, model.lr_decay: lr_decay,}
+                    )
 
                     # Print loss
-                    print("[+] Global Step %08d =>" % global_step,
-                          " G loss     : {:.8f}".format(g_loss),
-                          " Cycle loss : {:.8f}".format(cycle_loss),
-                          " w          : {:.8f}".format(w),
-                          " gp         : {:.8f}".format(gp))
+                    print(
+                        "[+] Global Step %08d =>" % global_step,
+                        " G loss     : {:.8f}".format(g_loss),
+                        " Cycle loss : {:.8f}".format(cycle_loss),
+                        " w          : {:.8f}".format(w),
+                        " gp         : {:.8f}".format(gp),
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step=global_step)
 
                     # Training G model with sample image and noise
-                    samples_a2b = s.run(model.g_a2b,
-                                        feed_dict={
-                                            model.a: sample_a,
-                                            model.b: sample_b,
-                                            model.lr_decay: lr_decay,
-                                        })
-                    samples_b2a = s.run(model.g_b2a,
-                                        feed_dict={
-                                            model.a: sample_a,
-                                            model.b: sample_b,
-                                            model.lr_decay: lr_decay,
-                                        })
+                    samples_a2b = s.run(
+                        model.g_a2b, feed_dict={model.a: sample_a, model.b: sample_b, model.lr_decay: lr_decay,}
+                    )
+                    samples_b2a = s.run(
+                        model.g_b2a, feed_dict={model.a: sample_a, model.b: sample_b, model.lr_decay: lr_decay,}
+                    )
 
                     # Export image generated by model G
                     sample_image_height = model.sample_size

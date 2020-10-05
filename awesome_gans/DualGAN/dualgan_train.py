@@ -8,10 +8,7 @@ import awesome_gans.image_utils as iu
 from awesome_gans.datasets import CelebADataSet as DataSet
 from awesome_gans.datasets import DataIterator
 
-results = {
-    'output': './gen_img/',
-    'model': './model/DualGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/DualGAN-model.ckpt'}
 
 train_step = {
     'epoch': 64,
@@ -35,67 +32,50 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # Celeb-A DataSet images
-        ds = DataSet(height=32,
-                     width=32,
-                     channel=3,
-                     ds_path="D:/DataSets/CelebA/",
-                     ds_type="CelebA").images
-        ds_iter = DataIterator(ds, None, train_step['batch_size'],
-                               label_off=True)
+        ds = DataSet(height=32, width=32, channel=3, ds_path="D:/DataSets/CelebA/", ds_type="CelebA").images
+        ds_iter = DataIterator(ds, None, train_step['batch_size'], label_off=True)
 
         global_step = 0
         for epoch in range(train_step['epoch']):
             for batch_images in ds_iter.iterate():
                 batch_x = np.reshape(batch_images, [-1] + model.image_shape[1:])
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
                 # Update D network
-                _, d_loss = s.run([model.d_op, model.d_loss],
-                                  feed_dict={
-                                      model.x: batch_x,
-                                      model.z: batch_z,
-                                  })
+                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
                 # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.z: batch_z,
-                                  })
+                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.z: batch_z,})
 
                 # Update k_t
-                _, k, m_global = s.run([model.k_update, model.k, model.m_global],
-                                       feed_dict={
-                                           model.x: batch_x,
-                                           model.z: batch_z,
-                                       })
+                _, k, m_global = s.run(
+                    [model.k_update, model.k, model.m_global], feed_dict={model.x: batch_x, model.z: batch_z,}
+                )
 
                 if global_step % train_step['logging_step'] == 0:
-                    batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                    batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
                     # Summary
-                    _, k, m_global, d_loss, g_loss, summary = s.run([model.k_update, model.k, model.m_global,
-                                                                     model.d_loss, model.g_loss, model.merged],
-                                                                    feed_dict={
-                                                                        model.x: batch_x,
-                                                                        model.z: batch_z,
-                                                                    })
+                    _, k, m_global, d_loss, g_loss, summary = s.run(
+                        [model.k_update, model.k, model.m_global, model.d_loss, model.g_loss, model.merged],
+                        feed_dict={model.x: batch_x, model.z: batch_z,},
+                    )
 
                     # Print loss
-                    print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss),
-                          " k : {:.8f}".format(k),
-                          " M : {:.8f}".format(m_global))
+                    print(
+                        "[+] Epoch %04d Step %07d =>" % (epoch, global_step),
+                        " D loss : {:.8f}".format(d_loss),
+                        " G loss : {:.8f}".format(g_loss),
+                        " k : {:.8f}".format(k),
+                        " M : {:.8f}".format(m_global),
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, epoch)
 
                     # Training G model with sample image and noise
-                    sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.z: sample_z,
-                                    })
+                    sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+                    samples = s.run(model.g, feed_dict={model.z: sample_z,})
 
                     # Export image generated by model G
                     sample_image_height = model.sample_size
@@ -103,9 +83,7 @@ def main():
                     sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, global_step)
 
                     # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir)
+                    iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
 
                     # Model save
                     model.saver.save(s, results['model'], global_step=global_step)

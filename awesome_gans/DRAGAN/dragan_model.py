@@ -6,10 +6,19 @@ tf.set_random_seed(777)
 
 
 class DRAGAN:
-
-    def __init__(self, s, batch_size=16, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 z_dim=128, fc_unit=512):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        height=28,
+        width=28,
+        channel=1,
+        n_classes=10,
+        sample_num=10 * 10,
+        sample_size=10,
+        z_dim=128,
+        fc_unit=512,
+    ):
 
         """
         # General Settings
@@ -48,9 +57,9 @@ class DRAGAN:
         self.fc_unit = fc_unit
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
-        self.gp = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
+        self.gp = 0.0
 
         self.g = None
 
@@ -62,16 +71,16 @@ class DRAGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                name='x-images')
-        self.x_p = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                  name='x-perturbed-images')
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='x-images')
+        self.x_p = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name='x-perturbed-images'
+        )
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         # Training Options
-        self.lambda_ = 10.  # Higher lambda value, More stable. But slower...
-        self.beta1 = .5
-        self.beta2 = .9
+        self.lambda_ = 10.0  # Higher lambda value, More stable. But slower...
+        self.beta1 = 0.5
+        self.beta2 = 0.9
         self.lr = 2e-4
 
         self.bulid_dragan()  # build DRAGAN model
@@ -113,13 +122,13 @@ class DRAGAN:
         self.g_loss = t.sce_loss(d_fake, tf.ones_like(d_fake))
 
         # DRAGAN loss with GP (gradient penalty)
-        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
+        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0, name='alpha')
         diff = self.x_p - self.x
         interpolates = self.x + alpha * diff
         d_inter = self.discriminator(interpolates, reuse=True)
         grads = tf.gradients(d_inter, [interpolates])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1]))
-        self.gp = tf.reduce_mean(tf.square(slopes - 1.))
+        self.gp = tf.reduce_mean(tf.square(slopes - 1.0))
 
         # update d_loss with gp
         self.d_loss += self.lambda_ * self.gp
@@ -137,10 +146,12 @@ class DRAGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

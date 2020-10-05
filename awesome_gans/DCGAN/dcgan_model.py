@@ -6,10 +6,20 @@ tf.set_random_seed(777)
 
 
 class DCGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
-                 sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        sample_num=8 * 8,
+        sample_size=8,
+        z_dim=128,
+        gf_dim=64,
+        df_dim=64,
+        lr=2e-4,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -49,8 +59,8 @@ class DCGAN:
         self.df_dim = df_dim
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -154,10 +164,12 @@ class DCGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

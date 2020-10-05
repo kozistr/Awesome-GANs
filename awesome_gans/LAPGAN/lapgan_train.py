@@ -10,10 +10,7 @@ from awesome_gans.datasets import DataIterator
 
 np.random.seed(1337)
 
-results = {
-    'output': './gen_img/',
-    'model': './model/LAPGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/LAPGAN-model.ckpt'}
 
 train_step = {
     'epoch': 200,
@@ -26,14 +23,9 @@ def main():
     start_time = time.time()  # Clocking start
 
     # Training, test data set
-    ds = DataSet(height=32,
-                 width=32,
-                 channel=3,
-                 ds_path='D:\\DataSet/cifar/cifar-10-batches-py/',
-                 ds_name='cifar-10')
+    ds = DataSet(height=32, width=32, channel=3, ds_path='D:\\DataSet/cifar/cifar-10-batches-py/', ds_name='cifar-10')
 
-    ds_iter = DataIterator(ds.train_images, ds.train_labels,
-                           train_step['batch_size'])
+    ds_iter = DataIterator(ds.train_images, ds.train_labels, train_step['batch_size'])
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -58,7 +50,7 @@ def main():
 
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
-            sample_y[10 * i:10 * (i + 1), i] = 1
+            sample_y[10 * i : 10 * (i + 1), i] = 1
 
         global_step = saved_global_step
         start_epoch = global_step // (len(ds.train_images) // model.batch_size)  # recover n_epoch
@@ -69,27 +61,60 @@ def main():
 
                 z = []
                 for i in range(3):
-                    z.append(np.random.uniform(-1., 1., [train_step['batch_size'], model.z_noises[i]]))
+                    z.append(np.random.uniform(-1.0, 1.0, [train_step['batch_size'], model.z_noises[i]]))
 
                 # Update D/G networks
-                img_fake, img_coarse, d_loss_1, g_loss_1, \
-                _, _, _, d_loss_2, g_loss_2, \
-                _, _, d_loss_3, g_loss_3, \
-                _, _, _, _, _, _ = s.run([
-                    model.g[0], model.x1_coarse, model.d_loss[0], model.g_loss[0],
-
-                    model.x2_fine, model.g[1], model.x2_coarse, model.d_loss[1], model.g_loss[1],
-
-                    model.x3_fine, model.g[2], model.d_loss[2], model.g_loss[2],
-
-                    model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2],
-                ],
+                (
+                    img_fake,
+                    img_coarse,
+                    d_loss_1,
+                    g_loss_1,
+                    _,
+                    _,
+                    _,
+                    d_loss_2,
+                    g_loss_2,
+                    _,
+                    _,
+                    d_loss_3,
+                    g_loss_3,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                ) = s.run(
+                    [
+                        model.g[0],
+                        model.x1_coarse,
+                        model.d_loss[0],
+                        model.g_loss[0],
+                        model.x2_fine,
+                        model.g[1],
+                        model.x2_coarse,
+                        model.d_loss[1],
+                        model.g_loss[1],
+                        model.x3_fine,
+                        model.g[2],
+                        model.d_loss[2],
+                        model.g_loss[2],
+                        model.d_op[0],
+                        model.g_op[0],
+                        model.d_op[1],
+                        model.g_op[1],
+                        model.d_op[2],
+                        model.g_op[2],
+                    ],
                     feed_dict={
                         model.x1_fine: batch_x,  # images
                         model.y: batch_labels,  # classes
-                        model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
+                        model.z[0]: z[0],
+                        model.z[1]: z[1],
+                        model.z[2]: z[2],  # z-noises
                         model.do_rate: 0.5,
-                    })
+                    },
+                )
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
@@ -98,36 +123,71 @@ def main():
 
                     z = []
                     for i in range(3):
-                        z.append(np.random.uniform(-1., 1., [model.sample_num, model.z_noises[i]]))
+                        z.append(np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_noises[i]]))
 
                     # Update D/G networks
-                    img_fake, img_coarse, d_loss_1, g_loss_1, \
-                    _, _, _, d_loss_2, g_loss_2, \
-                    _, _, d_loss_3, g_loss_3, \
-                    _, _, _, _, _, _, summary = s.run([
-                        model.g[0], model.x1_coarse, model.d_loss[0], model.g_loss[0],
-
-                        model.x2_fine, model.g[1], model.x2_coarse, model.d_loss[1], model.g_loss[1],
-
-                        model.x3_fine, model.g[2], model.d_loss[2], model.g_loss[2],
-
-                        model.d_op[0], model.g_op[0], model.d_op[1], model.g_op[1], model.d_op[2], model.g_op[2],
-
-                        model.merged,
-                    ],
+                    (
+                        img_fake,
+                        img_coarse,
+                        d_loss_1,
+                        g_loss_1,
+                        _,
+                        _,
+                        _,
+                        d_loss_2,
+                        g_loss_2,
+                        _,
+                        _,
+                        d_loss_3,
+                        g_loss_3,
+                        _,
+                        _,
+                        _,
+                        _,
+                        _,
+                        _,
+                        summary,
+                    ) = s.run(
+                        [
+                            model.g[0],
+                            model.x1_coarse,
+                            model.d_loss[0],
+                            model.g_loss[0],
+                            model.x2_fine,
+                            model.g[1],
+                            model.x2_coarse,
+                            model.d_loss[1],
+                            model.g_loss[1],
+                            model.x3_fine,
+                            model.g[2],
+                            model.d_loss[2],
+                            model.g_loss[2],
+                            model.d_op[0],
+                            model.g_op[0],
+                            model.d_op[1],
+                            model.g_op[1],
+                            model.d_op[2],
+                            model.g_op[2],
+                            model.merged,
+                        ],
                         feed_dict={
                             model.x1_fine: batch_x,  # images
                             model.y: sample_y,  # classes
-                            model.z[0]: z[0], model.z[1]: z[1], model.z[2]: z[2],  # z-noises
-                            model.do_rate: 0.,
-                        })
+                            model.z[0]: z[0],
+                            model.z[1]: z[1],
+                            model.z[2]: z[2],  # z-noises
+                            model.do_rate: 0.0,
+                        },
+                    )
 
                     # Print loss
-                    d_loss = (d_loss_1 + d_loss_2 + d_loss_3) / 3.
-                    g_loss = (g_loss_1 + g_loss_2 + g_loss_3) / 3.
-                    print("[+] Epoch %03d Step %05d => " % (epoch, global_step),
-                          " Avg D loss : {:.8f}".format(d_loss),
-                          " Avg G loss : {:.8f}".format(g_loss))
+                    d_loss = (d_loss_1 + d_loss_2 + d_loss_3) / 3.0
+                    g_loss = (g_loss_1 + g_loss_2 + g_loss_3) / 3.0
+                    print(
+                        "[+] Epoch %03d Step %05d => " % (epoch, global_step),
+                        " Avg D loss : {:.8f}".format(d_loss),
+                        " Avg G loss : {:.8f}".format(g_loss),
+                    )
 
                     # Training G model with sample image and noise
                     samples = img_fake + img_coarse
@@ -141,9 +201,9 @@ def main():
                     sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
 
                     # Generated image save
-                    iu.save_images(samples, size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir,
-                                   inv_type='127')
+                    iu.save_images(
+                        samples, size=[sample_image_height, sample_image_width], image_path=sample_dir, inv_type='127'
+                    )
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

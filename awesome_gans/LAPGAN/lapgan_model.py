@@ -20,10 +20,22 @@ def image_sampling(img, sampling_type='down'):
 
 
 class LAPGAN:
-
-    def __init__(self, s, batch_size=128, height=32, width=32, channel=3, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 z_dim=128, gf_dim=64, df_dim=64, d_fc_unit=512, g_fc_unit=1024):
+    def __init__(
+        self,
+        s,
+        batch_size=128,
+        height=32,
+        width=32,
+        channel=3,
+        n_classes=10,
+        sample_num=10 * 10,
+        sample_size=10,
+        z_dim=128,
+        gf_dim=64,
+        df_dim=64,
+        d_fc_unit=512,
+        g_fc_unit=1024,
+    ):
 
         """
         # General Settings
@@ -67,10 +79,8 @@ class LAPGAN:
         self.g_fc_unit = g_fc_unit
 
         # Placeholders
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes],
-                                name='y-classes')  # one_hot
-        self.x1_fine = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                      name='x-images')
+        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-classes')  # one_hot
+        self.x1_fine = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='x-images')
 
         self.x1_scaled = image_sampling(self.x1_fine, 'down')
         self.x1_coarse = image_sampling(self.x1_scaled, 'up')
@@ -86,9 +96,7 @@ class LAPGAN:
         self.z = []
         self.z_noises = [32 * 32, 16 * 16, self.z_dim]
         for i in range(3):
-            self.z.append(tf.placeholder(tf.float32,
-                                         shape=[None, self.z_noises[i]],
-                                         name='z-noise_{0}'.format(i)))
+            self.z.append(tf.placeholder(tf.float32, shape=[None, self.z_noises[i]], name='z-noise_{0}'.format(i)))
 
         self.do_rate = tf.placeholder(tf.float32, None, name='do-rate')
 
@@ -123,7 +131,7 @@ class LAPGAN:
         :return: logits
         """
 
-        assert (scale % 8 == 0)  # 32, 16, 8
+        assert scale % 8 == 0  # 32, 16, 8
 
         with tf.variable_scope('discriminator_{0}'.format(scale), reuse=reuse):
             if scale == 8:
@@ -175,7 +183,7 @@ class LAPGAN:
         :return: logits
         """
 
-        assert (scale % 8 == 0)  # 32, 16, 8
+        assert scale % 8 == 0  # 32, 16, 8
 
         with tf.variable_scope('generator_{0}'.format(scale), reuse=reuse):
             if scale == 8:
@@ -233,8 +241,10 @@ class LAPGAN:
         # Losses
         with tf.variable_scope('loss'):
             for i in range(len(self.g)):
-                self.d_loss.append(t.sce_loss(self.d_reals[i], tf.ones_like(self.d_reals[i])) +
-                                   t.sce_loss(self.d_fakes[i], tf.zeros_like(self.d_fakes[i])))
+                self.d_loss.append(
+                    t.sce_loss(self.d_reals[i], tf.ones_like(self.d_reals[i]))
+                    + t.sce_loss(self.d_fakes[i], tf.zeros_like(self.d_fakes[i]))
+                )
                 self.g_loss.append(t.sce_loss(self.d_fakes[i], tf.ones_like(self.d_fakes[i])))
 
         # Summary
@@ -245,14 +255,17 @@ class LAPGAN:
         # Optimizer
         t_vars = tf.trainable_variables()
         for idx, i in enumerate([32, 16, 8]):
-            self.d_op.append(tf.train.AdamOptimizer(learning_rate=self.lr,
-                                                    beta1=self.beta1, beta2=self.beta2).
-                             minimize(loss=self.d_loss[idx],
-                                      var_list=[v for v in t_vars if v.name.startswith('discriminator_{0}'.format(i))]))
-            self.g_op.append(tf.train.AdamOptimizer(learning_rate=self.lr,
-                                                    beta1=self.beta1, beta2=self.beta2).
-                             minimize(loss=self.g_loss[idx],
-                                      var_list=[v for v in t_vars if v.name.startswith('generator_{0}'.format(i))]))
+            self.d_op.append(
+                tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+                    loss=self.d_loss[idx],
+                    var_list=[v for v in t_vars if v.name.startswith('discriminator_{0}'.format(i))],
+                )
+            )
+            self.g_op.append(
+                tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+                    loss=self.g_loss[idx], var_list=[v for v in t_vars if v.name.startswith('generator_{0}'.format(i))]
+                )
+            )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

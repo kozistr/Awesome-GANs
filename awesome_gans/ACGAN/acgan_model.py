@@ -2,14 +2,23 @@ import tensorflow as tf
 
 import awesome_gans.tfutil as t
 
-tf.set_random_seed(777)  # reproducibility
-
 
 class ACGAN:
-
-    def __init__(self, s, batch_size=100, height=32, width=32, channel=3, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=16, gf_dim=384, z_dim=100, lr=2e-4):
+    def __init__(
+        self,
+        s: tf.compat.v1.Session,
+        batch_size: int = 100,
+        height: int = 32,
+        width: int = 32,
+        channel: int = 3,
+        n_classes: int = 10,
+        sample_num: int = 10 * 10,
+        sample_size: int = 10,
+        df_dim: int = 16,
+        gf_dim: int = 384,
+        z_dim: int = 100,
+        lr: float = 2e-4,
+    ):
 
         """
         # General Settings
@@ -54,9 +63,9 @@ class ACGAN:
         self.lr = lr
 
         # pre-defined
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.c_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.c_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -70,9 +79,9 @@ class ACGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 32, 32, 3)
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
+        )  # (-1, 32, 32, 3)
         self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
         self.y_rnd = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-rnd-label")  # (-1, 10)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 100)
@@ -169,12 +178,15 @@ class ACGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
         c_params = [v for v in t_vars if v.name.startswith('d') or v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.c_loss, var_list=c_params)
+        self.d_op = tf.train.AdamOptimizer(self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
+        self.c_op = tf.train.AdamOptimizer(self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.c_loss, var_list=c_params
+        )
         # Merge summary
         self.merged = tf.summary.merge_all()
 

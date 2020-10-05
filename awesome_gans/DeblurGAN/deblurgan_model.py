@@ -7,10 +7,20 @@ tf.set_random_seed(777)
 
 
 class DeblurGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
-                 sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        sample_num=8 * 8,
+        sample_size=8,
+        z_dim=128,
+        gf_dim=64,
+        df_dim=64,
+        lr=2e-4,
+    ):
 
         """
         # General Settings
@@ -55,8 +65,8 @@ class DeblurGAN:
         self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -98,6 +108,7 @@ class DeblurGAN:
 
     def generator(self, x, reuse=None):
         with tf.variable_scope('generator', reuse=reuse):
+
             def residual_block(x, f, name=""):
                 with tf.variable_scope(name, reuse=reuse):
                     skip_connection = tf.identity(x, name='gen-skip_connection-1')
@@ -138,12 +149,10 @@ class DeblurGAN:
         with tf.variable_scope("vgg19", reuse=reuse):
             # image re-scaling
             x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
-            x = tf.cast(x * 255., dtype=tf.float32)  # [0, 1]  to [0, 255]
+            x = tf.cast(x * 255.0, dtype=tf.float32)  # [0, 1]  to [0, 255]
 
             r, g, b = tf.split(x, 3, 3)
-            bgr = tf.concat([b - self.vgg_mean[0],
-                             g - self.vgg_mean[1],
-                             r - self.vgg_mean[2]], axis=3)
+            bgr = tf.concat([b - self.vgg_mean[0], g - self.vgg_mean[1], r - self.vgg_mean[2]], axis=3)
 
             self.vgg19 = vgg19.VGG19(bgr)
 
@@ -182,10 +191,12 @@ class DeblurGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

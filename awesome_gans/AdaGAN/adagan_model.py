@@ -6,10 +6,25 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class AdaGAN:
-
-    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=64, sample_size=8,
-                 n_input=784, df_dim=16, gf_dim=16, fc_unit=256, z_dim=100, d_lr=1e-3, g_lr=5e-3, c_lr=1e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=28,
+        width=28,
+        channel=1,
+        n_classes=10,
+        sample_num=64,
+        sample_size=8,
+        n_input=784,
+        df_dim=16,
+        gf_dim=16,
+        fc_unit=256,
+        z_dim=100,
+        d_lr=1e-3,
+        g_lr=5e-3,
+        c_lr=1e-4,
+    ):
 
         """
         # General Settings
@@ -60,9 +75,9 @@ class AdaGAN:
         self.g_lr = g_lr
         self.c_lr = c_lr
 
-        self.d_loss = 0.
-        self.g_loss = 0.
-        self.c_loss = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
+        self.c_loss = 0.0
 
         self.g = None
 
@@ -124,7 +139,7 @@ class AdaGAN:
 
         # Losses
         d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
-        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
+        d_fake_loss = -tf.reduce_mean(t.safe_log(1.0 - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = tf.reduce_mean(t.safe_log(d_fake))
 
@@ -141,12 +156,15 @@ class AdaGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
         c_params = [v for v in t_vars if v.name.startswith('c')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
-        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr,
-                                           beta1=self.beta1).minimize(self.c_loss, var_list=c_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
+        self.c_op = tf.train.AdamOptimizer(learning_rate=self.c_lr, beta1=self.beta1).minimize(
+            self.c_loss, var_list=c_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -7,10 +7,20 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class SRGAN:
-
-    def __init__(self, s, batch_size=16, height=384, width=384, channel=3,
-                 sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=64, lr=1e-4, use_vgg19=True):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        height=384,
+        width=384,
+        channel=3,
+        sample_num=1 * 1,
+        sample_size=1,
+        df_dim=64,
+        gf_dim=64,
+        lr=1e-4,
+        use_vgg19=True,
+    ):
 
         """ Super-Resolution GAN Class
         # General Settings
@@ -63,13 +73,13 @@ class SRGAN:
         self.vgg_mean = [103.939, 116.779, 123.68]
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
-        self.d_loss = 0.
-        self.g_adv_loss = 0.
-        self.g_cnt_loss = 0.
-        self.g_loss = 0.
-        self.psnr = 0.
+        self.d_real = 0.0
+        self.d_fake = 0.0
+        self.d_loss = 0.0
+        self.g_adv_loss = 0.0
+        self.g_cnt_loss = 0.0
+        self.g_loss = 0.0
+        self.psnr = 0.0
 
         self.use_vgg19 = use_vgg19
         self.vgg19 = None
@@ -77,7 +87,7 @@ class SRGAN:
         self.g = None
 
         self.adv_scaling = 1e-3
-        self.cnt_scaling = 1. / 12.75  # 6e-3
+        self.cnt_scaling = 1.0 / 12.75  # 6e-3
 
         self.d_op = None
         self.g_op = None
@@ -132,6 +142,7 @@ class SRGAN:
         """
 
         with tf.variable_scope("generator", reuse=reuse):
+
             def residual_block(x, f, name="", _is_train=True):
                 with tf.variable_scope(name):
                     shortcut = tf.identity(x, name='n64s1-shortcut')
@@ -173,12 +184,10 @@ class SRGAN:
         with tf.variable_scope("vgg19", reuse=reuse):
             # image re-scaling
             x = tf.cast((x + 1) / 2, dtype=tf.float32)  # [-1, 1] to [0, 1]
-            x = tf.cast(x * 255., dtype=tf.float32)  # [0, 1]  to [0, 255]
+            x = tf.cast(x * 255.0, dtype=tf.float32)  # [0, 1]  to [0, 255]
 
             r, g, b = tf.split(x, 3, 3)
-            bgr = tf.concat([b - self.vgg_mean[0],
-                             g - self.vgg_mean[1],
-                             r - self.vgg_mean[2]], axis=3)
+            bgr = tf.concat([b - self.vgg_mean[0], g - self.vgg_mean[1], r - self.vgg_mean[2]], axis=3)
 
             self.vgg19 = vgg19.VGG19(bgr)
 
@@ -208,8 +217,9 @@ class SRGAN:
             vgg_bottle_real = self.build_vgg19(x_vgg_real)
             vgg_bottle_fake = self.build_vgg19(x_vgg_fake, reuse=True)
 
-            self.g_cnt_loss = self.cnt_scaling * t.mse_loss(vgg_bottle_fake, vgg_bottle_real, self.batch_size,
-                                                            is_mean=True)
+            self.g_cnt_loss = self.cnt_scaling * t.mse_loss(
+                vgg_bottle_fake, vgg_bottle_real, self.batch_size, is_mean=True
+            )
         else:
             self.g_cnt_loss = t.mse_loss(self.g, self.x_hr, self.batch_size, is_mean=True)
 
@@ -218,7 +228,7 @@ class SRGAN:
         self.g_loss = self.g_adv_loss + self.g_cnt_loss
 
         def inverse_transform(img):
-            return (img + 1.) * 127.5
+            return (img + 1.0) * 127.5
 
         # calculate PSNR
         g, x_hr = inverse_transform(self.g), inverse_transform(self.x_hr)
@@ -239,17 +249,17 @@ class SRGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
-                                                                                        var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
-                                                                                        var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            loss=self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            loss=self.g_loss, var_list=g_params
+        )
 
         # pre-train
-        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                                beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_cnt_loss,
-                                                                                             var_list=g_params)
+        self.g_init_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            loss=self.g_cnt_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

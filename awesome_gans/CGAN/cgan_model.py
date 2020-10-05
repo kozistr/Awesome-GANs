@@ -6,10 +6,22 @@ tf.set_random_seed(777)
 
 
 class CGAN:
-
-    def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 n_input=784, fc_unit=256, z_dim=100, g_lr=8e-4, d_lr=8e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=32,
+        height=28,
+        width=28,
+        channel=1,
+        n_classes=10,
+        sample_num=10 * 10,
+        sample_size=10,
+        n_input=784,
+        fc_unit=256,
+        z_dim=100,
+        g_lr=8e-4,
+        d_lr=8e-4,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -54,8 +66,8 @@ class CGAN:
         self.beta1 = 0.5
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
 
         self.g = None
 
@@ -134,7 +146,7 @@ class CGAN:
 
         # Losses
         d_real_loss = -tf.reduce_mean(t.safe_log(d_real))
-        d_fake_loss = -tf.reduce_mean(t.safe_log(1. - d_fake))
+        d_fake_loss = -tf.reduce_mean(t.safe_log(1.0 - d_fake))
         self.d_loss = d_real_loss + d_fake_loss
         self.g_loss = -tf.reduce_mean(t.safe_log(d_fake))
         # d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
@@ -154,10 +166,12 @@ class CGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

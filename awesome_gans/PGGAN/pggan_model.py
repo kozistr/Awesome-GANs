@@ -6,7 +6,7 @@ import awesome_gans.tfutil as t
 tf.set_random_seed(777)  # reproducibility
 np.random.seed(777)  # reproducibility
 
-he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1., mode='FAN_AVG', uniform=True)
+he_normal = tf.contrib.layers.variance_scaling_initializer(factor=1.0, mode='FAN_AVG', uniform=True)
 l2_reg = tf.contrib.layers.l2_regularizer
 
 
@@ -32,10 +32,25 @@ def bacth_concat(x, eps=1e-8, averaging='all'):
 
 
 class PGGAN:
-
-    def __init__(self, s, batch_size=16, input_height=128, input_width=128, input_channel=3,
-                 pg=1, pg_t=False, sample_num=1 * 1, sample_size=1, output_height=128, output_width=128,
-                 df_dim=64, gf_dim=64, z_dim=512, lr=1e-4, epsilon=1e-9):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        input_height=128,
+        input_width=128,
+        input_channel=3,
+        pg=1,
+        pg_t=False,
+        sample_num=1 * 1,
+        sample_size=1,
+        output_height=128,
+        output_width=128,
+        df_dim=64,
+        gf_dim=64,
+        z_dim=512,
+        lr=1e-4,
+        epsilon=1e-9,
+    ):
 
         """
         # General Settings
@@ -85,19 +100,19 @@ class PGGAN:
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
-        self.beta1 = 0.
-        self.beta2 = .99
+        self.beta1 = 0.0
+        self.beta2 = 0.99
         self.lr = lr
         self.eps = epsilon
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.gp = 0.
-        self.gp_target = 1.
-        self.gp_lambda = 10.  # slower convergence but good
+        self.d_real = 0.0
+        self.d_fake = 0.0
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.gp = 0.0
+        self.gp_target = 1.0
+        self.gp_lambda = 10.0  # slower convergence but good
         self.gp_w = 1e-3
 
         self.g = None
@@ -112,14 +127,12 @@ class PGGAN:
         self.out_saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.output_size, self.output_size, self.input_channel],
-                                name="x-image")
-        self.z = tf.placeholder(tf.float32,
-                                shape=[None, self.z_dim],
-                                name='z-noise')
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.output_size, self.output_size, self.input_channel], name="x-image"
+        )
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
         self.step_pl = tf.placeholder(tf.float32, shape=None)
-        self.alpha_trans = tf.Variable(initial_value=0., trainable=False, name='alpha_trans')
+        self.alpha_trans = tf.Variable(initial_value=0.0, trainable=False, name='alpha_trans')
         self.alpha_trans_update = None
 
         self.build_pggan()  # build PGGAN model
@@ -147,7 +160,7 @@ class PGGAN:
                 x = tf.layers.average_pooling2d(x, pool_size=2, strides=2)
 
                 if i == 0 and pg_t:
-                    x = (1. - self.alpha_trans) * x_out + self.alpha_trans * x
+                    x = (1.0 - self.alpha_trans) * x_out + self.alpha_trans * x
 
             x = bacth_concat(x)
 
@@ -200,7 +213,7 @@ class PGGAN:
                 return x
 
             if pg_t:
-                x = (1. - self.alpha_trans) * x_out + self.alpha_trans * x
+                x = (1.0 - self.alpha_trans) * x_out + self.alpha_trans * x
 
             return x
 
@@ -222,15 +235,16 @@ class PGGAN:
 
         # Gradient Penalty
         diff = self.g - self.x
-        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
+        alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0)
         interp = self.x + (alpha * diff)
         d_interp = self.discriminator(interp, self.pg, self.pg_t, reuse=True)
         grads = tf.gradients(d_interp, [interp])[0]
         slopes = tf.sqrt(tf.reduce_sum(tf.square(grads), reduction_indices=[1, 2, 3]))
         self.gp = tf.reduce_mean(tf.square(slopes - self.gp_target))
 
-        self.d_loss += (self.gp_lambda / (self.gp_target ** 2)) * self.gp + \
-                       self.gp_w * tf.reduce_mean(tf.square(d_real - 0.))
+        self.d_loss += (self.gp_lambda / (self.gp_target ** 2)) * self.gp + self.gp_w * tf.reduce_mean(
+            tf.square(d_real - 0.0)
+        )
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
@@ -258,22 +272,23 @@ class PGGAN:
         g_n_out_nwm_params = [v for v in g_n_out_params if '%d' % self.output_size not in v.name]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()
 
         # Model saver
         mtk = 2
-        self.saver = tf.train.Saver(var_list=d_params + g_params,
-                                    max_to_keep=mtk, name='saver')
-        self.r_saver = tf.train.Saver(var_list=d_n_nwm_params + g_n_nwm_params,
-                                      max_to_keep=mtk, name='r_saver')
+        self.saver = tf.train.Saver(var_list=d_params + g_params, max_to_keep=mtk, name='saver')
+        self.r_saver = tf.train.Saver(var_list=d_n_nwm_params + g_n_nwm_params, max_to_keep=mtk, name='r_saver')
         if len(d_n_out_nwm_params + g_n_out_nwm_params):
-            self.out_saver = tf.train.Saver(var_list=d_n_out_nwm_params + g_n_out_nwm_params,
-                                            max_to_keep=mtk, name='out_saver')
+            self.out_saver = tf.train.Saver(
+                var_list=d_n_out_nwm_params + g_n_out_nwm_params, max_to_keep=mtk, name='out_saver'
+            )
 
         self.writer = tf.summary.FileWriter('./model/', self.s.graph)

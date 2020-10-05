@@ -6,11 +6,24 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class DualGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
-                 sample_num=16 * 16, sample_size=16,
-                 df_dim=64, gf_dim=64,
-                 lambda_a=20., lambda_b=20., z_dim=128, g_lr=1e-4, d_lr=1e-4, epsilon=1e-9):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        sample_num=16 * 16,
+        sample_size=16,
+        df_dim=64,
+        gf_dim=64,
+        lambda_a=20.0,
+        lambda_b=20.0,
+        z_dim=128,
+        g_lr=1e-4,
+        d_lr=1e-4,
+        epsilon=1e-9,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -54,16 +67,16 @@ class DualGAN:
         self.lambda_a = lambda_a
         self.lambda_b = lambda_b
         self.z_dim = z_dim
-        self.decay = .9
+        self.decay = 0.9
         self.d_lr = d_lr
         self.g_lr = g_lr
         self.eps = epsilon
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
-        self.g_loss = 0.
-        self.d_loss = 0.
+        self.d_real = 0.0
+        self.d_fake = 0.0
+        self.g_loss = 0.0
+        self.d_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -76,12 +89,8 @@ class DualGAN:
         self.saver = None
 
         # Placeholders
-        self.x_A = tf.placeholder(tf.float32,
-                                  shape=[None, self.height, self.width, self.channel],
-                                  name="x-image-A")
-        self.x_B = tf.placeholder(tf.float32,
-                                  shape=[None, self.height, self.width, self.channel],
-                                  name="x-image-B")
+        self.x_A = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image-A")
+        self.x_B = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image-B")
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_dualgan()  # build DualGAN model
@@ -139,10 +148,12 @@ class DualGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.d_lr,
-                                              decay=self.decay).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.g_lr,
-                                              decay=self.decay).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.d_lr, decay=self.decay).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.g_lr, decay=self.decay).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

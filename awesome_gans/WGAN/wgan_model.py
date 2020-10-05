@@ -6,11 +6,22 @@ tf.set_random_seed(777)
 
 
 class WGAN:
-
-    def __init__(self, s, batch_size=32, height=32, width=32, channel=3, n_classes=10,
-                 sample_num=8 * 8, sample_size=8,
-                 z_dim=128, gf_dim=64, df_dim=64, fc_unit=512,
-                 enable_gp=True):
+    def __init__(
+        self,
+        s,
+        batch_size=32,
+        height=32,
+        width=32,
+        channel=3,
+        n_classes=10,
+        sample_num=8 * 8,
+        sample_size=8,
+        z_dim=128,
+        gf_dim=64,
+        df_dim=64,
+        fc_unit=512,
+        enable_gp=True,
+    ):
 
         """
         # General Settings
@@ -51,21 +62,21 @@ class WGAN:
         self.fc_unit = fc_unit
 
         # Training Options - based on the WGAN paper
-        self.beta1 = 0.  # 0.5
-        self.beta2 = .9  # 0.999
+        self.beta1 = 0.0  # 0.5
+        self.beta2 = 0.9  # 0.999
         self.lr = 1e-4
         self.critic = 5
-        self.clip = .01
+        self.clip = 0.01
         self.d_clip = []  # (-0.01 ~ 0.01)
-        self.d_lambda = 10.
-        self.decay = .9
+        self.d_lambda = 10.0
+        self.decay = 0.9
 
         self.EnableGP = enable_gp
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
-        self.gradient_penalty = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
+        self.gradient_penalty = 0.0
 
         self.g = None
 
@@ -77,10 +88,8 @@ class WGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                name='x-images')
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
-                                name='z-noise')
+        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='x-images')
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')
 
         self.build_wgan()  # build WGAN model
 
@@ -228,13 +237,13 @@ class WGAN:
 
         # The gradient penalty loss
         if self.EnableGP:
-            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1., name='alpha')
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0, name='alpha')
             diff = self.g - self.x  # fake data - real data
             interpolates = self.x + alpha * diff
             d_interp = self.discriminator(interpolates, reuse=True)
             gradients = tf.gradients(d_interp, [interpolates])[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-            self.gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.))
+            self.gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.0))
 
             # Update D loss
             self.d_loss += self.d_lambda * self.gradient_penalty
@@ -257,17 +266,19 @@ class WGAN:
 
         # Optimizer
         if self.EnableGP:
-            self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr * 2,
-                                               beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
-                                                                                            var_list=d_params)
-            self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr * 2,
-                                               beta1=self.beta1, beta2=self.beta2).minimize(loss=self.g_loss,
-                                                                                            var_list=g_params)
+            self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr * 2, beta1=self.beta1, beta2=self.beta2).minimize(
+                loss=self.d_loss, var_list=d_params
+            )
+            self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr * 2, beta1=self.beta1, beta2=self.beta2).minimize(
+                loss=self.g_loss, var_list=g_params
+            )
         else:
-            self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.lr,
-                                                  decay=self.decay).minimize(self.d_loss, var_list=d_params)
-            self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.lr,
-                                                  decay=self.decay).minimize(self.g_loss, var_list=g_params)
+            self.d_op = tf.train.RMSPropOptimizer(learning_rate=self.lr, decay=self.decay).minimize(
+                self.d_loss, var_list=d_params
+            )
+            self.g_op = tf.train.RMSPropOptimizer(learning_rate=self.lr, decay=self.decay).minimize(
+                self.g_loss, var_list=g_params
+            )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

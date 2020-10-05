@@ -6,10 +6,24 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class CoGAN:
-
-    def __init__(self, s, batch_size=64, height=28, width=28, channel=1, n_classes=10,
-                 sample_num=8 * 8, sample_size=8,
-                 n_input=784, fc_d_unit=512, fc_g_unit=1024, df_dim=32, gf_dim=64, z_dim=128, lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=28,
+        width=28,
+        channel=1,
+        n_classes=10,
+        sample_num=8 * 8,
+        sample_size=8,
+        n_input=784,
+        fc_d_unit=512,
+        fc_g_unit=1024,
+        df_dim=32,
+        gf_dim=64,
+        z_dim=128,
+        lr=2e-4,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -56,17 +70,17 @@ class CoGAN:
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
-        self.beta1 = .5
-        self.beta2 = .999
+        self.beta1 = 0.5
+        self.beta2 = 0.999
         self.lr = lr
 
         # pre-defined
-        self.d_loss = 0.
-        self.d_1_loss = 0.
-        self.d_2_loss = 0.
-        self.g_loss = 0.
-        self.g_1_loss = 0.
-        self.g_2_loss = 0.
+        self.d_loss = 0.0
+        self.d_1_loss = 0.0
+        self.d_2_loss = 0.0
+        self.g_loss = 0.0
+        self.g_1_loss = 0.0
+        self.g_2_loss = 0.0
 
         self.g_1 = None
         self.g_2 = None
@@ -190,10 +204,12 @@ class CoGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

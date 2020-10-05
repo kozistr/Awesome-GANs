@@ -7,10 +7,7 @@ import awesome_gans.cgan.cgan_model as cgan
 import awesome_gans.image_utils as iu
 from awesome_gans.datasets import MNISTDataSet as DataSet
 
-results = {
-    'output': './gen_img/',
-    'model': './model/CGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/CGAN-model.ckpt'}
 
 train_step = {
     'batch_size': 100,
@@ -50,55 +47,43 @@ def main():
 
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
-            sample_y[10 * i:10 * (i + 1), i] = 1
+            sample_y[10 * i : 10 * (i + 1), i] = 1
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.c: batch_y,
-                                  model.z: batch_z,
-                                  model.do_rate: 0.5,
-                              })
+            _, d_loss = s.run(
+                [model.d_op, model.d_loss],
+                feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,},
+            )
 
             # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
-                              feed_dict={
-                                  model.c: batch_y,
-                                  model.z: batch_z,
-                                  model.do_rate: 0.5,
-                              })
+            _, g_loss = s.run(
+                [model.g_op, model.g_loss], feed_dict={model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,}
+            )
 
             # Logging
             if global_step % train_step['logging_interval'] == 0:
                 batch_x, batch_y = mnist.test.next_batch(model.batch_size)
-                batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+                batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
-                d_loss, g_loss, summary = s.run([model.d_loss, model.g_loss, model.merged],
-                                                feed_dict={
-                                                    model.x: batch_x,
-                                                    model.c: batch_y,
-                                                    model.z: batch_z,
-                                                    model.do_rate: 0.5,
-                                                })
+                d_loss, g_loss, summary = s.run(
+                    [model.d_loss, model.g_loss, model.merged],
+                    feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,},
+                )
 
                 # Print Loss
-                print("[+] Step %08d => " % global_step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                print(
+                    "[+] Step %08d => " % global_step,
+                    " D loss : {:.8f}".format(d_loss),
+                    " G loss : {:.8f}".format(g_loss),
+                )
 
                 # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.c: sample_y,
-                                    model.z: sample_z,
-                                    model.do_rate: 0.0,
-                                })
+                sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+                samples = s.run(model.g, feed_dict={model.c: sample_y, model.z: sample_z, model.do_rate: 0.0,})
 
                 samples = np.reshape(samples, [-1, 28, 28, 1])
 
@@ -111,9 +96,7 @@ def main():
                 sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                 # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir)
+                iu.save_images(samples, size=[sample_image_height, sample_image_width], image_path=sample_dir)
 
                 # Model save
                 model.saver.save(s, results['model'], global_step)

@@ -32,8 +32,8 @@ class VBN(object):
 
     def __call__(self, x):
         with tf.variable_scope(self.name):
-            new_coeff = 1. / (self.batch_size + 1.)
-            old_coeff = 1. - new_coeff
+            new_coeff = 1.0 / (self.batch_size + 1.0)
+            old_coeff = 1.0 - new_coeff
             new_mean = tf.reduce_mean(x, [0, 1], keep_dims=True)
             new_mean_sq = tf.reduce_mean(tf.square(x), [0, 1], keep_dims=True)
             mean = new_coeff * new_mean + old_coeff * self.mean
@@ -46,11 +46,9 @@ class VBN(object):
         # make sure this is called with a variable scope
         shape = x.get_shape().as_list()
         assert len(shape) == 3
-        self.gamma = tf.get_variable("gamma", [shape[-1]],
-                                     initializer=tf.random_normal_initializer(1., 0.02))
+        self.gamma = tf.get_variable("gamma", [shape[-1]], initializer=tf.random_normal_initializer(1.0, 0.02))
         gamma = tf.reshape(self.gamma, [1, 1, -1])
-        self.beta = tf.get_variable("beta", [shape[-1]],
-                                    initializer=tf.constant_initializer(0.))
+        self.beta = tf.get_variable("beta", [shape[-1]], initializer=tf.constant_initializer(0.0))
         beta = tf.reshape(self.beta, [1, 1, -1])
 
         assert self.epsilon is not None
@@ -67,10 +65,8 @@ class VBN(object):
         return out
 
 
-def gaussian_noise_layer(input_layer, std=.5):
-    noise = tf.random_normal(shape=input_layer.get_shape().as_list(),
-                             mean=.0, stddev=std,
-                             dtype=tf.float32)
+def gaussian_noise_layer(input_layer, std=0.5):
+    noise = tf.random_normal(shape=input_layer.get_shape().as_list(), mean=0.0, stddev=std, dtype=tf.float32)
     return input_layer + noise
 
 
@@ -86,14 +82,18 @@ def conv1d(x, f=64, k=1, s=1, reuse=False, bias=False, pad='SAME', name='conv1d'
     :param name: scope name, default conv2d
     :return: covn2d net
     """
-    return tf.layers.conv1d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            use_bias=bias,
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
+    return tf.layers.conv1d(
+        x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+        use_bias=bias,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def conv2d(x, f=64, k=5, s=2, reuse=False, bias=False, pad='SAME', name='conv2d'):
@@ -108,14 +108,18 @@ def conv2d(x, f=64, k=5, s=2, reuse=False, bias=False, pad='SAME', name='conv2d'
     :param name: scope name, default conv2d
     :return: covn2d net
     """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=s,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            use_bias=bias,
-                            padding=pad,
-                            reuse=reuse,
-                            name=name)
+    return tf.layers.conv2d(
+        x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+        use_bias=bias,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )
 
 
 def deconv2d(x, f=64, k=5, s=2, reuse=False, bias=False, pad='SAME', name='deconv2d'):
@@ -130,11 +134,15 @@ def deconv2d(x, f=64, k=5, s=2, reuse=False, bias=False, pad='SAME', name='decon
     :param name: scope name, default deconv2d
     :return: decovn2d net
     """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=s,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                      use_bias=bias,
-                                      padding=pad,
-                                      reuse=reuse,
-                                      name=name)
+    return tf.layers.conv2d_transpose(
+        x,
+        filters=f,
+        kernel_size=k,
+        strides=s,
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+        use_bias=bias,
+        padding=pad,
+        reuse=reuse,
+        name=name,
+    )

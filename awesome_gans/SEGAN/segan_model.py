@@ -6,11 +6,27 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class SEGAN:
-
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1, n_classes=10,
-                 sample_num=8 * 8, sample_size=8, output_height=28, output_width=28,
-                 n_input=784, fc_unit=1024, df_dim=64, gf_dim=64,
-                 z_dim=128, g_lr=2e-4, d_lr=2e-4, epsilon=1e-12):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        input_height=28,
+        input_width=28,
+        input_channel=1,
+        n_classes=10,
+        sample_num=8 * 8,
+        sample_size=8,
+        output_height=28,
+        output_width=28,
+        n_input=784,
+        fc_unit=1024,
+        df_dim=64,
+        gf_dim=64,
+        z_dim=128,
+        g_lr=2e-4,
+        d_lr=2e-4,
+        epsilon=1e-12,
+    ):
 
         """
         # General Settings
@@ -59,18 +75,18 @@ class SEGAN:
         self.gf_dim = gf_dim
 
         self.z_dim = z_dim
-        self.beta1 = .5
-        self.beta2 = .999
+        self.beta1 = 0.5
+        self.beta2 = 0.999
         self.d_lr, self.g_lr = d_lr, g_lr
         self.eps = epsilon
 
         # pre-defined
-        self.d_loss = 0.
-        self.d_1_loss = 0.
-        self.d_2_loss = 0.
-        self.g_loss = 0.
-        self.g_1_loss = 0.
-        self.g_2_loss = 0.
+        self.d_loss = 0.0
+        self.d_1_loss = 0.0
+        self.d_2_loss = 0.0
+        self.g_loss = 0.0
+        self.g_1_loss = 0.0
+        self.g_2_loss = 0.0
 
         self.g = None
         self.g_sample = None
@@ -83,11 +99,10 @@ class SEGAN:
         self.saver = None
 
         # Placeholder
-        self.x = tf.placeholder(tf.float32, shape=[self.batch_size,
-                                                   self.input_height, self.input_width, self.input_channel],
-                                name="x-sound")
-        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim],
-                                name='z-noise')
+        self.x = tf.placeholder(
+            tf.float32, shape=[self.batch_size, self.input_height, self.input_width, self.input_channel], name="x-sound"
+        )
+        self.z = tf.placeholder(tf.float32, shape=[self.batch_size, self.z_dim], name='z-noise')
 
         # ops
         self.ops = ops.VBN()
@@ -98,6 +113,7 @@ class SEGAN:
 
     def discriminator(self, x, reuse=False):
         with tf.variable_scope("discriminator", reuse=reuse):
+
             def residual_block(x, name='residual_block'):
                 x = ops.conv2d(x)
                 x = self.ops(x)
@@ -150,10 +166,12 @@ class SEGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -1,7 +1,3 @@
-"""
-Inspired by https://github.com/tkarras/progressive_growing_of_gans/blob/master/tfutil.py
-"""
-
 import functools
 
 import numpy as np
@@ -9,8 +5,6 @@ import tensorflow as tf
 from tensorflow.python.ops import array_ops, functional_ops
 
 seed = 1337
-np.random.seed(seed)
-tf.set_random_seed(seed)
 
 batch_size = 64
 
@@ -72,46 +66,6 @@ def up_sampling(img, interp=tf.image.ResizeMethod.BILINEAR):
     w2 = int(shape[2] * 2)
 
     return tf.image.resize_images(img, [h2, w2], interp)
-
-
-# ---------------------------------------------------------------------------------------------
-# Optimizer
-
-
-class Optimizer(object):
-    def __init__(
-        self,
-        name='train',
-        optimizer='tf.train.AdamOptimizer',
-        learning_rate=1e-3,
-        use_loss_scaling=False,
-        loss_scaling_init=64.0,
-        loss_scaling_inc=5e-4,
-        loss_scaling_dec=1.0,
-        use_grad_scaling=False,
-        grad_scaling=7.0,
-        **kwargs
-    ):
-        self.name = name
-        self.optimizer = optimizer
-        self.learning_rate = learning_rate
-
-        self.use_loss_scaling = use_loss_scaling
-        self.loss_scaling_init = loss_scaling_init
-        self.loss_scaling_inc = loss_scaling_inc
-        self.loss_scaling_dec = loss_scaling_dec
-
-        self.use_grad_scaling = use_grad_scaling
-        self.grad_scaling = grad_scaling
-
-
-# ---------------------------------------------------------------------------------------------
-# Network
-
-
-class Network:
-    def __init__(self):
-        pass
 
 
 # ---------------------------------------------------------------------------------------------
@@ -486,15 +440,15 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
 
         preds = np.zeros([len(x), n_classes], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
-            preds[i * batch_size : (i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
+            inp = x[i * batch_size: (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            preds[i * batch_size: (i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
         preds = np.exp(preds) / np.sum(np.exp(preds), 1, keepdims=True)
         return preds
 
     def preds2score(preds, splits=10):
         scores = []
         for i in range(splits):
-            part = preds[(i * preds.shape[0] // splits) : ((i + 1) * preds.shape[0] // splits), :]
+            part = preds[(i * preds.shape[0] // splits): ((i + 1) * preds.shape[0] // splits), :]
             kl = part * (np.log(part) - np.log(np.expand_dims(np.mean(part, axis=0), axis=0)))
             kl = np.mean(np.sum(kl, axis=1))
             scores.append(np.exp(kl))
@@ -542,14 +496,14 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
 
         acts = np.zeros([len(x), feats], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
-            acts[i * batch_size : (i + 1) * batch_size] = activations.eval({inception_images: inp})
+            inp = x[i * batch_size: (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            acts[i * batch_size: (i + 1) * batch_size] = activations.eval({inception_images: inp})
         acts = np.exp(acts) / np.sum(np.exp(acts), 1, keepdims=True)
         return acts
 
     def get_fid(real, fake):
         return tf.contrib.gan.eval.frechet_classifier_distance_from_activations(real_acts, fake_acts).eval(
-            feed_dict={real_acts: real, fake_acts: fake,}
+            feed_dict={real_acts: real, fake_acts: fake, }
         )
 
     real_img_acts = get_inception_activations(real_img)

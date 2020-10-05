@@ -11,10 +11,22 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class MAGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=512, z_dim=350, lr=5e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        n_classes=41,
+        sample_num=10 * 10,
+        sample_size=10,
+        df_dim=64,
+        gf_dim=64,
+        fc_unit=512,
+        z_dim=350,
+        lr=5e-4,
+    ):
 
         """
         # General Settings
@@ -61,10 +73,10 @@ class MAGAN:
         self.pt_lambda = 0.1
 
         # pre-defined
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.d_real_loss = 0.
-        self.d_fake_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.d_real_loss = 0.0
+        self.d_fake_loss = 0.0
 
         self.g = None
 
@@ -159,7 +171,7 @@ class MAGAN:
 
         self.d_real_loss = t.mse_loss(self.x, d_real, self.batch_size)
         self.d_fake_loss = t.mse_loss(self.g, d_fake, self.batch_size)
-        self.d_loss = self.d_real_loss + tf.maximum(0., self.m - self.d_fake_loss)
+        self.d_loss = self.d_real_loss + tf.maximum(0.0, self.m - self.d_fake_loss)
         self.g_loss = self.d_fake_loss
 
         # Summary
@@ -173,10 +185,8 @@ class MAGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = AdamaxOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.d_loss,
-                                                                                      var_list=d_params)
-        self.g_op = AdamaxOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.g_loss,
-                                                                                      var_list=g_params)
+        self.d_op = AdamaxOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
+        self.g_op = AdamaxOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -9,10 +9,7 @@ from awesome_gans.datasets import Div2KDataSet as DataSet
 
 np.random.seed(1337)
 
-results = {
-    'output': './gen_img/',
-    'model': './model/SRGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/SRGAN-model.ckpt'}
 
 train_step = {
     'batch_size': 16,
@@ -35,9 +32,11 @@ def main():
                  save_file_name="/home/zero/hdd/DataSet/DIV2K/DIV2K",
                  use_img_scale=True)
     """
-    ds = DataSet(ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
-                 ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5",
-                 use_img_scale=True)
+    ds = DataSet(
+        ds_hr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-hr.h5",
+        ds_lr_path="/home/zero/hdd/DataSet/DIV2K/DIV2K-lr.h5",
+        use_img_scale=True,
+    )
 
     hr, lr = ds.hr_images, ds.lr_images
 
@@ -51,8 +50,7 @@ def main():
     with tf.Session(config=config) as s:
         with tf.device("/gpu:1"):  # Change
             # SRGAN Model
-            model = srgan.SRGAN(s, batch_size=train_step['batch_size'],
-                                use_vgg19=False)
+            model = srgan.SRGAN(s, batch_size=train_step['batch_size'], use_vgg19=False)
 
         # Initializing
         s.run(tf.global_variables_initializer())
@@ -74,9 +72,10 @@ def main():
         rnd = np.random.randint(0, ds.n_images)
         sample_x_hr, sample_x_lr = hr[rnd], lr[rnd]
 
-        sample_x_hr, sample_x_lr = \
-            np.reshape(sample_x_hr, [1] + model.hr_image_shape[1:]), \
-            np.reshape(sample_x_lr, [1] + model.lr_image_shape[1:])
+        sample_x_hr, sample_x_lr = (
+            np.reshape(sample_x_hr, [1] + model.hr_image_shape[1:]),
+            np.reshape(sample_x_lr, [1] + model.lr_image_shape[1:]),
+        )
 
         # Export real image
         # valid_image_height = model.sample_size
@@ -84,15 +83,9 @@ def main():
         sample_hr_dir, sample_lr_dir = results['output'] + 'valid_hr.png', results['output'] + 'valid_lr.png'
 
         # Generated image save
-        iu.save_images(sample_x_hr,
-                       size=[1, 1],
-                       image_path=sample_hr_dir,
-                       inv_type='127')
+        iu.save_images(sample_x_hr, size=[1, 1], image_path=sample_hr_dir, inv_type='127')
 
-        iu.save_images(sample_x_lr,
-                       size=[1, 1],
-                       image_path=sample_lr_dir,
-                       inv_type='127')
+        iu.save_images(sample_x_lr, size=[1, 1], image_path=sample_lr_dir, inv_type='127')
 
         learning_rate = 1e-4
         for epoch in range(start_epoch, train_step['train_epochs']):
@@ -120,57 +113,49 @@ def main():
                 batch_x_lr = np.reshape(batch_x_lr, [train_step['batch_size']] + model.lr_image_shape[1:])
 
                 # Update Only G network
-                d_loss, g_loss, g_init_loss = 0., 0., 0.
+                d_loss, g_loss, g_init_loss = 0.0, 0.0, 0.0
                 if epoch <= train_step['init_epochs']:
-                    _, g_init_loss = s.run([model.g_init_op, model.g_cnt_loss],
-                                           feed_dict={
-                                               model.x_hr: batch_x_hr,
-                                               model.x_lr: batch_x_lr,
-                                               model.lr: learning_rate,
-                                           })
+                    _, g_init_loss = s.run(
+                        [model.g_init_op, model.g_cnt_loss],
+                        feed_dict={model.x_hr: batch_x_hr, model.x_lr: batch_x_lr, model.lr: learning_rate,},
+                    )
                 # Update G/D network
                 else:
-                    _, d_loss = s.run([model.d_op, model.d_loss],
-                                      feed_dict={
-                                          model.x_hr: batch_x_hr,
-                                          model.x_lr: batch_x_lr,
-                                          model.lr: learning_rate,
-                                      })
+                    _, d_loss = s.run(
+                        [model.d_op, model.d_loss],
+                        feed_dict={model.x_hr: batch_x_hr, model.x_lr: batch_x_lr, model.lr: learning_rate,},
+                    )
 
-                    _, g_loss = s.run([model.g_op, model.g_loss],
-                                      feed_dict={
-                                          model.x_hr: batch_x_hr,
-                                          model.x_lr: batch_x_lr,
-                                          model.lr: learning_rate,
-                                      })
+                    _, g_loss = s.run(
+                        [model.g_op, model.g_loss],
+                        feed_dict={model.x_hr: batch_x_hr, model.x_lr: batch_x_lr, model.lr: learning_rate,},
+                    )
 
                 if i % train_step['logging_interval'] == 0:
                     # Print loss
                     if epoch <= train_step['init_epochs']:
-                        print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
-                              " MSE loss : {:.8f}".format(g_init_loss))
+                        print(
+                            "[+] Epoch %04d Step %08d => " % (epoch, global_step),
+                            " MSE loss : {:.8f}".format(g_init_loss),
+                        )
                     else:
-                        print("[+] Epoch %04d Step %08d => " % (epoch, global_step),
-                              " D loss : {:.8f}".format(d_loss),
-                              " G loss : {:.8f}".format(g_loss))
+                        print(
+                            "[+] Epoch %04d Step %08d => " % (epoch, global_step),
+                            " D loss : {:.8f}".format(d_loss),
+                            " G loss : {:.8f}".format(g_loss),
+                        )
 
-                        summary = s.run(model.merged,
-                                        feed_dict={
-                                            model.x_hr: batch_x_hr,
-                                            model.x_lr: batch_x_lr,
-                                            model.lr: learning_rate,
-                                        })
+                        summary = s.run(
+                            model.merged,
+                            feed_dict={model.x_hr: batch_x_hr, model.x_lr: batch_x_lr, model.lr: learning_rate,},
+                        )
 
                         # Summary saver
                         model.writer.add_summary(summary, global_step)
 
                     # Training G model with sample image and noise
                     sample_x_lr = np.reshape(sample_x_lr, [model.sample_num] + model.lr_image_shape[1:])
-                    samples = s.run(model.g,
-                                    feed_dict={
-                                        model.x_lr: sample_x_lr,
-                                        model.lr: learning_rate,
-                                    })
+                    samples = s.run(model.g, feed_dict={model.x_lr: sample_x_lr, model.lr: learning_rate,})
 
                     # Export image generated by model G
                     # sample_image_height = model.output_height
@@ -178,10 +163,7 @@ def main():
                     sample_dir = results['output'] + 'train_{:08d}.png'.format(global_step)
 
                     # Generated image save
-                    iu.save_images(samples,
-                                   size=[1, 1],
-                                   image_path=sample_dir,
-                                   inv_type='127')
+                    iu.save_images(samples, size=[1, 1], image_path=sample_dir, inv_type='127')
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

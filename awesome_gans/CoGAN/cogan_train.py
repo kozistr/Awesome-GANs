@@ -7,10 +7,7 @@ import awesome_gans.cogan.cogan_model as cogan
 import awesome_gans.image_utils as iu
 from awesome_gans.datasets import MNISTDataSet as DataSet
 
-results = {
-    'output': './gen_img/',
-    'model': './model/CoGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/CoGAN-model.ckpt'}
 
 train_step = {
     'batch_size': 128,
@@ -54,67 +51,76 @@ def main():
         sample_rot_x = np.rot90(sample_x[:], 1, axes=(-3, -2))
 
         # Generated image save
-        iu.save_images(sample_x,
-                       size=[model.sample_size, model.sample_size],
-                       image_path='./gen_img/sample_1.png')
-        iu.save_images(sample_rot_x,
-                       size=[model.sample_size, model.sample_size],
-                       image_path='./gen_img/sample_2.png')
+        iu.save_images(sample_x, size=[model.sample_size, model.sample_size], image_path='./gen_img/sample_1.png')
+        iu.save_images(sample_rot_x, size=[model.sample_size, model.sample_size], image_path='./gen_img/sample_2.png')
 
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
-            sample_y[10 * i:10 * (i + 1), i] = 1
+            sample_y[10 * i : 10 * (i + 1), i] = 1
 
         for global_step in range(saved_global_step, train_step['global_step']):
             batch_x, batch_y = mnist.train.next_batch(model.batch_size)
-            batch_rot_x = np.reshape(np.rot90(np.reshape(batch_x, model.image_shape), 1, axes=(-3, -2)),
-                                     (-1, model.n_input))
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_rot_x = np.reshape(
+                np.rot90(np.reshape(batch_x, model.image_shape), 1, axes=(-3, -2)), (-1, model.n_input)
+            )
+            batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x_1: batch_x,
-                                  model.x_2: batch_rot_x,  # batch_x
-                                  # model.y: batch_y,
-                                  model.z: batch_z,
-                              })
+            _, d_loss = s.run(
+                [model.d_op, model.d_loss],
+                feed_dict={
+                    model.x_1: batch_x,
+                    model.x_2: batch_rot_x,  # batch_x
+                    # model.y: batch_y,
+                    model.z: batch_z,
+                },
+            )
 
             # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
-                              feed_dict={
-                                  model.x_1: batch_x,
-                                  model.x_2: batch_rot_x,
-                                  # model.y: batch_y,
-                                  model.z: batch_z,
-                              })
+            _, g_loss = s.run(
+                [model.g_op, model.g_loss],
+                feed_dict={
+                    model.x_1: batch_x,
+                    model.x_2: batch_rot_x,
+                    # model.y: batch_y,
+                    model.z: batch_z,
+                },
+            )
 
             if global_step % train_step['logging_interval'] == 0:
-                summary = s.run(model.merged,
-                                feed_dict={
-                                    model.x_1: batch_x,
-                                    model.x_2: batch_rot_x,
-                                    # model.y: batch_y,
-                                    model.z: batch_z,
-                                })
+                summary = s.run(
+                    model.merged,
+                    feed_dict={
+                        model.x_1: batch_x,
+                        model.x_2: batch_rot_x,
+                        # model.y: batch_y,
+                        model.z: batch_z,
+                    },
+                )
 
                 # Print loss
-                print("[+] Step %08d => " % global_step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                print(
+                    "[+] Step %08d => " % global_step,
+                    " D loss : {:.8f}".format(d_loss),
+                    " G loss : {:.8f}".format(g_loss),
+                )
 
                 # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim]).astype(np.float32)
-                samples_1 = s.run(model.g_sample_1,
-                                  feed_dict={
-                                      # model.y: sample_y,
-                                      model.z: sample_z,
-                                  })
-                samples_2 = s.run(model.g_sample_2,
-                                  feed_dict={
-                                      # model.y: sample_y,
-                                      model.z: sample_z,
-                                  })
+                sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
+                samples_1 = s.run(
+                    model.g_sample_1,
+                    feed_dict={
+                        # model.y: sample_y,
+                        model.z: sample_z,
+                    },
+                )
+                samples_2 = s.run(
+                    model.g_sample_2,
+                    feed_dict={
+                        # model.y: sample_y,
+                        model.z: sample_z,
+                    },
+                )
 
                 # Summary saver
                 model.writer.add_summary(summary, global_step)
@@ -127,12 +133,8 @@ def main():
                 sample_dir_2 = results['output'] + 'train_2_{:08d}.png'.format(global_step)
 
                 # Generated image save
-                iu.save_images(samples_1,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir_1)
-                iu.save_images(samples_2,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir_2)
+                iu.save_images(samples_1, size=[sample_image_height, sample_image_width], image_path=sample_dir_1)
+                iu.save_images(samples_2, size=[sample_image_height, sample_image_width], image_path=sample_dir_2)
 
                 # Model save
                 model.saver.save(s, results['model'], global_step)

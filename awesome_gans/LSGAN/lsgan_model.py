@@ -6,10 +6,22 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class LSGAN:
-
-    def __init__(self, s, batch_size=64, height=32, width=32, channel=3, n_classes=10,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=1024, z_dim=128, lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=32,
+        width=32,
+        channel=3,
+        n_classes=10,
+        sample_num=10 * 10,
+        sample_size=10,
+        df_dim=64,
+        gf_dim=64,
+        fc_unit=1024,
+        z_dim=128,
+        lr=2e-4,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -54,8 +66,8 @@ class LSGAN:
         self.lr = lr
 
         # pre-defined
-        self.g_loss = 0.
-        self.d_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
 
         self.g = None
 
@@ -67,10 +79,10 @@ class LSGAN:
         self.saver = None
 
         # Placeholder
-        self.x = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 64, 64, 3)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim],
-                                name='z-noise')  # (-1, 128)
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
+        )  # (-1, 64, 64, 3)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_lsgan()  # build LSGAN model
 
@@ -128,7 +140,7 @@ class LSGAN:
         # LSGAN Loss
         d_real_loss = t.mse_loss(d_real, tf.ones_like(d_real), self.batch_size)
         d_fake_loss = t.mse_loss(d_fake, tf.zeros_like(d_fake), self.batch_size)
-        self.d_loss = (d_real_loss + d_fake_loss) / 2.
+        self.d_loss = (d_real_loss + d_fake_loss) / 2.0
         self.g_loss = t.mse_loss(d_fake, tf.ones_like(d_fake), self.batch_size)
 
         # Summary
@@ -142,10 +154,12 @@ class LSGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -6,10 +6,22 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class CycleGAN:
-
-    def __init__(self, s, batch_size=8, height=128, width=128, channel=3,
-                 sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=32, fd_unit=512, g_lr=2e-4, d_lr=2e-4, epsilon=1e-9):
+    def __init__(
+        self,
+        s,
+        batch_size=8,
+        height=128,
+        width=128,
+        channel=3,
+        sample_num=1 * 1,
+        sample_size=1,
+        df_dim=64,
+        gf_dim=32,
+        fd_unit=512,
+        g_lr=2e-4,
+        d_lr=2e-4,
+        epsilon=1e-9,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -49,12 +61,12 @@ class CycleGAN:
         self.gf_dim = gf_dim
         self.fd_unit = fd_unit
 
-        self.beta1 = .5
-        self.beta2 = .999
+        self.beta1 = 0.5
+        self.beta2 = 0.999
         self.d_lr = d_lr
         self.g_lr = g_lr
-        self.lambda_ = 10.
-        self.lambda_cycle = 10.
+        self.lambda_ = 10.0
+        self.lambda_cycle = 10.0
         self.n_train_critic = 10
         self.eps = epsilon
 
@@ -72,11 +84,11 @@ class CycleGAN:
         self.gp_b = None
         self.gp = None
 
-        self.g_loss = 0.
-        self.g_a_loss = 0.
-        self.g_b_loss = 0.
-        self.d_loss = 0.
-        self.cycle_loss = 0.
+        self.g_loss = 0.0
+        self.g_a_loss = 0.0
+        self.g_b_loss = 0.0
+        self.d_loss = 0.0
+        self.cycle_loss = 0.0
 
         self.d_op = None
         self.g_op = None
@@ -86,10 +98,8 @@ class CycleGAN:
         self.saver = None
 
         # placeholders
-        self.a = tf.placeholder(tf.float32,
-                                [None, self.height, self.width, self.channel], name='image-a')
-        self.b = tf.placeholder(tf.float32,
-                                [None, self.height, self.width, self.channel], name='image-b')
+        self.a = tf.placeholder(tf.float32, [None, self.height, self.width, self.channel], name='image-a')
+        self.b = tf.placeholder(tf.float32, [None, self.height, self.width, self.channel], name='image-b')
         self.lr_decay = tf.placeholder(tf.float32, None, name='learning_rate-decay')
 
         self.build_cyclegan()  # build CycleGAN
@@ -103,6 +113,7 @@ class CycleGAN:
         :return: logits, prob
         """
         with tf.variable_scope('discriminator-%s' % name, reuse=reuse):
+
             def residual_block(x, f, name=''):
                 x = t.conv2d(x, f=f, k=4, s=2, name='disc-conv2d-%s' % name)
                 x = t.instance_norm(x, name='disc-ins_norm-%s' % name)
@@ -133,6 +144,7 @@ class CycleGAN:
         :return: logits, prob
         """
         with tf.variable_scope('generator-%s' % name, reuse=reuse):
+
             def d(x, f, name=''):
                 x = t.conv2d(x, f=f, k=3, s=2, name='gen-d-conv2d-%s' % name)
                 x = t.instance_norm(x, name='gen-d-ins_norm-%s' % name)
@@ -182,15 +194,15 @@ class CycleGAN:
 
         # Classifier
         with tf.variable_scope("discriminator-a"):
-            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
-            a_hat = alpha * self.a + (1. - alpha) * self.g_b2a
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0)
+            a_hat = alpha * self.a + (1.0 - alpha) * self.g_b2a
 
             d_a = self.discriminator(self.a)
             d_b2a = self.discriminator(self.g_b2a, reuse=True)
             d_a_hat = self.discriminator(a_hat, reuse=True)
         with tf.variable_scope("discriminator-b"):
-            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0., maxval=1.)
-            b_hat = alpha * self.b + (1. - alpha) * self.g_a2b
+            alpha = tf.random_uniform(shape=[self.batch_size, 1, 1, 1], minval=0.0, maxval=1.0)
+            b_hat = alpha * self.b + (1.0 - alpha) * self.g_a2b
 
             d_b = self.discriminator(self.b)
             d_a2b = self.discriminator(self.g_a2b, reuse=True)
@@ -202,10 +214,10 @@ class CycleGAN:
         self.w = self.w_a + self.w_b
 
         self.gp_a = tf.reduce_mean(
-            (tf.sqrt(tf.reduce_sum(tf.gradients(d_a_hat, a_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+            (tf.sqrt(tf.reduce_sum(tf.gradients(d_a_hat, a_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.0) ** 2
         )
         self.gp_b = tf.reduce_mean(
-            (tf.sqrt(tf.reduce_sum(tf.gradients(d_b_hat, b_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.) ** 2
+            (tf.sqrt(tf.reduce_sum(tf.gradients(d_b_hat, b_hat)[0] ** 2, reduction_indices=[1, 2, 3])) - 1.0) ** 2
         )
         self.gp = self.gp_a + self.gp_b
 
@@ -216,8 +228,8 @@ class CycleGAN:
         self.cycle_loss = cycle_a_loss + cycle_b_loss
 
         # using adv loss
-        self.g_a_loss = -1. * tf.reduce_mean(d_b2a)
-        self.g_b_loss = -1. * tf.reduce_mean(d_a2b)
+        self.g_a_loss = -1.0 * tf.reduce_mean(d_b2a)
+        self.g_b_loss = -1.0 * tf.reduce_mean(d_a2b)
         self.g_loss = self.g_a_loss + self.g_b_loss + self.lambda_cycle * self.cycle_loss
 
         # Summary
@@ -237,10 +249,12 @@ class CycleGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr * self.lr_decay,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr * self.lr_decay,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(
+            learning_rate=self.d_lr * self.lr_decay, beta1=self.beta1, beta2=self.beta2
+        ).minimize(self.d_loss, var_list=d_params)
+        self.g_op = tf.train.AdamOptimizer(
+            learning_rate=self.g_lr * self.lr_decay, beta1=self.beta1, beta2=self.beta2
+        ).minimize(self.g_loss, var_list=g_params)
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -6,10 +6,21 @@ tf.set_random_seed(777)
 
 
 class UGAN:
-
-    def __init__(self, s, batch_size=64, height=32, width=32, channel=3,
-                 sample_num=8 * 8, sample_size=8,
-                 z_dim=256, gf_dim=64, df_dim=64, d_lr=2e-4, g_lr=1e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=32,
+        width=32,
+        channel=3,
+        sample_num=8 * 8,
+        sample_size=8,
+        z_dim=256,
+        gf_dim=64,
+        df_dim=64,
+        d_lr=2e-4,
+        g_lr=1e-4,
+    ):
 
         """
         # General Settings
@@ -50,8 +61,8 @@ class UGAN:
         self.df_dim = df_dim
 
         # pre-defined
-        self.d_loss = 0.
-        self.g_loss = 0.
+        self.d_loss = 0.0
+        self.g_loss = 0.0
 
         self.g = None
 
@@ -128,10 +139,12 @@ class UGAN:
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
         # Optimizer
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

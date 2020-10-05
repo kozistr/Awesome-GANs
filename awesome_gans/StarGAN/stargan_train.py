@@ -7,10 +7,7 @@ import awesome_gans.image_utils as iu
 import awesome_gans.stargan.stargan_model as stargan
 from awesome_gans.stargan.dataset import CelebADataSet as DataSet
 
-results = {
-    'output': './gen_img/',
-    'model': './model/StarGAN-model.ckpt'
-}
+results = {'output': './gen_img/', 'model': './model/StarGAN-model.ckpt'}
 
 train_step = {
     'epoch': 100,
@@ -29,8 +26,16 @@ def main():
     with tf.Session(config=config) as s:
         # pre-chosen
         attr_labels = [
-            'Big_Nose', 'Black_Hair', 'Blond_Hair', 'Blurry', 'Brown_Hair',
-            'Bushy_Eyebrows', 'Chubby', 'Double_Chin', 'Eyeglasses', 'Gray_Hair'
+            'Big_Nose',
+            'Black_Hair',
+            'Blond_Hair',
+            'Blurry',
+            'Brown_Hair',
+            'Bushy_Eyebrows',
+            'Chubby',
+            'Double_Chin',
+            'Eyeglasses',
+            'Gray_Hair',
         ]
 
         # StarGAN Model
@@ -40,18 +45,20 @@ def main():
         s.run(tf.global_variables_initializer())
 
         # loading CelebA DataSet
-        ds = DataSet(height=64,
-                     width=64,
-                     channel=3,
-                     ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
-                     ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
-                     # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
-                     ds_type="CelebA",
-                     use_save=False,
-                     save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
-                     save_type="to_h5",
-                     use_img_scale=False,
-                     img_scale="-1,1")
+        ds = DataSet(
+            height=64,
+            width=64,
+            channel=3,
+            ds_image_path="D:/DataSet/CelebA/CelebA-64.h5",
+            ds_label_path="D:/DataSet/CelebA/Anno/list_attr_celeba.txt",
+            # ds_image_path="D:/DataSet/CelebA/Img/img_align_celeba/",
+            ds_type="CelebA",
+            use_save=False,
+            save_file_name="D:/DataSet/CelebA/CelebA-64.h5",
+            save_type="to_h5",
+            use_img_scale=False,
+            img_scale="-1,1",
+        )
 
         # x_A # Celeb-A
         img_a = np.reshape(ds.images, [-1, 64, 64, 3])
@@ -72,9 +79,9 @@ def main():
         global_step = 0
         for epoch in range(train_step['epoch']):
             # learning rate decay
-            lr_decay = 1.
+            lr_decay = 1.0
             if epoch >= train_step['epoch']:
-                lr_decay = (train_step['epoch'] - epoch) / (train_step['epoch'] / 2.)
+                lr_decay = (train_step['epoch'] - epoch) / (train_step['epoch'] / 2.0)
 
             # re-implement DataIterator for multi-input
             pointer = 0
@@ -112,43 +119,51 @@ def main():
 
                 # Update D network - 5 times
                 for _ in range(5):
-                    _, d_loss = s.run([model.d_op, model.d_loss],
-                                      feed_dict={
-                                          model.x_B: batch_b,
-                                          model.y_B: y_b,
-                                          model.fake_x_B: fake_b,
-                                          model.lr_decay: lr_decay,
-                                          model.epsilon: eps,
-                                      })
+                    _, d_loss = s.run(
+                        [model.d_op, model.d_loss],
+                        feed_dict={
+                            model.x_B: batch_b,
+                            model.y_B: y_b,
+                            model.fake_x_B: fake_b,
+                            model.lr_decay: lr_decay,
+                            model.epsilon: eps,
+                        },
+                    )
 
                 # Update G network - 1 time
-                _, g_loss = s.run([model.g_op, model.g_loss],
-                                  feed_dict={
-                                      model.x_A: batch_a,
-                                      model.x_B: batch_b,
-                                      model.y_B: y_b,
-                                      model.lr_decay: lr_decay,
-                                      model.epsilon: eps,
-                                  })
+                _, g_loss = s.run(
+                    [model.g_op, model.g_loss],
+                    feed_dict={
+                        model.x_A: batch_a,
+                        model.x_B: batch_b,
+                        model.y_B: y_b,
+                        model.lr_decay: lr_decay,
+                        model.epsilon: eps,
+                    },
+                )
 
                 if global_step % train_step['logging_step'] == 0:
                     eps = np.random.rand(train_step['batch_size'], 1, 1, 1)
 
                     # Summary
-                    samples, d_loss, g_loss, summary = s.run([model.fake_A, model.d_loss, model.g_loss, model.merged],
-                                                             feed_dict={
-                                                                 model.x_A: batch_a,
-                                                                 model.x_B: batch_b,
-                                                                 model.y_B: y_b,
-                                                                 model.fake_x_B: fake_b,
-                                                                 model.lr_decay: lr_decay,
-                                                                 model.epsilon: eps,
-                                                             })
+                    samples, d_loss, g_loss, summary = s.run(
+                        [model.fake_A, model.d_loss, model.g_loss, model.merged],
+                        feed_dict={
+                            model.x_A: batch_a,
+                            model.x_B: batch_b,
+                            model.y_B: y_b,
+                            model.fake_x_B: fake_b,
+                            model.lr_decay: lr_decay,
+                            model.epsilon: eps,
+                        },
+                    )
 
                     # Print loss
-                    print("[+] Epoch %04d Step %07d =>" % (epoch, global_step),
-                          " D loss : {:.8f}".format(d_loss),
-                          " G loss : {:.8f}".format(g_loss))
+                    print(
+                        "[+] Epoch %04d Step %07d =>" % (epoch, global_step),
+                        " D loss : {:.8f}".format(d_loss),
+                        " G loss : {:.8f}".format(g_loss),
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, epoch)
@@ -159,10 +174,9 @@ def main():
                     sample_dir = results['output'] + 'train_{0}_{1}.png'.format(epoch, global_step)
 
                     # Generated image save
-                    iu.save_images(samples,
-                                   size=[sample_image_height, sample_image_width],
-                                   image_path=sample_dir,
-                                   inv_type='127')
+                    iu.save_images(
+                        samples, size=[sample_image_height, sample_image_width], image_path=sample_dir, inv_type='127'
+                    )
 
                     # Model save
                     model.saver.save(s, results['model'], global_step)

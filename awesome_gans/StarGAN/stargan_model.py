@@ -20,10 +20,21 @@ def residual_block(x, f, name="0"):
 
 
 class StarGAN:
-
-    def __init__(self, s, batch_size=32, height=64, width=64, channel=3, attr_labels=(),
-                 sample_num=1 * 1, sample_size=1,
-                 df_dim=64, gf_dim=64, g_lr=1e-4, d_lr=1e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=32,
+        height=64,
+        width=64,
+        channel=3,
+        attr_labels=(),
+        sample_num=1 * 1,
+        sample_size=1,
+        df_dim=64,
+        gf_dim=64,
+        g_lr=1e-4,
+        d_lr=1e-4,
+    ):
 
         """
         # General Settings
@@ -70,9 +81,9 @@ class StarGAN:
         self.d_lr = d_lr
         self.g_lr = g_lr
 
-        self.lambda_cls = 1.  #
-        self.lambda_rec = 10.  #
-        self.lambda_gp = .25  # gradient penalty
+        self.lambda_cls = 1.0  #
+        self.lambda_rec = 10.0  #
+        self.lambda_gp = 0.25  # gradient penalty
 
         # Training Setting
         self.beta1 = 0.5
@@ -80,18 +91,16 @@ class StarGAN:
 
         self.d_real = 0
         self.d_fake = 0
-        self.g_loss = 0.
-        self.d_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
 
         # Placeholders
-        self.x_A = tf.placeholder(tf.float32,
-                                  shape=[None,
-                                         self.height, self.width, self.channel + self.n_classes],
-                                  name='x-image-A')  # input image
-        self.x_B = tf.placeholder(tf.float32,
-                                  shape=[None,
-                                         self.height, self.width, self.channel + self.n_classes],
-                                  name='x-image-B')  # target image
+        self.x_A = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel + self.n_classes], name='x-image-A'
+        )  # input image
+        self.x_B = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel + self.n_classes], name='x-image-B'
+        )  # target image
         self.fake_x_B = tf.placeholder(tf.float32, shape=self.image_shape, name='x-image-fake-B')
         self.y_B = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label-B')
 
@@ -118,6 +127,7 @@ class StarGAN:
         :return: logits
         """
         with tf.variable_scope("discriminator", reuse=reuse):
+
             def conv_lrelu(x, f, k, s):
                 x = t.conv2d(x, f=f, k=k, s=s)
                 x = tf.nn.leaky_relu(x)
@@ -142,6 +152,7 @@ class StarGAN:
         :return: logits
         """
         with tf.variable_scope("generator", reuse=reuse):
+
             def conv_in_relu(x, f, k, s, de=False, name=""):
                 if not de:
                     x = t.conv2d(x, f=f, k=k, s=s)
@@ -176,16 +187,16 @@ class StarGAN:
             # alpha = tf.random_uniform(shape=real.get_shape(), minval=0., maxval=1., name='alpha')
             # diff = fake - real  # fake data - real data
             # interpolates = real + alpha * diff
-            interpolates = eps * real + (1. - eps) * fake
+            interpolates = eps * real + (1.0 - eps) * fake
             d_interp = self.discriminator(interpolates, reuse=True)
             gradients = tf.gradients(d_interp, [interpolates])[0]
             slopes = tf.sqrt(tf.reduce_sum(tf.square(gradients), reduction_indices=[1]))
-            gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.))
+            gradient_penalty = tf.reduce_mean(tf.square(slopes - 1.0))
             return gradient_penalty
 
-        x_img_a = self.x_A[:, :, :, :self.channel]
-        x_attr_a = self.x_A[:, :, :, self.channel:]
-        x_img_b = self.x_B[:, :, :, :self.channel]
+        x_img_a = self.x_A[:, :, :, : self.channel]
+        x_attr_a = self.x_A[:, :, :, self.channel :]
+        x_img_b = self.x_B[:, :, :, : self.channel]
         # x_attr_b = self.x_B[:, :, :, self.channel:]
 
         # Generator
@@ -223,10 +234,12 @@ class StarGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr * self.lr_decay,
-                                           beta1=self.beta1).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr * self.lr_decay,
-                                           beta1=self.beta1).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr * self.lr_decay, beta1=self.beta1).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr * self.lr_decay, beta1=self.beta1).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

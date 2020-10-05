@@ -6,11 +6,24 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class InfoGAN:
-
-    def __init__(self, s, batch_size=16, height=32, width=32, channel=3,
-                 sample_num=10 * 10, sample_size=10,
-                 df_dim=64, gf_dim=64, fc_unit=128, n_categories=10, n_continous_factor=1,
-                 z_dim=128, g_lr=1e-3, d_lr=2e-4):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        height=32,
+        width=32,
+        channel=3,
+        sample_num=10 * 10,
+        sample_size=10,
+        df_dim=64,
+        gf_dim=64,
+        fc_unit=128,
+        n_categories=10,
+        n_continous_factor=1,
+        z_dim=128,
+        g_lr=1e-3,
+        d_lr=2e-4,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -62,7 +75,7 @@ class InfoGAN:
         self.n_cat = n_categories  # category dist, label
         self.n_cont = n_continous_factor  # gaussian dist, rotate, etc
         self.z_dim = z_dim
-        self.lambda_ = 1.  # sufficient for discrete latent codes # less than 1
+        self.lambda_ = 1.0  # sufficient for discrete latent codes # less than 1
 
         self.beta1 = 0.5
         self.beta2 = 0.999
@@ -70,12 +83,12 @@ class InfoGAN:
         self.g_lr = g_lr
 
         # pre-defined
-        self.d_real = 0.
-        self.d_fake = 0.
+        self.d_real = 0.0
+        self.d_fake = 0.0
 
-        self.g_loss = 0.
-        self.d_adv_loss = 0.
-        self.d_loss = 0.
+        self.g_loss = 0.0
+        self.d_adv_loss = 0.0
+        self.d_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -89,9 +102,9 @@ class InfoGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 32, 32, 3)
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
+        )  # (-1, 32, 32, 3)
         self.c = tf.placeholder(tf.float32, shape=[None, self.n_cont + self.n_cat], name='c-cond')  # (-1, 11)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
@@ -126,7 +139,7 @@ class InfoGAN:
             x = tf.nn.leaky_relu(x, alpha=0.1)
 
             x = t.dense(x, 1 + self.n_cont + self.n_cat, name='disc-fc-2')
-            prob, cont, cat = x[:, 0], x[:, 1:1 + self.n_cont], x[:, 1 + self.n_cont:]  # logits
+            prob, cont, cat = x[:, 0], x[:, 1 : 1 + self.n_cont], x[:, 1 + self.n_cont :]  # logits
 
             prob = tf.nn.sigmoid(prob)  # probability
             cat = tf.nn.softmax(cat)  # categories
@@ -177,10 +190,10 @@ class InfoGAN:
         d_fake, d_fake_cont, d_fake_cat = self.discriminator(self.g, reuse=True)
 
         # Losses
-        self.d_adv_loss = -tf.reduce_mean(t.safe_log(d_real) + t.safe_log(1. - d_fake))
+        self.d_adv_loss = -tf.reduce_mean(t.safe_log(d_real) + t.safe_log(1.0 - d_fake))
 
-        d_cont_loss = tf.reduce_mean(tf.square(d_fake_cont / .5))
-        cat = self.c[:, self.n_cont:]
+        d_cont_loss = tf.reduce_mean(tf.square(d_fake_cont / 0.5))
+        cat = self.c[:, self.n_cont :]
         d_cat_loss = -(tf.reduce_mean(tf.reduce_sum(cat * d_fake_cont)) + tf.reduce_mean(cat * cat))
 
         d_info_loss = self.lambda_ * (d_cont_loss + d_cat_loss)
@@ -200,10 +213,12 @@ class InfoGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

@@ -6,11 +6,26 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class AnoGAN:
-
-    def __init__(self, s, batch_size=16, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=1, sample_size=1,
-                 df_dim=64, gf_dim=64, fc_unit=1024, lambda_=1e-1, z_dim=128, g_lr=2e-4, d_lr=2e-4,
-                 detect=False, use_label=False):
+    def __init__(
+        self,
+        s,
+        batch_size=16,
+        height=64,
+        width=64,
+        channel=3,
+        n_classes=41,
+        sample_num=1,
+        sample_size=1,
+        df_dim=64,
+        gf_dim=64,
+        fc_unit=1024,
+        lambda_=1e-1,
+        z_dim=128,
+        g_lr=2e-4,
+        d_lr=2e-4,
+        detect=False,
+        use_label=False,
+    ):
 
         """
         # General Settings
@@ -58,8 +73,8 @@ class AnoGAN:
 
         self.lambda_ = lambda_
         self.z_dim = z_dim
-        self.beta1 = .5
-        self.beta2 = .9
+        self.beta1 = 0.5
+        self.beta2 = 0.9
         self.d_lr = d_lr
         self.g_lr = g_lr
 
@@ -67,12 +82,12 @@ class AnoGAN:
         self.use_label = use_label
 
         # pre-defined
-        self.d_fake_loss = 0.
-        self.d_real_loss = 0.
-        self.d_loss = 0.
-        self.g_loss = 0.
-        self.r_loss = 0.
-        self.ano_loss = 0.
+        self.d_fake_loss = 0.0
+        self.d_real_loss = 0.0
+        self.d_loss = 0.0
+        self.g_loss = 0.0
+        self.r_loss = 0.0
+        self.ano_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -86,9 +101,9 @@ class AnoGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32,
-                                shape=[None, self.height, self.width, self.channel],
-                                name="x-image")  # (-1, 64, 64, 3)
+        self.x = tf.placeholder(
+            tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
+        )  # (-1, 64, 64, 3)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
         if self.use_label:
             self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='y-label')  # (-1, 41)
@@ -164,22 +179,22 @@ class AnoGAN:
         d_params = [v for v in t_vars if v.name.startswith('disc')]
         g_params = [v for v in t_vars if v.name.startswith('gen')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
-                                                                                        var_list=d_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            loss=self.d_loss, var_list=d_params
+        )
 
         if self.detect:
             self.d_loss = t.l1_loss(d_fake_fm, d_real_fm)  # disc     loss
             self.r_loss = t.l1_loss(self.x, self.g)  # residual loss
-            self.ano_loss = (1. - self.lambda_) * self.r_loss + self.lambda_ * self.d_loss
+            self.ano_loss = (1.0 - self.lambda_) * self.r_loss + self.lambda_ * self.d_loss
 
             tf.summary.scalar("loss/d_loss", self.d_loss)
             tf.summary.scalar("loss/r_loss", self.r_loss)
             tf.summary.scalar("loss/ano_loss", self.ano_loss)
 
-            self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                                 beta1=self.beta1, beta2=self.beta2).minimize(loss=self.ano_loss,
-                                                                                              var_list=g_params)
+            self.ano_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+                loss=self.ano_loss, var_list=g_params
+            )
         else:
             self.d_real_loss = t.sce_loss(d_real, tf.ones_like(d_real))
             self.d_fake_loss = t.sce_loss(d_fake, tf.zeros_like(d_fake))
@@ -192,9 +207,9 @@ class AnoGAN:
             tf.summary.scalar("loss/d_loss", self.d_loss)
             tf.summary.scalar("loss/g_loss", self.r_loss)
 
-            self.g_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                               beta1=self.beta1, beta2=self.beta2).minimize(loss=self.d_loss,
-                                                                                            var_list=d_params)
+            self.g_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+                loss=self.d_loss, var_list=d_params
+            )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

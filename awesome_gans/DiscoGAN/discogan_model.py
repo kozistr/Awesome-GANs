@@ -8,10 +8,23 @@ np.random.seed(777)
 
 
 class DiscoGAN:
-
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3,
-                 sample_size=32, sample_num=64, z_dim=128, gf_dim=32, df_dim=32,
-                 learning_rate=2e-4, beta1=0.5, beta2=0.999, eps=1e-9):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        sample_size=32,
+        sample_num=64,
+        z_dim=128,
+        gf_dim=32,
+        df_dim=32,
+        learning_rate=2e-4,
+        beta1=0.5,
+        beta2=0.999,
+        eps=1e-9,
+    ):
 
         self.s = s
         self.batch_size = batch_size
@@ -75,14 +88,8 @@ class DiscoGAN:
             return x
 
     def build_discogan(self):
-        self.A = tf.placeholder(tf.float32, shape=[None,
-                                                   self.height,
-                                                   self.width,
-                                                   self.channel], name='trainA')
-        self.B = tf.placeholder(tf.float32, shape=[None,
-                                                   self.height,
-                                                   self.width,
-                                                   self.channel], name='trainA')
+        self.A = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='trainA')
+        self.B = tf.placeholder(tf.float32, shape=[None, self.height, self.width, self.channel], name='trainA')
         # generator
         # s : shoes, b : bags, 2 : to
         self.G_AB = self.generator(self.A, "generator_AB")
@@ -116,21 +123,25 @@ class DiscoGAN:
         # self.g_loss = 10 * (self.s_loss + self.b_loss) + self.g_shoes_loss + self.g_bags_loss
         # self.d_loss = self.d_shoes_loss + self.d_bags_loss
         # sigmoid cross entropy loss
-        self.g_s_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_fake,
-                                                                               labels=tf.ones_like(self.D_s_fake)))
-        self.g_b_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_fake,
-                                                                               labels=tf.ones_like(self.D_b_fake)))
+        self.g_s_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_fake, labels=tf.ones_like(self.D_s_fake))
+        )
+        self.g_b_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_fake, labels=tf.ones_like(self.D_b_fake))
+        )
 
-        self.d_s_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_real,
-                                                                                    labels=tf.ones_like(self.D_s_real)))
-        self.d_b_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_real,
-                                                                                    labels=tf.ones_like(self.D_b_real)))
-        self.d_s_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_fake,
-                                                                                    labels=tf.zeros_like(
-                                                                                        self.D_s_fake)))
-        self.d_b_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_fake,
-                                                                                    labels=tf.zeros_like(
-                                                                                        self.D_b_fake)))
+        self.d_s_real_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_real, labels=tf.ones_like(self.D_s_real))
+        )
+        self.d_b_real_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_real, labels=tf.ones_like(self.D_b_real))
+        )
+        self.d_s_fake_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_fake, labels=tf.zeros_like(self.D_s_fake))
+        )
+        self.d_b_fake_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_fake, labels=tf.zeros_like(self.D_b_fake))
+        )
 
         self.g_loss = (self.s_loss + self.g_s_loss) + (self.b_loss + self.g_b_loss)
 
@@ -156,10 +167,12 @@ class DiscoGAN:
         self.saver = tf.train.Saver()
 
         # train op
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2). \
-            minimize(self.g_loss, var_list=self.g_vars)
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2). \
-            minimize(self.d_loss, var_list=self.d_vars)
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2).minimize(
+            self.g_loss, var_list=self.g_vars
+        )
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2).minimize(
+            self.d_loss, var_list=self.d_vars
+        )
 
         # merge summary
         self.g_sum = tf.summary.merge([self.g_loss_sum, self.g_shoes_sum, self.g_bags_sum])

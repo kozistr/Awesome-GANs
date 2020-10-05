@@ -29,19 +29,28 @@ def main():
     config.gpu_options.allow_growth = True
 
     idx = 1
-    divergences = ['GAN', 'KL', 'Reverse-KL', 'JS',
-                   'JS-Weighted', 'Squared-Hellinger', 'Pearson', 'Neyman',
-                   'Jeffrey', 'Total-Variation']
-    assert (0 <= idx < len(divergences))
+    divergences = [
+        'GAN',
+        'KL',
+        'Reverse-KL',
+        'JS',
+        'JS-Weighted',
+        'Squared-Hellinger',
+        'Pearson',
+        'Neyman',
+        'Jeffrey',
+        'Total-Variation',
+    ]
+    assert 0 <= idx < len(divergences)
 
     results['output'] += '%s/' % divergences[idx]
     results['model'] += '%s/fGAN-model.ckpt' % divergences[idx]
 
     with tf.Session(config=config) as s:
         # f-GAN model
-        model = fgan.FGAN(s, batch_size=train_step['batch_size'],
-                          divergence_method=divergences[idx],
-                          use_tricky_g_loss=True)
+        model = fgan.FGAN(
+            s, batch_size=train_step['batch_size'], divergence_method=divergences[idx], use_tricky_g_loss=True
+        )
 
         # Initializing variables
         s.run(tf.global_variables_initializer())
@@ -61,40 +70,27 @@ def main():
 
         for global_step in range(saved_global_step, train_step['global_steps']):
             batch_x, _ = mnist.train.next_batch(model.batch_size)
-            batch_z = np.random.uniform(-1., 1., [model.batch_size, model.z_dim]).astype(np.float32)
+            batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
             # Update D network
-            _, d_loss = s.run([model.d_op, model.d_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                              })
+            _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
             # Update G network
-            _, g_loss = s.run([model.g_op, model.g_loss],
-                              feed_dict={
-                                  model.x: batch_x,
-                                  model.z: batch_z,
-                              })
+            _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
 
             if global_step % train_step['logging_interval'] == 0:
-                summary = s.run(model.merged,
-                                feed_dict={
-                                    model.x: batch_x,
-                                    model.z: batch_z,
-                                })
+                summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z,})
 
                 # Print loss
-                print("[+] Global step %06d => " % global_step,
-                      " D loss : {:.8f}".format(d_loss),
-                      " G loss : {:.8f}".format(g_loss))
+                print(
+                    "[+] Global step %06d => " % global_step,
+                    " D loss : {:.8f}".format(d_loss),
+                    " G loss : {:.8f}".format(g_loss),
+                )
 
                 # Training G model with sample image and noise
-                sample_z = np.random.uniform(-1., 1., [model.sample_num, model.z_dim])
-                samples = s.run(model.g,
-                                feed_dict={
-                                    model.z: sample_z,
-                                })
+                sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim])
+                samples = s.run(model.g, feed_dict={model.z: sample_z,})
                 samples = np.reshape(samples, (-1, 28, 28, 1))
 
                 # Summary saver
@@ -106,10 +102,9 @@ def main():
                 sample_dir = results['output'] + 'train_{0}.png'.format(global_step)
 
                 # Generated image save
-                iu.save_images(samples,
-                               size=[sample_image_height, sample_image_width],
-                               image_path=sample_dir,
-                               inv_type='255')
+                iu.save_images(
+                    samples, size=[sample_image_height, sample_image_width], image_path=sample_dir, inv_type='255'
+                )
 
                 # Model save
                 model.saver.save(s, results['model'], global_step)

@@ -13,12 +13,17 @@ def conv2d(x, f=64, k=5, d=2, pad='SAME', name='conv2d'):
     :param name: scope name, default conv2d
     :return: covn2d net
     """
-    return tf.layers.conv2d(x,
-                            filters=f, kernel_size=k, strides=d,
-                            kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                            kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                            bias_initializer=tf.zeros_initializer(),
-                            padding=pad, name=name)
+    return tf.layers.conv2d(
+        x,
+        filters=f,
+        kernel_size=k,
+        strides=d,
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+        bias_initializer=tf.zeros_initializer(),
+        padding=pad,
+        name=name,
+    )
 
 
 def deconv2d(x, f=64, k=5, d=2, pad='SAME', name='deconv2d'):
@@ -31,32 +36,45 @@ def deconv2d(x, f=64, k=5, d=2, pad='SAME', name='deconv2d'):
     :param name: scope name, default deconv2d
     :return: decovn2d net
     """
-    return tf.layers.conv2d_transpose(x,
-                                      filters=f, kernel_size=k, strides=d,
-                                      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
-                                      bias_initializer=tf.zeros_initializer(),
-                                      padding=pad, name=name)
+    return tf.layers.conv2d_transpose(
+        x,
+        filters=f,
+        kernel_size=k,
+        strides=d,
+        kernel_initializer=tf.contrib.layers.variance_scaling_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(5e-4),
+        bias_initializer=tf.zeros_initializer(),
+        padding=pad,
+        name=name,
+    )
 
 
 def batch_norm(x, momentum=0.9, eps=1e-5):
-    return tf.layers.batch_normalization(inputs=x,
-                                         momentum=momentum,
-                                         epsilon=eps,
-                                         scale=True,
-                                         training=True)
+    return tf.layers.batch_normalization(inputs=x, momentum=momentum, epsilon=eps, scale=True, training=True)
 
 
 def gaussian_noise(x, std=5e-2):
-    noise = tf.random_normal(x.get_shape(), mean=0., stddev=std, dtype=tf.float32)
+    noise = tf.random_normal(x.get_shape(), mean=0.0, stddev=std, dtype=tf.float32)
     return x + noise
 
 
 class SGAN:
-
-    def __init__(self, s, batch_size=64, input_height=28, input_width=28, input_channel=1,
-                 n_classes=10, n_input=784, sample_size=8, sample_num=64,
-                 z_dim=128, gf_dim=128, df_dim=96, fc_unit=256):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        input_height=28,
+        input_width=28,
+        input_channel=1,
+        n_classes=10,
+        n_input=784,
+        sample_size=8,
+        sample_num=64,
+        z_dim=128,
+        gf_dim=128,
+        df_dim=96,
+        fc_unit=256,
+    ):
 
         """
         # General Settings
@@ -111,14 +129,14 @@ class SGAN:
         self.beta2 = 0.9
         self.lr = 2e-4
 
-        self.d_1_loss = 0.
-        self.d_0_loss = 0.
-        self.g_1_loss = 0.
-        self.g_0_loss = 0.
+        self.d_1_loss = 0.0
+        self.d_0_loss = 0.0
+        self.g_1_loss = 0.0
+        self.g_0_loss = 0.0
 
-        self.d_w_loss = 1.  # weight for adversarial loss
-        self.c_w_loss = 1.  # weight for conditional loss
-        self.e_w_loss = 10.  # weight for entropy loss
+        self.d_w_loss = 1.0  # weight for adversarial loss
+        self.c_w_loss = 1.0  # weight for conditional loss
+        self.e_w_loss = 10.0  # weight for entropy loss
 
         # pre-defined
         self.g_0 = None
@@ -268,31 +286,36 @@ class SGAN:
 
         # Losses
         # Discriminator 1
-        d_1_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_real,
-                                                                               labels=tf.ones_like(d_1_real)))
-        d_1_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake,
-                                                                               labels=tf.zeros_like(d_1_fake)))
+        d_1_real_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_real, labels=tf.ones_like(d_1_real))
+        )
+        d_1_fake_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake, labels=tf.zeros_like(d_1_fake))
+        )
         g_1_ent = tf.reduce_mean(tf.square(d_1_fake_z_prob - self.z_2))
         self.d_1_loss = 0.5 * self.d_w_loss * (d_1_real_loss + d_1_fake_loss) + self.e_w_loss * g_1_ent
 
         # Discriminator 0
-        d_0_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_real,
-                                                                               labels=tf.ones_like(d_0_real)))
-        d_0_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake,
-                                                                               labels=tf.zeros_like(d_0_fake)))
+        d_0_real_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_real, labels=tf.ones_like(d_0_real))
+        )
+        d_0_fake_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake, labels=tf.zeros_like(d_0_fake))
+        )
         g_0_ent = tf.reduce_mean(tf.square(d_0_fake_z_prob - self.z_1))
         self.d_0_loss = 0.5 * self.d_w_loss * (d_0_real_loss + d_0_fake_loss) + self.e_w_loss * g_0_ent
 
         # Generator 1
-        g_1_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake,
-                                                                              labels=tf.ones_like(d_1_fake)))
-        g_1_cond_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=enc_real_c,
-                                                                               labels=self.y))
+        g_1_adv_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_1_fake, labels=tf.ones_like(d_1_fake))
+        )
+        g_1_cond_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=enc_real_c, labels=self.y))
         self.g_1_loss = self.d_w_loss * g_1_adv_loss + self.c_w_loss * g_1_cond_loss + self.e_w_loss * g_1_ent
 
         # Generator 0
-        g_0_adv_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake,
-                                                                              labels=tf.ones_like(d_0_fake)))
+        g_0_adv_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_0_fake, labels=tf.ones_like(d_0_fake))
+        )
         g_0_cond_loss = tf.reduce_mean(tf.square(enc_fake_f_prob - enc_real_f_prob))
         self.g_0_loss = self.d_w_loss * g_0_adv_loss + self.c_w_loss * g_0_cond_loss + self.e_w_loss * g_0_ent
 
@@ -310,14 +333,18 @@ class SGAN:
         g_0_params = [v for v in t_vars if v.name.startswith('generator_0')]
 
         # Optimizer
-        self.d_1_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                             beta1=self.beta1).minimize(self.d_1_loss, var_list=d_1_params)
-        self.d_0_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                             beta1=self.beta1).minimize(self.d_0_loss, var_list=d_0_params)
-        self.g_1_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                             beta1=self.beta1).minimize(self.g_1_loss, var_list=g_1_params)
-        self.g_0_op = tf.train.AdamOptimizer(learning_rate=self.lr,
-                                             beta1=self.beta1).minimize(self.g_0_loss, var_list=g_0_params)
+        self.d_1_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_1_loss, var_list=d_1_params
+        )
+        self.d_0_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.d_0_loss, var_list=d_0_params
+        )
+        self.g_1_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_1_loss, var_list=g_1_params
+        )
+        self.g_0_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(
+            self.g_0_loss, var_list=g_0_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()

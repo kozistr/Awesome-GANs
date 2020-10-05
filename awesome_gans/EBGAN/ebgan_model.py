@@ -6,7 +6,6 @@ tf.set_random_seed(777)  # reproducibility
 
 
 class EBGAN:
-
     @staticmethod
     def pullaway_loss(x, n):
         # PullAway Loss # 2.4 Repelling Regularizer in 1609.03126.pdf
@@ -14,10 +13,23 @@ class EBGAN:
         similarity = tf.matmul(normalized, normalized, transpose_b=True)
         return (tf.reduce_sum(similarity) - n) / (n * (n - 1))
 
-    def __init__(self, s, batch_size=64, height=64, width=64, channel=3, n_classes=41,
-                 sample_num=4 * 4, sample_size=4,
-                 df_dim=64, gf_dim=64, z_dim=128, g_lr=2e-4, d_lr=2e-4,
-                 enable_pull_away=True):
+    def __init__(
+        self,
+        s,
+        batch_size=64,
+        height=64,
+        width=64,
+        channel=3,
+        n_classes=41,
+        sample_num=4 * 4,
+        sample_size=4,
+        df_dim=64,
+        gf_dim=64,
+        z_dim=128,
+        g_lr=2e-4,
+        d_lr=2e-4,
+        enable_pull_away=True,
+    ):
         """
         # General Settings
         :param s: TF Session
@@ -66,11 +78,11 @@ class EBGAN:
 
         # 1 is enough. But in case of the large batch, it needs value more than 1.
         # 20 for CelebA, 80 for LSUN
-        self.margin = 20.  # max(1., self.batch_size / 64.)
+        self.margin = 20.0  # max(1., self.batch_size / 64.)
 
-        self.g_loss = 0.
-        self.d_loss = 0.
-        self.pt_loss = 0.
+        self.g_loss = 0.0
+        self.d_loss = 0.0
+        self.pt_loss = 0.0
 
         self.g = None
         self.g_test = None
@@ -185,7 +197,7 @@ class EBGAN:
 
         d_real_loss = t.mse_loss(d_decode_real, self.x, self.batch_size)
         d_fake_loss = t.mse_loss(d_decode_fake, self.g, self.batch_size)
-        self.d_loss = d_real_loss + tf.maximum(0., self.margin - d_fake_loss)
+        self.d_loss = d_real_loss + tf.maximum(0.0, self.margin - d_fake_loss)
 
         if self.EnablePullAway:
             self.pt_loss = self.pullaway_loss(d_embed_fake, self.batch_size)
@@ -204,10 +216,12 @@ class EBGAN:
         d_params = [v for v in t_vars if v.name.startswith('d')]
         g_params = [v for v in t_vars if v.name.startswith('g')]
 
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_params)
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr,
-                                           beta1=self.beta1, beta2=self.beta2).minimize(self.g_loss, var_list=g_params)
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.d_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.d_loss, var_list=d_params
+        )
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.g_lr, beta1=self.beta1, beta2=self.beta2).minimize(
+            self.g_loss, var_list=g_params
+        )
 
         # Merge summary
         self.merged = tf.summary.merge_all()
