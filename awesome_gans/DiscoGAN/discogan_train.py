@@ -1,19 +1,16 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
+import sys
+import time
 
 import tensorflow as tf
+
+import awesome_gans.discogan.discogan_model as discogan
+import awesome_gans.image_utils as iu
+from awesome_gans.datasets import Pix2PixDataSet as DataSets
+
 # import numpy as np
 
-import time
-import discogan
 
-import sys
 sys.path.insert(0, '../')
-
-import image_utils as iu
-from datasets import Pix2PixDataSet as DataSets
-
 
 results = {
     'sample_output': './gen_img/',

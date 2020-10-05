@@ -1,7 +1,7 @@
-import tensorflow as tf
 import numpy as np
-import tfutil as t
+import tensorflow as tf
 
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)
 np.random.seed(777)
@@ -126,9 +126,11 @@ class DiscoGAN:
         self.d_b_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_real,
                                                                                     labels=tf.ones_like(self.D_b_real)))
         self.d_s_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_s_fake,
-                                                                                    labels=tf.zeros_like(self.D_s_fake)))
+                                                                                    labels=tf.zeros_like(
+                                                                                        self.D_s_fake)))
         self.d_b_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.D_b_fake,
-                                                                                    labels=tf.zeros_like(self.D_b_fake)))
+                                                                                    labels=tf.zeros_like(
+                                                                                        self.D_b_fake)))
 
         self.g_loss = (self.s_loss + self.g_s_loss) + (self.b_loss + self.g_b_loss)
 
@@ -154,9 +156,9 @@ class DiscoGAN:
         self.saver = tf.train.Saver()
 
         # train op
-        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2).\
+        self.g_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2). \
             minimize(self.g_loss, var_list=self.g_vars)
-        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2).\
+        self.d_op = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.mm1, beta2=self.mm2). \
             minimize(self.d_loss, var_list=self.d_vars)
 
         # merge summary
