@@ -75,6 +75,7 @@ Supporting datasets are... (code is in `/awesome_gans/datasets.py`)
 │        ├── image_utils.py    (image processing)
 │        └── datasets.py       (DataSet loader)
 ├── CONTRIBUTING.md
+├── Makefile (for code linting)
 ├── LICENSE
 ├── README.md
 └── requirements.txt
