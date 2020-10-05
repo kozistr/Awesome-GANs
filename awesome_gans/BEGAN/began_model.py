@@ -1,10 +1,7 @@
-import tensorflow as tf
 import numpy as np
-import sys
+import tensorflow as tf
 
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -222,7 +219,7 @@ class BEGAN:
         self.m_global = d_real_loss + tf.abs(self.balance)
 
         # k_t update
-        self.k_update = tf.assign(self.k,  tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
+        self.k_update = tf.assign(self.k, tf.clip_by_value(self.k + self.lambda_k * self.balance, 0, 1))
 
         # Summary
         tf.summary.scalar("loss/d_loss", self.d_loss)
