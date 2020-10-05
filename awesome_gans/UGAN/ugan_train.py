@@ -1,20 +1,12 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import ugan_model as ugan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-from datasets import DataIterator
-from datasets import CiFarDataSet as DataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.ugan.ugan_model as ugan
+from awesome_gans.datasets import CiFarDataSet as DataSet
+from awesome_gans.datasets import DataIterator
 
 results = {
     'output': './gen_img/',
