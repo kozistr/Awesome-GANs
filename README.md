@@ -9,6 +9,8 @@ Tensorflow implementation of GANs (Generative Adversarial Networks)
 
 ## **WIP** : This repo is about to be refactored & supporting `tf 2.x`.
 
+Maybe some of the codes wouldn't work on master branch, because i'm just working on the branch.
+
 ## Environments
 
 Because of the image and model size, (especially **BEGAN**, **SRGAN**, **StarGAN**, ... using high resolution images as input),
