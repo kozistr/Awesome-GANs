@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -14,7 +10,6 @@ class LSGAN:
     def __init__(self, s, batch_size=64, height=32, width=32, channel=3, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  df_dim=64, gf_dim=64, fc_unit=1024, z_dim=128, lr=2e-4):
-
         """
         # General Settings
         :param s: TF Session
@@ -109,11 +104,11 @@ class LSGAN:
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-1')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 2, 5, 2, name='gen-deconv2d-1')
+            x = t.deconv2d(x, self.gf_dim * 2, 5, 2, name='gen-deconv2d-1')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-2')
             x = tf.nn.relu(x)
 
-            x = t.deconv2d(x,  self.gf_dim * 1, 5, 2, name='gen-deconv2d-2')
+            x = t.deconv2d(x, self.gf_dim * 1, 5, 2, name='gen-deconv2d-2')
             x = t.batch_norm(x, is_train=is_train, name='gen-bn-3')
             x = tf.nn.relu(x)
 
