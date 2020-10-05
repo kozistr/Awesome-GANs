@@ -1,10 +1,7 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
+import awesome_gans.tfutil as t
 
 np.random.seed(777)
 tf.set_random_seed(777)  # reproducibility
