@@ -1,13 +1,10 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
 import os
+from glob import glob
+
 import h5py
 import numpy as np
-from glob import glob
-from tqdm import tqdm
 from scipy.misc import imread, imresize
+from tqdm import tqdm
 
 '''
 This dataset is for Celeb-A
@@ -121,7 +118,7 @@ class CelebADataSet:
         elif self.input_height == 64:
             self.ds_name = 'celeb-a-64x64-h5'
 
-        self.labels = self.load_attr()    # selected attributes info (list)
+        self.labels = self.load_attr()  # selected attributes info (list)
 
         if mode == 'w':
             self.files = glob(os.path.join(DataSets['celeb-a'], "*.jpg"))

@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -74,9 +70,9 @@ class StarGAN:
         self.d_lr = d_lr
         self.g_lr = g_lr
 
-        self.lambda_cls = 1.   #
+        self.lambda_cls = 1.  #
         self.lambda_rec = 10.  #
-        self.lambda_gp = .25   # gradient penalty
+        self.lambda_gp = .25  # gradient penalty
 
         # Training Setting
         self.beta1 = 0.5
@@ -199,7 +195,7 @@ class StarGAN:
 
         # Discriminator
         d_src_real_b, d_aux_real_b = self.discriminator(x_img_b)
-        g_src_fake_b, g_aux_fake_b = self.discriminator(self.fake_B, reuse=True)    # used at updating G net
+        g_src_fake_b, g_aux_fake_b = self.discriminator(self.fake_B, reuse=True)  # used at updating G net
         d_src_fake_b, d_aux_fake_b = self.discriminator(self.fake_x_B, reuse=True)  # used at updating D net
 
         # using WGAN-GP losses

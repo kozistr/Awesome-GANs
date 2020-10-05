@@ -1,19 +1,11 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import stargan_model as stargan
-from dataset import CelebADataSet as DataSet
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-
+import awesome_gans.image_utils as iu
+import awesome_gans.stargan.stargan_model as stargan
+from awesome_gans.stargan.dataset import CelebADataSet as DataSet
 
 results = {
     'output': './gen_img/',
@@ -127,7 +119,7 @@ def main():
                                           model.fake_x_B: fake_b,
                                           model.lr_decay: lr_decay,
                                           model.epsilon: eps,
-                                    })
+                                      })
 
                 # Update G network - 1 time
                 _, g_loss = s.run([model.g_op, model.g_loss],
