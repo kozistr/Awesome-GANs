@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 tf.set_random_seed(777)
 
 
@@ -117,8 +116,8 @@ class SGAN:
         self.g_1_loss = 0.
         self.g_0_loss = 0.
 
-        self.d_w_loss = 1.   # weight for adversarial loss
-        self.c_w_loss = 1.   # weight for conditional loss
+        self.d_w_loss = 1.  # weight for adversarial loss
+        self.c_w_loss = 1.  # weight for conditional loss
         self.e_w_loss = 10.  # weight for entropy loss
 
         # pre-defined
@@ -254,7 +253,7 @@ class SGAN:
 
     def bulid_sgan(self):
         # Generator
-        self.g_1 = self.generator_1(self.z_2, self.y)    # embeddings
+        self.g_1 = self.generator_1(self.z_2, self.y)  # embeddings
         self.g_0 = self.generator_0(self.z_1, self.g_1)  # generated image
 
         # Encoder
