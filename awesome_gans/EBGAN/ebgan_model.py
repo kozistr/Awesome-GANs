@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -22,7 +18,6 @@ class EBGAN:
                  sample_num=4 * 4, sample_size=4,
                  df_dim=64, gf_dim=64, z_dim=128, g_lr=2e-4, d_lr=2e-4,
                  enable_pull_away=True):
-
         """
         # General Settings
         :param s: TF Session
@@ -89,7 +84,7 @@ class EBGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")    # (-1, 64, 64, 3)
+        self.x = tf.placeholder(tf.float32, shape=self.image_shape, name="x-image")  # (-1, 64, 64, 3)
         self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 128)
 
         self.build_ebgan()  # build EBGAN model
