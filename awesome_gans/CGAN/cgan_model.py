@@ -1,10 +1,6 @@
 import tensorflow as tf
 
-import sys
-
-sys.path.append('../')
-import tfutil as t
-
+import awesome_gans.tfutil as t
 
 tf.set_random_seed(777)
 
@@ -14,7 +10,6 @@ class CGAN:
     def __init__(self, s, batch_size=32, height=28, width=28, channel=1, n_classes=10,
                  sample_num=10 * 10, sample_size=10,
                  n_input=784, fc_unit=256, z_dim=100, g_lr=8e-4, d_lr=8e-4):
-
         """
         # General Settings
         :param s: TF Session
@@ -72,9 +67,9 @@ class CGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")        # (-1, 784)
+        self.x = tf.placeholder(tf.float32, shape=[None, self.n_input], name="x-image")  # (-1, 784)
         self.c = tf.placeholder(tf.float32, shape=[None, self.n_classes], name='c-condition')  # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')          # (-1, 100)
+        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name='z-noise')  # (-1, 100)
         self.do_rate = tf.placeholder(tf.float32, shape=[], name='do_rate')
 
         self.build_cgan()  # build CGAN model
