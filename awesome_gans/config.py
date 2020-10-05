@@ -20,6 +20,7 @@ def parse_args():
     # model
     parser.add_argument('--bs', default=64, type=int, help='batch size')
     parser.add_argument('--epochs', default=50, type=int, help='epochs to train')
+    parser.add_argument('--global_steps', default=5e4, type=int, help='iterations to train')
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate for generic somethings')
     parser.add_argument('--d_lr', default=1e-4, type=float, help='learning rate of discriminator')
     parser.add_argument('--g_lr', default=1e-4, type=float, help='learning rate of generator')
@@ -39,6 +40,7 @@ def parse_args():
     parser.add_argument('--device', default='cuda', type=str, help='type of device', choices=['cpu', 'cuda'])
     parser.add_argument('--n_threads', default=8, type=int, help='number of threads')
     parser.add_argument('--seed', default=42, type=int, help='seed for reproducibility')
+    parser.add_argument('--log_interval', default=1000, type=int, help='intervals to log')
     parser.add_argument('--verbose', type=bool, default=True)
 
     return parser.parse_args()

@@ -79,12 +79,12 @@ class ACGAN:
         self.saver = None
 
         # Placeholders
-        self.x = tf.placeholder(
+        self.x = tf.compat.v1.placeholder(
             tf.float32, shape=[None, self.height, self.width, self.channel], name="x-image"
         )  # (-1, 32, 32, 3)
-        self.y = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
-        self.y_rnd = tf.placeholder(tf.float32, shape=[None, self.n_classes], name="y-rnd-label")  # (-1, 10)
-        self.z = tf.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 100)
+        self.y = tf.compat.v1.placeholder(tf.float32, shape=[None, self.n_classes], name="y-label")  # (-1, 10)
+        self.y_rnd = tf.compat.v1.placeholder(tf.float32, shape=[None, self.n_classes], name="y-rnd-label")  # (-1, 10)
+        self.z = tf.compat.v1.placeholder(tf.float32, shape=[None, self.z_dim], name="z-noise")  # (-1, 100)
 
         self.build_acgan()  # build ACGAN model
 
