@@ -1,6 +1,6 @@
 import tensorflow as tf
-import ops
 
+import awesome_gans.segan.ops as ops
 
 tf.set_random_seed(777)  # reproducibility
 
@@ -112,12 +112,10 @@ class SEGAN:
             for idx, f in enumerate(self.num_blocks):
                 x = residual_block(x)
 
-
             return x
 
     def generator(self, z, reuse=False, training=True):
         with tf.variable_scope("generator", reuse=reuse):
-
             return z
 
     def build_segan(self):

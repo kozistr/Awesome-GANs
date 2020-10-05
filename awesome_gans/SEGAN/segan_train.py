@@ -1,20 +1,11 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-
-import tensorflow as tf
-import numpy as np
-
-import sys
 import time
 
-import segan_model as segan
+import numpy as np
+import tensorflow as tf
 
-sys.path.append('../')
-import image_utils as iu
-# from datasets import UrbanSoundDataSet as DataSet
-from datasets import MNISTDataSet
-
+import awesome_gans.image_utils as iu
+import awesome_gans.segan.segan_model as segan
+from awesome_gans.datasets import MNISTDataSet
 
 results = {
     'output': './gen_img/',
