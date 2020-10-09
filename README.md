@@ -106,42 +106,43 @@ Here for the theories & concepts of the GAN.
 
 | *Name* | *Summary* | *Paper* | *Code* |
 | :---: | :---: | :---: | :---: |
-| **ACGAN**        | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN) |
-| **AdaGAN**       | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) | [[~~code~~]]() |
-| **BEGAN**        | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](./BEGAN) |
-| **BGAN**         | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) | [[code]](./BGAN) |
-| **BigGAN**       | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) | [[~~code~~]]() |
-| **CGAN**         | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](./CGAN) |
-| **CoGAN**        | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) | [[code]](./CoGAN) |
-| **DCGAN**        | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](./DCGAN) |
-| **DRAGAN**       | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](./DRAGAN) |
-| **EBGAN**        | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](./EBGAN) |
-| **f-GAN**        | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) | [[code]](./FGAN) |
-| **GP-GAN**       | *Towards Realistic High-Resolution Image Blending* | [[arXiv]](https://arxiv.org/abs/1703.07195) | [[~~code~~]]() |
-| **Softmax GAN**  | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/abs/1704.06191) | [[code]](./GAN) |
-| **GAP**          | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) | [[~~code~~]]() |
-| **GEGAN**        | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) | [[~~code~~]]() |
-| **G-GAN**        | *Geometric GAN* | [[arXiv]](https://arxiv.org/abs/1705.02894) | [[~~code~~]]() | 
-| **InfoGAN**      | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657) | [[code]](./InfoGAN) |
-| **LAPGAN**       | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) | [[code]](./LAPGAN) |
-| **LSGAN**        | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) | [[code]](./LSGAN) |
-| **MAGAN**        | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](./MAGAN) |
-| **MRGAN**        | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) | [[code]](./MRGAN) |
-| **MSGGAN**       | *Multi-Scale Gradients for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1903.06048) | [[~~code~~]]() |
-| **PGGAN**        | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) | [[~~code~~]]() |
-| **RaGAN**        | *The relativistic discriminator: a key element missing from standard GAN* | [[arXiv]](https://arxiv.org/pdf/1807.00734v3.pdf) | [[~~code~~]]() |
-| **SeAtGAN**      | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN) |
-| **SphereGAN**    | *Sphere Generative Adversarial Network Based on Geometric Moment Matching* | [[CVPR2019]](http://cau.ac.kr/~jskwon/paper/SphereGAN_CVPR2019.pdf) | [[~~code~~]]() |
-| **SGAN**         | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN) |
-| **SGAN++**       | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1710.10916) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN) |
-| **SinGAN**       | *Learning a Generative Model from a Single Natural Image* | [[arXiv]](https://arxiv.org/abs/1905.01164) | [[~~code~~]]() |
-| **StableGAN**    | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | [[~~code~~]]() |
-| **StyleGAN**     | *A Style-Based Generator Architecture for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1812.04948) | [[~~code~~]]() |
-| **StyleGAN V2**  | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() |
-| **TripleGAN**    | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) | [[~~code~~]]() |
-| **UGAN**         | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) | [[~~code~~]]() |
-| **WGAN**         | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](./WGAN) |
-| **WGAN-GP**      | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](./WGAN) |
+| **ACGAN**         | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN) |
+| **AdaGAN**        | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) | [[~~code~~]]() |
+| **BEGAN**         | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](./BEGAN) |
+| **BGAN**          | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) | [[code]](./BGAN) |
+| **BigGAN**        | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) | [[~~code~~]]() |
+| **CGAN**          | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](./CGAN) |
+| **CoGAN**         | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) | [[code]](./CoGAN) |
+| **DCGAN**         | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](./DCGAN) |
+| **DRAGAN**        | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](./DRAGAN) |
+| **EBGAN**         | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](./EBGAN) |
+| **f-GAN**         | *Training Generative Neural Samplers using Variational Divergence Minimization* | [[arXiv]](https://arxiv.org/abs/1606.00709) | [[code]](./FGAN) |
+| **GP-GAN**        | *Towards Realistic High-Resolution Image Blending* | [[arXiv]](https://arxiv.org/abs/1703.07195) | [[~~code~~]]() |
+| **Softmax GAN**   | *Generative Adversarial Networks with Softmax* | [[arXiv]](https://arxiv.org/abs/1704.06191) | [[code]](./GAN) |
+| **GAP**           | *Generative Adversarial Parallelization* | [[arXiv]](https://arxiv.org/abs/1612.04021) | [[~~code~~]]() |
+| **GEGAN**         | *Generalization and Equilibrium in Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.00573) | [[~~code~~]]() |
+| **G-GAN**         | *Geometric GAN* | [[arXiv]](https://arxiv.org/abs/1705.02894) | [[~~code~~]]() | 
+| **InfoGAN**       | *Interpretable Representation Learning by Information Maximizing Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.03657) | [[code]](./InfoGAN) |
+| **LAPGAN**        | *Laplacian Pyramid Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1506.05751) | [[code]](./LAPGAN) |
+| **LSGAN**         | *Loss-Sensitive Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.06264) | [[code]](./LSGAN) |
+| **MAGAN**         | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](./MAGAN) |
+| **MRGAN**         | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) | [[code]](./MRGAN) |
+| **MSGGAN**        | *Multi-Scale Gradients for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1903.06048) | [[~~code~~]]() |
+| **PGGAN**         | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) | [[~~code~~]]() |
+| **RaGAN**         | *The relativistic discriminator: a key element missing from standard GAN* | [[arXiv]](https://arxiv.org/pdf/1807.00734v3.pdf) | [[~~code~~]]() |
+| **SeAtGAN**       | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN) |
+| **SphereGAN**     | *Sphere Generative Adversarial Network Based on Geometric Moment Matching* | [[CVPR2019]](http://cau.ac.kr/~jskwon/paper/SphereGAN_CVPR2019.pdf) | [[~~code~~]]() |
+| **SGAN**          | *Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.04357) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN) |
+| **SGAN++**        | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1710.10916) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN) |
+| **SinGAN**        | *Learning a Generative Model from a Single Natural Image* | [[arXiv]](https://arxiv.org/abs/1905.01164) | [[~~code~~]]() |
+| **StableGAN**     | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | [[~~code~~]]() |
+| **StyleGAN**      | *A Style-Based Generator Architecture for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1812.04948) | [[~~code~~]]() |
+| **StyleGAN2**     | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() |
+| **StyleGAN2 ADA** | *StyleGAN2 with adaptive discriminator augmentation* | [[arXiv]](https://arxiv.org/abs/2006.06676) | [[~~code~~]]() |
+| **TripleGAN**     | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) | [[~~code~~]]() |
+| **UGAN**          | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) | [[~~code~~]]() |
+| **WGAN**          | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](./WGAN) |
+| **WGAN-GP**       | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](./WGAN) |
 
 ### Applied Vision
 
