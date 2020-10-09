@@ -108,6 +108,7 @@ Here for the theories & concepts of the GAN.
 | :---: | :---: | :---: | :---: |
 | **ACGAN**         | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN) |
 | **AdaGAN**        | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) | [[~~code~~]]() |
+| **bCR**           | *Improved Consistency Regularization for GANs* | [[arXiv]](https://arxiv.org/abs/2002.04724) | [[~~code~~]]() |
 | **BEGAN**         | *Boundary Equilibrium Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10717) | [[code]](./BEGAN) |
 | **BGAN**          | *Boundary-Seeking Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1702.08431) | [[code]](./BGAN) |
 | **BigGAN**        | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) | [[~~code~~]]() |
