@@ -5,7 +5,7 @@ init:
 	pipenv install --dev
 
 check:
-	isort --recursive --check-only awesome_gans
+	isort --check-only awesome_gans
 	black -S -l 120 --check awesome_gans
 	pylint awesome_gans
 
