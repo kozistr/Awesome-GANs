@@ -10,7 +10,7 @@ check:
 	pylint awesome_gans
 
 format:
-	isort -rc -y awesome_gans
+	isort awesome_gans
 	black -S -l 120 awesome_gans
 
 requirements:
