@@ -440,15 +440,15 @@ def inception_score(images, img_size=(299, 299), n_splits=10):
 
         preds = np.zeros([len(x), n_classes], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size: (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
-            preds[i * batch_size: (i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
+            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            preds[i * batch_size : (i + 1) * batch_size] = logits.eval({inception_images: inp})[:, :n_classes]
         preds = np.exp(preds) / np.sum(np.exp(preds), 1, keepdims=True)
         return preds
 
     def preds2score(preds, splits=10):
         scores = []
         for i in range(splits):
-            part = preds[(i * preds.shape[0] // splits): ((i + 1) * preds.shape[0] // splits), :]
+            part = preds[(i * preds.shape[0] // splits) : ((i + 1) * preds.shape[0] // splits), :]
             kl = part * (np.log(part) - np.log(np.expand_dims(np.mean(part, axis=0), axis=0)))
             kl = np.mean(np.sum(kl, axis=1))
             scores.append(np.exp(kl))
@@ -496,14 +496,14 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
 
         acts = np.zeros([len(x), feats], dtype=np.float32)
         for i in range(n_batches):
-            inp = x[i * batch_size: (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
-            acts[i * batch_size: (i + 1) * batch_size] = activations.eval({inception_images: inp})
+            inp = x[i * batch_size : (i + 1) * batch_size] / 255.0 * 2 - 1.0  # scaled into [-1, 1]
+            acts[i * batch_size : (i + 1) * batch_size] = activations.eval({inception_images: inp})
         acts = np.exp(acts) / np.sum(np.exp(acts), 1, keepdims=True)
         return acts
 
     def get_fid(real, fake):
         return tf.contrib.gan.eval.frechet_classifier_distance_from_activations(real_acts, fake_acts).eval(
-            feed_dict={real_acts: real, fake_acts: fake, }
+            feed_dict={real_acts: real, fake_acts: fake,}
         )
 
     real_img_acts = get_inception_activations(real_img)

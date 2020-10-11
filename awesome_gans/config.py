@@ -5,6 +5,9 @@ def parse_args():
     parser = ArgumentParser(description='Awesome-GANs Arguments')
 
     # dataset
+    parser.add_argument('--width', type=int, default=64, help='width of image')
+    parser.add_argument('--height', type=int, default=64, help='height of image')
+    parser.add_argument('--n_channels', type=int, default=3, help='number of channel of image')
     parser.add_argument('--root_path', type=str, default='./', help='root path')
     parser.add_argument('--mnist_path', type=str, default='mnist')
     parser.add_argument('--fashion_mnist_path', type=str, default='fashion-mnist')
@@ -16,24 +19,6 @@ def parse_args():
     parser.add_argument('--pix2pix_path', type=str, default='pix2pix')
     parser.add_argument('--model_path', type=str, default='model')
     parser.add_argument('--output_path', type=str, default='outputs')
-
-    # model
-    parser.add_argument('--bs', default=64, type=int, help='batch size')
-    parser.add_argument('--epochs', default=50, type=int, help='epochs to train')
-    parser.add_argument('--global_steps', default=5e4, type=int, help='iterations to train')
-    parser.add_argument('--lr', default=1e-4, type=float, help='learning rate for generic somethings')
-    parser.add_argument('--d_lr', default=1e-4, type=float, help='learning rate of discriminator')
-    parser.add_argument('--g_lr', default=1e-4, type=float, help='learning rate of generator')
-    parser.add_argument('--c_lr', default=1e-4, type=float, help='learning rate of classifier')
-    parser.add_argument('--optimizer', default='adam', type=str, choices=['adam', 'sgd'], help='optimizer for generic')
-    parser.add_argument('--d_optimizer', default='adam', type=str, choices=['adam', 'sgd'], help='disc optimizer')
-    parser.add_argument('--g_optimizer', default='adam', type=str, choices=['adam', 'sgd'], help='gen optimizer')
-    parser.add_argument('--c_optimizer', default='adam', type=str, choices=['adam', 'sgd'], help='cls optimizer')
-    parser.add_argument('--loss', default='bce', type=str, choices=['bce', 'cce', 'l1', 'l2'])
-    parser.add_argument(
-        '--gan_loss', default='gan', type=str,
-        choices=['gan', 'lsgan', 'ragan', 'wgan', 'wgan-gp', 'hinge', 'spheregan']
-    )
 
     # misc
     parser.add_argument('--mode', default='train', type=str, choices=['train', 'inference'])
