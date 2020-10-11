@@ -136,7 +136,7 @@ class CycleGAN:
             return logits
 
     def generator(self, x, reuse=None, name=""):
-        """ The form of Auto-Encoder
+        """The form of Auto-Encoder
         :param x: 128x128x3 images
         :param reuse: re-usability
         :param name: name

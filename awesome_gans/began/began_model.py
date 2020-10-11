@@ -129,8 +129,8 @@ class BEGAN:
 
                 if i < repeat:
                     """
-                        You can choose one of them. max-pool or avg-pool or conv-pool.
-                        Speed Order : conv-pool > avg-pool > max-pool. i guess :)
+                    You can choose one of them. max-pool or avg-pool or conv-pool.
+                    Speed Order : conv-pool > avg-pool > max-pool. i guess :)
                     """
                     x = t.conv2d(x, f, 3, 2, name='enc-conv2d-pool-%d' % i)  # conv pooling
                     x = tf.nn.elu(x)

@@ -111,17 +111,34 @@ def main():
 
                 # Update D network
                 _, d_loss = s.run(
-                    [model.d_op, model.d_loss], feed_dict={model.c: batch_c, model.x: batch_x, model.z: batch_z,}
+                    [model.d_op, model.d_loss],
+                    feed_dict={
+                        model.c: batch_c,
+                        model.x: batch_x,
+                        model.z: batch_z,
+                    },
                 )
 
                 # Update G network
                 _, g_loss = s.run(
-                    [model.g_op, model.g_loss], feed_dict={model.c: batch_c, model.x: batch_x, model.z: batch_z,}
+                    [model.g_op, model.g_loss],
+                    feed_dict={
+                        model.c: batch_c,
+                        model.x: batch_x,
+                        model.z: batch_z,
+                    },
                 )
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    summary = s.run(model.merged, feed_dict={model.c: batch_c, model.x: batch_x, model.z: batch_z,})
+                    summary = s.run(
+                        model.merged,
+                        feed_dict={
+                            model.c: batch_c,
+                            model.x: batch_x,
+                            model.z: batch_z,
+                        },
+                    )
 
                     # Print loss
                     print(
@@ -141,7 +158,13 @@ def main():
 
                     sample_c = np.concatenate((sample_z_con, sample_z_cat), axis=1)
 
-                    samples = s.run(model.g, feed_dict={model.c: sample_c, model.z: sample_z,})
+                    samples = s.run(
+                        model.g,
+                        feed_dict={
+                            model.c: sample_c,
+                            model.z: sample_z,
+                        },
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)

@@ -85,7 +85,12 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g, feed_dict={model.z: sample_z,})
+                    samples = s.run(
+                        model.g,
+                        feed_dict={
+                            model.z: sample_z,
+                        },
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)

@@ -74,14 +74,31 @@ def main():
                 batch_x = np.reshape(batch_x, (model.batch_size, model.height, model.width, model.channel))
                 batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
-                _, d_loss = s.run([model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.z: batch_z,})
+                _, d_loss = s.run(
+                    [model.d_op, model.d_loss],
+                    feed_dict={
+                        model.x: batch_x,
+                        model.z: batch_z,
+                    },
+                )
 
                 # Update G network
-                _, g_loss = s.run([model.g_op, model.g_loss], feed_dict={model.z: batch_z,})
+                _, g_loss = s.run(
+                    [model.g_op, model.g_loss],
+                    feed_dict={
+                        model.z: batch_z,
+                    },
+                )
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z,})
+                    summary = s.run(
+                        model.merged,
+                        feed_dict={
+                            model.x: batch_x,
+                            model.z: batch_z,
+                        },
+                    )
 
                     # Print loss
                     print(
@@ -92,7 +109,12 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g, feed_dict={model.z: sample_z,})
+                    samples = s.run(
+                        model.g,
+                        feed_dict={
+                            model.z: sample_z,
+                        },
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)

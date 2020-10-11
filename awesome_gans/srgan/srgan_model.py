@@ -22,7 +22,7 @@ class SRGAN:
         use_vgg19=True,
     ):
 
-        """ Super-Resolution GAN Class
+        """Super-Resolution GAN Class
         # General Settings
         :param s: TF Session
         :param batch_size: training batch size, default 16

@@ -56,12 +56,22 @@ def main():
             # Update D network
             _, d_loss = s.run(
                 [model.d_op, model.d_loss],
-                feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,},
+                feed_dict={
+                    model.x: batch_x,
+                    model.c: batch_y,
+                    model.z: batch_z,
+                    model.do_rate: 0.5,
+                },
             )
 
             # Update G network
             _, g_loss = s.run(
-                [model.g_op, model.g_loss], feed_dict={model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,}
+                [model.g_op, model.g_loss],
+                feed_dict={
+                    model.c: batch_y,
+                    model.z: batch_z,
+                    model.do_rate: 0.5,
+                },
             )
 
             # Logging
@@ -71,7 +81,12 @@ def main():
 
                 d_loss, g_loss, summary = s.run(
                     [model.d_loss, model.g_loss, model.merged],
-                    feed_dict={model.x: batch_x, model.c: batch_y, model.z: batch_z, model.do_rate: 0.5,},
+                    feed_dict={
+                        model.x: batch_x,
+                        model.c: batch_y,
+                        model.z: batch_z,
+                        model.do_rate: 0.5,
+                    },
                 )
 
                 # Print Loss
@@ -83,7 +98,14 @@ def main():
 
                 # Training G model with sample image and noise
                 sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                samples = s.run(model.g, feed_dict={model.c: sample_y, model.z: sample_z, model.do_rate: 0.0,})
+                samples = s.run(
+                    model.g,
+                    feed_dict={
+                        model.c: sample_y,
+                        model.z: sample_z,
+                        model.do_rate: 0.0,
+                    },
+                )
 
                 samples = np.reshape(samples, [-1, 28, 28, 1])
 

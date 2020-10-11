@@ -503,7 +503,10 @@ def fid_score(real_img, fake_img, img_size=(299, 299), n_splits=10):
 
     def get_fid(real, fake):
         return tf.contrib.gan.eval.frechet_classifier_distance_from_activations(real_acts, fake_acts).eval(
-            feed_dict={real_acts: real, fake_acts: fake,}
+            feed_dict={
+                real_acts: real,
+                fake_acts: fake,
+            }
         )
 
     real_img_acts = get_inception_activations(real_img)

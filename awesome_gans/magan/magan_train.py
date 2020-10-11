@@ -82,7 +82,12 @@ def main():
                     batch_z = np.random.uniform(-1.0, 1.0, [model.batch_size, model.z_dim]).astype(np.float32)
 
                     _, d_real_loss = s.run(
-                        [model.d_op, model.d_real_loss], feed_dict={model.x: batch_x, model.z: batch_z, model.m: 0.0,}
+                        [model.d_op, model.d_real_loss],
+                        feed_dict={
+                            model.x: batch_x,
+                            model.z: batch_z,
+                            model.m: 0.0,
+                        },
                     )
                     sum_d_loss += d_real_loss
 
@@ -109,7 +114,11 @@ def main():
                 # Update D network
                 _, d_loss, d_real_loss = s.run(
                     [model.d_op, model.d_loss, model.d_real_loss],
-                    feed_dict={model.x: batch_x, model.z: batch_z, model.m: margin,},
+                    feed_dict={
+                        model.x: batch_x,
+                        model.z: batch_z,
+                        model.m: margin,
+                    },
                 )
 
                 # Update D real sample
@@ -118,7 +127,11 @@ def main():
                 # Update G network
                 _, g_loss, d_fake_loss = s.run(
                     [model.g_op, model.g_loss, model.d_fake_loss],
-                    feed_dict={model.x: batch_x, model.z: batch_z, model.m: margin,},
+                    feed_dict={
+                        model.x: batch_x,
+                        model.z: batch_z,
+                        model.m: margin,
+                    },
                 )
 
                 # Update G fake sample
@@ -126,7 +139,14 @@ def main():
 
                 # Logging
                 if global_step % train_step['logging_interval'] == 0:
-                    summary = s.run(model.merged, feed_dict={model.x: batch_x, model.z: batch_z, model.m: margin,})
+                    summary = s.run(
+                        model.merged,
+                        feed_dict={
+                            model.x: batch_x,
+                            model.z: batch_z,
+                            model.m: margin,
+                        },
+                    )
 
                     # Print loss
                     print(
@@ -137,7 +157,13 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g, feed_dict={model.z: sample_z, model.m: margin,})
+                    samples = s.run(
+                        model.g,
+                        feed_dict={
+                            model.z: sample_z,
+                            model.m: margin,
+                        },
+                    )
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)

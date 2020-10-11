@@ -46,13 +46,23 @@ def main():
             if not d_overpowered:
                 _, d_0_loss, _, _ = s.run(
                     [model.d_0_op, model.d_0_loss, model.d_1_op, model.d_1_loss],
-                    feed_dict={model.x: batch_x, model.y: batch_y, model.z_1: batch_z_1, model.z_0: batch_z_0,},
+                    feed_dict={
+                        model.x: batch_x,
+                        model.y: batch_y,
+                        model.z_1: batch_z_1,
+                        model.z_0: batch_z_0,
+                    },
                 )
 
             # Update G network
             _, g_0_loss, _, _ = s.run(
                 [model.g_0_op, model.g_0_loss, model.g_1_op, model.g_1_loss],
-                feed_dict={model.x: batch_x, model.y: batch_y, model.z_1: batch_z_1, model.z_0: batch_z_0,},
+                feed_dict={
+                    model.x: batch_x,
+                    model.y: batch_y,
+                    model.z_1: batch_z_1,
+                    model.z_0: batch_z_0,
+                },
             )
 
             d_overpowered = d_0_loss < g_0_loss / 2
@@ -65,7 +75,12 @@ def main():
 
                 d_0_loss, _, g_0_loss, _, summary = s.run(
                     [model.d_0_loss, model.d_1_loss, model.g_0_loss, model.g_1_loss, model.merged],
-                    feed_dict={model.x: batch_x, model.y: batch_y, model.z_1: batch_z_1, model.z_0: batch_z_0,},
+                    feed_dict={
+                        model.x: batch_x,
+                        model.y: batch_y,
+                        model.z_1: batch_z_1,
+                        model.z_0: batch_z_0,
+                    },
                 )
 
                 d_overpowered = d_0_loss < g_0_loss / 2
@@ -79,7 +94,12 @@ def main():
                 sample_z_0 = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
                 sample_z_1 = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
                 _, samples = s.run(
-                    [model.g_1, model.g_0], feed_dict={model.y: sample_y, model.z_1: sample_z_1, model.z_0: sample_z_0,}
+                    [model.g_1, model.g_0],
+                    feed_dict={
+                        model.y: sample_y,
+                        model.z_1: sample_z_1,
+                        model.z_0: sample_z_0,
+                    },
                 )
 
                 samples = np.reshape(samples, [model.batch_size] + model.image_shape)

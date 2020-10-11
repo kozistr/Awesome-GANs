@@ -155,8 +155,8 @@ class CelebADataSet:
 
     def load_data(self, size, offset=0):
         """
-            From great jupyter notebook by Tim Sainburg:
-            http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
+        From great jupyter notebook by Tim Sainburg:
+        http://github.com/timsainb/Tensorflow-MultiGPU-VAE-GAN
         """
         with h5py.File(DataSets[self.ds_name], 'r') as hf:
             faces = hf['images']
