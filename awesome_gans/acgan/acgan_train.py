@@ -45,7 +45,7 @@ def main():
 
         sample_y = np.zeros(shape=[model.sample_num, model.n_classes])
         for i in range(10):
-            sample_y[10 * i: 10 * (i + 1), i] = 1
+            sample_y[10 * i : 10 * (i + 1), i] = 1
 
         saved_global_step = 0
         ckpt = tf.train.get_checkpoint_state('./model/')
@@ -67,13 +67,13 @@ def main():
 
                 # Update D network
                 _, d_loss = s.run(
-                    [model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z, }
+                    [model.d_op, model.d_loss], feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z,}
                 )
 
                 # Update G/C networks
                 _, g_loss, _, c_loss = s.run(
                     [model.g_op, model.g_loss, model.c_op, model.c_loss],
-                    feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z, },
+                    feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z,},
                 )
 
                 if global_step % train_step['logging_interval'] == 0:
@@ -81,7 +81,7 @@ def main():
 
                     d_loss, g_loss, c_loss, summary = s.run(
                         [model.d_loss, model.g_loss, model.c_loss, model.merged],
-                        feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z, },
+                        feed_dict={model.x: batch_x, model.y: batch_y, model.z: batch_z,},
                     )
 
                     # Print loss
@@ -94,7 +94,7 @@ def main():
 
                     # Training G model with sample image and noise
                     sample_z = np.random.uniform(-1.0, 1.0, [model.sample_num, model.z_dim]).astype(np.float32)
-                    samples = s.run(model.g, feed_dict={model.y: sample_y, model.z: sample_z, })
+                    samples = s.run(model.g, feed_dict={model.y: sample_y, model.z: sample_z,})
 
                     # Summary saver
                     model.writer.add_summary(summary, global_step)
