@@ -17,7 +17,7 @@ from tensorflow.keras.models import Model
 from tqdm import tqdm
 
 from awesome_gans.losses import discriminator_loss, generator_loss
-from awesome_gans.optimizers import build_discriminator_optimizer, build_generator_optimizer
+from awesome_gans.optimizers import build_optimizer
 from awesome_gans.utils import merge_images, save_image
 
 
@@ -36,6 +36,7 @@ class WGAN:
         self.n_channels: int = self.config.n_channels
         self.z_dims: int = self.config.z_dims
         self.n_critics: int = self.config.n_critics
+        self.grad_clip: float = self.config.grad_clip
 
         self.output_path: str = self.config.output_path
         self.verbose: bool = self.config.verbose
@@ -44,8 +45,8 @@ class WGAN:
         self.discriminator: tf.keras.Model = self.build_discriminator()
         self.generator: tf.keras.Model = self.build_generator()
 
-        self.d_opt: tf.keras.optimizers = build_discriminator_optimizer(config)
-        self.g_opt: tf.keras.optimizers = build_generator_optimizer(config)
+        self.d_opt: tf.keras.optimizers = build_optimizer(config, config.d_opt)
+        self.g_opt: tf.keras.optimizers = build_optimizer(config, config.g_opt)
 
         if self.verbose:
             self.discriminator.summary()
@@ -113,6 +114,9 @@ class WGAN:
 
         gradient = gt.gradient(g_loss, self.generator.trainable_variables)
         self.g_opt.apply_gradients(zip(gradient, self.generator.trainable_variables))
+
+        for var in self.discriminator.trainable_variables:
+            var.assign(tf.clip_by_value(var, -self.grad_clip, self.grad_clip))
 
         return g_loss
 
