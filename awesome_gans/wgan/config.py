@@ -20,8 +20,8 @@ def get_config():
     parser.add_argument(
         '--g_opt', default='rmsprop', type=str, choices=['adam', 'rmsprop', 'sgd'], help='generator optimizer'
     )
-    parser.add_argument('--d_loss', default='bce', type=str, choices=['bce', 'cce', 'l1', 'l2'])
-    parser.add_argument('--g_loss', default='bce', type=str, choices=['bce', 'cce', 'l1', 'l2'])
+    parser.add_argument('--d_loss', default='wgan', type=str)
+    parser.add_argument('--g_loss', default='wgan', type=str)
     parser.add_argument('--grad_clip', default=1e-2, type=float)
     parser.add_argument(
         '--n_critics', default=5, type=int, help='number of times to train critic(discriminator) per 1-iter generator'
