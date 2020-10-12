@@ -55,7 +55,7 @@ def generator_loss(loss_func: str, real: tf.Tensor, fake: tf.Tensor, use_ra: boo
             fake_loss = tf.reduce_mean(tf.nn.relu(1.0 - fake_logit))
             real_loss = tf.reduce_mean(tf.nn.relu(1.0 + real_logit))
     else:
-        if loss_func == 'wgan-gp' or loss_func == 'wgan-lp':
+        if loss_func == 'wgan' or loss_func == 'wgan-gp' or loss_func == 'wgan-lp':
             fake_loss = -tf.reduce_mean(fake)
 
         if loss_func == 'lsgan':
