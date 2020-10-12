@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument('--celeba_hq_path', type=str, default='CelebA-HQ')
     parser.add_argument('--div2k_path', type=str, default='DIV2K')
     parser.add_argument('--pix2pix_path', type=str, default='pix2pix')
+    parser.add_argument('--use_crop', type=bool, default=False, help='use image center crop')
     parser.add_argument('--model_path', type=str, default='model')
     parser.add_argument('--output_path', type=str, default='outputs')
 
