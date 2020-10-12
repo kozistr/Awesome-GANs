@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -12,9 +14,11 @@ from tensorflow.keras.layers import (
     Reshape,
 )
 from tensorflow.keras.models import Model
+from tqdm import tqdm
 
 from awesome_gans.losses import discriminator_loss, generator_loss
 from awesome_gans.optimizers import build_discriminator_optimizer, build_generator_optimizer
+from awesome_gans.utils import merge_images, save_image
 
 
 class WGAN:
@@ -22,6 +26,8 @@ class WGAN:
         self.config = config
 
         self.bs: int = self.config.bs
+        self.n_samples: int = self.config.n_samples
+        self.epochs: int = self.config.epochs
         self.d_loss = self.config.d_loss
         self.g_loss = self.config.g_loss
         self.n_feats: int = self.config.n_feats
@@ -29,8 +35,11 @@ class WGAN:
         self.height: int = self.config.height
         self.n_channels: int = self.config.n_channels
         self.z_dims: int = self.config.z_dims
+        self.n_critics: int = self.config.n_critics
 
+        self.output_path: str = self.config.output_path
         self.verbose: bool = self.config.verbose
+        self.log_interval: int = self.config.log_interval
 
         self.discriminator: tf.keras.Model = self.build_discriminator()
         self.generator: tf.keras.Model = self.build_generator()
@@ -106,6 +115,29 @@ class WGAN:
         self.g_opt.apply_gradients(zip(gradient, self.generator.trainable_variables))
 
         return g_loss
+
+    def train(self, dataset: tf.data.Dataset):
+        z_samples = tf.random.normal((self.n_samples, self.z_dims))
+
+        for epoch in range(self.epochs):
+            loader = tqdm(dataset, desc=f'[*] Epoch {epoch} / {self.epochs}')
+            for n_iter, batch in enumerate(loader):
+                d_loss = 0.0
+                for _ in range(self.n_critics):
+                    d_loss += self.train_discriminator(batch)
+
+                g_loss = self.train_generator()
+
+                loader.set_postfix(
+                    d_loss=f'{d_loss / self.n_critics:.6f}',
+                    g_loss=f'{g_loss:.6f}',
+                )
+
+                global_steps: int = epoch * len(loader) + n_iter
+                if global_steps and global_steps % self.log_interval == 0:
+                    samples = self.generate_samples(z_samples)
+                    samples = merge_images(samples, n_rows=int(self.n_samples ** 0.5))
+                    save_image(samples, os.path.join(self.output_path, f'{global_steps}.png'))
 
     @tf.function
     def generate_samples(self, z: tf.Tensor):
