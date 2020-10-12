@@ -35,11 +35,11 @@ def denormalized_image(images):
 
 
 def merge_images(
-        images: Optional[np.ndarray, tf.Tensor],
-        n_rows: Optional[int] = None,
-        n_cols: Optional[int] = None,
-        padding: int = 0,
-        pad_value: int = 0,
+    images: Optional[np.ndarray, tf.Tensor],
+    n_rows: Optional[int] = None,
+    n_cols: Optional[int] = None,
+    padding: int = 0,
+    pad_value: int = 0,
 ):
     """Merge multiple images into one (squared) image.
     :param images: images to merge.
@@ -76,7 +76,7 @@ def merge_images(
 
     for idx, image in enumerate(images):
         i, j = idx % n_cols, idx // n_cols
-        img[j * (h + padding): j * (h + padding) + h, i * (w + padding): i * (w + padding) + w, ...] = image
+        img[j * (h + padding) : j * (h + padding) + h, i * (w + padding) : i * (w + padding) + w, ...] = image
 
     return img
 
