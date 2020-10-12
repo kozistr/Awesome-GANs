@@ -2,12 +2,12 @@ import tensorflow as tf
 
 from awesome_gans.data import TFDatasets
 from awesome_gans.utils import initialize, set_seed
-from awesome_gans.wgan.config import parse_args
+from awesome_gans.wgan.config import get_config
 from awesome_gans.wgan.model import WGAN
 
 
 def main():
-    config = parse_args()
+    config = get_config()
 
     # initial tf settings
     initialize()
