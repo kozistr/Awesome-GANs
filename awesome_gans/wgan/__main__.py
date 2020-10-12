@@ -16,7 +16,7 @@ def main():
     set_seed(config.seed)
 
     # load the data
-    dataset: tf.data.Dataset = TFDatasets(config).load_dataset()
+    dataset: tf.data.Dataset = TFDatasets(config).load_dataset(use_label=False)
 
     if config.mode == 'train':
         model = WGAN(config)
