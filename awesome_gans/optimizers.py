@@ -1,4 +1,4 @@
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import SGD, Adam
 
 
 def build_discriminator_optimizer(config):
