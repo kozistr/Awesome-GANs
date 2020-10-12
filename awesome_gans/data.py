@@ -33,7 +33,7 @@ class TFDatasets:
         return image
 
     def load_dataset(self, use_label: bool = False):
-        ds = tfds.load(name=self.dataset, split=tfds.Split.ALL, as_supervised=use_label, shuffle_files=True)
+        ds = tfds.load(name=self.dataset, split='train', as_supervised=use_label, shuffle_files=True)
         ds = ds.map(lambda x: self.preprocess_image(x['image']), tf.data.experimental.AUTOTUNE)
         ds = ds.cache()
         ds = ds.shuffle(50000, reshuffle_each_iteration=True)
