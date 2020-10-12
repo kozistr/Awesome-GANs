@@ -5,11 +5,15 @@ def parse_args():
     parser = ArgumentParser(description='Awesome-GANs Arguments')
 
     # dataset
-    parser.add_argument('--width', type=int, default=64, help='width of image')
-    parser.add_argument('--height', type=int, default=64, help='height of image')
+    parser.add_argument('--width', type=int, default=32, help='width of image')
+    parser.add_argument('--height', type=int, default=32, help='height of image')
     parser.add_argument('--n_channels', type=int, default=3, help='number of channel of image')
     parser.add_argument('--root_path', type=str, default='./', help='root path')
-    parser.add_argument('--dataset', type=str, default='mnist', help='type of dataset')
+    parser.add_argument(
+        '--dataset', type=str, default='cifar10',
+        choices=['mnist', 'cifar10', 'cifar100', 'div2k'],
+        help='type of dataset'
+    )
     parser.add_argument('--mnist_path', type=str, default='mnist')
     parser.add_argument('--fashion_mnist_path', type=str, default='fashion-mnist')
     parser.add_argument('--cifar10_path', type=str, default='cifar10')
