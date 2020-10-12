@@ -41,8 +41,6 @@ class WGAN:
         self.model_path: str = self.config.model_path
         self.output_path: str = self.config.output_path
         self.verbose: bool = self.config.verbose
-        self.log_interval: int = self.config.log_interval
-        self.save_interval: int = self.config.save_interval
 
         self.discriminator: tf.keras.Model = self.build_discriminator()
         self.generator: tf.keras.Model = self.build_generator()
@@ -151,14 +149,13 @@ class WGAN:
                     g_loss=f'{g_loss:.6f}',
                 )
 
-                global_steps: int = epoch * len(loader) + n_iter
-                if global_steps and global_steps % self.log_interval == 0:
-                    samples = self.generate_samples(z_samples)
-                    samples = merge_images(samples, n_rows=int(self.n_samples ** 0.5))
-                    save_image(samples, os.path.join(self.output_path, f'{global_steps}.png'))
+            # saving the generated samples
+            samples = self.generate_samples(z_samples)
+            samples = merge_images(samples, n_rows=int(self.n_samples ** 0.5))
+            save_image(samples, os.path.join(self.output_path, f'{epoch}.png'))
 
-                if global_steps and global_steps % self.save_interval == 0:
-                    self.checkpoint.save(file_prefix=os.path.join(self.model_path, f'{global_steps}'))
+            # saving the models & optimizers
+            self.checkpoint.save(file_prefix=os.path.join(self.model_path, f'{epoch}'))
 
     @tf.function
     def generate_samples(self, z: tf.Tensor):
