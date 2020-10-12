@@ -1,8 +1,9 @@
-tensorflow
-numpy
+tensorflow>=2.2.0
+tensorflow_datasets>=4.0.1
+numpy>=1.16.6
 scipy
 scikit-learn
-opencv-python
+opencv-python>=4.4.0.44
 pillow
 h5py
-tqdm
+tqdm>=4.50.2
