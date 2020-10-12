@@ -24,7 +24,6 @@ class TFDatasets:
         self.width: int = config.width
         self.height: int = config.height
         self.use_crop: bool = config.use_crop
-        self.buffer_size: int = config.buffer_size
 
     def preprocess_image(self, image: tf.Tensor) -> tf.Tensor:
         if self.use_crop:
@@ -38,6 +37,6 @@ class TFDatasets:
         ds = ds.map(lambda x: self.preprocess_image(x['image']), tf.data.experimental.AUTOTUNE)
         ds = ds.cache()
         ds = ds.shuffle(50000, reshuffle_each_iteration=True)
-        ds = ds.batch(self.bs, drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE)
-        ds = ds.prefetch(self.buffer_size)
+        ds = ds.batch(self.bs, drop_remainder=True)
+        ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
         return ds
