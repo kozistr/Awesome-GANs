@@ -3,18 +3,18 @@ import tensorflow_datasets as tfds
 
 
 class TFDatasets:
-    """ tensorflow_datasets package
-        This opensource dataset contains lots of public datasets & loader.
-         - CelebA
-         - CelebA-HQ
-         - DIV2K
-         - MNIST
-         - E-MNIST
-         - Fashion-MNIST
-         - CIFAR10
-         - CIFAR100
-         - lots of ...
-        github : https://github.com/tensorflow/datasets
+    """tensorflow_datasets package
+    This opensource dataset contains lots of public datasets & loader.
+     - CelebA
+     - CelebA-HQ
+     - DIV2K
+     - MNIST
+     - E-MNIST
+     - Fashion-MNIST
+     - CIFAR10
+     - CIFAR100
+     - lots of ...
+    github : https://github.com/tensorflow/datasets
     """
 
     def __init__(self, config):
