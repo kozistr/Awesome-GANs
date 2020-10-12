@@ -7,6 +7,17 @@ import numpy as np
 import tensorflow as tf
 
 
+def initialize():
+    # clear keras session
+    tf.keras.backend.clear_session()
+
+    # tf log level to info
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+    # control flow v2 lets opt-in to tf 2.x features
+    tf.compat.v1.enable_v2_behavior()
+
+
 def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
@@ -24,11 +35,11 @@ def denormalized_image(images):
 
 
 def merge_images(
-    images: Optional[np.ndarray, tf.Tensor],
-    n_rows: Optional[int] = None,
-    n_cols: Optional[int] = None,
-    padding: int = 0,
-    pad_value: int = 0,
+        images: Optional[np.ndarray, tf.Tensor],
+        n_rows: Optional[int] = None,
+        n_cols: Optional[int] = None,
+        padding: int = 0,
+        pad_value: int = 0,
 ):
     """Merge multiple images into one (squared) image.
     :param images: images to merge.
@@ -65,7 +76,7 @@ def merge_images(
 
     for idx, image in enumerate(images):
         i, j = idx % n_cols, idx // n_cols
-        img[j * (h + padding) : j * (h + padding) + h, i * (w + padding) : i * (w + padding) + w, ...] = image
+        img[j * (h + padding): j * (h + padding) + h, i * (w + padding): i * (w + padding) + w, ...] = image
 
     return img
 
