@@ -38,15 +38,24 @@ class WGAN:
         self.n_critics: int = self.config.n_critics
         self.grad_clip: float = self.config.grad_clip
 
+        self.model_path: str = self.config.model_path
         self.output_path: str = self.config.output_path
         self.verbose: bool = self.config.verbose
         self.log_interval: int = self.config.log_interval
+        self.save_interval: int = self.config.save_interval
 
         self.discriminator: tf.keras.Model = self.build_discriminator()
         self.generator: tf.keras.Model = self.build_generator()
 
         self.d_opt: tf.keras.optimizers = build_optimizer(config, config.d_opt)
         self.g_opt: tf.keras.optimizers = build_optimizer(config, config.g_opt)
+
+        self.checkpoint = tf.train.Checkpoint(
+            discriminator=self.discriminator,
+            discriminator_optimzer=self.d_opt,
+            generator=self.generator,
+            generator_optimizer=self.g_opt,
+        )
 
         if self.verbose:
             self.discriminator.summary()
@@ -120,10 +129,15 @@ class WGAN:
 
         return g_loss
 
+    def load(self) -> int:
+        return 0
+
     def train(self, dataset: tf.data.Dataset):
+        start_epoch: int = self.load()
+
         z_samples = tf.random.normal((self.n_samples, self.z_dims))
 
-        for epoch in range(self.epochs):
+        for epoch in range(start_epoch, self.epochs):
             loader = tqdm(dataset, desc=f'[*] Epoch {epoch} / {self.epochs}')
             for n_iter, batch in enumerate(loader):
                 d_loss = 0.0
@@ -142,6 +156,9 @@ class WGAN:
                     samples = self.generate_samples(z_samples)
                     samples = merge_images(samples, n_rows=int(self.n_samples ** 0.5))
                     save_image(samples, os.path.join(self.output_path, f'{global_steps}.png'))
+
+                if global_steps and global_steps % self.save_interval == 0:
+                    self.checkpoint.save(file_prefix=os.path.join(self.model_path, f'{global_steps}'))
 
     @tf.function
     def generate_samples(self, z: tf.Tensor):
