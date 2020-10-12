@@ -36,7 +36,7 @@ class TFDatasets:
         ds = tfds.load(name=self.dataset, split='train', as_supervised=use_label, shuffle_files=True)
         ds = ds.map(lambda x: self.preprocess_image(x['image']), tf.data.experimental.AUTOTUNE)
         ds = ds.cache()
-        ds = ds.shuffle(50000)
+        ds = ds.shuffle(self.bs * 16)
         ds = ds.batch(self.bs, drop_remainder=True)
         ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
         return ds

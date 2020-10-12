@@ -16,7 +16,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model
 from tqdm import tqdm
 
-from awesome_gans.losses import discriminator_loss, generator_loss
+from awesome_gans.losses import discriminator_loss, generator_loss, discriminator_wgan_loss, generator_wgan_loss
 from awesome_gans.optimizers import build_optimizer
 from awesome_gans.utils import merge_images, save_image
 
@@ -103,15 +103,15 @@ class WGAN:
             d_fake = self.discriminator(x_fake, training=True)
             d_real = self.discriminator(x, training=True)
 
-            d_loss = discriminator_loss(self.d_loss, d_real, d_fake)
+            d_loss = discriminator_wgan_loss(d_real, d_fake)
 
-            gradient = gt.gradient(d_loss, self.discriminator.trainable_variables)
-            self.d_opt.apply_gradients(zip(gradient, self.discriminator.trainable_variables))
+            gradients = gt.gradient(d_loss, self.discriminator.trainable_variables)
+            self.d_opt.apply_gradients(zip(gradients, self.discriminator.trainable_variables))
 
             for var in self.discriminator.trainable_variables:
                 var.assign(tf.clip_by_value(var, -self.grad_clip, self.grad_clip))
 
-        return d_loss
+            return d_loss
 
     @tf.function
     def train_generator(self):
@@ -120,12 +120,12 @@ class WGAN:
             x_fake = self.generator(z, training=True)
             d_fake = self.discriminator(x_fake, training=True)
 
-            g_loss = generator_loss(self.g_loss, d_fake, d_fake)
+            g_loss = generator_wgan_loss(d_fake)
 
-            gradient = gt.gradient(g_loss, self.generator.trainable_variables)
-            self.g_opt.apply_gradients(zip(gradient, self.generator.trainable_variables))
+            gradients = gt.gradient(g_loss, self.generator.trainable_variables)
+            self.g_opt.apply_gradients(zip(gradients, self.generator.trainable_variables))
 
-        return g_loss
+            return g_loss
 
     def load(self) -> int:
         return 0

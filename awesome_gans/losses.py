@@ -1,6 +1,17 @@
 import tensorflow as tf
 
 
+@tf.function
+def discriminator_wgan_loss(real: tf.Tensor, fake: tf.Tensor):
+    return tf.reduce_mean(fake) - tf.reduce_mean(real)
+
+
+@tf.function
+def generator_wgan_loss(fake: tf.Tensor):
+    return -tf.reduce_mean(fake)
+
+
+@tf.function
 def discriminator_loss(loss_func: str, real: tf.Tensor, fake: tf.Tensor, use_ra: bool = False):
     real_loss: float = 0.0
     fake_loss: float = 0.0
@@ -31,6 +42,7 @@ def discriminator_loss(loss_func: str, real: tf.Tensor, fake: tf.Tensor, use_ra:
     return loss
 
 
+@tf.function
 def generator_loss(loss_func: str, real: tf.Tensor, fake: tf.Tensor, use_ra: bool = False):
     fake_loss: float = 0.0
     real_loss: float = 0.0
