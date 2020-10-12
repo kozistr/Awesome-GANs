@@ -138,15 +138,14 @@ class WGAN:
         for epoch in range(start_epoch, self.epochs):
             loader = tqdm(dataset, desc=f'[*] Epoch {epoch} / {self.epochs}')
             for n_iter, batch in enumerate(loader):
-                d_loss = 0.0
                 for _ in range(self.n_critics):
-                    d_loss += self.train_discriminator(batch)
+                    d_loss = self.train_discriminator(batch)
 
                 g_loss = self.train_generator()
 
                 loader.set_postfix(
-                    d_loss=f'{d_loss / self.n_critics:.6f}',
-                    g_loss=f'{g_loss:.6f}',
+                    d_loss=f'{d_loss:.5f}',
+                    g_loss=f'{g_loss:.5f}',
                 )
 
             # saving the generated samples

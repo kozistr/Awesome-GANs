@@ -9,7 +9,6 @@ def get_config():
     parser.add_argument('--epochs', default=50, type=int, help='epochs to train')
     parser.add_argument('--global_steps', default=5e4, type=int, help='iterations to train')
     parser.add_argument('--n_feats', default=64, type=int, help='number of convolution filters')
-    parser.add_argument('--lr', default=1e-4, type=float, help='learning rate for generic somethings')
     parser.add_argument('--d_lr', default=1e-4, type=float, help='learning rate of discriminator')
     parser.add_argument('--g_lr', default=1e-4, type=float, help='learning rate of generator')
     parser.add_argument(

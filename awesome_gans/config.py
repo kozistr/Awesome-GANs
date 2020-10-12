@@ -10,9 +10,11 @@ def parse_args():
     parser.add_argument('--n_channels', type=int, default=3, help='number of channel of image')
     parser.add_argument('--root_path', type=str, default='./', help='root path')
     parser.add_argument(
-        '--dataset', type=str, default='cifar10',
+        '--dataset',
+        type=str,
+        default='cifar10',
         choices=['mnist', 'cifar10', 'cifar100', 'div2k'],
-        help='type of dataset'
+        help='type of dataset',
     )
     parser.add_argument('--mnist_path', type=str, default='mnist')
     parser.add_argument('--fashion_mnist_path', type=str, default='fashion-mnist')
