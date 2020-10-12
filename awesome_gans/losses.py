@@ -1,31 +1,71 @@
 import tensorflow as tf
 
 
-def discriminator_loss(loss_func: str, d_real: tf.Tensor, d_fake: tf.Tensor):
-    real_loss, fake_loss = 0.0, 0.0
-    if loss_func in {'wgan', 'wgan-gp'}:
-        real_loss = -d_real
-        fake_loss = d_fake
+def discriminator_loss(loss_func: str, real, fake, use_ra: bool = False):
+    real_loss: float = .0
+    fake_loss: float = .0
+
+    if use_ra:
+        if not loss_func.__contains__('wgan'):
+            real = real - tf.reduce_mean(fake)
+            fake = fake - tf.reduce_mean(real)
+
+    if loss_func.__contains__('wgan'):
+        real_loss = -tf.reduce_mean(real)
+        fake_loss = tf.reduce_mean(fake)
+
     if loss_func == 'lsgan':
-        real_loss = tf.math.squared_difference(d_real, 1.0)
-        fake_loss = tf.square(d_fake)
-    if loss_func in {'dragan', 'gan'}:
-        real_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(d_real), logits=d_real)
-        fake_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(d_fake), logits=d_fake)
+        real_loss = tf.reduce_mean(tf.squared_difference(real, 1.))
+        fake_loss = tf.reduce_mean(tf.square(fake))
+
+    if loss_func == 'gan' or loss_func == 'dragan':
+        real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+            labels=tf.ones_like(real), logits=real))
+        fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+            labels=tf.zeros_like(fake), logits=fake))
+
     if loss_func == 'hinge':
-        real_loss = tf.math.maximum(0.0, 1.0 - d_real)
-        fake_loss = tf.math.maximum(0.0, 1.0 + d_fake)
-    return fake_loss + real_loss
+        real_loss = tf.reduce_mean(tf.nn.relu(1. - real))
+        fake_loss = tf.reduce_mean(tf.nn.relu(1. + fake))
+
+    loss = real_loss + fake_loss
+    return loss
 
 
-def generator_loss(loss_func: str, d_fake: tf.Tensor):
-    fake_loss = 0.0
-    if loss_func in {'wgan', 'wgan-gp'}:
-        fake_loss = -d_fake
-    if loss_func == 'lsgan':
-        fake_loss = tf.math.squared_difference(d_fake, 1.0)
-    if loss_func in {'dragan', 'gan'}:
-        fake_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(d_fake), logits=d_fake)
-    if loss_func == 'hinge':
-        fake_loss = -d_fake
-    return fake_loss
+def generator_loss(loss_func: str, real, fake, use_ra: bool = False):
+    fake_loss: float = .0
+    real_loss: float = .0
+
+    if use_ra:
+        fake_logit = (fake - tf.reduce_mean(real))
+        real_logit = (real - tf.reduce_mean(fake))
+
+        if loss_func == 'lsgan':
+            fake_loss = tf.reduce_mean(tf.square(fake_logit - 1.))
+            real_loss = tf.reduce_mean(tf.square(real_logit + 1.))
+
+        if loss_func == 'gan' or loss_func == 'gan-gp' or loss_func == 'dragan':
+            fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=tf.ones_like(fake), logits=fake_logit))
+            real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=tf.zeros_like(real), logits=real_logit))
+
+        if loss_func == 'hinge':
+            fake_loss = tf.reduce_mean(tf.nn.relu(1. - fake_logit))
+            real_loss = tf.reduce_mean(tf.nn.relu(1. + real_logit))
+    else:
+        if loss_func == 'wgan-gp' or loss_func == 'wgan-lp':
+            fake_loss = -tf.reduce_mean(fake)
+
+        if loss_func == 'lsgan':
+            fake_loss = tf.reduce_mean(tf.square(fake - 1.0))
+
+        if loss_func == 'gan' or loss_func == 'gan-gp' or loss_func == 'dragan':
+            fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=tf.ones_like(fake), logits=fake))
+
+        if loss_func == 'hinge':
+            fake_loss = -tf.reduce_mean(fake)
+
+    loss = fake_loss + real_loss
+    return loss
