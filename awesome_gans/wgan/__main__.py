@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-from awesome_gans.config import parse_args
 from awesome_gans.data import TFDatasets
 from awesome_gans.utils import initialize, set_seed
+from awesome_gans.wgan.config import parse_args
 from awesome_gans.wgan.model import WGAN
 
 

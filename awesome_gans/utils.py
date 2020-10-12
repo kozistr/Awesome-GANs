@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Optional
+from typing import Optional, Union
 
 import cv2
 import numpy as np
@@ -35,7 +35,7 @@ def denormalized_image(images):
 
 
 def merge_images(
-    images: Optional[np.ndarray, tf.Tensor],
+    images: Union[np.ndarray, tf.Tensor],
     n_rows: Optional[int] = None,
     n_cols: Optional[int] = None,
     padding: int = 0,
@@ -89,7 +89,7 @@ def save_numpy_image(image: np.ndarray, fn: str, is_rgb: bool):
     cv2.imwrite(fn, image[..., ::-1] if is_rgb else image)
 
 
-def save_image(image: Optional[np.ndarray, tf.Tensor], fn: str, is_rgb: bool = True):
+def save_image(image: Union[np.ndarray, tf.Tensor], fn: str, is_rgb: bool = True):
     if isinstance(image, tf.Tensor):
         save_tensor_image(image, fn)
     elif isinstance(image, np.ndarray):
