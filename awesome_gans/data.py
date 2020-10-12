@@ -10,8 +10,7 @@ class Dataset:
         self.width: int = config.width
         self.height: int = config.height
         self.use_crop: bool = config.use_crop
-
-        self.buffer_size: int = 4096
+        self.buffer_size: int = config.buffer_size
 
     def preprocess_image(self, image):
         if self.use_crop:
