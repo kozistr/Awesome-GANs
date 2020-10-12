@@ -12,10 +12,14 @@ def get_config():
     parser.add_argument('--lr', default=1e-4, type=float, help='learning rate for generic somethings')
     parser.add_argument('--d_lr', default=1e-4, type=float, help='learning rate of discriminator')
     parser.add_argument('--g_lr', default=1e-4, type=float, help='learning rate of generator')
-    parser.add_argument('--d_opt', default='adam', type=str, choices=['adam', 'sgd'], help='disc optimizer')
+    parser.add_argument(
+        '--d_opt', default='rmsprop', type=str, choices=['adam', 'rmsprop', 'sgd'], help='disciminator optimizer'
+    )
     parser.add_argument('--beta1', default=0.0, type=float)
     parser.add_argument('--beta2', default=0.99, type=float)
-    parser.add_argument('--g_opt', default='adam', type=str, choices=['adam', 'sgd'], help='gen optimizer')
+    parser.add_argument(
+        '--g_opt', default='rmsprop', type=str, choices=['adam', 'rmsprop', 'sgd'], help='generator optimizer'
+    )
     parser.add_argument('--d_loss', default='bce', type=str, choices=['bce', 'cce', 'l1', 'l2'])
     parser.add_argument('--g_loss', default='bce', type=str, choices=['bce', 'cce', 'l1', 'l2'])
     parser.add_argument('--grad_clip', default=1e-2, type=float)
