@@ -32,4 +32,4 @@ def parse_args():
     parser.add_argument('--save_interval', default=1000, type=int, help='intervals to save the model(s)')
     parser.add_argument('--verbose', type=bool, default=True)
 
-    return parser.parse_args()
+    return parser
