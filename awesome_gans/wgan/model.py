@@ -13,11 +13,17 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.models import Model
 
+from awesome_gans.losses import discriminator_loss, generator_loss
+from awesome_gans.optimizers import build_discriminator_optimizer, build_generator_optimizer
+
 
 class WGAN:
     def __init__(self, config):
         self.config = config
 
+        self.bs: int = self.config.bs
+        self.d_loss = self.config.d_loss
+        self.g_loss = self.config.g_loss
         self.n_feats: int = self.config.n_feats
         self.width: int = self.config.width
         self.height: int = self.config.height
@@ -28,6 +34,9 @@ class WGAN:
 
         self.discriminator: tf.keras.Model = self.build_discriminator()
         self.generator: tf.keras.Model = self.build_generator()
+
+        self.d_opt: tf.keras.optimizers = build_discriminator_optimizer(config)
+        self.g_opt: tf.keras.optimizers = build_generator_optimizer(config)
 
         if self.verbose:
             self.discriminator.summary()
@@ -70,12 +79,33 @@ class WGAN:
         return Model(inputs, x, name='generator')
 
     @tf.function
-    def train_discriminator(self):
-        pass
+    def train_discriminator(self, x_real: tf.Tensor):
+        z = tf.random.uniform((self.bs, self.z_dims))
+        with tf.GradientTape() as gt:
+            x_fake = self.generator(z, training=True)
+            d_fake = self.discriminator(x_fake, training=True)
+            d_real = self.discriminator(x_real, training=True)
+
+            d_loss = tf.reduce_mean(discriminator_loss(self.d_loss, d_real, d_fake))
+
+        gradient = gt.gradient(d_loss, self.discriminator.trainable_variables)
+        self.d_opt.apply_gradients(zip(gradient, self.discriminator.trainable_variables))
+
+        return d_loss
 
     @tf.function
     def train_generator(self):
-        pass
+        z = tf.random.uniform((self.bs, self.z_dims))
+        with tf.GradientTape() as gt:
+            x_fake = self.generator(z, training=True)
+            d_fake = self.discriminator(x_fake, training=True)
+
+            g_loss = tf.reduce_mean(generator_loss(self.g_loss, d_fake))
+
+        gradient = gt.gradient(g_loss, self.generator.trainable_variables)
+        self.g_opt.apply_gradients(zip(gradient, self.generator.trainable_variables))
+
+        return g_loss
 
     @tf.function
     def generate_samples(self, z: tf.Tensor):
