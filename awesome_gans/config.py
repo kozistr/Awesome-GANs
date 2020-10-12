@@ -22,6 +22,7 @@ def parse_args():
 
     # misc
     parser.add_argument('--mode', default='train', type=str, choices=['train', 'inference'])
+    parser.add_argument('--n_samples', default=100, type=int, help='number of image samples to generate')
     parser.add_argument('--device', default='cuda', type=str, help='type of device', choices=['cpu', 'cuda'])
     parser.add_argument('--n_threads', default=8, type=int, help='number of threads')
     parser.add_argument('--seed', default=42, type=int, help='seed for reproducibility')
