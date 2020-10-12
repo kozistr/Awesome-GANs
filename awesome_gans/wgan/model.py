@@ -77,20 +77,20 @@ class WGAN:
         return Model(inputs, x, name='discriminator')
 
     def build_generator(self) -> tf.keras.Model:
-        inputs = Input((1, 1, self.z_dims))
+        inputs = Input((self.z_dims,))
 
         x = Dense(4 * 4 * 4 * self.z_dims)(inputs)
         x = BatchNormalization()(x)
         x = ReLU()(x)
 
-        x = Reshape((-1, 4, 4, 4 * self.z_dims))(x)
+        x = Reshape((4, 4, 4 * self.z_dims))(x)
 
         for i in range(3):
             x = Conv2DTranspose(self.z_dims * 4 // (2 ** i), kernel_size=5, strides=2)(x)
             x = BatchNormalization()(x)
             x = ReLU()(x)
 
-        x = Conv2DTranspose(x, self.n_channels, 5, 1)(x)
+        x = Conv2DTranspose(self.n_channels, kernel_size=5, strides=1)(x)
         x = Layer('tanh')(x)
 
         return Model(inputs, x, name='generator')
