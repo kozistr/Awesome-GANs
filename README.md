@@ -104,8 +104,8 @@ Here's the beginning of the **GAN**.
 
 Here for the theories & concepts of the GAN.
 
-| *Name* | *Summary* | *Paper* | *Code* |
-| :---: | :---: | :---: | :---: |
+| *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
+| :---: | :---: | :---: | :---: | :---: |
 | **ACGAN**         | *Auxiliary Classifier Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1610.09585) | [[code]](./ACGAN) |
 | **AdaGAN**        | *Boosting Generative Models* | [[arXiv]](https://arxiv.org/abs/1701.02386) | [[~~code~~]]() |
 | **bCR**           | *Improved Consistency Regularization for GANs* | [[arXiv]](https://arxiv.org/abs/2002.04724) | [[~~code~~]]() |
@@ -129,6 +129,7 @@ Here for the theories & concepts of the GAN.
 | **MAGAN**         | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](./MAGAN) |
 | **MRGAN**         | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) | [[code]](./MRGAN) |
 | **MSGGAN**        | *Multi-Scale Gradients for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1903.06048) | [[~~code~~]]() |
+| **NICE-GAN**      | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() |
 | **PGGAN**         | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) | [[~~code~~]]() |
 | **RaGAN**         | *The relativistic discriminator: a key element missing from standard GAN* | [[arXiv]](https://arxiv.org/pdf/1807.00734v3.pdf) | [[~~code~~]]() |
 | **SeAtGAN**       | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN) |
