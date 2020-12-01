@@ -129,7 +129,6 @@ Here for the theories & concepts of the GAN.
 | **MAGAN**         | *Margin Adaptation for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.03817) | [[code]](./MAGAN) |
 | **MRGAN**         | *Mode Regularized Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1612.02136) | [[code]](./MRGAN) |
 | **MSGGAN**        | *Multi-Scale Gradients for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1903.06048) | [[~~code~~]]() |
-| **NICE-GAN**      | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
 | **PGGAN**         | *Progressive Growing of GANs for Improved Quality, Stability, and Variation* | [[arXiv]](https://arxiv.org/abs/1710.10196) | [[~~code~~]]() | [[official]](https://github.com/tkarras/progressive_growing_of_gans) |
 | **RaGAN**         | *The relativistic discriminator: a key element missing from standard GAN* | [[arXiv]](https://arxiv.org/pdf/1807.00734v3.pdf) | [[~~code~~]]() |
 | **SeAtGAN**       | *Self-Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1805.08318) | [[code]](./SAGAN) |
@@ -151,8 +150,8 @@ Here for the theories & concepts of the GAN.
 Here for the GAN applications on Vision domain, 
 like image-to-image translation, image in-painting, single image super resolution , etc.
 
-| *Name* | *Summary* | *Paper* | *Code* |
-| :---: | :---: | :---: | :---: |
+| *Name* | *Summary* | *Paper* | *Code* | *Official* |
+| :---: | :---: | :---: | :---: | :---: |
 | **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
 | **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./CycleGAN) |
 | **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
@@ -164,6 +163,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() |
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
 | **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() |
+| **NICE-GAN**      | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
 | **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
 | **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
 | **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./SRGAN) |
