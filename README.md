@@ -171,7 +171,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() |
 | **TecoGAN**      | *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation* | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() |
 | **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | [[~~code~~]]() |
-| **TUNIT**        | *Rethinking the Truly Unsupervised Image-to-Image Translation* | [[arXiv]]() | [[~~code~~]](https://arxiv.org/abs/2006.06500) |
+| **TUNIT**        | *Rethinking the Truly Unsupervised Image-to-Image Translation* | [[arXiv]]() | [[~~code~~]](https://arxiv.org/abs/2006.06500) | [[official]](https://github.com/clovaai/tunit) |
 | **TwinGAN**      | *Cross-Domain Translation fo Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) | [[~~code~~]]() |
 | **UNIT**        | *Unsupervised Image-to-Image Translation Networks* | [[arXiv]](https://arxiv.org/abs/1703.00848) | [[~~code~~]]() |
 | **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) | [[~~code~~]]() |
