@@ -169,7 +169,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
 | **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./SRGAN) |
 | **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./StarGAN) |
-| **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() |
+| **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() | [[official]](https://github.com/clovaai/stargan-v2) |
 | **TecoGAN**      | *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation* | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() |
 | **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | [[~~code~~]]() |
 | **TUNIT**        | *Rethinking the Truly Unsupervised Image-to-Image Translation* | [[arXiv]]() | [[~~code~~]](https://arxiv.org/abs/2006.06500) | [[official]](https://github.com/clovaai/tunit) |
