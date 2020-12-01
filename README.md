@@ -157,6 +157,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
 | **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
 | **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]() |
+| **DRIT/++**      | *Diverse Image-to-Image Translation via Disentangled Representations* | [[arXiv]](https://arxiv.org/abs/1905.01270) | [[~~code~~]]() | [[official]](https://github.com/HsinYingLee/DRIT) |
 | **EdgeConnect**  | *Generative Image Inpainting with Adversarial Edge Learning* | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() |
 | **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
 | **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() |
