@@ -150,7 +150,7 @@ Here for the theories & concepts of the GAN.
 Here for the GAN applications on Vision domain, 
 like image-to-image translation, image in-painting, single image super resolution , etc.
 
-| *Name* | *Summary* | *Paper* | *Code* | *Official* |
+| *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
 | :---: | :---: | :---: | :---: | :---: |
 | **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
 | **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./CycleGAN) |
@@ -182,8 +182,8 @@ like image-to-image translation, image in-painting, single image super resolutio
 Here for the GAN applications on Audio domain, 
 like wave generation, wave to wave translation, etc.
 
-| *Name* | *Summary* | *Paper* | *Code* |
-| :---: | :---: | :---: | :---: |
+| *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
+| :---: | :---: | :---: | :---: | :---: |
 | **AAS**              | *Adversarial Audio Synthesis* | [[arXiv]](https://arxiv.org/abs/1802.04208) | [[~~code~~]]() |
 | **BeatGAN**          | *Generating Drum Loops via GANs* | [[arXiv]](https://github.com/NarainKrishnamurthy/BeatGAN2.0) | [[~~code~~]]() |
 | **GANSynth**         | *Adversarial Neural Audio Synthesis* | [[arXiv]](https://arxiv.org/abs/1902.08710) | [[~~code~~]]() |
@@ -199,8 +199,8 @@ like wave generation, wave to wave translation, etc.
 Here for the GAN applications on other domains, 
 like nlp, tabular, etc.
 
-| *Name* | *Summary* | *Paper* | *Code* |
-| :---: | :---: | :---: | :---: |
+| *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
+| :---: | :---: | :---: | :---: | :---: |
 | **AnoGAN**       | *Unsupervised Anomaly Detection with Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05921) | [[~~code~~]](./AnoGAN)
 | **CipherGAN**    | *Unsupervised Cipher Cracking Using Discrete GANs* | [[github]](https://arxiv.org/abs/1801.04883) | [[~~code~~]]() |
 | **DiscoGAN**     | *Discover Cross-Domain Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.05192) | [[~~code~~]]() |
