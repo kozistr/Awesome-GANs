@@ -161,7 +161,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **EdgeConnect**  | *Generative Image Inpainting with Adversarial Edge Learning* | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() | [[official]](https://github.com/knazeri/edge-connect) |
 | **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
 | **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/FUNIT) |
-| **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() |
+| **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() | [[official]](https://github.com/JiahuiYu/generative_inpainting) |
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
 | **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/MUNIT) |
 | **NICE-GAN**     | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
