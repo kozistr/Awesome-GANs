@@ -114,6 +114,7 @@ Here for the theories & concepts of the GAN.
 | **BigGAN**        | *Large Scale GAN Training for High Fidelity Natural Image Synthesis* | [[arXiv]](https://arxiv.org/abs/1809.11096) | [[~~code~~]]() |
 | **CGAN**          | *Conditional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1411.1784) | [[code]](./CGAN) |
 | **CoGAN**         | *Coupled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1606.07536) | [[code]](./CoGAN) |
+| **ConSinGAN**     | *Improved Techniques for Training Single-Image GANs* | [[WACV21]](https://openaccess.thecvf.com/content/WACV2021/papers/Hinz_Improved_Techniques_for_Training_Single-Image_GANs_WACV_2021_paper.pdf) | [[~~code~~]]() | [[official]](https://github.com/tohinz/ConSinGAN) |
 | **DCGAN**         | *Deep Convolutional Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1511.06434) | [[code]](./DCGAN) |
 | **DRAGAN**        | *On Convergence and Stability of Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1705.07215) | [[code]](./DRAGAN) |
 | **EBGAN**         | *Energy-based Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1609.03126) | [[code]](./EBGAN) |
