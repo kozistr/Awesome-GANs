@@ -166,9 +166,10 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
 | **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/MUNIT) |
 | **NICE-GAN**     | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
+| **PSGAN**        | *Pose and Expression Robust Spatial-Aware GAN for Customizable Makeup Transfer* | [[arXiv]](https://arxiv.org/abs/1909.06956) | [[~~code~~]]() | [[official]](https://github.com/wtjiang98/PSGAN) |
 | **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
 | **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
-| **SRFlow**       | *Super-Resolution using Normalizing Flow* | [[arXiv]](https://arxiv.org/pdf/2006.14200.pdf) | [[~~code~~]]() | [[official]](https://github.com/andreas128/SRFlow) |
+| **SRFlow**       | *Super-Resolution using Normalizing Flow* | [[arXiv]](https://arxiv.org/abs/2006.14200) | [[~~code~~]]() | [[official]](https://github.com/andreas128/SRFlow) |
 | **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./SRGAN) |
 | **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./StarGAN) | [[official]](https://github.com/yunjey/stargan) |
 | **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() | [[official]](https://github.com/clovaai/stargan-v2) |
