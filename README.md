@@ -143,6 +143,7 @@ Here for the theories & concepts of the GAN.
 | **StyleGAN2 ADA** | *StyleGAN2 with adaptive discriminator augmentation* | [[arXiv]](https://arxiv.org/abs/2006.06676) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2-ada) |
 | **TripleGAN**     | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) | [[~~code~~]]() |
 | **UGAN**          | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) | [[~~code~~]]() |
+| **U-Net GAN**     | *A U-Net Based Discriminator for Generative Adversarial Networks* | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/html/Schonfeld_A_U-Net_Based_Discriminator_for_Generative_Adversarial_Networks_CVPR_2020_paper.html) | [[~~code~~]]() | [[official]](https://github.com/boschresearch/unetgan) | 
 | **WGAN**          | *Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.07875) | [[code]](./WGAN) |
 | **WGAN-GP**       | *Improved Training of Wasserstein Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1704.00028) | [[code]](./WGAN) |
 
