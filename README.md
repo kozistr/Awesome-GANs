@@ -172,6 +172,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
 | **SRFlow**       | *Super-Resolution using Normalizing Flow* | [[arXiv]](https://arxiv.org/abs/2006.14200) | [[~~code~~]]() | [[official]](https://github.com/andreas128/SRFlow) |
 | **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./awesome_gans/SRGAN) |
+| **SRResCGAN**    | *Deep Generative Adversarial Residual Convolutional Networks for Real-World Super-Resolution* | [[arXiv]](https://arxiv.org/abs/2005.00953) | [[~~code~~]]() | [[official]](https://github.com/RaoUmer/SRResCGAN) |
 | **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./awesome_gans/StarGAN) | [[official]](https://github.com/yunjey/stargan) |
 | **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() | [[official]](https://github.com/clovaai/stargan-v2) |
 | **TecoGAN**      | *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation* | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() | [[official]](https://github.com/thunil/TecoGAN) |
@@ -221,16 +222,9 @@ Here for the useful resources when you try to train and stable a gan model.
 | :---: | :---: | :---: |
 | GAN Hacks | a bunch of tips & tricks to train GAN stable | [github](https://github.com/soumith/ganhacks) |
 
-## To-Do
-
-0. updating `worth a try` GAN papers
-1. refactoring the whole codes
-2. supporting **tensorflow 2.x**
-3. linking to the official implementations, if not, unofficial implementations
-
 ## Note
 
-**Any suggestions and PRs and issues are WELCOME :)**
+Any suggestions and PRs and issues are WELCOME :)
 
 ## Author
 
