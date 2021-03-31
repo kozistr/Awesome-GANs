@@ -181,6 +181,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **TwinGAN**      | *Cross-Domain Translation fo Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) | [[~~code~~]]() |
 | **UNIT**         | *Unsupervised Image-to-Image Translation Networks* | [[arXiv]](https://arxiv.org/abs/1703.00848) | [[~~code~~]]() | [[official]](https://github.com/mingyuliutw/UNIT) |
 | **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) | [[~~code~~]]() |
+| **Zero-DCE**     | *Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement* | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf) | [[~~code~~]]() | [[official]](https://github.com/Li-Chongyi/Zero-DCE) |
 
 ### Applied Audio
 
