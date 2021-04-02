@@ -138,6 +138,7 @@ Here for the theories & concepts of the GAN.
 | **SGAN++**        | *Realistic Image Synthesis with Stacked Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1710.10916) | [[~~code~~]](https://github.com/kozistr/Awesome-GANs/blob/master/SGAN) |
 | **SinGAN**        | *Learning a Generative Model from a Single Natural Image* | [[arXiv]](https://arxiv.org/abs/1905.01164) | [[~~code~~]]() | [[official]](https://github.com/tamarott/SinGAN) |
 | **StableGAN**     | *Stabilizing Adversarial Nets With Prediction Methods* | [[arXiv]](https://arxiv.org/abs/1705.07364) | [[~~code~~]]() |
+| **StyleCLIP**     | *Text-Driven Manipulation of StyleGAN Imagery* | [[arXiv]](https://arxiv.org/abs/2103.17249) | [[~~code~~]]() | [[official]](https://github.com/orpatashnik/StyleCLIP) | 
 | **StyleGAN**      | *A Style-Based Generator Architecture for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1812.04948) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan) |
 | **StyleGAN2**     | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2) |
 | **StyleGAN2 ADA** | *StyleGAN2 with adaptive discriminator augmentation* | [[arXiv]](https://arxiv.org/abs/2006.06676) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2-ada) |
