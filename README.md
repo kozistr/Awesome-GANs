@@ -156,7 +156,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
 | :---: | :---: | :---: | :---: | :---: |
 | **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
-| **AnycostGAN**   | *Anycost GANs for Interactive Image Synthesis and Editing* | [[arXiv]](https://arxiv.org/abs/2103.03243) | [[~~code~~]]() | [[official]])(https://github.com/mit-han-lab/anycost-gan) |
+| **AnycostGAN**   | *Anycost GANs for Interactive Image Synthesis and Editing* | [[arXiv]](https://arxiv.org/abs/2103.03243) | [[~~code~~]]() | [[official]](https://github.com/mit-han-lab/anycost-gan) |
 | **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./awesome_gans/CycleGAN) |
 | **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
 | **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
@@ -164,6 +164,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | **DRIT/++**      | *Diverse Image-to-Image Translation via Disentangled Representations* | [[arXiv]](https://arxiv.org/abs/1905.01270) | [[~~code~~]]() | [[official]](https://github.com/HsinYingLee/DRIT) |
 | **EdgeConnect**  | *Generative Image Inpainting with Adversarial Edge Learning* | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() | [[official]](https://github.com/knazeri/edge-connect) |
 | **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
+| **FastGAN**      | *Towards Faster and Stabilized GAN Training for High-fidelity Few-shot Image Synthesis* | [[arXiv]](https://arxiv.org/abs/2101.04775) | [[~~code~~]]() | [[official]](https://github.com/odegeasslbc/FastGAN-pytorch) |
 | **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/FUNIT) |
 | **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() | [[official]](https://github.com/JiahuiYu/generative_inpainting) |
 | **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
