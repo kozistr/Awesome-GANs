@@ -156,6 +156,7 @@ like image-to-image translation, image in-painting, single image super resolutio
 | *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
 | :---: | :---: | :---: | :---: | :---: |
 | **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
+| **AnycostGAN**   | *Anycost GANs for Interactive Image Synthesis and Editing* | [[arXiv]](https://arxiv.org/abs/2103.03243) | [[~~code~~]]() | [[official]])(https://github.com/mit-han-lab/anycost-gan) |
 | **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./awesome_gans/CycleGAN) |
 | **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
 | **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
