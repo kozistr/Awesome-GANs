@@ -142,7 +142,7 @@ Here for the theories & concepts of the GAN.
 | **StyleGAN**      | *A Style-Based Generator Architecture for Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1812.04948) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan) |
 | **StyleGAN2**     | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2) |
 | **StyleGAN2 ADA** | *StyleGAN2 with adaptive discriminator augmentation* | [[arXiv]](https://arxiv.org/abs/2006.06676) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2-ada) |
-| **StyleGAN2 AF**  | *Alias-Free StyleGAN2* | [[arXiv]](https://arxiv.org/abs/2106.12423) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/alias-free-gan) |
+| **StyleGAN3**     | *Alias-Free Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/2106.12423) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan3) |
 | **TripleGAN**     | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) | [[~~code~~]]() |
 | **UGAN**          | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) | [[~~code~~]]() |
 | **U-Net GAN**     | *A U-Net Based Discriminator for Generative Adversarial Networks* | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/html/Schonfeld_A_U-Net_Based_Discriminator_for_Generative_Adversarial_Networks_CVPR_2020_paper.html) | [[~~code~~]]() | [[official]](https://github.com/boschresearch/unetgan) | 
