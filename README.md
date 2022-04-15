@@ -8,7 +8,7 @@ Tensorflow implementation of GANs (**Generative Adversarial Networks**)
 
 ## **WIP** : This repo is about to be refactored & supporting `tf 2.x`.
 
-Maybe some of the codes wouldn't work on master branch, because i'm just working on the branch.
+Maybe some codes wouldn't work on master branch, because i'm just working on the branch.
 
 ## Environments
 
@@ -143,6 +143,7 @@ Here for the theories & concepts of the GAN.
 | **StyleGAN2**     | *Analyzing and Improving the Image Quality of StyleGAN* | [[arXiv]](http://arxiv.org/abs/1912.04958) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2) |
 | **StyleGAN2 ADA** | *StyleGAN2 with adaptive discriminator augmentation* | [[arXiv]](https://arxiv.org/abs/2006.06676) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan2-ada) |
 | **StyleGAN3**     | *Alias-Free Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/2106.12423) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/stylegan3) |
+| **StyleGAN-XL**   | *StyleGAN-XL: Scaling StyleGAN to Large Diverse Datasets* | [[arXiv]](https://arxiv.org/abs/2202.00273) | [[~~code~~]]() | [[official]](https://github.com/autonomousvision/stylegan_xl) |
 | **TripleGAN**     | *Triple Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.02291) | [[~~code~~]]() |
 | **UGAN**          | *Unrolled Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1611.02163) | [[~~code~~]]() |
 | **U-Net GAN**     | *A U-Net Based Discriminator for Generative Adversarial Networks* | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/html/Schonfeld_A_U-Net_Based_Discriminator_for_Generative_Adversarial_Networks_CVPR_2020_paper.html) | [[~~code~~]]() | [[official]](https://github.com/boschresearch/unetgan) | 
@@ -154,38 +155,39 @@ Here for the theories & concepts of the GAN.
 Here for the GAN applications on Vision domain, 
 like image-to-image translation, image in-painting, single image super resolution , etc.
 
-| *Name* | *Summary* | *Paper* | *Code* | *Official Code* |
-| :---: | :---: | :---: | :---: | :---: |
-| **3D GAN**       | *3D Generative Adversarial Networks* | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
-| **AnycostGAN**   | *Anycost GANs for Interactive Image Synthesis and Editing* | [[arXiv]](https://arxiv.org/abs/2103.03243) | [[~~code~~]]() | [[official]](https://github.com/mit-han-lab/anycost-gan) |
-| **CycleGAN**     | *Unpaired img2img translation using Cycle-consistent Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./awesome_gans/CycleGAN) |
-| **DAGAN**        | *Instance-level Image Translation by Deep Attention Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
-| **DeblurGAN**    | *Blind Motion Deblurring Using Conditional Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
-| **DualGAN**      | *Unsupervised Dual Learning for Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]() |
-| **DRIT/++**      | *Diverse Image-to-Image Translation via Disentangled Representations* | [[arXiv]](https://arxiv.org/abs/1905.01270) | [[~~code~~]]() | [[official]](https://github.com/HsinYingLee/DRIT) |
-| **EdgeConnect**  | *Generative Image Inpainting with Adversarial Edge Learning* | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() | [[official]](https://github.com/knazeri/edge-connect) |
-| **ESRGAN**       | *Enhanced Super-Resolution Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
-| **FastGAN**      | *Towards Faster and Stabilized GAN Training for High-fidelity Few-shot Image Synthesis* | [[arXiv]](https://arxiv.org/abs/2101.04775) | [[~~code~~]]() | [[official]](https://github.com/odegeasslbc/FastGAN-pytorch) |
-| **FUNIT**        | *Few-Shot Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/FUNIT) |
-| **CA & GA**      | *Generative Image Inpainting w/ Contextual Attention & Gated Convolution* | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() | [[official]](https://github.com/JiahuiYu/generative_inpainting) |
-| **HiFaceGAN**    | *Face Renovation via Collaborative Suppression and Replenishment* | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
-| **MUNIT**        | *Multimodal Unsupervised Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/MUNIT) |
-| **NICE-GAN**     | *Reusing Discriminators for Encoding* | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
-| **PSGAN**        | *Pose and Expression Robust Spatial-Aware GAN for Customizable Makeup Transfer* | [[arXiv]](https://arxiv.org/abs/1909.06956) | [[~~code~~]]() | [[official]](https://github.com/wtjiang98/PSGAN) |
-| **SpAtGAN**      | *Generative Adversarial Network with Spatial Attention for Face Attribute Editing* | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
-| **SalGAN**       | *Visual Saliency Prediction Generative Adversarial Networks* | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
-| **SRFlow**       | *Super-Resolution using Normalizing Flow* | [[arXiv]](https://arxiv.org/abs/2006.14200) | [[~~code~~]]() | [[official]](https://github.com/andreas128/SRFlow) |
-| **SRGAN**        | *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network* | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./awesome_gans/SRGAN) |
+| *Name* |                                           *Summary*                                           | *Paper* | *Code* | *Official Code* |
+| :---: |:---------------------------------------------------------------------------------------------:| :---: | :---: | :---: |
+| **3D GAN**       |                             *3D Generative Adversarial Networks*                              | [[MIT]](http://3dgan.csail.mit.edu/) | [[~~code~~]]() |
+| **AnycostGAN**   |                  *Anycost GANs for Interactive Image Synthesis and Editing*                   | [[arXiv]](https://arxiv.org/abs/2103.03243) | [[~~code~~]]() | [[official]](https://github.com/mit-han-lab/anycost-gan) |
+| **CycleGAN**     |          *Unpaired img2img translation using Cycle-consistent Adversarial Networks*           | [[arXiv]](https://arxiv.org/abs/1703.10593) | [[code]](./awesome_gans/CycleGAN) |
+| **DAGAN**        |     *Instance-level Image Translation by Deep Attention Generative Adversarial Networks*      | [[arXiv]](https://arxiv.org/abs/1802.06454) | [[~~code~~]]() |
+| **DeblurGAN**    |               *Blind Motion Deblurring Using Conditional Adversarial Networks*                | [[arXiv]](https://arxiv.org/abs/1711.07064) | [[~~code~~]]() |
+| **DualGAN**      |                  *Unsupervised Dual Learning for Image-to-Image Translation*                  | [[arXiv]](https://arxiv.org/abs/1704.02510) | [[~~code~~]]() |
+| **DRIT/++**      |             *Diverse Image-to-Image Translation via Disentangled Representations*             | [[arXiv]](https://arxiv.org/abs/1905.01270) | [[~~code~~]]() | [[official]](https://github.com/HsinYingLee/DRIT) |
+| **EdgeConnect**  |                 *Generative Image Inpainting with Adversarial Edge Learning*                  | [[arXiv]](https://arxiv.org/abs/1901.00212) | [[~~code~~]]() | [[official]](https://github.com/knazeri/edge-connect) |
+| **ESRGAN**       |                  *Enhanced Super-Resolution Generative Adversarial Networks*                  | [[arXiv]](https://arxiv.org/abs/1809.00219) | [[~~code~~]]() |
+| **FastGAN**      |    *Towards Faster and Stabilized GAN Training for High-fidelity Few-shot Image Synthesis*    | [[arXiv]](https://arxiv.org/abs/2101.04775) | [[~~code~~]]() | [[official]](https://github.com/odegeasslbc/FastGAN-pytorch) |
+| **FUNIT**        |                      *Few-Shot Unsupervised Image-to-Image Translation*                       | [[arXiv]](https://arxiv.org/abs/1905.01723) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/FUNIT) |
+| **CA & GA**      |           *Generative Image Inpainting w/ Contextual Attention & Gated Convolution*           | [[CVPR2018]](https://arxiv.org/abs/1801.07892), [[ICCV2019]](https://arxiv.org/abs/1806.03589) | [[~~code~~]]() | [[official]](https://github.com/JiahuiYu/generative_inpainting) |
+| **HiFaceGAN**    |               *Face Renovation via Collaborative Suppression and Replenishment*               | [[arXiv]](https://arxiv.org/abs/2005.05005v1) | [[~~code~~]]() |
+| **MUNIT**        |                     *Multimodal Unsupervised Image-to-Image Translation*                      | [[arXiv]](https://arxiv.org/abs/1804.04732) | [[~~code~~]]() | [[official]](https://github.com/NVlabs/MUNIT) |
+| **NICE-GAN**     |                             *Reusing Discriminators for Encoding*                             | [[arXiv]](https://arxiv.org/abs/2003.00273) | [[~~code~~]]() | [[official]](https://github.com/alpc91/NICE-GAN-pytorch) |
+| **PSGAN**        |        *Pose and Expression Robust Spatial-Aware GAN for Customizable Makeup Transfer*        | [[arXiv]](https://arxiv.org/abs/1909.06956) | [[~~code~~]]() | [[official]](https://github.com/wtjiang98/PSGAN) |
+| **SpAtGAN**      |      *Generative Adversarial Network with Spatial Attention for Face Attribute Editing*       | [[ECCV2018]](http://openaccess.thecvf.com/content_ECCV_2018/html/Gang_Zhang_Generative_Adversarial_Network_ECCV_2018_paper.html) | [[~~code~~]]() |
+| **SalGAN**       |                 *Visual Saliency Prediction Generative Adversarial Networks*                  | [[arXiv]](https://arxiv.org/abs/1701.01081) | [[~~code~~]]() |
+| **SRFlow**       |                           *Super-Resolution using Normalizing Flow*                           | [[arXiv]](https://arxiv.org/abs/2006.14200) | [[~~code~~]]() | [[official]](https://github.com/andreas128/SRFlow) |
+| **SRGAN**        |    *Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network*     | [[arXiv]](https://arxiv.org/abs/1609.04802) | [[code]](./awesome_gans/SRGAN) |
 | **SRResCGAN**    | *Deep Generative Adversarial Residual Convolutional Networks for Real-World Super-Resolution* | [[arXiv]](https://arxiv.org/abs/2005.00953) | [[~~code~~]]() | [[official]](https://github.com/RaoUmer/SRResCGAN) |
-| **StarGAN**      | *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation* | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./awesome_gans/StarGAN) | [[official]](https://github.com/yunjey/stargan) |
-| **StarGAN V2**   | *Diverse Image Synthesis for Multiple Domains* | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() | [[official]](https://github.com/clovaai/stargan-v2) |
-| **TecoGAN**      | *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation* | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() | [[official]](https://github.com/thunil/TecoGAN) |
-| **TextureGAN**   | *Controlling Deep Image Synthesis with Texture Patches* | [[arXiv]](https://arxiv.org/abs/1706.02823) | [[~~code~~]]() |
-| **TUNIT**        | *Rethinking the Truly Unsupervised Image-to-Image Translation* | [[arXiv]]() | [[~~code~~]](https://arxiv.org/abs/2006.06500) | [[official]](https://github.com/clovaai/tunit) |
-| **TwinGAN**      | *Cross-Domain Translation fo Human Portraits* | [[github]](https://github.com/jerryli27/TwinGAN) | [[~~code~~]]() |
-| **UNIT**         | *Unsupervised Image-to-Image Translation Networks* | [[arXiv]](https://arxiv.org/abs/1703.00848) | [[~~code~~]]() | [[official]](https://github.com/mingyuliutw/UNIT) |
-| **XGAN**         | *Unsupervised Image-to-Image Translation for Many-to-Many Mappings* | [[arXiv]](https://arxiv.org/abs/1711.05139) | [[~~code~~]]() |
-| **Zero-DCE**     | *Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement* | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf) | [[~~code~~]]() | [[official]](https://github.com/Li-Chongyi/Zero-DCE) |
+| **StarGAN**      |     *Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation*     | [[arXiv]](https://arxiv.org/abs/1711.09020) | [[code]](./awesome_gans/StarGAN) | [[official]](https://github.com/yunjey/stargan) |
+| **StarGAN V2**   |                        *Diverse Image Synthesis for Multiple Domains*                         | [[arXiv]](https://arxiv.org/abs/1912.01865) | [[~~code~~]]() | [[official]](https://github.com/clovaai/stargan-v2) |
+| **StyleGAN-V**   |      *A Continuous Video Generator with the Price, Image Quality and Perks of StyleGAN2*      | [[arXiv]](https://kaust-cair.s3.amazonaws.com/stylegan-v/stylegan-v-paper.pdf) | [[~~code~~]]() | [[official]](https://github.com/universome/stylegan-v) |
+| **TecoGAN**      |       *Learning Temporal Coherence via Self-Supervision for GAN-based Video Generation*       | [[arXiv]](https://arxiv.org/abs/1811.09393) | [[~~code~~]]() | [[official]](https://github.com/thunil/TecoGAN) |
+| **TextureGAN**   |                    *Controlling Deep Image Synthesis with Texture Patches*                    | [[arXiv]](https://arxiv.org/abs/1706.02823) | [[~~code~~]]() |
+| **TUNIT**        |                *Rethinking the Truly Unsupervised Image-to-Image Translation*                 | [[arXiv]](https://arxiv.org/abs/2006.06500) | [[~~code~~]]() | [[official]](https://github.com/clovaai/tunit) |
+| **TwinGAN**      |                         *Cross-Domain Translation fo Human Portraits*                         | [[github]](https://github.com/jerryli27/TwinGAN) | [[~~code~~]]() |
+| **UNIT**         |                      *Unsupervised Image-to-Image Translation Networks*                       | [[arXiv]](https://arxiv.org/abs/1703.00848) | [[~~code~~]]() | [[official]](https://github.com/mingyuliutw/UNIT) |
+| **XGAN**         |              *Unsupervised Image-to-Image Translation for Many-to-Many Mappings*              | [[arXiv]](https://arxiv.org/abs/1711.05139) | [[~~code~~]]() |
+| **Zero-DCE**     |            *Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement*             | [[CVPR20]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Guo_Zero-Reference_Deep_Curve_Estimation_for_Low-Light_Image_Enhancement_CVPR_2020_paper.pdf) | [[~~code~~]]() | [[official]](https://github.com/Li-Chongyi/Zero-DCE) |
 
 ### Applied Audio
 
