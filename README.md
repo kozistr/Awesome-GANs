@@ -83,11 +83,6 @@ Supporting datasets are ... (code is in `/awesome_gans/datasets.py`)
 └── requirements.txt
 ```
 
-## Pre-Trained Models
-
-Here's a **google drive link**. 
-You can download pre-trained models from [here](https://drive.google.com/open?id=1XUiCC_q7bkSA8uQBFgn6vexVJqaMw9tA)
-
 ## Papers & Codes
 
 Here's the list-up for tons of GAN papers. all papers are sorted by alphabetic order.
@@ -104,7 +99,7 @@ Here's the beginning of the **GAN**.
 
 Here for the theories & concepts of the GAN.
 
-|      *Name*       |                                                         *Summary*                                 |                                                                               *Paper*                                                                           |                                   *Code*                               |                            *Official Code*                           |
+|      *Name*       |                                             *Summary*                                             |                                                                             *Paper*                                                                             |                                 *Code*                                 |                           *Official Code*                            |
 |:-----------------:|:-------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|:--------------------------------------------------------------------:|
 |     **ACGAN**     |                      *Auxiliary Classifier Generative Adversarial Networks*                       |                                                           [[arXiv]](https://arxiv.org/abs/1610.09585)                                                           |                     [[code]](./awesome_gans/ACGAN)                     |
 |    **AdaGAN**     |                                   *Boosting Generative Models*                                    |                                                           [[arXiv]](https://arxiv.org/abs/1701.02386)                                                           |                             [[~~code~~]]()                             |
@@ -118,6 +113,7 @@ Here for the theories & concepts of the GAN.
 |     **DCGAN**     |                       *Deep Convolutional Generative Adversarial Networks*                        |                                                           [[arXiv]](https://arxiv.org/abs/1511.06434)                                                           |                     [[code]](./awesome_gans/DCGAN)                     |
 |    **DRAGAN**     |                 *On Convergence and Stability of Generative Adversarial Networks*                 |                                                           [[arXiv]](https://arxiv.org/abs/1705.07215)                                                           |                    [[code]](./awesome_gans/DRAGAN)                     |
 |     **EBGAN**     |                          *Energy-based Generative Adversarial Networks*                           |                                                           [[arXiv]](https://arxiv.org/abs/1609.03126)                                                           |                     [[code]](./awesome_gans/EBGAN)                     |
+|   **EqGAN-SA**    |                     *Improving GAN Equilibrium by Raising Spatial Awareness*                      |                                                         [[arXiv]](https://arxiv.org/pdf/2112.00718.pdf)                                                         |                             [[~~code~~]]()                             |          [[official]](https://github.com/genforce/eqgan-sa)          |
 |     **f-GAN**     |          *Training Generative Neural Samplers using Variational Divergence Minimization*          |                                                           [[arXiv]](https://arxiv.org/abs/1606.00709)                                                           |                     [[code]](./awesome_gans/FGAN)                      |
 |    **GP-GAN**     |                        *Towards Realistic High-Resolution Image Blending*                         |                                                           [[arXiv]](https://arxiv.org/abs/1703.07195)                                                           |                             [[~~code~~]]()                             |
 |  **Softmax GAN**  |                          *Generative Adversarial Networks with Softmax*                           |                                                           [[arXiv]](https://arxiv.org/abs/1704.06191)                                                           |                      [[code]](./awesome_gans/GAN)                      |
